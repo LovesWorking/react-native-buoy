@@ -9,7 +9,11 @@
   ],
   "types": "dist/types/index.d.ts",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "build:yalc": "npm run build && yalc push",
+    "dev": "nodemon --watch src --ext ts,tsx,js,jsx --exec \"npm run build:yalc\"",
+    "yalc:publish": "yalc publish",
+    "yalc:push": "yalc push"
   },
   "repository": {
     "type": "git",
@@ -34,8 +38,10 @@
   "devDependencies": {
     "@tanstack/react-query": "^5.77.2",
     "@types/react": "^19.0.1",
+    "concurrently": "^9.2.0",
     "esbuild": "^0.25.4",
     "esbuild-node-externals": "^1.18.0",
+    "nodemon": "^3.1.10",
     "react": "^19.0.0",
     "react-native": ">=0.78.0",
     "react-native-svg": "^15.12.0",
