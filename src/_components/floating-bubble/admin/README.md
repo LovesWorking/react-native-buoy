@@ -1,199 +1,345 @@
-# FloatingStatusBubble
+# React Native Admin Panel
 
-A draggable, floating status bubble component for React Native applications that provides environment information, admin controls, and debugging utilities.
+A comprehensive, customizable admin panel for React Native applications with Sentry integration and floating status bubble interface.
 
-## Features
+## 🎯 Features
 
-- 🎯 **Draggable Interface**: Smooth gesture-based positioning with edge snapping
-- 🌍 **Environment Display**: Visual indicators for different environments (LOCAL, DEV, PROD)
-- 👤 **User Status**: Shows admin, internal, or regular user status
-- 🔧 **Debug Controls**: Toggle network status and debug logging (in local environment)
-- 📱 **Responsive**: Adapts to screen size and safe areas
-- 🎨 **Customizable**: Configurable through props with sensible defaults
+- **Floating Status Bubble**: Draggable admin interface that doesn't interfere with your app
+- **Sentry Logs**: Built-in viewer for Sentry events and breadcrumbs
+- **Optional Sections**: Easy to enable/disable admin features
+- **Customizable**: Add your own admin sections with consistent styling
+- **Production Ready**: Easy to disable debug tools for production builds
+- **TypeScript**: Full type safety throughout
 
-## Installation
+## 📦 Installation
 
 ```bash
-npm install react-native-floating-status-bubble
+npm install your-admin-package
 # or
-yarn add react-native-floating-status-bubble
+yarn add your-admin-package
 ```
 
 ### Dependencies
 
-This component requires the following peer dependencies:
+This package requires these peer dependencies:
 
 ```bash
-npm install react-native-gesture-handler react-native-reanimated
+npm install @gorhom/bottom-sheet @sentry/react-native react-native-safe-area-context lucide-react-native nanoid
 ```
 
-Make sure to follow the installation guides for:
-- [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/docs/installation)
-- [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation)
+## 🚀 Quick Start
 
-## Usage
-
-### Basic Usage
+### Basic Setup
 
 ```tsx
-import React, { useState } from 'react';
-import { FloatingStatusBubble } from 'react-native-floating-status-bubble';
+import { FloatingStatusBubble } from 'your-admin-package';
 
 export default function App() {
-  const [isOnline, setIsOnline] = useState(true);
-  const [isDebugEnabled, setIsDebugEnabled] = useState(false);
-
-  const handleAdminPress = () => {
-    console.log('Admin panel opened');
-  };
-
-  const handleNetworkToggle = () => {
-    setIsOnline(!isOnline);
-  };
-
-  const handleDebugToggle = () => {
-    setIsDebugEnabled(!isDebugEnabled);
-  };
-
   return (
-    <FloatingStatusBubble
-      environment={{ label: 'DEV', backgroundColor: '#F97316', isLocal: false }}
-      isAdmin={true}
-      isOnline={isOnline}
-      isDebugEnabled={isDebugEnabled}
-      onAdminPress={handleAdminPress}
-      onNetworkToggle={handleNetworkToggle}
-      onDebugToggle={handleDebugToggle}
-    />
+    <YourApp>
+      <FloatingStatusBubble
+        userRole="admin"
+        environment="dev"
+      />
+    </YourApp>
   );
 }
 ```
 
-### Advanced Usage with Custom Configuration
+### With Sentry Integration
 
 ```tsx
-import React from 'react';
-import { FloatingStatusBubble, EnvironmentConfig } from 'react-native-floating-status-bubble';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Sentry from '@sentry/react-native';
+import { FloatingStatusBubble, sentryLogger } from 'your-admin-package';
 
-const MyApp = () => {
-  const insets = useSafeAreaInsets();
+// Configure Sentry to capture events for the admin panel
+Sentry.init({
+  dsn: 'your-sentry-dsn',
+  beforeSend: sentryLogger.captureEvent,
+  beforeBreadcrumb: sentryLogger.captureBreadcrumb,
+  // ... other Sentry config
+});
+
+export default function App() {
+  return (
+    <YourApp>
+      <FloatingStatusBubble
+        userRole="admin"
+        environment="dev"
+      />
+    </YourApp>
+  );
+}
+```
+
+## 🎨 Customization
+
+### Adding Custom Admin Sections
+
+```tsx
+import { 
+  FloatingStatusBubble, 
+  ExpandableSectionWithModal 
+} from 'your-admin-package';
+import { Database } from 'lucide-react-native';
+
+function MyCustomSection() {
+  return (
+    <ExpandableSectionWithModal
+      icon={Database}
+      iconColor="#10B981"
+      iconBackgroundColor="rgba(16, 185, 129, 0.1)"
+      title="Database Tools"
+      subtitle="Manage database connections"
+    >
+      {(closeModal) => <DatabaseToolsModal onClose={closeModal} />}
+    </ExpandableSectionWithModal>
+  );
+}
+
+export default function App() {
+  return (
+    <YourApp>
+      <FloatingStatusBubble userRole="admin" environment="dev">
+        <MyCustomSection />
+      </FloatingStatusBubble>
+    </YourApp>
+  );
+}
+```
+
+### Disabling Default Sections
+
+```tsx
+// Remove Sentry logs for production
+<FloatingStatusBubble 
+  userRole="admin" 
+  environment="prod"
+  removeSections={['sentry-logs']}
+>
+  <ProductionOnlySection />
+</FloatingStatusBubble>
+```
+
+## 🔧 API Reference
+
+### FloatingStatusBubble
+
+Main component that provides the floating admin interface.
+
+```tsx
+interface FloatingStatusBubbleProps {
+  userRole: UserRole;
+  environment: Environment;
+  children?: ReactNode;
+  removeSections?: DefaultSection[];
+}
+
+type UserRole = 'admin' | string;
+type Environment = 'local' | 'dev' | 'prod';
+type DefaultSection = 'sentry-logs';
+```
+
+### ExpandableSectionWithModal
+
+Utility component for creating custom admin sections with modals.
+
+```tsx
+interface ExpandableSectionWithModalProps {
+  icon: LucideIcon;
+  iconColor: string;
+  iconBackgroundColor: string;
+  title: string;
+  subtitle: string;
+  children: ReactNode | ((closeModal: () => void) => ReactNode);
+  modalSnapPoints?: string[];
+  enableDynamicSizing?: boolean;
+  modalBackgroundColor?: string;
+  handleIndicatorColor?: string;
+  onModalOpen?: () => void;
+  onModalClose?: () => void;
+}
+```
+
+### SentryLogger
+
+Logger for capturing Sentry events in the admin panel.
+
+```tsx
+class SentryLogger {
+  captureEvent: (event: Sentry.Event) => Sentry.Event;
+  captureBreadcrumb: (breadcrumb: Sentry.Breadcrumb) => Sentry.Breadcrumb | null;
+  captureTransaction: (event: Sentry.Event) => Sentry.Event;
+  captureSpan: (span: Sentry.Event) => Sentry.Event;
+}
+
+// Use the default instance
+import { sentryLogger } from 'your-admin-package';
+```
+
+## 📋 Usage Patterns
+
+### Development Environment
+
+```tsx
+// Include all debugging tools
+<FloatingStatusBubble userRole="admin" environment="dev">
+  {/* Sentry logs included by default */}
+  <ApiTestingSection />
+  <DatabaseDebugSection />
+</FloatingStatusBubble>
+```
+
+### Production Environment
+
+```tsx
+// Remove dev tools, keep essential admin functions
+<FloatingStatusBubble 
+  userRole="admin" 
+  environment="prod"
+  removeSections={['sentry-logs']}
+>
+  <SystemHealthSection />
+  <UserManagementSection />
+</FloatingStatusBubble>
+```
+
+### Conditional Features
+
+```tsx
+function AdminInterface({ environment, userRole }) {
+  const isProduction = environment === 'prod';
   
-  const prodEnvironment: EnvironmentConfig = {
-    label: 'PROD',
-    backgroundColor: '#DC2626',
-    isLocal: false,
-  };
-
   return (
     <FloatingStatusBubble
-      environment={prodEnvironment}
-      isAdmin={false}
-      isInternal={true}
-      isAuthorized={true}
-      isOnline={true}
-      isDebugEnabled={false}
-      safeAreaInsets={insets}
-      hitSlop={15}
-      onAdminPress={() => console.log('Admin pressed')}
-      onNetworkToggle={() => console.log('Network toggled')}
-      onDebugToggle={() => console.log('Debug toggled')}
-    />
+      userRole={userRole}
+      environment={environment}
+      removeSections={isProduction ? ['sentry-logs'] : []}
+    >
+      {!isProduction && <DevOnlySection />}
+      <AlwaysAvailableSection />
+      {userRole === 'admin' && <AdminOnlySection />}
+    </FloatingStatusBubble>
   );
-};
+}
 ```
 
-## Props
+## 🎨 Styling
 
-### FloatingStatusBubbleProps
+All components follow a consistent dark theme:
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `environment` | `EnvironmentConfig` | `{ label: 'DEV', backgroundColor: '#F97316', isLocal: false }` | Environment configuration |
-| `isAdmin` | `boolean` | `false` | Whether user has admin privileges |
-| `isInternal` | `boolean` | `false` | Whether user has internal access |
-| `isAuthorized` | `boolean` | `true` | Whether user is authorized to see the bubble |
-| `isOnline` | `boolean` | `true` | Whether network is online |
-| `isDebugEnabled` | `boolean` | `false` | Whether debug logging is enabled |
-| `onAdminPress` | `() => void` | `undefined` | Callback when admin panel should open |
-| `onNetworkToggle` | `() => void` | `undefined` | Callback when network toggle is pressed |
-| `onDebugToggle` | `() => void` | `undefined` | Callback when debug toggle is pressed |
-| `safeAreaInsets` | `{ top: number; bottom: number }` | `{ top: 44, bottom: 34 }` | Safe area insets |
-| `hitSlop` | `number` | `10` | Custom hit slop for touchables |
+- Background: `#171717` / `#0F0F0F`
+- Text: `#FFFFFF` / `#9CA3AF`
+- Borders: `rgba(255, 255, 255, 0.08)`
+- Accent colors based on component purpose
 
-### EnvironmentConfig
+### Custom Modal Content
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `label` | `string` | Environment label (e.g., 'LOCAL', 'DEV', 'PROD') |
-| `backgroundColor` | `string` | Hex color for environment indicator |
-| `isLocal` | `boolean` | Whether this is a local development environment |
+When creating modal content, follow these patterns:
 
-## Environment Examples
-
-### Local Development
 ```tsx
-const localEnv: EnvironmentConfig = {
-  label: 'LOCAL',
-  backgroundColor: '#06B6D4',
-  isLocal: true, // Shows debug toggle
-};
+function MyModalContent({ onClose }) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+      {/* Header with close button */}
+      <View style={headerStyles}>
+        <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>
+          My Feature
+        </Text>
+        <TouchableOpacity onPress={onClose}>
+          <X size={16} color="#9CA3AF" />
+        </TouchableOpacity>
+      </View>
+      
+      {/* Content */}
+      <ScrollView style={{ flex: 1 }}>
+        {/* Your content */}
+      </ScrollView>
+      
+      {/* Bottom spacing */}
+      <View style={{ paddingBottom: insets.bottom + 20 }} />
+    </View>
+  );
+}
 ```
 
-### Development
+## 🛠 Advanced Features
+
+### Environment-Based Configuration
+
 ```tsx
-const devEnv: EnvironmentConfig = {
-  label: 'DEV',
-  backgroundColor: '#F97316',
-  isLocal: false,
+const getAdminConfig = (environment: Environment) => {
+  switch (environment) {
+    case 'prod':
+      return { removeSections: ['sentry-logs'] as const };
+    case 'dev':
+      return { removeSections: [] as const };
+    case 'local':
+      return { removeSections: [] as const };
+    default:
+      return { removeSections: ['sentry-logs'] as const };
+  }
 };
+
+<FloatingStatusBubble
+  userRole="admin"
+  environment={environment}
+  {...getAdminConfig(environment)}
+>
+  <MyCustomSection />
+</FloatingStatusBubble>
 ```
 
-### Production
+### Custom Section Order
+
 ```tsx
-const prodEnv: EnvironmentConfig = {
-  label: 'PROD',
-  backgroundColor: '#DC2626',
-  isLocal: false,
-};
+// Control exact order of sections
+<FloatingStatusBubble
+  userRole="admin"
+  environment="dev"
+  removeSections={['sentry-logs']} // Remove from default position
+>
+  <HighPrioritySection />
+  <SentryLogDumpSection /> {/* Add back where you want it */}
+  <LowerPrioritySection />
+</FloatingStatusBubble>
 ```
 
-## Behavior
+## 📚 Examples
 
-### Dragging
-- The bubble can be dragged around the screen
-- It automatically snaps to screen edges
-- When partially hidden, only the grip handle remains visible
-- Visual feedback during dragging with border color changes
+See the [examples directory](./examples) for complete implementation examples:
 
-### Environment Indicator
-- Displays a colored dot and label for the current environment
-- Different colors help distinguish between LOCAL, DEV, and PROD
+- Basic setup
+- Sentry integration
+- Custom sections
+- Production configuration
+- Advanced patterns
 
-### User Status
-- Shows user type with appropriate colors:
-  - **Admin**: Green indicator
-  - **Internal**: Blue indicator  
-  - **User**: Gray indicator
+## 🤝 Contributing
 
-### Debug Controls (Local Only)
-- Debug toggle only appears in local environments (`isLocal: true`)
-- Network toggle allows simulating online/offline states
-- Callback functions provide integration points for your app logic
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Integration Tips
+## 📄 License
 
-1. **State Management**: Use your app's state management to control the bubble's state
-2. **Network Simulation**: Connect `onNetworkToggle` to your network management library
-3. **Debug Logging**: Use `onDebugToggle` to control your app's debug output
-4. **Admin Panel**: Connect `onAdminPress` to open your admin interface
+MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Requirements
+## 🐛 Troubleshooting
 
-- React Native 0.60+
-- react-native-gesture-handler
-- react-native-reanimated
+### Common Issues
 
-## License
+1. **Modal not opening**: Ensure `@gorhom/bottom-sheet` is properly installed and configured
+2. **Sentry logs not showing**: Verify `sentryLogger` is configured in Sentry.init()
+3. **Styling issues**: Make sure your app supports the required CSS properties
+4. **TypeScript errors**: Ensure all peer dependencies are installed with correct versions
 
-MIT 
+### Support
+
+- GitHub Issues: [Report bugs or request features](https://github.com/your-repo/issues)
+- Documentation: [Full documentation](https://your-docs-site.com)
+- Community: [Discord/Slack community](https://your-community-link.com) 

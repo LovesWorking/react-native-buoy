@@ -1,2 +1,2 @@
 export { DevToolsBubble } from "./DevToolsBubble";
-export { FloatingStatusBubble } from "./_components/floating-bubble/FloatingStatusBubble";
+export { FloatingStatusBubble } from "./_components/floating-bubble/admin/FloatingStatusBubble";

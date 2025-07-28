@@ -1,14 +1,12 @@
 import { ReactNode, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
-
-import { Separator } from '~/components/ui/separator';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { ExpandableSectionHeader } from './ExpandableSectionHeader';
 
 interface ExpandableSectionProps {
-  icon: IconProp;
+  icon: LucideIcon;
   iconColor: string;
   iconBackgroundColor: string;
   title: string;
@@ -39,8 +37,8 @@ export function ExpandableSection({
   };
 
   return (
-    <View className="bg-[#1F1F1F] rounded-xl border border-white/[0.08] overflow-hidden">
-      <View className="p-6">
+    <View style={styles.container}>
+      <View style={styles.content}>
         <ExpandableSectionHeader
           icon={icon}
           iconColor={iconColor}
@@ -51,10 +49,29 @@ export function ExpandableSection({
           onPress={handlePress}
         />
 
-        <Separator className="bg-white/[0.06] mb-6" />
+        <View style={styles.divider} />
 
         {isExpanded && <Animated.View entering={FadeIn.duration(300)}>{children}</Animated.View>}
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  content: {
+    padding: 24,
+  },
+  divider: {
+    height: 1,
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    marginBottom: 24,
+  },
+});

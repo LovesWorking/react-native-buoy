@@ -1,23 +1,20 @@
-import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
-  faBug,
-  faCube,
-  faDatabase,
-  faGears,
-  faGlobe,
-  faHandPointer,
-  faKey,
-  faPalette,
-  faPlay,
-  faRoute,
-  faTriangleExclamation,
-  faUser,
-} from '@fortawesome/pro-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+  AlertTriangle,
+  Box,
+  Bug,
+  Database,
+  Globe,
+  Hand,
+  Key,
+  Palette,
+  Play,
+  Route,
+  Settings,
+  User,
+} from 'lucide-react-native';
 
-import { Text } from '~/components/ui/text';
-
-import { ConsoleTransportEntry, LogLevel, LogType } from '~/lib/utils/logger/types';
+import { ConsoleTransportEntry, LogLevel, LogType } from '../../logger/types';
 
 import { getLevelCount, getTypeCount } from './utils';
 
@@ -49,87 +46,99 @@ export const LogFilters = ({
   const typeFilters = [
     {
       type: LogType.Auth,
-      icon: faKey,
+      Icon: Key,
       color: '#F59E0B',
-      textColor: 'text-yellow-500',
-      bgColor: 'bg-yellow-500/20 border-yellow-500',
+      textColor: '#F59E0B',
+      bgColor: 'rgba(245, 158, 11, 0.2)',
+      borderColor: '#F59E0B',
     },
     {
       type: LogType.Custom,
-      icon: faPalette,
+      Icon: Palette,
       color: '#06B6D4',
-      textColor: 'text-cyan-500',
-      bgColor: 'bg-cyan-500/20 border-cyan-500',
+      textColor: '#06B6D4',
+      bgColor: 'rgba(6, 182, 212, 0.2)',
+      borderColor: '#06B6D4',
     },
     {
       type: LogType.Debug,
-      icon: faBug,
+      Icon: Bug,
       color: '#60A5FA',
-      textColor: 'text-blue-400',
-      bgColor: 'bg-blue-400/20 border-blue-400',
+      textColor: '#60A5FA',
+      bgColor: 'rgba(96, 165, 250, 0.2)',
+      borderColor: '#60A5FA',
     },
     {
       type: LogType.Error,
-      icon: faTriangleExclamation,
+      Icon: AlertTriangle,
       color: '#F87171',
-      textColor: 'text-red-400',
-      bgColor: 'bg-red-400/20 border-red-400',
+      textColor: '#F87171',
+      bgColor: 'rgba(248, 113, 113, 0.2)',
+      borderColor: '#F87171',
     },
     {
       type: LogType.Generic,
-      icon: faCube,
+      Icon: Box,
       color: '#94A3B8',
-      textColor: 'text-slate-400',
-      bgColor: 'bg-slate-400/20 border-slate-400',
+      textColor: '#94A3B8',
+      bgColor: 'rgba(148, 163, 184, 0.2)',
+      borderColor: '#94A3B8',
     },
     {
       type: LogType.HTTPRequest,
-      icon: faGlobe,
+      Icon: Globe,
       color: '#2DD4BF',
-      textColor: 'text-teal-400',
-      bgColor: 'bg-teal-400/20 border-teal-400',
+      textColor: '#2DD4BF',
+      bgColor: 'rgba(45, 212, 191, 0.2)',
+      borderColor: '#2DD4BF',
     },
     {
       type: LogType.Navigation,
-      icon: faRoute,
+      Icon: Route,
       color: '#34D399',
-      textColor: 'text-emerald-400',
-      bgColor: 'bg-emerald-400/20 border-emerald-400',
+      textColor: '#34D399',
+      bgColor: 'rgba(52, 211, 153, 0.2)',
+      borderColor: '#34D399',
     },
     {
       type: LogType.System,
-      icon: faGears,
+      Icon: Settings,
       color: '#A78BFA',
-      textColor: 'text-violet-400',
-      bgColor: 'bg-violet-400/20 border-violet-400',
+      textColor: '#A78BFA',
+      bgColor: 'rgba(167, 139, 250, 0.2)',
+      borderColor: '#A78BFA',
     },
     {
       type: LogType.Touch,
-      icon: faHandPointer,
+      Icon: Hand,
       color: '#FBBF24',
-      textColor: 'text-amber-400',
-      bgColor: 'bg-amber-400/20 border-amber-400',
+      textColor: '#FBBF24',
+      bgColor: 'rgba(251, 191, 36, 0.2)',
+      borderColor: '#FBBF24',
     },
     {
       type: LogType.UserAction,
-      icon: faUser,
+      Icon: User,
       color: '#FB923C',
-      textColor: 'text-orange-400',
-      bgColor: 'bg-orange-400/20 border-orange-400',
+      textColor: '#FB923C',
+      bgColor: 'rgba(251, 146, 60, 0.2)',
+      borderColor: '#FB923C',
     },
     {
       type: LogType.State,
-      icon: faDatabase,
+      Icon: Database,
       color: '#8B5CF6',
-      textColor: 'text-purple-500',
-      bgColor: 'bg-purple-500/20 border-purple-500',
+      textColor: '#8B5CF6',
+      bgColor: 'rgba(139, 92, 246, 0.2)',
+      borderColor: '#8B5CF6',
     },
     {
       type: LogType.Replay,
-      icon: faPlay,
+      Icon: Play,
       color: '#EC4899',
-      textColor: 'text-pink-500',
-      bgColor: 'bg-pink-500/20 border-pink-500',
+      textColor: '#EC4899',
+      bgColor: 'rgba(236, 72, 153, 0.2)',
+      borderColor: '#EC4899',
     },
   ]
     .filter((filter) => getActualTypeCount(entries, filter.type) > 0)
@@ -138,44 +147,48 @@ export const LogFilters = ({
   const levelFilters = [
     {
       level: LogLevel.Debug,
-      textColor: 'text-blue-400',
-      bgColor: 'bg-blue-400/20 border-blue-400',
-      dotColor: 'bg-blue-400',
+      textColor: '#60A5FA',
+      bgColor: 'rgba(96, 165, 250, 0.2)',
+      borderColor: '#60A5FA',
+      dotColor: '#60A5FA',
     },
     {
       level: LogLevel.Error,
-      textColor: 'text-red-400',
-      bgColor: 'bg-red-400/20 border-red-400',
-      dotColor: 'bg-red-400',
+      textColor: '#F87171',
+      bgColor: 'rgba(248, 113, 113, 0.2)',
+      borderColor: '#F87171',
+      dotColor: '#F87171',
     },
     {
       level: LogLevel.Info,
-      textColor: 'text-cyan-400',
-      bgColor: 'bg-cyan-400/20 border-cyan-400',
-      dotColor: 'bg-cyan-400',
+      textColor: '#22D3EE',
+      bgColor: 'rgba(34, 211, 238, 0.2)',
+      borderColor: '#22D3EE',
+      dotColor: '#22D3EE',
     },
     {
       level: LogLevel.Warn,
-      textColor: 'text-yellow-400',
-      bgColor: 'bg-yellow-400/20 border-yellow-400',
-      dotColor: 'bg-yellow-400',
+      textColor: '#FBBF24',
+      bgColor: 'rgba(251, 191, 36, 0.2)',
+      borderColor: '#FBBF24',
+      dotColor: '#FBBF24',
     },
   ]
     .filter((filter) => getActualLevelCount(entries, filter.level) > 0)
     .sort((a, b) => getActualLevelCount(entries, b.level) - getActualLevelCount(entries, a.level));
 
   return (
-    <View className="px-4 pb-1 space-y-2">
+    <View style={styles.container}>
       {/* Type filters */}
       {typeFilters.length > 0 && (
         <View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8 }}
+            contentContainerStyle={styles.scrollContent}
             sentry-label="ignore log type filters scroll view"
           >
-            {typeFilters.map(({ type, icon, color, textColor, bgColor }) => (
+            {typeFilters.map(({ type, Icon, color, textColor, bgColor, borderColor }) => (
               <TouchableOpacity
                 key={type}
                 sentry-label={`ignore toggle ${type} type filter`}
@@ -183,12 +196,20 @@ export const LogFilters = ({
                 accessibilityLabel={`Filter ${type} logs`}
                 accessibilityHint={`${selectedTypes.has(type) ? 'Remove' : 'Add'} ${type} type filter`}
                 onPress={() => onToggleTypeFilter(type)}
-                className={`flex-row items-center px-3 py-1.5 rounded-full border ${
-                  selectedTypes.has(type) ? bgColor : 'bg-white/[0.02] border-white/[0.1]'
-                }`}
+                style={[
+                  styles.filterButton,
+                  selectedTypes.has(type)
+                    ? { backgroundColor: bgColor, borderColor: borderColor }
+                    : styles.inactiveFilter,
+                ]}
               >
-                <FontAwesomeIcon icon={icon} size={12} color={selectedTypes.has(type) ? color : '#6B7280'} />
-                <Text className={`ml-2 text-sm font-medium ${selectedTypes.has(type) ? textColor : 'text-gray-400'}`}>
+                <Icon size={12} color={selectedTypes.has(type) ? color : '#6B7280'} />
+                <Text
+                  style={[
+                    styles.filterText,
+                    selectedTypes.has(type) ? { color: textColor } : styles.inactiveFilterText,
+                  ]}
+                >
                   {type === LogType.HTTPRequest ? 'HTTP Request' : type === LogType.UserAction ? 'User Action' : type}
                   {getTypeCount(entries, type)}
                 </Text>
@@ -200,14 +221,14 @@ export const LogFilters = ({
 
       {/* Level filters */}
       {levelFilters.length > 0 && (
-        <View className="mt-2">
+        <View style={styles.levelFiltersContainer}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8 }}
+            contentContainerStyle={styles.scrollContent}
             sentry-label="ignore log level filters scroll view"
           >
-            {levelFilters.map(({ level, textColor, bgColor, dotColor }) => (
+            {levelFilters.map(({ level, textColor, bgColor, borderColor, dotColor }) => (
               <TouchableOpacity
                 key={level}
                 sentry-label={`ignore toggle ${level} level filter`}
@@ -215,12 +236,20 @@ export const LogFilters = ({
                 accessibilityLabel={`Filter ${level} level logs`}
                 accessibilityHint={`${selectedLevels.has(level) ? 'Remove' : 'Add'} ${level} level filter`}
                 onPress={() => onToggleLevelFilter(level)}
-                className={`flex-row items-center px-3 py-1.5 rounded-full border ${
-                  selectedLevels.has(level) ? bgColor : 'bg-white/[0.02] border-white/[0.1]'
-                }`}
+                style={[
+                  styles.filterButton,
+                  selectedLevels.has(level)
+                    ? { backgroundColor: bgColor, borderColor: borderColor }
+                    : styles.inactiveFilter,
+                ]}
               >
-                <View className={`w-2 h-2 rounded-full ${dotColor}`} />
-                <Text className={`ml-2 text-sm font-medium ${selectedLevels.has(level) ? textColor : 'text-gray-400'}`}>
+                <View style={[styles.levelDot, { backgroundColor: dotColor }]} />
+                <Text
+                  style={[
+                    styles.filterText,
+                    selectedLevels.has(level) ? { color: textColor } : styles.inactiveFilterText,
+                  ]}
+                >
                   {level === LogLevel.Warn ? 'warning' : level}
                   {getLevelCount(entries, level)}
                 </Text>
@@ -232,3 +261,42 @@ export const LogFilters = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    gap: 8,
+  },
+  scrollContent: {
+    gap: 8,
+  },
+  levelFiltersContainer: {
+    marginTop: 8,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 9999,
+    borderWidth: 1,
+  },
+  inactiveFilter: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  filterText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  inactiveFilterText: {
+    color: '#9CA3AF',
+  },
+  levelDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+});

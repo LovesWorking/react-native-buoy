@@ -6,7 +6,8 @@ import { getEntries } from '../logger';
 import { ConsoleTransportEntry } from '../logger/types';
 
 import { formatRelativeTime, LogDumpModalContent } from './log-dump';
-export function LogDumpSection() {
+
+export function LogDumpSectionNew() {
   const [entries, setEntries] = useState<ConsoleTransportEntry[]>([]);
 
   // Function to calculate entries

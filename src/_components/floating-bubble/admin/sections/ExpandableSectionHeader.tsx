@@ -1,12 +1,9 @@
-import { TouchableOpacity, View } from 'react-native';
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { faChevronDown, faChevronRight } from '@fortawesome/pro-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-
-import { Text } from '~/components/ui/text';
+import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
+import type { LucideIcon } from "lucide-react-native";
+import { ChevronDown, ChevronRight } from "lucide-react-native";
 
 interface ExpandableSectionHeaderProps {
-  icon: IconProp;
+  icon: LucideIcon;
   iconColor: string;
   iconBackgroundColor: string;
   title: string;
@@ -16,7 +13,7 @@ interface ExpandableSectionHeaderProps {
 }
 
 export function ExpandableSectionHeader({
-  icon,
+  icon: Icon,
   iconColor,
   iconBackgroundColor,
   title,
@@ -29,22 +26,62 @@ export function ExpandableSectionHeader({
       sentry-label="ignore expand section button"
       accessibilityRole="button"
       onPress={onPress}
-      className="mb-4"
+      style={styles.button}
     >
-      <View className="flex-row items-start">
-        <View className={`${iconBackgroundColor} p-3 rounded-xl`}>
-          <FontAwesomeIcon icon={icon} size={20} color={iconColor} />
+      <View style={styles.container}>
+        <View
+          style={[
+            styles.iconContainer,
+            { backgroundColor: iconBackgroundColor },
+          ]}
+        >
+          <Icon size={20} color={iconColor} />
         </View>
-        <View className="flex-1 mx-4">
-          <Text className="text-lg font-medium text-white mb-1">{title}</Text>
-          <Text className="text-base text-gray-400" numberOfLines={2}>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle} numberOfLines={2}>
             {subtitle}
           </Text>
         </View>
-        <View className="pt-1.5">
-          <FontAwesomeIcon icon={isExpanded ? faChevronDown : faChevronRight} size={18} color="#4B5563" />
+        <View style={styles.chevronContainer}>
+          {isExpanded ? (
+            <ChevronDown size={18} color="#4B5563" />
+          ) : (
+            <ChevronRight size={18} color="#4B5563" />
+          )}
         </View>
       </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    marginBottom: 16,
+  },
+  container: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  iconContainer: {
+    padding: 12,
+    borderRadius: 12,
+  },
+  textContainer: {
+    flex: 1,
+    marginHorizontal: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "white",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#9CA3AF",
+  },
+  chevronContainer: {
+    paddingTop: 6,
+  },
+});

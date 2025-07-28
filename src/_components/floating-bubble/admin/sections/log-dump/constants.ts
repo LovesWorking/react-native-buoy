@@ -1,6 +1,6 @@
 // Custom theme for JSONTree - matches app's color palette and admin modal design
 export const jsonTreeTheme = {
-  scheme: 'gloo-admin',
+  scheme: 'lovesworking',
   // Base colors - using app's dark theme palette
   base00: 'transparent', // background - transparent to blend with container
   base01: '#1a1a1a', // darker background

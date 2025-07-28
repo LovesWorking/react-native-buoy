@@ -1,35 +1,43 @@
-import { ScrollView, TouchableOpacity, View } from 'react-native';
-import JSONTree from 'react-native-json-tree';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { faChevronLeft } from '@fortawesome/pro-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import JSONTree from "react-native-json-tree";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ChevronLeft } from "lucide-react-native";
 
-import { Text } from '~/components/ui/text';
+import { ConsoleTransportEntry } from "../../logger/types";
 
-import { ConsoleTransportEntry } from '~/lib/utils/logger/types';
+import { jsonTreeTheme } from "./constants";
+import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 
-import { jsonTreeTheme } from './constants';
-import { formatTimestamp, getLevelColor, getTypeColor, getTypeIcon } from './utils';
-
-// Log Detail View Component
-export const LogDetailView = ({ entry, onBack }: { entry: ConsoleTransportEntry; onBack: () => void }) => {
+export const LogDetailView = ({
+  entry,
+  onBack,
+}: {
+  entry: ConsoleTransportEntry;
+  onBack: () => void;
+}) => {
   const insets = useSafeAreaInsets();
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-black/20">
+      <View style={styles.header}>
         <TouchableOpacity
           sentry-label="ignore back to log list"
           accessibilityLabel="Back to log list"
           accessibilityHint="Return to log entries list"
           onPress={onBack}
-          className="flex-row items-center space-x-2"
+          style={styles.backButton}
         >
-          <FontAwesomeIcon icon={faChevronLeft} size={16} color="#8B5CF6" />
-          <Text className="text-purple-400 font-medium">Back</Text>
+          <ChevronLeft size={16} color="#8B5CF6" />
+          <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text className="text-white font-semibold text-lg flex-1 text-center mr-16">Log Details</Text>
+        <Text style={styles.headerTitle}>Log Details</Text>
       </View>
 
       {/* Scrollable Content */}
@@ -37,47 +45,52 @@ export const LogDetailView = ({ entry, onBack }: { entry: ConsoleTransportEntry;
         sentry-label="ignore log entries scroll view"
         accessibilityLabel="Log entries scroll view"
         accessibilityHint="Scroll through log entries"
-        className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 16 + insets.bottom }}
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 16 + insets.bottom },
+        ]}
         showsVerticalScrollIndicator={true}
       >
         {/* Level and timestamp */}
-        <View className="flex-row items-center justify-between mb-4">
-          <View className="flex-row items-center space-x-2">
+        <View style={styles.metaRow}>
+          <View style={styles.metaLeft}>
             {/* Type indicator */}
-            <View className="flex-row items-center bg-white/[0.05] px-2 py-1 rounded-md mr-3">
-              <FontAwesomeIcon icon={getTypeIcon(entry.type)} size={14} color={getTypeColor(entry.type)} />
-              <Text className="text-sm font-medium ml-1.5" style={{ color: getTypeColor(entry.type) }}>
+            <View style={styles.typeIndicator}>
+              {(() => {
+                const IconComponent = getTypeIcon(entry.type);
+                return (
+                  <IconComponent size={14} color={getTypeColor(entry.type)} />
+                );
+              })()}
+              <Text
+                style={[styles.typeText, { color: getTypeColor(entry.type) }]}
+              >
                 {entry.type}
               </Text>
             </View>
 
             {/* Level indicator */}
-            <View
-              className={`w-3 h-3 rounded-full mr-2 ${
-                entry.level === 'error'
-                  ? 'bg-red-400'
-                  : entry.level === 'warn'
-                    ? 'bg-yellow-400'
-                    : entry.level === 'info'
-                      ? 'bg-cyan-400'
-                      : entry.level === 'debug'
-                        ? 'bg-blue-400'
-                        : 'bg-gray-400'
-              }`}
-            />
-            <Text className={`text-sm font-mono font-medium ${getLevelColor(entry.level)}`}>
+            <View style={[styles.levelDot, getLevelDotStyle(entry.level)]} />
+            <Text
+              style={[
+                styles.levelText,
+                { color: getLevelTextColor(entry.level) },
+              ]}
+            >
               {entry.level.toUpperCase()}
             </Text>
           </View>
-          <Text className="text-gray-400 text-sm font-mono">{formatTimestamp(entry.timestamp)}</Text>
+          <Text style={styles.timestamp}>
+            {formatTimestamp(entry.timestamp)}
+          </Text>
         </View>
 
         {/* Message */}
-        <View className="mb-6">
-          <Text className="text-gray-400 text-xs font-medium mb-3">MESSAGE</Text>
-          <View className="bg-white/[0.02] p-4 rounded-lg border border-white/[0.05]">
-            <Text className="text-white text-base leading-6" selectable>
+        <View style={styles.messageSection}>
+          <Text style={styles.sectionLabel}>MESSAGE</Text>
+          <View style={styles.messageContainer}>
+            <Text style={styles.messageText} selectable>
               {String(entry.message)}
             </Text>
           </View>
@@ -85,15 +98,15 @@ export const LogDetailView = ({ entry, onBack }: { entry: ConsoleTransportEntry;
 
         {/* Metadata if it exists */}
         {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-          <View className="mb-6">
-            <Text className="text-gray-400 text-xs font-medium mb-3">METADATA</Text>
-            <View className="bg-white/[0.02] p-1 rounded-lg border border-white/[0.05]">
+          <View style={styles.metadataSection}>
+            <Text style={styles.sectionLabel}>METADATA</Text>
+            <View style={styles.jsonContainer}>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={true}
                 sentry-label="ignore metadata horizontal scroll"
               >
-                <View className="flex-1">
+                <View style={styles.jsonContent}>
                   <JSONTree
                     data={entry.metadata}
                     theme={jsonTreeTheme}
@@ -108,17 +121,21 @@ export const LogDetailView = ({ entry, onBack }: { entry: ConsoleTransportEntry;
         )}
 
         {/* Debug info */}
-        <View>
-          <Text className="text-gray-400 text-xs font-medium mb-3">DEBUG INFO</Text>
-          <View className="bg-white/[0.02] p-1 rounded-lg border border-white/[0.05]">
+        <View style={styles.debugSection}>
+          <Text style={styles.sectionLabel}>DEBUG INFO</Text>
+          <View style={styles.jsonContainer}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={true}
               sentry-label="ignore debug info horizontal scroll"
             >
-              <View className="flex-1">
+              <View style={styles.jsonContent}>
                 <JSONTree
-                  data={{ id: entry.id, level: entry.level, timestamp: entry.timestamp }}
+                  data={{
+                    id: entry.id,
+                    level: entry.level,
+                    timestamp: entry.timestamp,
+                  }}
                   theme={jsonTreeTheme}
                   invertTheme={false}
                   hideRoot
@@ -132,3 +149,150 @@ export const LogDetailView = ({ entry, onBack }: { entry: ConsoleTransportEntry;
     </View>
   );
 };
+
+const getLevelDotStyle = (level: string) => {
+  switch (level) {
+    case "error":
+      return { backgroundColor: "#F87171" }; // red-400
+    case "warn":
+      return { backgroundColor: "#FBBF24" }; // yellow-400
+    case "info":
+      return { backgroundColor: "#22D3EE" }; // cyan-400
+    case "debug":
+      return { backgroundColor: "#60A5FA" }; // blue-400
+    default:
+      return { backgroundColor: "#9CA3AF" }; // gray-400
+  }
+};
+
+const getLevelTextColor = (level: string) => {
+  switch (level) {
+    case "error":
+      return "#F87171"; // red-400
+    case "warn":
+      return "#FBBF24"; // yellow-400
+    case "info":
+      return "#22D3EE"; // cyan-400
+    case "debug":
+      return "#60A5FA"; // blue-400
+    default:
+      return "#9CA3AF"; // gray-400
+  }
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  backText: {
+    color: "#A78BFA",
+    fontWeight: "500",
+  },
+  headerTitle: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+    flex: 1,
+    textAlign: "center",
+    marginRight: 64,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  metaLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  typeIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  typeText: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginLeft: 6,
+  },
+  levelDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  levelText: {
+    fontSize: 14,
+    fontFamily: "monospace",
+    fontWeight: "500",
+  },
+  timestamp: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    fontFamily: "monospace",
+  },
+  messageSection: {
+    marginBottom: 24,
+  },
+  metadataSection: {
+    marginBottom: 24,
+  },
+  debugSection: {
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    fontWeight: "500",
+    marginBottom: 12,
+  },
+  messageContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  messageText: {
+    color: "white",
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  jsonContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    padding: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  jsonContent: {
+    flex: 1,
+  },
+});

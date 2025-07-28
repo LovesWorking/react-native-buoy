@@ -1,65 +1,159 @@
-import { TouchableOpacity, View } from 'react-native';
-import { faChevronRight } from '@fortawesome/pro-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { ListRenderItem } from '@shopify/flash-list';
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ListRenderItem } from "@shopify/flash-list";
+import { ChevronRight } from "lucide-react-native";
 
-import { Text } from '~/components/ui/text';
+import { ConsoleTransportEntry } from "../../logger/types";
 
-import { ConsoleTransportEntry } from '~/lib/utils/logger/types';
+import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 
-import { formatTimestamp, getLevelColor, getTypeColor, getTypeIcon } from './utils';
-
-// Stable render function outside component
-export const renderLogEntry: ListRenderItem<ConsoleTransportEntry> = ({ item: entry, extraData }) => {
+export const renderLogEntry: ListRenderItem<ConsoleTransportEntry> = ({
+  item: entry,
+  extraData,
+}) => {
   return (
-    <View className="bg-white/[0.03] rounded-lg overflow-hidden mb-2 mx-4">
+    <View style={styles.container}>
       <TouchableOpacity
         sentry-label={`ignore view log entry ${entry.id} details`}
         accessibilityLabel={`Log entry: ${entry.message}`}
         accessibilityHint="View full log entry details"
         onPress={() => extraData?.selectEntry(entry)}
-        className="p-4"
+        style={styles.touchable}
       >
         {/* Header row with type, level and time */}
-        <View className="flex-row items-start justify-between mb-2">
-          <View className="flex-row items-center space-x-2">
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
             {/* Type indicator */}
-            <View className="flex-row items-center bg-white/[0.05] px-2 py-1 rounded-md mr-2">
-              <FontAwesomeIcon icon={getTypeIcon(entry.type)} size={12} color={getTypeColor(entry.type)} />
-              <Text className="text-xs font-medium ml-1.5" style={{ color: getTypeColor(entry.type) }}>
+            <View style={styles.typeIndicator}>
+              {(() => {
+                const IconComponent = getTypeIcon(entry.type);
+                return (
+                  <IconComponent size={12} color={getTypeColor(entry.type)} />
+                );
+              })()}
+              <Text
+                style={[styles.typeText, { color: getTypeColor(entry.type) }]}
+              >
                 {entry.type}
               </Text>
             </View>
 
             {/* Level indicator */}
-            <View
-              className={`w-2 h-2 rounded-full mr-2 ${
-                entry.level === 'error'
-                  ? 'bg-red-400'
-                  : entry.level === 'warn'
-                    ? 'bg-yellow-400'
-                    : entry.level === 'info'
-                      ? 'bg-cyan-400'
-                      : entry.level === 'debug'
-                        ? 'bg-blue-400'
-                        : 'bg-gray-400'
-              }`}
-            />
-            <Text className={`text-xs font-mono font-medium ${getLevelColor(entry.level)}`}>
+            <View style={[styles.levelDot, getLevelDotStyle(entry.level)]} />
+            <Text
+              style={[
+                styles.levelText,
+                { color: getLevelTextColor(entry.level) },
+              ]}
+            >
               {entry.level.toUpperCase()}
             </Text>
           </View>
-          <View className="flex-row items-center space-x-2">
-            <Text className="text-gray-500 text-xs font-mono">{formatTimestamp(entry.timestamp)}</Text>
-            <FontAwesomeIcon icon={faChevronRight} size={12} color="#6B7280" />
+          <View style={styles.headerRight}>
+            <Text style={styles.timestamp}>
+              {formatTimestamp(entry.timestamp)}
+            </Text>
+            <ChevronRight size={12} color="#6B7280" />
           </View>
         </View>
 
         {/* Message preview */}
-        <Text className="text-white text-sm leading-5" numberOfLines={3}>
+        <Text style={styles.message} numberOfLines={3}>
           {String(entry.message)}
         </Text>
       </TouchableOpacity>
     </View>
   );
 };
+
+const getLevelDotStyle = (level: string) => {
+  switch (level) {
+    case "error":
+      return { backgroundColor: "#F87171" }; // red-400
+    case "warn":
+      return { backgroundColor: "#FBBF24" }; // yellow-400
+    case "info":
+      return { backgroundColor: "#22D3EE" }; // cyan-400
+    case "debug":
+      return { backgroundColor: "#60A5FA" }; // blue-400
+    default:
+      return { backgroundColor: "#9CA3AF" }; // gray-400
+  }
+};
+
+const getLevelTextColor = (level: string) => {
+  switch (level) {
+    case "error":
+      return "#F87171"; // red-400
+    case "warn":
+      return "#FBBF24"; // yellow-400
+    case "info":
+      return "#22D3EE"; // cyan-400
+    case "debug":
+      return "#60A5FA"; // blue-400
+    default:
+      return "#9CA3AF"; // gray-400
+  }
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 8,
+    overflow: "hidden",
+    marginBottom: 8,
+    marginHorizontal: 16,
+  },
+  touchable: {
+    padding: 16,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  typeIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  typeText: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginLeft: 6,
+  },
+  levelDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  levelText: {
+    fontSize: 12,
+    fontFamily: "monospace",
+    fontWeight: "500",
+  },
+  timestamp: {
+    color: "#6B7280",
+    fontSize: 12,
+    fontFamily: "monospace",
+  },
+  message: {
+    color: "white",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});

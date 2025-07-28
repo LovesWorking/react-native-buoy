@@ -6,7 +6,8 @@ import { getEntries } from '../logger';
 import { ConsoleTransportEntry } from '../logger/types';
 
 import { formatRelativeTime, LogDumpModalContent } from './log-dump';
-export function LogDumpSection() {
+
+export function SentryLogDumpSection() {
   const [entries, setEntries] = useState<ConsoleTransportEntry[]>([]);
 
   // Function to calculate entries
@@ -36,8 +37,8 @@ export function LogDumpSection() {
       icon={FileText}
       iconColor="#8B5CF6"
       iconBackgroundColor="rgba(139, 92, 246, 0.1)"
-      title="Log Dump"
-      subtitle={`${entries.length} entries • Last ${entries.length > 0 ? formatRelativeTime(entries[0]?.timestamp) : 'never'}`}
+      title="Sentry Logs"
+      subtitle={`${entries.length} events • Last ${entries.length > 0 ? formatRelativeTime(entries[0]?.timestamp) : 'never'}`}
       onModalOpen={refreshEntries}
     >
       {(closeModal) => <LogDumpModalContent onClose={closeModal} />}

@@ -1,22 +1,47 @@
-import { View } from 'react-native';
-
-import { Text } from '~/components/ui/text';
+import { StyleSheet, Text, View } from 'react-native';
 
 export const EmptyState = () => (
-  <View className="flex-1 justify-center items-center p-8">
-    <View className="bg-white/[0.03] p-8 rounded-lg border border-white/[0.05]">
-      <Text className="text-gray-500 text-base font-medium text-center mb-2">No log entries found</Text>
-      <Text className="text-gray-600 text-sm text-center">Logs will appear here as the app generates them</Text>
+  <View style={styles.container}>
+    <View style={styles.messageContainer}>
+      <Text style={styles.primaryText}>No log entries found</Text>
+      <Text style={styles.secondaryText}>Logs will appear here as the app generates them</Text>
     </View>
   </View>
 );
 
-// Add EmptyFilterState component
 export const EmptyFilterState = () => (
-  <View className="flex-1 justify-center items-center p-8">
-    <View className="bg-white/[0.03] p-8 rounded-lg border border-white/[0.05]">
-      <Text className="text-gray-500 text-base font-medium text-center mb-2">No matching entries</Text>
-      <Text className="text-gray-600 text-sm text-center">Try adjusting your filters to see more entries</Text>
+  <View style={styles.container}>
+    <View style={styles.messageContainer}>
+      <Text style={styles.primaryText}>No matching entries</Text>
+      <Text style={styles.secondaryText}>Try adjusting your filters to see more entries</Text>
     </View>
   </View>
 );
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  messageContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    padding: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  primaryText: {
+    color: '#6B7280',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  secondaryText: {
+    color: '#4B5563',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+});
