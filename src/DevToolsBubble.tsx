@@ -1,8 +1,6 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  TouchableOpacity,
-  Platform,
   StyleSheet,
   ViewStyle,
   StyleProp,
@@ -12,7 +10,7 @@ import {
 } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import DevTools from "./DevTools";
-import { TanstackLogo } from "./_components/devtools/svgs";
+import { DevToolsBubbleButton } from "./_components/devtools/DevToolsBubbleButton";
 import { ClipboardFunction, CopyContext } from "./context/CopyContext";
 
 interface DevToolsBubbleProps {
@@ -129,20 +127,10 @@ export function DevToolsBubble({
             </Animated.View>
           </QueryClientProvider>
         ) : (
-          <TouchableOpacity
-            onPress={() => {
-              setShowDevTools(true);
-            }}
-            style={[
-              styles.touchableOpacityBase,
-              Platform.OS === "ios"
-                ? styles.touchableOpacityIOS
-                : styles.touchableOpacityAndroid,
-              bubbleStyle,
-            ]}
-          >
-            <TanstackLogo />
-          </TouchableOpacity>
+          <DevToolsBubbleButton
+            onPress={() => setShowDevTools(true)}
+            bubbleStyle={bubbleStyle}
+          />
         )}
       </View>
     </CopyContext.Provider>
@@ -157,27 +145,5 @@ const styles = StyleSheet.create({
     zIndex: 50,
     width: "100%",
     // height is now dynamic, controlled by Animated.Value
-  },
-  touchableOpacityBase: {
-    position: "absolute",
-    right: 1,
-    zIndex: 50,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 4,
-    borderColor: "#A4C200",
-  },
-  touchableOpacityIOS: {
-    bottom: 96,
-  },
-  touchableOpacityAndroid: {
-    bottom: 64,
-  },
-  text: {
-    zIndex: 10,
-    color: "white",
-    fontSize: 40,
-    padding: 24,
   },
 });

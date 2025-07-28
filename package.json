@@ -48,6 +48,10 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "fast-deep-equal": "^3.1.3"
+    "@gorhom/bottom-sheet": "^5.1.6",
+    "fast-deep-equal": "^3.1.3",
+    "lucide-react-native": "^0.526.0",
+    "react-native-gesture-handler": "^2.27.2",
+    "react-native-reanimated": "^4.0.0"
   }
 }
