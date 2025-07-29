@@ -1,11 +1,12 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetModal,
   BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
-import { Terminal } from 'lucide-react-native';
+} from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Terminal } from "lucide-react-native";
 
 interface Props {
   bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
@@ -13,7 +14,13 @@ interface Props {
   children?: React.ReactNode;
 }
 
-export function AdminModal({ bottomSheetModalRef, onDismiss, children }: Props) {
+export function AdminModal({
+  bottomSheetModalRef,
+  onDismiss,
+  children,
+}: Props) {
+  const insets = useSafeAreaInsets();
+
   return (
     <BottomSheetModal
       sentry-label="ignore Admin modal"
@@ -26,8 +33,14 @@ export function AdminModal({ bottomSheetModalRef, onDismiss, children }: Props) 
       backdropComponent={CustomBackdrop}
       backgroundStyle={styles.modalBackground}
       handleIndicatorStyle={styles.handleIndicator}
+      style={{
+        marginTop: insets.top,
+      }}
     >
-      <BottomSheetScrollView sentry-label="ignore admin modal scroll view" style={styles.scrollView}>
+      <BottomSheetScrollView
+        sentry-label="ignore admin modal scroll view"
+        style={styles.scrollView}
+      >
         <View style={styles.contentContainer}>
           {/* Header */}
           <View style={styles.header}>
@@ -38,6 +51,9 @@ export function AdminModal({ bottomSheetModalRef, onDismiss, children }: Props) 
           </View>
 
           <View style={styles.sectionsContainer}>{children}</View>
+
+          {/* Bottom safe area padding */}
+          <View style={{ paddingBottom: insets.bottom }} />
         </View>
       </BottomSheetScrollView>
     </BottomSheetModal>
@@ -46,7 +62,13 @@ export function AdminModal({ bottomSheetModalRef, onDismiss, children }: Props) 
 
 function CustomBackdrop(props: BottomSheetBackdropProps) {
   return (
-    <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" opacity={0.8} />
+    <BottomSheetBackdrop
+      {...props}
+      appearsOnIndex={0}
+      disappearsOnIndex={-1}
+      pressBehavior="close"
+      opacity={0.8}
+    />
   );
 }
 
@@ -55,10 +77,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalBackground: {
-    backgroundColor: '#171717',
+    backgroundColor: "#171717",
   },
   handleIndicator: {
-    backgroundColor: '#6B7280',
+    backgroundColor: "#6B7280",
     width: 40,
     height: 5,
   },
@@ -68,21 +90,21 @@ const styles = StyleSheet.create({
   },
   contentContainer: {},
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 32,
     paddingHorizontal: 12,
   },
   iconContainer: {
-    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+    backgroundColor: "rgba(14, 165, 233, 0.1)",
     padding: 12,
     borderRadius: 12,
     marginRight: 16,
   },
   headerText: {
     fontSize: 24,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
     letterSpacing: -0.5,
   },
   sectionsContainer: {
@@ -95,9 +117,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   footerText: {
-    color: '#4B5563',
-    textAlign: 'center',
+    color: "#4B5563",
+    textAlign: "center",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });

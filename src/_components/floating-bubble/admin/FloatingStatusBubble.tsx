@@ -6,19 +6,21 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { BubbleContent } from "./components/BubbleContent";
 import { DragHandle } from "./components/DragHandle";
 import { SentryLogDumpSection } from "./sections/SentryLogDumpSection";
+import { EnvVarsSection } from "./sections/EnvVarsSection";
 import { AdminModal } from "./AdminModal";
 import type { Environment, UserRole } from "./components";
 import { useBubbleWidth, useDragGesture, useWifiState } from "./hooks";
 
 const { width: screenWidth } = Dimensions.get("window");
 
-type DefaultSection = "sentry-logs";
+type DefaultSection = "sentry-logs" | "env-vars";
 
 interface FloatingStatusBubbleProps {
   userRole: UserRole;
   environment: Environment;
   children?: ReactNode; // Additional admin modal content
   removeSections?: DefaultSection[]; // Array of default sections to disable
+  requiredEnvVars?: string[]; // List of required environment variables to check
 }
 
 export function FloatingStatusBubble({
@@ -26,6 +28,7 @@ export function FloatingStatusBubble({
   environment,
   children,
   removeSections = [],
+  requiredEnvVars = [],
 }: FloatingStatusBubbleProps) {
   const adminModalRef = useRef<BottomSheetModal>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -131,6 +134,9 @@ export function FloatingStatusBubble({
       >
         {/* Default sections (conditionally rendered) */}
         {!removeSections.includes("sentry-logs") && <SentryLogDumpSection />}
+        {!removeSections.includes("env-vars") && (
+          <EnvVarsSection requiredEnvVars={requiredEnvVars} />
+        )}
 
         {/* User-provided additional sections */}
         {children}
