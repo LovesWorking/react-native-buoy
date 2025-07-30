@@ -4,8 +4,8 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { BubbleContent } from "./components/BubbleContent";
 import { DragHandle } from "./components/DragHandle";
-import { SentryLogDumpSection } from "./sections/SentryLogDumpSection";
 import { EnvVarsSection } from "./sections/EnvVarsSection";
+import { SentryLogDumpSection } from "./sections/SentryLogDumpSection";
 import { AdminModal } from "./AdminModal";
 import type { Environment, UserRole } from "./components";
 import { useBubbleWidth, useDragGesture, useWifiState } from "./hooks";

@@ -1,29 +1,9 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  Modal,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Terminal, X } from "lucide-react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from "react-native-reanimated";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import { useEffect } from "react";
+import React from 'react';
+import { Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Terminal, X } from 'lucide-react-native';
 
-const { height: screenHeight } = Dimensions.get("window");
+const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 interface Props {
   visible: boolean;
@@ -33,110 +13,67 @@ interface Props {
 
 export function AdminModal({ visible, onDismiss, children }: Props) {
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(screenHeight);
-  const backdropOpacity = useSharedValue(0);
-  const gestureTranslateY = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      backdropOpacity.value = withTiming(0.8, { duration: 300 });
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 90,
-      });
-      gestureTranslateY.value = 0;
-    } else {
-      backdropOpacity.value = withTiming(0, { duration: 200 });
-      translateY.value = withTiming(screenHeight, { duration: 250 }, () => {
-        // Animation completed
-      });
-      gestureTranslateY.value = 0;
-    }
-  }, [visible]);
-
-  // Pan gesture to close modal by swiping down
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      if (event.translationY > 0) {
-        gestureTranslateY.value = event.translationY;
-      }
-    })
-    .onEnd((event) => {
-      const shouldClose = event.translationY > 100 || event.velocityY > 500;
-
-      if (shouldClose) {
-        gestureTranslateY.value = withTiming(screenHeight, { duration: 250 });
-        runOnJS(() => onDismiss?.())();
-      } else {
-        gestureTranslateY.value = withSpring(0, {
-          damping: 20,
-          stiffness: 90,
-        });
-      }
-    });
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
-
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value + gestureTranslateY.value }],
-  }));
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="none"
       onRequestClose={onDismiss}
+      sentry-label="ignore admin modal"
+      animationType="slide"
+      navigationBarTranslucent
+      statusBarTranslucent
     >
-      <GestureHandlerRootView style={styles.container}>
+      <View style={styles.container}>
         {/* Backdrop */}
-        <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
+        <View style={styles.backdrop}>
           <TouchableOpacity
+            accessibilityRole="button"
+            sentry-label="ignore admin modal backdrop"
             style={styles.backdropTouchable}
             onPress={onDismiss}
             activeOpacity={1}
           />
-        </Animated.View>
+        </View>
 
-        {/* Modal Content */}
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-            <View style={styles.modal}>
-              {/* Header - moved to top, no handle indicator */}
-              <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                  <View style={styles.iconContainer}>
-                    <Terminal size={16} color="#0EA5E9" />
-                  </View>
-                  <Text style={styles.headerText}>Debug Console</Text>
+        {/* Modal Content - Full Screen */}
+        <View style={styles.modalContainer}>
+          <View style={[styles.modal, { paddingTop: insets.top }]}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerLeft}>
+                <View style={styles.iconContainer}>
+                  <Terminal size={16} color="#0EA5E9" />
                 </View>
-                <TouchableOpacity
-                  onPress={onDismiss}
-                  style={styles.closeButton}
-                >
-                  <X size={20} color="#9CA3AF" />
-                </TouchableOpacity>
+                <Text style={styles.headerText}>Debug Console</Text>
               </View>
-
-              {/* Content - ScrollView should fill remaining space */}
-              <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.contentContainer}
-                showsVerticalScrollIndicator={false}
-                nestedScrollEnabled={true}
-                scrollEventThrottle={16}
+              <TouchableOpacity
+                accessibilityRole="button"
+                sentry-label="ignore admin modal close button"
+                onPress={onDismiss}
+                style={styles.closeButton}
               >
-                {children}
-
-                {/* Bottom safe area padding */}
-                <View style={{ paddingBottom: insets.bottom + 20 }} />
-              </ScrollView>
+                <X size={20} color="#9CA3AF" />
+              </TouchableOpacity>
             </View>
-          </Animated.View>
-        </GestureDetector>
-      </GestureHandlerRootView>
+
+            {/* Content - ScrollView should fill remaining space */}
+            <ScrollView
+              sentry-label="ignore admin modal scroll view"
+              style={styles.scrollView}
+              contentContainerStyle={styles.contentContainer}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+              scrollEventThrottle={16}
+            >
+              {children}
+
+              {/* Bottom safe area padding */}
+              <View style={{ paddingBottom: insets.bottom + 20 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -147,55 +84,55 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "black",
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   backdropTouchable: {
     flex: 1,
   },
   modalContainer: {
-    position: "absolute",
-    bottom: 0,
+    position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
-    height: screenHeight * 0.9,
+    bottom: 0,
+    width: screenWidth,
+    height: screenHeight,
   },
   modal: {
-    backgroundColor: "#171717",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: "100%",
+    backgroundColor: '#171717',
+    flex: 1,
     paddingVertical: 16,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.06)",
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     paddingBottom: 16,
     marginBottom: 8,
   },
   headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconContainer: {
-    backgroundColor: "rgba(14, 165, 233, 0.1)",
+    backgroundColor: 'rgba(14, 165, 233, 0.1)',
     padding: 12,
     borderRadius: 12,
     marginRight: 16,
   },
   headerText: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontWeight: '600',
+    color: '#FFFFFF',
     letterSpacing: -0.5,
   },
   closeButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: "rgba(156, 163, 175, 0.1)",
+    backgroundColor: 'rgba(156, 163, 175, 0.1)',
   },
   scrollView: {
     flex: 1,

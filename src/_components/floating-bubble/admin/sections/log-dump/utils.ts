@@ -11,64 +11,64 @@ import {
   Settings,
   TriangleAlert,
   User,
-} from "lucide-react-native";
+} from 'lucide-react-native';
 
-import { ConsoleTransportEntry, LogLevel, LogType } from "../../logger/types";
+import { ConsoleTransportEntry, LogLevel, LogType } from '../../logger/types';
 
 // Helper functions - moved outside component to be stable
 export const formatTimestamp = (timestamp: number) => {
   const date = new Date(timestamp);
   return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
     hour12: true,
   });
 };
 
 export const getLevelColor = (level: string) => {
   switch (level) {
-    case "debug":
-      return "text-blue-400";
-    case "info":
-      return "text-cyan-400";
-    case "log":
-      return "text-gray-400";
-    case "warn":
-      return "text-yellow-400";
-    case "error":
-      return "text-red-400";
+    case 'debug':
+      return 'text-blue-400';
+    case 'info':
+      return 'text-cyan-400';
+    case 'log':
+      return 'text-gray-400';
+    case 'warn':
+      return 'text-yellow-400';
+    case 'error':
+      return 'text-red-400';
     default:
-      return "text-gray-400";
+      return 'text-gray-400';
   }
 };
 
 // Add new helper functions for type styling
 export const getTypeIcon = (type: string) => {
   switch (type) {
-    case "Auth":
+    case 'Auth':
       return Key;
-    case "Custom":
+    case 'Custom':
       return Palette;
-    case "Debug":
+    case 'Debug':
       return Bug;
-    case "Error":
+    case 'Error':
       return TriangleAlert;
-    case "Generic":
+    case 'Generic':
       return Box;
-    case "HTTP Request":
+    case 'HTTP Request':
       return Globe;
-    case "Navigation":
+    case 'Navigation':
       return Route;
-    case "Replay":
+    case 'Replay':
       return Play;
-    case "State":
+    case 'State':
       return Database;
-    case "System":
+    case 'System':
       return Settings;
-    case "Touch":
+    case 'Touch':
       return Hand;
-    case "User Action":
+    case 'User Action':
       return User;
     default:
       return Box;
@@ -77,53 +77,47 @@ export const getTypeIcon = (type: string) => {
 
 export const getTypeColor = (type: string) => {
   switch (type) {
-    case "Auth":
-      return "#F59E0B"; // yellow-500
-    case "Custom":
-      return "#06B6D4"; // cyan-500
-    case "Debug":
-      return "#60A5FA"; // blue-400
-    case "Error":
-      return "#F87171"; // red-400
-    case "Generic":
-      return "#94A3B8"; // slate-400
-    case "HTTP Request":
-      return "#2DD4BF"; // teal-400
-    case "Navigation":
-      return "#34D399"; // emerald-400
-    case "Replay":
-      return "#EC4899"; // pink-500
-    case "State":
-      return "#8B5CF6"; // purple-500
-    case "System":
-      return "#A78BFA"; // violet-400
-    case "Touch":
-      return "#FBBF24"; // amber-400
-    case "User Action":
-      return "#FB923C"; // orange-400
+    case 'Auth':
+      return '#F59E0B'; // yellow-500
+    case 'Custom':
+      return '#06B6D4'; // cyan-500
+    case 'Debug':
+      return '#60A5FA'; // blue-400
+    case 'Error':
+      return '#F87171'; // red-400
+    case 'Generic':
+      return '#94A3B8'; // slate-400
+    case 'HTTP Request':
+      return '#2DD4BF'; // teal-400
+    case 'Navigation':
+      return '#34D399'; // emerald-400
+    case 'Replay':
+      return '#EC4899'; // pink-500
+    case 'State':
+      return '#8B5CF6'; // purple-500
+    case 'System':
+      return '#A78BFA'; // violet-400
+    case 'Touch':
+      return '#FBBF24'; // amber-400
+    case 'User Action':
+      return '#FB923C'; // orange-400
     default:
-      return "#94A3B8"; // slate-400
+      return '#94A3B8'; // slate-400
   }
 };
 
 // Add these helper functions before the LogDumpSection component
 export const formatCount = (count: number) => {
-  if (count === 0) return "";
-  if (count > 99) return " (99+)";
+  if (count === 0) return '';
+  if (count > 99) return ' (99+)';
   return ` (${count})`;
 };
 
-export const getTypeCount = (
-  entries: ConsoleTransportEntry[],
-  type: LogType
-) => {
+export const getTypeCount = (entries: ConsoleTransportEntry[], type: LogType) => {
   return formatCount(entries.filter((entry) => entry.type === type).length);
 };
 
-export const getLevelCount = (
-  entries: ConsoleTransportEntry[],
-  level: LogLevel
-) => {
+export const getLevelCount = (entries: ConsoleTransportEntry[], level: LogLevel) => {
   return formatCount(entries.filter((entry) => entry.level === level).length);
 };
 
@@ -135,8 +129,39 @@ export const formatRelativeTime = (timestamp: number) => {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return "now";
+  if (diffMins < 1) return 'now';
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   return `${diffDays}d`;
+};
+
+// Level styling utilities
+export const getLevelDotStyle = (level: string) => {
+  switch (level) {
+    case 'error':
+      return { backgroundColor: '#F87171' }; // red-400
+    case 'warn':
+      return { backgroundColor: '#FBBF24' }; // yellow-400
+    case 'info':
+      return { backgroundColor: '#22D3EE' }; // cyan-400
+    case 'debug':
+      return { backgroundColor: '#60A5FA' }; // blue-400
+    default:
+      return { backgroundColor: '#9CA3AF' }; // gray-400
+  }
+};
+
+export const getLevelTextColor = (level: string) => {
+  switch (level) {
+    case 'error':
+      return '#F87171'; // red-400
+    case 'warn':
+      return '#FBBF24'; // yellow-400
+    case 'info':
+      return '#22D3EE'; // cyan-400
+    case 'debug':
+      return '#60A5FA'; // blue-400
+    default:
+      return '#9CA3AF'; // gray-400
+  }
 };

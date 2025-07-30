@@ -1,35 +1,35 @@
 import { useEffect, useState } from "react";
 import { FileText } from "lucide-react-native";
 
+import {
+  getSentryEvents,
+  SentryEventEntry,
+} from "../../sentry/sentryEventListeners";
 import { ExpandableSectionWithModal } from "../ExpandableSectionWithModal";
-import { getEntries } from "../logger";
-import { ConsoleTransportEntry } from "../logger/types";
 
-import { formatRelativeTime, LogDumpModalContent } from "./log-dump";
+import { formatRelativeTime, SentryEventLogDumpModalContent } from "./log-dump";
 
 export function SentryLogDumpSection() {
-  const [entries, setEntries] = useState<ConsoleTransportEntry[]>([]);
+  const [entries, setEntries] = useState<SentryEventEntry[]>([]);
 
   // Function to calculate entries
   const calculateEntries = () => {
-    const rawEntries = getEntries();
+    const rawEntries = getSentryEvents();
+    // Remove duplicates based on ID
     const uniqueEntries = rawEntries.reduce(
-      (acc: ConsoleTransportEntry[], entry: ConsoleTransportEntry) => {
+      (acc: SentryEventEntry[], entry: SentryEventEntry) => {
         if (
-          !acc.some(
-            (existing: ConsoleTransportEntry) => existing.id === entry.id
-          )
+          !acc.some((existing: SentryEventEntry) => existing.id === entry.id)
         ) {
           acc.push(entry);
         }
         return acc;
       },
-      [] as ConsoleTransportEntry[]
+      [] as SentryEventEntry[]
     );
 
     return uniqueEntries.sort(
-      (a: ConsoleTransportEntry, b: ConsoleTransportEntry) =>
-        b.timestamp - a.timestamp
+      (a: SentryEventEntry, b: SentryEventEntry) => b.timestamp - a.timestamp
     );
   };
 
@@ -52,9 +52,10 @@ export function SentryLogDumpSection() {
         entries.length > 0 ? formatRelativeTime(entries[0]?.timestamp) : "never"
       }`}
       showModalHeader={false}
+      fullScreen={true}
       onModalOpen={refreshEntries}
     >
-      {(closeModal) => <LogDumpModalContent onClose={closeModal} />}
+      {(closeModal) => <SentryEventLogDumpModalContent onClose={closeModal} />}
     </ExpandableSectionWithModal>
   );
 }

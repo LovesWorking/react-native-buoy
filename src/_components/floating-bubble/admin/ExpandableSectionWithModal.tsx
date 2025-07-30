@@ -1,31 +1,12 @@
-import { ReactNode, useState, useEffect } from "react";
-import {
-  Modal,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-  StyleSheet,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from "react-native-reanimated";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import type { LucideIcon } from "lucide-react-native";
-import { X } from "lucide-react-native";
+import { ReactNode, useState } from 'react';
+import { Dimensions, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { LucideIcon } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 
-import { ExpandableSection } from "./sections/ExpandableSection";
+import { ExpandableSection } from './sections/ExpandableSection';
 
-const { height: screenHeight } = Dimensions.get("window");
+const { height: screenHeight } = Dimensions.get('window');
 
 interface ExpandableSectionWithModalProps {
   icon: LucideIcon;
@@ -37,8 +18,9 @@ interface ExpandableSectionWithModalProps {
   modalSnapPoints?: string[]; // Kept for compatibility but not used
   enableDynamicSizing?: boolean; // Kept for compatibility but not used
   modalBackgroundColor?: string; // Default to '#0F0F0F'
-  handleIndicatorColor?: string; // Default to '#6B7280'
+  handleIndicatorColor?: string; // Default to '#6B7280' (kept for compatibility)
   showModalHeader?: boolean; // Default to true, set to false to hide default header
+  fullScreen?: boolean; // Default to false, set to true for full-screen modal
   onModalOpen?: () => void;
   onModalClose?: () => void;
 }
@@ -50,56 +32,20 @@ export function ExpandableSectionWithModal({
   title,
   subtitle,
   children,
-  modalBackgroundColor = "#0F0F0F",
-  handleIndicatorColor = "#6B7280",
+  modalBackgroundColor = '#0F0F0F',
+  handleIndicatorColor = '#6B7280', // Kept for compatibility
   showModalHeader = true,
+  fullScreen = false,
   onModalOpen,
   onModalClose,
 }: ExpandableSectionWithModalProps) {
+  // Suppress unused variable warning - kept for compatibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unusedHandleIndicatorColor = handleIndicatorColor;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(screenHeight);
-  const backdropOpacity = useSharedValue(0);
-  const gestureTranslateY = useSharedValue(0);
-
-  useEffect(() => {
-    if (isModalOpen) {
-      backdropOpacity.value = withTiming(0.8, { duration: 300 });
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 90,
-      });
-      gestureTranslateY.value = 0;
-    } else {
-      backdropOpacity.value = withTiming(0, { duration: 200 });
-      translateY.value = withTiming(screenHeight, { duration: 250 });
-      gestureTranslateY.value = 0;
-    }
-  }, [isModalOpen]);
-
-  // Pan gesture to close modal by swiping down
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      if (event.translationY > 0) {
-        gestureTranslateY.value = event.translationY;
-      }
-    })
-    .onEnd((event) => {
-      const shouldClose = event.translationY > 100 || event.velocityY > 500;
-
-      if (shouldClose) {
-        gestureTranslateY.value = withTiming(screenHeight, { duration: 250 });
-        runOnJS(closeModal)();
-      } else {
-        gestureTranslateY.value = withSpring(0, {
-          damping: 20,
-          stiffness: 90,
-        });
-      }
-    });
 
   const openModal = () => {
-    gestureTranslateY.value = 0;
     setIsModalOpen(true);
     onModalOpen?.();
   };
@@ -108,14 +54,6 @@ export function ExpandableSectionWithModal({
     setIsModalOpen(false);
     onModalClose?.();
   };
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
-
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value + gestureTranslateY.value }],
-  }));
 
   return (
     <>
@@ -131,73 +69,71 @@ export function ExpandableSectionWithModal({
       </ExpandableSection>
 
       <Modal
+        sentry-label="expandable section modal"
         visible={isModalOpen}
         transparent
-        animationType="none"
+        animationType="slide"
         onRequestClose={closeModal}
       >
-        <GestureHandlerRootView style={styles.container}>
+        <View style={styles.container}>
           {/* Backdrop */}
-          <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
+          <View style={styles.backdrop}>
             <TouchableOpacity
+              sentry-label="modal backdrop close"
+              accessibilityRole="button"
               style={styles.backdropTouchable}
               onPress={closeModal}
               activeOpacity={1}
             />
-          </Animated.View>
+          </View>
 
           {/* Modal Content */}
-          <GestureDetector gesture={panGesture}>
-            <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-              <View
-                style={[
-                  styles.modal,
-                  {
-                    backgroundColor: modalBackgroundColor,
-                    paddingTop: showModalHeader ? insets.top : 0,
-                  },
-                ]}
-              >
-                {/* Close Button - moved to top */}
-                {showModalHeader && (
-                  <View style={styles.headerContainer}>
-                    <TouchableOpacity
-                      onPress={closeModal}
-                      style={styles.closeButton}
-                    >
-                      <X size={20} color="#9CA3AF" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {/* Content */}
-                {showModalHeader ? (
-                  <ScrollView
-                    style={styles.scrollView}
-                    contentContainerStyle={styles.contentContainer}
-                    showsVerticalScrollIndicator={false}
+          <View style={fullScreen ? styles.fullScreenModalContainer : styles.modalContainer}>
+            <View
+              style={[
+                fullScreen ? styles.fullScreenModal : styles.modal,
+                {
+                  backgroundColor: modalBackgroundColor,
+                  paddingTop: fullScreen ? insets.top : showModalHeader ? insets.top : 0,
+                },
+              ]}
+            >
+              {/* Close Button - moved to top */}
+              {showModalHeader && (
+                <View style={styles.headerContainer}>
+                  <TouchableOpacity
+                    sentry-label="modal close button"
+                    accessibilityRole="button"
+                    onPress={closeModal}
+                    style={styles.closeButton}
                   >
-                    <View style={styles.content}>
-                      {typeof children === "function"
-                        ? children(closeModal)
-                        : children}
-                    </View>
+                    <X size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              )}
 
-                    {/* Bottom safe area padding */}
-                    <View style={{ paddingBottom: insets.bottom + 20 }} />
-                  </ScrollView>
-                ) : (
-                  /* Direct content without ScrollView wrapper when no header */
-                  <View style={styles.directContent}>
-                    {typeof children === "function"
-                      ? children(closeModal)
-                      : children}
-                  </View>
-                )}
-              </View>
-            </Animated.View>
-          </GestureDetector>
-        </GestureHandlerRootView>
+              {/* Content */}
+              {showModalHeader ? (
+                <ScrollView
+                  sentry-label="modal content scroll"
+                  style={styles.scrollView}
+                  contentContainerStyle={styles.contentContainer}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <View style={styles.content}>{typeof children === 'function' ? children(closeModal) : children}</View>
+
+                  {/* Bottom safe area padding */}
+                  <View style={{ paddingBottom: insets.bottom + 20 }} />
+                </ScrollView>
+              ) : (
+                /* Direct content without ScrollView wrapper when no header */
+                <View style={styles.directContent}>
+                  {typeof children === 'function' ? children(closeModal) : children}
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
       </Modal>
     </>
   );
@@ -209,17 +145,25 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "black",
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   backdropTouchable: {
     flex: 1,
   },
   modalContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     maxHeight: screenHeight * 0.9,
+  },
+  fullScreenModalContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: screenHeight,
   },
   modal: {
     borderTopLeftRadius: 20,
@@ -227,8 +171,12 @@ const styles = StyleSheet.create({
     minHeight: 200,
     flex: 1,
   },
+  fullScreenModal: {
+    flex: 1,
+    minHeight: screenHeight,
+  },
   headerContainer: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 8,
@@ -236,7 +184,7 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: "rgba(156, 163, 175, 0.1)",
+    backgroundColor: 'rgba(156, 163, 175, 0.1)',
   },
   scrollView: {
     flex: 1,

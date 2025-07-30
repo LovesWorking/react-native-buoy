@@ -1,6 +1,6 @@
-import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
-import type { LucideIcon } from "lucide-react-native";
-import { ChevronDown, ChevronRight } from "lucide-react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
+import { ChevronDown, ChevronRight } from 'lucide-react-native';
 
 interface ExpandableSectionHeaderProps {
   icon: LucideIcon;
@@ -29,12 +29,7 @@ export function ExpandableSectionHeader({
       style={styles.button}
     >
       <View style={styles.container}>
-        <View
-          style={[
-            styles.iconContainer,
-            { backgroundColor: iconBackgroundColor },
-          ]}
-        >
+        <View style={[styles.iconContainer, { backgroundColor: iconBackgroundColor }]}>
           <Icon size={20} color={iconColor} />
         </View>
         <View style={styles.textContainer}>
@@ -44,11 +39,7 @@ export function ExpandableSectionHeader({
           </Text>
         </View>
         <View style={styles.chevronContainer}>
-          {isExpanded ? (
-            <ChevronDown size={18} color="#4B5563" />
-          ) : (
-            <ChevronRight size={18} color="#4B5563" />
-          )}
+          {isExpanded ? <ChevronDown size={18} color="#4B5563" /> : <ChevronRight size={18} color="#4B5563" />}
         </View>
       </View>
     </TouchableOpacity>
@@ -60,8 +51,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   container: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   iconContainer: {
     padding: 12,
@@ -73,13 +64,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: "500",
-    color: "white",
+    fontWeight: '500',
+    color: 'white',
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: "#9CA3AF",
+    color: '#9CA3AF',
   },
   chevronContainer: {
     paddingTop: 6,

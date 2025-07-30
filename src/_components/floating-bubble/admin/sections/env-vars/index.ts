@@ -1,2 +1,2 @@
-export { EnvVarsModalContent } from "./EnvVarsModalContent";
-export { getEnvVarType } from "./envTypeDetector";
+export { getEnvVarType } from './envTypeDetector';
+export { EnvVarsModalContent } from './EnvVarsModalContent';
