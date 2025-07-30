@@ -24,7 +24,7 @@ yarn add your-admin-package
 This package requires these peer dependencies:
 
 ```bash
-npm install @sentry/react-native react-native-safe-area-context lucide-react-native
+npm install react-native-safe-area-context lucide-react-native
 ```
 
 ## 🚀 Quick Start
@@ -43,9 +43,12 @@ export default function App() {
 }
 ```
 
-### With Sentry Integration
+### With Optional Sentry Integration
+
+If you're using Sentry in your app, you can integrate the logger:
 
 ```tsx
+// Only if you have @sentry/react-native installed
 import * as Sentry from "@sentry/react-native";
 import { FloatingStatusBubble, sentryLogger } from "your-admin-package";
 
@@ -161,12 +164,10 @@ Logger for capturing Sentry events in the admin panel.
 
 ```tsx
 class SentryLogger {
-  captureEvent: (event: Sentry.Event) => Sentry.Event;
-  captureBreadcrumb: (
-    breadcrumb: Sentry.Breadcrumb
-  ) => Sentry.Breadcrumb | null;
-  captureTransaction: (event: Sentry.Event) => Sentry.Event;
-  captureSpan: (span: Sentry.Event) => Sentry.Event;
+  captureEvent: (event: SentryEvent) => SentryEvent;
+  captureBreadcrumb: (breadcrumb: SentryBreadcrumb) => SentryBreadcrumb | null;
+  captureTransaction: (event: SentryEvent) => SentryEvent;
+  captureSpan: (span: SentryEvent) => SentryEvent;
 }
 
 // Use the default instance

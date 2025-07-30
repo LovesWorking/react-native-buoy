@@ -1,7 +1,11 @@
-import * as Sentry from "@sentry/react-native";
-
 import { add } from "./logDump";
-import { ConsoleTransportEntry, LogLevel, LogType } from "./types";
+import {
+  ConsoleTransportEntry,
+  LogLevel,
+  LogType,
+  SentryEvent,
+  SentryBreadcrumb,
+} from "./types";
 
 export { LogLevel, LogType };
 
@@ -49,7 +53,7 @@ export class SentryLogger {
   /**
    * Capture a Sentry transaction before it's sent
    */
-  captureTransaction = (event: Sentry.Event) => {
+  captureTransaction = (event: SentryEvent) => {
     this.logSentryEvent("transaction", event as unknown as SentryEventData);
     return event;
   };
@@ -57,7 +61,7 @@ export class SentryLogger {
   /**
    * Capture a Sentry span before it's sent
    */
-  captureSpan = (span: Sentry.Event) => {
+  captureSpan = (span: SentryEvent) => {
     this.logSentryEvent("span", span as unknown as SentryEventData);
     return span;
   };
@@ -65,7 +69,7 @@ export class SentryLogger {
   /**
    * Capture a Sentry event before it's sent
    */
-  captureEvent = (event: Sentry.Event) => {
+  captureEvent = (event: SentryEvent) => {
     this.logSentryEvent("event", event as unknown as SentryEventData);
     return event;
   };
@@ -87,7 +91,7 @@ export class SentryLogger {
   /**
    * Capture a Sentry breadcrumb before it's added
    */
-  captureBreadcrumb = (breadcrumb: Sentry.Breadcrumb) => {
+  captureBreadcrumb = (breadcrumb: SentryBreadcrumb) => {
     // Get current pathname from global tracker if available
     let pathname = "unknown";
     try {

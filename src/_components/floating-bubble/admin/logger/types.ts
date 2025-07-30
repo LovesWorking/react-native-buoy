@@ -1,33 +1,77 @@
-import type * as Sentry from '@sentry/react-native';
-
 export enum LogLevel {
-  Debug = 'debug',
-  Info = 'info',
-  Log = 'log',
-  Warn = 'warn',
-  Error = 'error',
+  Debug = "debug",
+  Info = "info",
+  Log = "log",
+  Warn = "warn",
+  Error = "error",
 }
 
 export enum LogType {
-  Auth = 'Auth',
-  Custom = 'Custom',
-  Debug = 'Debug',
-  Error = 'Error',
-  Generic = 'Generic',
-  HTTPRequest = 'HTTP Request',
-  Navigation = 'Navigation',
-  Replay = 'Replay',
-  State = 'State',
-  System = 'System',
-  Touch = 'Touch',
-  UserAction = 'User Action',
+  Auth = "Auth",
+  Custom = "Custom",
+  Debug = "Debug",
+  Error = "Error",
+  Generic = "Generic",
+  HTTPRequest = "HTTP Request",
+  Navigation = "Navigation",
+  Replay = "Replay",
+  State = "State",
+  System = "System",
+  Touch = "Touch",
+  UserAction = "User Action",
 }
 
-export type Transport = (level: LogLevel, message: string | Error, metadata: Metadata, timestamp: number) => void;
+export type Transport = (
+  level: LogLevel,
+  message: string | Error,
+  metadata: Metadata,
+  timestamp: number
+) => void;
 
 /**
- * A union of some of Sentry's breadcrumb properties as well as Sentry's
- * `captureException` parameter, `CaptureContext`.
+ * Event object structure that matches Sentry Event format
+ */
+export interface SentryEvent {
+  event_id?: string;
+  message?: string | { message?: string; params?: unknown[] };
+  level?: string;
+  platform?: string;
+  logger?: string;
+  timestamp?: number;
+  environment?: string;
+  release?: string;
+  dist?: string;
+  tags?: Record<string, string | number | boolean>;
+  extra?: Record<string, unknown>;
+  user?: Record<string, unknown>;
+  contexts?: Record<string, unknown>;
+  breadcrumbs?: SentryBreadcrumb[];
+  fingerprint?: string[];
+  exception?: {
+    values?: Array<{
+      type?: string;
+      value?: string;
+      stacktrace?: unknown;
+    }>;
+  };
+  [key: string]: unknown;
+}
+
+/**
+ * Breadcrumb object structure that matches Sentry Breadcrumb format
+ */
+export interface SentryBreadcrumb {
+  timestamp?: number;
+  message?: string;
+  category?: string;
+  level?: string;
+  type?: string;
+  data?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/**
+ * Metadata type that encompasses breadcrumb properties and capture context
  */
 export type Metadata = {
   /**
@@ -35,7 +79,17 @@ export type Metadata = {
    *
    * @see https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types
    */
-  type?: 'default' | 'debug' | 'error' | 'navigation' | 'http' | 'info' | 'query' | 'transaction' | 'ui' | 'user';
+  type?:
+    | "default"
+    | "debug"
+    | "error"
+    | "navigation"
+    | "http"
+    | "info"
+    | "query"
+    | "transaction"
+    | "ui"
+    | "user";
 
   /**
    * Sentry breadcrumb category - used to determine the LogType
@@ -43,12 +97,17 @@ export type Metadata = {
   category?: string;
 
   /**
-   * Passed through to `Sentry.captureException`
-   *
-   * @see https://github.com/getsentry/sentry-javascript/blob/903addf9a1a1534a6cb2ba3143654b918a86f6dd/packages/types/src/misc.ts#L65
+   * Tags for categorization
    */
   tags?: {
-    [key: string]: number | string | boolean | bigint | symbol | null | undefined;
+    [key: string]:
+      | number
+      | string
+      | boolean
+      | bigint
+      | symbol
+      | null
+      | undefined;
   };
 
   /**
@@ -56,7 +115,7 @@ export type Metadata = {
    * exceptions, or the `data` param on breadcrumbs.
    */
   [key: string]: unknown;
-} & Parameters<typeof Sentry.captureException>[1];
+};
 
 export type ConsoleTransportEntry = {
   id: string;
