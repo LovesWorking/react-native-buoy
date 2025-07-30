@@ -25,88 +25,91 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.headerText}>Actions</Text>
-      <ActionButton
-        disabled={getQueryStatusLabel(query) === "fetching"}
-        onClick={() => {
-          refetch({
-            query,
-          });
-        }}
-        bgColorClass="btnRefetch"
-        text="Refetch"
-        textColorClass="btnRefetch"
-      />
-      <ActionButton
-        disabled={queryStatus === "pending"}
-        onClick={() => {
-          invalidate({ query, queryClient });
-        }}
-        bgColorClass="btnInvalidate"
-        text="Invalidate"
-        textColorClass="btnInvalidate"
-      />
-      <ActionButton
-        disabled={queryStatus === "pending"}
-        onClick={() => {
-          reset({ queryClient, query });
-        }}
-        bgColorClass="btnReset"
-        text="Reset"
-        textColorClass="btnReset"
-      />
-      <ActionButton
-        disabled={getQueryStatusLabel(query) === "fetching"}
-        onClick={() => {
-          remove({ queryClient, query });
-          setSelectedQuery(undefined);
-        }}
-        bgColorClass="btnRemove"
-        text="Remove"
-        textColorClass="btnRemove"
-      />
-      <ActionButton
-        disabled={false}
-        onClick={() => {
-          triggerLoading({ query });
-        }}
-        bgColorClass="btnTriggerLoading"
-        text={
-          query.state.data === undefined ? "Restore Loading" : "Trigger Loading"
-        }
-        textColorClass="btnTriggerLoading"
-      />
-      <ActionButton
-        disabled={queryStatus === "pending"}
-        onClick={() => {
-          triggerError({ query, queryClient });
-        }}
-        bgColorClass="btnTriggerLoadiError"
-        text={queryStatus === "error" ? "Restore" : "Trigger Error"}
-        textColorClass="btnTriggerLoadiError"
-      />
+      <View style={styles.buttonsContainer}>
+        <ActionButton
+          disabled={getQueryStatusLabel(query) === "fetching"}
+          onClick={() => {
+            refetch({
+              query,
+            });
+          }}
+          bgColorClass="btnRefetch"
+          text="Refetch"
+          textColorClass="btnRefetch"
+        />
+        <ActionButton
+          disabled={queryStatus === "pending"}
+          onClick={() => {
+            invalidate({ query, queryClient });
+          }}
+          bgColorClass="btnInvalidate"
+          text="Invalidate"
+          textColorClass="btnInvalidate"
+        />
+        <ActionButton
+          disabled={queryStatus === "pending"}
+          onClick={() => {
+            reset({ queryClient, query });
+          }}
+          bgColorClass="btnReset"
+          text="Reset"
+          textColorClass="btnReset"
+        />
+        <ActionButton
+          disabled={getQueryStatusLabel(query) === "fetching"}
+          onClick={() => {
+            remove({ queryClient, query });
+            setSelectedQuery(undefined);
+          }}
+          bgColorClass="btnRemove"
+          text="Remove"
+          textColorClass="btnRemove"
+        />
+        <ActionButton
+          disabled={false}
+          onClick={() => {
+            triggerLoading({ query });
+          }}
+          bgColorClass="btnTriggerLoading"
+          text={
+            query.state.data === undefined
+              ? "Restore Loading"
+              : "Trigger Loading"
+          }
+          textColorClass="btnTriggerLoading"
+        />
+        <ActionButton
+          disabled={queryStatus === "pending"}
+          onClick={() => {
+            triggerError({ query, queryClient });
+          }}
+          bgColorClass="btnTriggerLoadiError"
+          text={queryStatus === "error" ? "Restore" : "Trigger Error"}
+          textColorClass="btnTriggerLoadiError"
+        />
+      </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
   container: {
-    minWidth: 50,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    backgroundColor: "#171717",
-    borderRadius: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
-    gap: 8,
-    padding: 12,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    padding: 16,
+    gap: 12,
   },
   headerText: {
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
-    padding: 12,
-    width: "100%",
+    fontSize: 16,
     fontWeight: "600",
-    fontSize: 14,
     color: "#FFFFFF",
     marginBottom: 8,
-    borderRadius: 6,
+    textAlign: "left",
+  },
+  buttonsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
 });

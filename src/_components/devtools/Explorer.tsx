@@ -166,12 +166,37 @@ const ToggleValueButton = ({
   };
 
   return (
-    <TouchableOpacity
-      style={styles.buttonStyle3}
-      aria-label="Toggle value"
-      onPress={handleClick}
-    >
-      <Check checked={value} theme="light" />
+    <TouchableOpacity style={styles.modernToggleButton} onPress={handleClick}>
+      <View style={styles.toggleIconContainer}>
+        <View
+          style={[
+            styles.toggleIconSmall,
+            { backgroundColor: value ? "#22C55E" : "#6B7280" },
+          ]}
+        />
+      </View>
+      <View style={styles.toggleContent}>
+        <Text style={styles.toggleLabel}>{displayValue(value)}</Text>
+      </View>
+      <View
+        style={[
+          styles.toggleBadge,
+          {
+            backgroundColor: value
+              ? "rgba(34, 197, 94, 0.1)"
+              : "rgba(107, 114, 128, 0.1)",
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.toggleBadgeText,
+            { color: value ? "#22C55E" : "#6B7280" },
+          ]}
+        >
+          {value ? "TRUE" : "FALSE"}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -467,16 +492,11 @@ export default function Explorer({
                     </View>
                   )}
                 {valueType === "boolean" && (
-                  <View style={styles.booleanContainer}>
-                    <ToggleValueButton
-                      activeQuery={activeQuery}
-                      dataPath={currentDataPath}
-                      value={value}
-                    />
-                    <Text style={styles.booleanText}>
-                      {displayValue(value)}
-                    </Text>
-                  </View>
+                  <ToggleValueButton
+                    activeQuery={activeQuery}
+                    dataPath={currentDataPath}
+                    value={value}
+                  />
                 )}
               </>
             ) : (
@@ -678,5 +698,59 @@ const styles = StyleSheet.create({
     height: "100%",
     fontWeight: "500",
     fontFamily: "monospace",
+  },
+  modernToggleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+    padding: 12,
+    marginVertical: 2,
+    flex: 1,
+  },
+  toggleIconContainer: {
+    marginRight: 12,
+  },
+  toggleIcon: {
+    padding: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 32,
+    height: 32,
+  },
+  toggleIconSmall: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  toggleContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  toggleLabel: {
+    color: "#F9FAFB",
+    fontSize: 12,
+    fontWeight: "500",
+    fontFamily: "monospace",
+  },
+  toggleStatus: {
+    color: "#9CA3AF",
+    fontSize: 11,
+  },
+  toggleBadge: {
+    marginLeft: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  toggleBadgeText: {
+    fontSize: 10,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
