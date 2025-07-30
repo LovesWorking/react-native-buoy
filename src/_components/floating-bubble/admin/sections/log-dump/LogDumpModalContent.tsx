@@ -225,13 +225,13 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
   };
 
   return (
-    <>
+    <View style={styles.container}>
       {/* Show detail view or list view */}
       {selectedEntry ? (
         <LogDetailView entry={selectedEntry} onBack={goBackToList} />
       ) : (
         <>
-          {/* Enhanced Header */}
+          {/* Header */}
           <View style={styles.headerContainer}>
             {/* Main header */}
             <View style={styles.mainHeader}>
@@ -286,6 +286,7 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
                     <RefreshCw size={16} color="#8B5CF6" />
                   )}
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   sentry-label="ignore close log viewer button"
                   accessibilityRole="button"
@@ -308,36 +309,40 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
               onToggleLevelFilter={toggleLevelFilter}
             />
           </View>
+
           {/* Log Entries */}
-          <FlatList
-            sentry-label="ignore log entries list"
-            ref={flatListRef}
-            data={getFilteredEntries()}
-            renderItem={({ item }) => (
-              <LogEntryItem entry={item} onSelectEntry={selectEntry} />
-            )}
-            keyExtractor={keyExtractor}
-            inverted
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator
-            removeClippedSubviews
-            ListEmptyComponent={
-              getFilteredEntries().length === 0 ? (
-                <EmptyState />
-              ) : (
-                <EmptyFilterState />
-              )
-            }
-            onEndReachedThreshold={0.5}
-          />
-          <View style={{ paddingBottom: insets.bottom + 20 }} />
+          {getFilteredEntries().length === 0 ? (
+            <View style={styles.emptyContainer}>
+              {entries.length === 0 ? <EmptyState /> : <EmptyFilterState />}
+            </View>
+          ) : (
+            <FlatList
+              sentry-label="ignore log entries list"
+              ref={flatListRef}
+              data={getFilteredEntries()}
+              renderItem={({ item }) => (
+                <LogEntryItem entry={item} onSelectEntry={selectEntry} />
+              )}
+              keyExtractor={keyExtractor}
+              inverted
+              style={styles.flatList}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator
+              removeClippedSubviews
+              onEndReachedThreshold={0.5}
+            />
+          )}
         </>
       )}
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 16,
+  },
   headerContainer: {
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.06)",
@@ -395,7 +400,13 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
   },
+  emptyContainer: {
+    flex: 1,
+  },
+  flatList: {
+    flex: 1,
+  },
   listContent: {
-    // paddingTop and paddingBottom will be added dynamically using insets
+    paddingTop: 16,
   },
 });

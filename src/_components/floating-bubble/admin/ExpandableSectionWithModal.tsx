@@ -13,7 +13,13 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
+  runOnJS,
 } from "react-native-reanimated";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import type { LucideIcon } from "lucide-react-native";
 import { X } from "lucide-react-native";
 
@@ -32,6 +38,7 @@ interface ExpandableSectionWithModalProps {
   enableDynamicSizing?: boolean; // Kept for compatibility but not used
   modalBackgroundColor?: string; // Default to '#0F0F0F'
   handleIndicatorColor?: string; // Default to '#6B7280'
+  showModalHeader?: boolean; // Default to true, set to false to hide default header
   onModalOpen?: () => void;
   onModalClose?: () => void;
 }
@@ -45,6 +52,7 @@ export function ExpandableSectionWithModal({
   children,
   modalBackgroundColor = "#0F0F0F",
   handleIndicatorColor = "#6B7280",
+  showModalHeader = true,
   onModalOpen,
   onModalClose,
 }: ExpandableSectionWithModalProps) {
@@ -52,6 +60,7 @@ export function ExpandableSectionWithModal({
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(screenHeight);
   const backdropOpacity = useSharedValue(0);
+  const gestureTranslateY = useSharedValue(0);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -60,13 +69,37 @@ export function ExpandableSectionWithModal({
         damping: 20,
         stiffness: 90,
       });
+      gestureTranslateY.value = 0;
     } else {
       backdropOpacity.value = withTiming(0, { duration: 200 });
       translateY.value = withTiming(screenHeight, { duration: 250 });
+      gestureTranslateY.value = 0;
     }
   }, [isModalOpen]);
 
+  // Pan gesture to close modal by swiping down
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      if (event.translationY > 0) {
+        gestureTranslateY.value = event.translationY;
+      }
+    })
+    .onEnd((event) => {
+      const shouldClose = event.translationY > 100 || event.velocityY > 500;
+
+      if (shouldClose) {
+        gestureTranslateY.value = withTiming(screenHeight, { duration: 250 });
+        runOnJS(closeModal)();
+      } else {
+        gestureTranslateY.value = withSpring(0, {
+          damping: 20,
+          stiffness: 90,
+        });
+      }
+    });
+
   const openModal = () => {
+    gestureTranslateY.value = 0;
     setIsModalOpen(true);
     onModalOpen?.();
   };
@@ -81,7 +114,7 @@ export function ExpandableSectionWithModal({
   }));
 
   const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
+    transform: [{ translateY: translateY.value + gestureTranslateY.value }],
   }));
 
   return (
@@ -103,7 +136,7 @@ export function ExpandableSectionWithModal({
         animationType="none"
         onRequestClose={closeModal}
       >
-        <View style={styles.container}>
+        <GestureHandlerRootView style={styles.container}>
           {/* Backdrop */}
           <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
             <TouchableOpacity
@@ -114,44 +147,57 @@ export function ExpandableSectionWithModal({
           </Animated.View>
 
           {/* Modal Content */}
-          <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-            <View
-              style={[
-                styles.modal,
-                {
-                  backgroundColor: modalBackgroundColor,
-                  paddingTop: insets.top,
-                },
-              ]}
-            >
-              {/* Close Button - moved to top */}
-              <View style={styles.headerContainer}>
-                <TouchableOpacity
-                  onPress={closeModal}
-                  style={styles.closeButton}
-                >
-                  <X size={20} color="#9CA3AF" />
-                </TouchableOpacity>
-              </View>
-
-              {/* Content */}
-              <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.contentContainer}
-                showsVerticalScrollIndicator={false}
+          <GestureDetector gesture={panGesture}>
+            <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
+              <View
+                style={[
+                  styles.modal,
+                  {
+                    backgroundColor: modalBackgroundColor,
+                    paddingTop: showModalHeader ? insets.top : 0,
+                  },
+                ]}
               >
-                <View style={styles.content}>
-                  {typeof children === "function"
-                    ? children(closeModal)
-                    : children}
-                </View>
+                {/* Close Button - moved to top */}
+                {showModalHeader && (
+                  <View style={styles.headerContainer}>
+                    <TouchableOpacity
+                      onPress={closeModal}
+                      style={styles.closeButton}
+                    >
+                      <X size={20} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  </View>
+                )}
 
-                {/* Bottom safe area padding */}
-                <View style={{ paddingBottom: insets.bottom + 20 }} />
-              </ScrollView>
-            </View>
-          </Animated.View>
-        </View>
+                {/* Content */}
+                {showModalHeader ? (
+                  <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.contentContainer}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    <View style={styles.content}>
+                      {typeof children === "function"
+                        ? children(closeModal)
+                        : children}
+                    </View>
+
+                    {/* Bottom safe area padding */}
+                    <View style={{ paddingBottom: insets.bottom + 20 }} />
+                  </ScrollView>
+                ) : (
+                  /* Direct content without ScrollView wrapper when no header */
+                  <View style={styles.directContent}>
+                    {typeof children === "function"
+                      ? children(closeModal)
+                      : children}
+                  </View>
+                )}
+              </View>
+            </Animated.View>
+          </GestureDetector>
+        </GestureHandlerRootView>
       </Modal>
     </>
   );
@@ -199,6 +245,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   content: {
+    flex: 1,
+  },
+  directContent: {
     flex: 1,
   },
 });
