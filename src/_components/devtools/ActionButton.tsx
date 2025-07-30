@@ -46,11 +46,7 @@ export default function ActionButton({
       style={[styles.button, { opacity: disabled ? 0.6 : 1 }]}
     >
       <View style={[styles.dot, { backgroundColor: textColor }]}></View>
-      <Text
-        style={[styles.text, { color: textColor, opacity: disabled ? 0.6 : 1 }]}
-      >
-        {text}
-      </Text>
+      <Text style={[styles.text, { opacity: disabled ? 0.6 : 1 }]}>{text}</Text>
     </TouchableOpacity>
   );
 }
@@ -60,22 +56,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 4,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#d0d5dd",
-    backgroundColor: "#f2f4f7",
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
     height: 32,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
+    minWidth: 80,
   },
   dot: {
     width: 6,
     height: 6,
-    borderRadius: 999,
+    borderRadius: 3,
     marginRight: 6,
   },
   text: {
     fontSize: 12,
-    fontWeight: "400",
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
 });
