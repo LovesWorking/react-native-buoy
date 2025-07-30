@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   View,
   Text,
+  FlatList,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FlashList } from "@shopify/flash-list";
 import {
   FileText,
   FlaskConical,
@@ -24,7 +24,7 @@ import {
   EmptyState,
   LogDetailView,
   LogFilters,
-  renderLogEntry,
+  LogEntryItem,
 } from "./index";
 
 interface LogDumpModalContentProps {
@@ -40,7 +40,7 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
   const [selectedLevels, setSelectedLevels] = useState<Set<LogLevel>>(
     new Set()
   );
-  const flashListRef = useRef<FlashList<ConsoleTransportEntry>>(null);
+  const flatListRef = useRef<FlatList<ConsoleTransportEntry>>(null);
   const insets = useSafeAreaInsets();
 
   // Function to calculate entries
@@ -79,13 +79,11 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
     setSelectedEntry(null);
   };
 
-  const scrollToBottom = () => {
-    if (flashListRef.current && entries.length > 0) {
-      requestAnimationFrame(() => {
-        flashListRef.current?.scrollToIndex({
-          index: 0,
-          animated: true,
-        });
+  const scrollToTop = () => {
+    if (flatListRef.current && entries.length > 0) {
+      flatListRef.current.scrollToIndex({
+        index: 0,
+        animated: true,
       });
     }
   };
@@ -95,7 +93,7 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 300));
       setEntries(calculateEntries());
-      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToTop, 100);
     } finally {
       setIsRefreshing(false);
     }
@@ -143,12 +141,10 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
   useEffect(() => {
     if (entries.length > 0) {
       const timer = setTimeout(() => {
-        if (flashListRef.current && entries.length > 0) {
-          requestAnimationFrame(() => {
-            flashListRef.current?.scrollToIndex({
-              index: 0,
-              animated: true,
-            });
+        if (flatListRef.current && entries.length > 0) {
+          flatListRef.current.scrollToIndex({
+            index: 0,
+            animated: true,
           });
         }
       }, 200);
@@ -313,14 +309,14 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
             />
           </View>
           {/* Log Entries */}
-          <FlashList
+          <FlatList
             sentry-label="ignore log entries list"
-            ref={flashListRef}
+            ref={flatListRef}
             data={getFilteredEntries()}
-            renderItem={renderLogEntry}
-            extraData={{ selectEntry }}
+            renderItem={({ item }) => (
+              <LogEntryItem entry={item} onSelectEntry={selectEntry} />
+            )}
             keyExtractor={keyExtractor}
-            estimatedItemSize={100}
             inverted
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator
@@ -333,10 +329,6 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
               )
             }
             onEndReachedThreshold={0.5}
-            maintainVisibleContentPosition={{
-              minIndexForVisible: 0,
-              autoscrollToTopThreshold: 10,
-            }}
           />
           <View style={{ paddingBottom: insets.bottom + 20 }} />
         </>

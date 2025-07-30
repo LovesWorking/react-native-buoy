@@ -27,7 +27,6 @@ export { ExampleCustomSection } from "./ExampleCustomSection";
 export {
   BasicFloatingStatusBubble,
   CustomOrderFloatingStatusBubble,
-  EnvVarsFloatingStatusBubble,
   MultiSectionFloatingStatusBubble,
   NoSentryLogsFloatingStatusBubble,
   NPMPackageUsageExample,

@@ -1,22 +1,29 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ListRenderItem } from "@shopify/flash-list";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ListRenderItem,
+} from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
 import { ConsoleTransportEntry } from "../../logger/types";
 
 import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 
-export const renderLogEntry: ListRenderItem<ConsoleTransportEntry> = ({
-  item: entry,
-  extraData,
-}) => {
+interface LogEntryItemProps {
+  entry: ConsoleTransportEntry;
+  onSelectEntry: (entry: ConsoleTransportEntry) => void;
+}
+
+export const LogEntryItem = ({ entry, onSelectEntry }: LogEntryItemProps) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity
         sentry-label={`ignore view log entry ${entry.id} details`}
         accessibilityLabel={`Log entry: ${entry.message}`}
         accessibilityHint="View full log entry details"
-        onPress={() => extraData?.selectEntry(entry)}
+        onPress={() => onSelectEntry(entry)}
         style={styles.touchable}
       >
         {/* Header row with type, level and time */}
@@ -63,6 +70,14 @@ export const renderLogEntry: ListRenderItem<ConsoleTransportEntry> = ({
       </TouchableOpacity>
     </View>
   );
+};
+
+export const renderLogEntry: ListRenderItem<ConsoleTransportEntry> = ({
+  item: entry,
+}) => {
+  // We'll need to pass the selectEntry function through FlatList's extraData
+  // and access it in the parent component
+  return <LogEntryItem entry={entry} onSelectEntry={() => {}} />;
 };
 
 const getLevelDotStyle = (level: string) => {
