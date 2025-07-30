@@ -421,6 +421,165 @@ export function EnvVarsSection({ requiredEnvVars = [] }: EnvVarsSectionProps) {
     );
   };
 
+  const renderStatsSection = () => {
+    const {
+      requiredCount,
+      missingCount,
+      wrongValueCount,
+      wrongTypeCount,
+      presentRequiredCount,
+    } = stats;
+
+    const totalIssues = missingCount + wrongValueCount + wrongTypeCount;
+
+    if (requiredCount === 0) return null;
+
+    return (
+      <View style={styles.statsContainer}>
+        {/* Summary Cards */}
+        <View style={styles.summaryCards}>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>TOTAL ISSUES</Text>
+            <Text
+              style={[
+                styles.summaryValue,
+                { color: totalIssues > 0 ? "#EF4444" : "#10B981" },
+              ]}
+            >
+              {totalIssues}
+            </Text>
+          </View>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>REQUIRED VARS</Text>
+            <Text style={styles.summaryValue}>{requiredCount}</Text>
+          </View>
+        </View>
+
+        {/* Status Breakdown */}
+        {(missingCount > 0 ||
+          wrongValueCount > 0 ||
+          wrongTypeCount > 0 ||
+          presentRequiredCount > 0) && (
+          <View style={styles.statusBreakdown}>
+            <Text style={styles.breakdownTitle}>STATUS BREAKDOWN</Text>
+            <View style={styles.statusList}>
+              {presentRequiredCount > 0 && (
+                <View style={styles.statusItem}>
+                  <View style={styles.statusItemRow}>
+                    <View style={styles.statusItemLeft}>
+                      <View style={styles.statusIconValid}>
+                        <CheckCircle2 size={14} color="#10B981" />
+                      </View>
+                      <View style={styles.statusItemInfo}>
+                        <Text style={styles.statusItemLabel}>
+                          Valid Variables
+                        </Text>
+                        <Text style={styles.statusItemDesc}>
+                          Correctly configured
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.statusItemRight}>
+                      <Text style={styles.statusCountValid}>
+                        {presentRequiredCount}
+                      </Text>
+                      <Text style={styles.statusPercentage}>
+                        {((presentRequiredCount / requiredCount) * 100).toFixed(
+                          0
+                        )}
+                        %
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {missingCount > 0 && (
+                <View style={styles.statusItem}>
+                  <View style={styles.statusItemRow}>
+                    <View style={styles.statusItemLeft}>
+                      <View style={styles.statusIconMissing}>
+                        <AlertCircle size={14} color="#EF4444" />
+                      </View>
+                      <View style={styles.statusItemInfo}>
+                        <Text style={styles.statusItemLabel}>
+                          Missing Variables
+                        </Text>
+                        <Text style={styles.statusItemDesc}>
+                          Required but not found
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.statusItemRight}>
+                      <Text style={styles.statusCountMissing}>
+                        {missingCount}
+                      </Text>
+                      <Text style={styles.statusPercentage}>
+                        {((missingCount / requiredCount) * 100).toFixed(0)}%
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {wrongValueCount > 0 && (
+                <View style={styles.statusItem}>
+                  <View style={styles.statusItemRow}>
+                    <View style={styles.statusItemLeft}>
+                      <View style={styles.statusIconWrongValue}>
+                        <XCircle size={14} color="#F97316" />
+                      </View>
+                      <View style={styles.statusItemInfo}>
+                        <Text style={styles.statusItemLabel}>Wrong Values</Text>
+                        <Text style={styles.statusItemDesc}>
+                          Incorrect values set
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.statusItemRight}>
+                      <Text style={styles.statusCountWrongValue}>
+                        {wrongValueCount}
+                      </Text>
+                      <Text style={styles.statusPercentage}>
+                        {((wrongValueCount / requiredCount) * 100).toFixed(0)}%
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {wrongTypeCount > 0 && (
+                <View style={styles.statusItem}>
+                  <View style={styles.statusItemRow}>
+                    <View style={styles.statusItemLeft}>
+                      <View style={styles.statusIconWrongType}>
+                        <XCircle size={14} color="#3B82F6" />
+                      </View>
+                      <View style={styles.statusItemInfo}>
+                        <Text style={styles.statusItemLabel}>Wrong Types</Text>
+                        <Text style={styles.statusItemDesc}>
+                          Incorrect data types
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.statusItemRight}>
+                      <Text style={styles.statusCountWrongType}>
+                        {wrongTypeCount}
+                      </Text>
+                      <Text style={styles.statusPercentage}>
+                        {((wrongTypeCount / requiredCount) * 100).toFixed(0)}%
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <ExpandableSection
       icon={Settings}
@@ -430,6 +589,9 @@ export function EnvVarsSection({ requiredEnvVars = [] }: EnvVarsSectionProps) {
       subtitle={getSubtitle()}
     >
       <View style={styles.container}>
+        {/* Stats Section */}
+        {renderStatsSection()}
+
         {/* Required Variables Section */}
         {renderSection(
           "Required Variables",
@@ -633,5 +795,132 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginTop: 4,
     textAlign: "center",
+  },
+  statsContainer: {
+    marginBottom: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  summaryCards: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  summaryLabel: {
+    color: "#9CA3AF",
+    fontSize: 10,
+    fontWeight: "500",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  summaryValue: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  statusBreakdown: {
+    gap: 16,
+  },
+  breakdownTitle: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    fontWeight: "500",
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  statusList: {
+    gap: 12,
+  },
+  statusItem: {
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  statusItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  statusItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+    minWidth: 0,
+  },
+  statusItemRight: {
+    alignItems: "flex-end",
+  },
+  statusItemInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  statusItemLabel: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  statusItemDesc: {
+    color: "#9CA3AF",
+    fontSize: 12,
+  },
+  statusIconValid: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+  },
+  statusIconMissing: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+  },
+  statusIconWrongValue: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(249, 115, 22, 0.1)",
+  },
+  statusIconWrongType: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+  },
+  statusCountValid: {
+    color: "#10B981",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  statusCountMissing: {
+    color: "#EF4444",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  statusCountWrongValue: {
+    color: "#F97316",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  statusCountWrongType: {
+    color: "#3B82F6",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  statusPercentage: {
+    color: "#6B7280",
+    fontSize: 10,
   },
 });
