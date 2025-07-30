@@ -1,9 +1,9 @@
-import { ReactNode, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import type { LucideIcon } from 'lucide-react-native';
+import { ReactNode, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
+import type { LucideIcon } from "lucide-react-native";
 
-import { ExpandableSectionHeader } from './ExpandableSectionHeader';
+import { ExpandableSectionHeader } from "./ExpandableSectionHeader";
 
 interface ExpandableSectionProps {
   icon: LucideIcon;
@@ -51,7 +51,11 @@ export function ExpandableSection({
 
         <View style={styles.divider} />
 
-        {isExpanded && <Animated.View entering={FadeIn.duration(300)}>{children}</Animated.View>}
+        {isExpanded && (
+          <Animated.View entering={FadeIn.duration(300)}>
+            {children}
+          </Animated.View>
+        )}
       </View>
     </View>
   );
@@ -59,19 +63,21 @@ export function ExpandableSection({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#1F1F1F',
+    backgroundColor: "#1F1F1F",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    overflow: 'hidden',
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    overflow: "hidden",
+    marginHorizontal: 8,
+    marginBottom: 16,
   },
   content: {
     padding: 24,
   },
   divider: {
     height: 1,
-    width: '100%',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    width: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
     marginBottom: 24,
   },
 });

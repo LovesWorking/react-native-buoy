@@ -1,7 +1,6 @@
-import { ReactNode, useRef, useState } from "react";
+import { ReactNode, useState } from "react";
 import { Dimensions, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { BubbleContent } from "./components/BubbleContent";
 import { DragHandle } from "./components/DragHandle";
@@ -30,7 +29,6 @@ export function FloatingStatusBubble({
   removeSections = [],
   requiredEnvVars = [],
 }: FloatingStatusBubbleProps) {
-  const adminModalRef = useRef<BottomSheetModal>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -46,7 +44,6 @@ export function FloatingStatusBubble({
   const handlePress = () => {
     if (!isDragging) {
       setIsModalOpen(true);
-      adminModalRef.current?.present();
     }
   };
 
@@ -128,10 +125,7 @@ export function FloatingStatusBubble({
         </Animated.View>
       )}
 
-      <AdminModal
-        bottomSheetModalRef={adminModalRef}
-        onDismiss={handleModalDismiss}
-      >
+      <AdminModal visible={isModalOpen} onDismiss={handleModalDismiss}>
         {/* Default sections (conditionally rendered) */}
         {!removeSections.includes("sentry-logs") && <SentryLogDumpSection />}
         {!removeSections.includes("env-vars") && (

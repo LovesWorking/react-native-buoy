@@ -24,7 +24,7 @@ yarn add your-admin-package
 This package requires these peer dependencies:
 
 ```bash
-npm install @gorhom/bottom-sheet @sentry/react-native react-native-safe-area-context lucide-react-native nanoid
+npm install @sentry/react-native react-native-safe-area-context lucide-react-native
 ```
 
 ## 🚀 Quick Start
@@ -32,15 +32,12 @@ npm install @gorhom/bottom-sheet @sentry/react-native react-native-safe-area-con
 ### Basic Setup
 
 ```tsx
-import { FloatingStatusBubble } from 'your-admin-package';
+import { FloatingStatusBubble } from "your-admin-package";
 
 export default function App() {
   return (
     <YourApp>
-      <FloatingStatusBubble
-        userRole="admin"
-        environment="dev"
-      />
+      <FloatingStatusBubble userRole="admin" environment="dev" />
     </YourApp>
   );
 }
@@ -49,12 +46,12 @@ export default function App() {
 ### With Sentry Integration
 
 ```tsx
-import * as Sentry from '@sentry/react-native';
-import { FloatingStatusBubble, sentryLogger } from 'your-admin-package';
+import * as Sentry from "@sentry/react-native";
+import { FloatingStatusBubble, sentryLogger } from "your-admin-package";
 
 // Configure Sentry to capture events for the admin panel
 Sentry.init({
-  dsn: 'your-sentry-dsn',
+  dsn: "your-sentry-dsn",
   beforeSend: sentryLogger.captureEvent,
   beforeBreadcrumb: sentryLogger.captureBreadcrumb,
   // ... other Sentry config
@@ -63,10 +60,7 @@ Sentry.init({
 export default function App() {
   return (
     <YourApp>
-      <FloatingStatusBubble
-        userRole="admin"
-        environment="dev"
-      />
+      <FloatingStatusBubble userRole="admin" environment="dev" />
     </YourApp>
   );
 }
@@ -77,11 +71,11 @@ export default function App() {
 ### Adding Custom Admin Sections
 
 ```tsx
-import { 
-  FloatingStatusBubble, 
-  ExpandableSectionWithModal 
-} from 'your-admin-package';
-import { Database } from 'lucide-react-native';
+import {
+  FloatingStatusBubble,
+  ExpandableSectionWithModal,
+} from "your-admin-package";
+import { Database } from "lucide-react-native";
 
 function MyCustomSection() {
   return (
@@ -112,10 +106,10 @@ export default function App() {
 
 ```tsx
 // Remove Sentry logs for production
-<FloatingStatusBubble 
-  userRole="admin" 
+<FloatingStatusBubble
+  userRole="admin"
   environment="prod"
-  removeSections={['sentry-logs']}
+  removeSections={["sentry-logs"]}
 >
   <ProductionOnlySection />
 </FloatingStatusBubble>
@@ -135,9 +129,9 @@ interface FloatingStatusBubbleProps {
   removeSections?: DefaultSection[];
 }
 
-type UserRole = 'admin' | string;
-type Environment = 'local' | 'dev' | 'prod';
-type DefaultSection = 'sentry-logs';
+type UserRole = "admin" | string;
+type Environment = "local" | "dev" | "prod";
+type DefaultSection = "sentry-logs";
 ```
 
 ### ExpandableSectionWithModal
@@ -168,13 +162,15 @@ Logger for capturing Sentry events in the admin panel.
 ```tsx
 class SentryLogger {
   captureEvent: (event: Sentry.Event) => Sentry.Event;
-  captureBreadcrumb: (breadcrumb: Sentry.Breadcrumb) => Sentry.Breadcrumb | null;
+  captureBreadcrumb: (
+    breadcrumb: Sentry.Breadcrumb
+  ) => Sentry.Breadcrumb | null;
   captureTransaction: (event: Sentry.Event) => Sentry.Event;
   captureSpan: (span: Sentry.Event) => Sentry.Event;
 }
 
 // Use the default instance
-import { sentryLogger } from 'your-admin-package';
+import { sentryLogger } from "your-admin-package";
 ```
 
 ## 📋 Usage Patterns
@@ -194,10 +190,10 @@ import { sentryLogger } from 'your-admin-package';
 
 ```tsx
 // Remove dev tools, keep essential admin functions
-<FloatingStatusBubble 
-  userRole="admin" 
+<FloatingStatusBubble
+  userRole="admin"
   environment="prod"
-  removeSections={['sentry-logs']}
+  removeSections={["sentry-logs"]}
 >
   <SystemHealthSection />
   <UserManagementSection />
@@ -208,17 +204,17 @@ import { sentryLogger } from 'your-admin-package';
 
 ```tsx
 function AdminInterface({ environment, userRole }) {
-  const isProduction = environment === 'prod';
-  
+  const isProduction = environment === "prod";
+
   return (
     <FloatingStatusBubble
       userRole={userRole}
       environment={environment}
-      removeSections={isProduction ? ['sentry-logs'] : []}
+      removeSections={isProduction ? ["sentry-logs"] : []}
     >
       {!isProduction && <DevOnlySection />}
       <AlwaysAvailableSection />
-      {userRole === 'admin' && <AdminOnlySection />}
+      {userRole === "admin" && <AdminOnlySection />}
     </FloatingStatusBubble>
   );
 }
@@ -242,22 +238,20 @@ function MyModalContent({ onClose }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+    <View style={{ flex: 1, backgroundColor: "#0F0F0F" }}>
       {/* Header with close button */}
       <View style={headerStyles}>
-        <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>
+        <Text style={{ color: "white", fontSize: 18, fontWeight: "600" }}>
           My Feature
         </Text>
         <TouchableOpacity onPress={onClose}>
           <X size={16} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
-      
+
       {/* Content */}
-      <ScrollView style={{ flex: 1 }}>
-        {/* Your content */}
-      </ScrollView>
-      
+      <ScrollView style={{ flex: 1 }}>{/* Your content */}</ScrollView>
+
       {/* Bottom spacing */}
       <View style={{ paddingBottom: insets.bottom + 20 }} />
     </View>
@@ -272,14 +266,14 @@ function MyModalContent({ onClose }) {
 ```tsx
 const getAdminConfig = (environment: Environment) => {
   switch (environment) {
-    case 'prod':
-      return { removeSections: ['sentry-logs'] as const };
-    case 'dev':
+    case "prod":
+      return { removeSections: ["sentry-logs"] as const };
+    case "dev":
       return { removeSections: [] as const };
-    case 'local':
+    case "local":
       return { removeSections: [] as const };
     default:
-      return { removeSections: ['sentry-logs'] as const };
+      return { removeSections: ["sentry-logs"] as const };
   }
 };
 
@@ -289,7 +283,7 @@ const getAdminConfig = (environment: Environment) => {
   {...getAdminConfig(environment)}
 >
   <MyCustomSection />
-</FloatingStatusBubble>
+</FloatingStatusBubble>;
 ```
 
 ### Custom Section Order
@@ -299,7 +293,7 @@ const getAdminConfig = (environment: Environment) => {
 <FloatingStatusBubble
   userRole="admin"
   environment="dev"
-  removeSections={['sentry-logs']} // Remove from default position
+  removeSections={["sentry-logs"]} // Remove from default position
 >
   <HighPrioritySection />
   <SentryLogDumpSection /> {/* Add back where you want it */}
@@ -333,7 +327,7 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 ### Common Issues
 
-1. **Modal not opening**: Ensure `@gorhom/bottom-sheet` is properly installed and configured
+1. **Modal not opening**: Ensure `react-native-reanimated` is properly installed and configured for animations
 2. **Sentry logs not showing**: Verify `sentryLogger` is configured in Sentry.init()
 3. **Styling issues**: Make sure your app supports the required CSS properties
 4. **TypeScript errors**: Ensure all peer dependencies are installed with correct versions
@@ -342,4 +336,4 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 - GitHub Issues: [Report bugs or request features](https://github.com/your-repo/issues)
 - Documentation: [Full documentation](https://your-docs-site.com)
-- Community: [Discord/Slack community](https://your-community-link.com) 
+- Community: [Discord/Slack community](https://your-community-link.com)

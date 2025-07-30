@@ -4,7 +4,7 @@ A reusable component that combines an expandable section with a bottom sheet mod
 
 ## Features
 
-- **Unified Component**: Combines `ExpandableSection` UI with built-in `BottomSheetModal`
+- **Unified Component**: Combines `ExpandableSection` UI with built-in animated Modal
 - **Customizable Modal**: Configurable snap points, background colors, and behavior
 - **Automatic State Management**: Handles modal open/close state internally
 - **Safe Area Support**: Automatically handles device safe areas
@@ -13,8 +13,8 @@ A reusable component that combines an expandable section with a bottom sheet mod
 ## Basic Usage
 
 ```tsx
-import { ExpandableSectionWithModal } from '~/components/admin';
-import { FileText } from 'lucide-react-native';
+import { ExpandableSectionWithModal } from "~/components/admin";
+import { FileText } from "lucide-react-native";
 
 function MyAdminSection() {
   return (
@@ -33,20 +33,20 @@ function MyAdminSection() {
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `icon` | `LucideIcon` | required | Icon to display in the section header |
-| `iconColor` | `string` | required | Color of the icon |
-| `iconBackgroundColor` | `string` | required | Background color of the icon container |
-| `title` | `string` | required | Title text for the section |
-| `subtitle` | `string` | required | Subtitle text for the section |
-| `children` | `ReactNode` | required | Modal content to display |
-| `modalSnapPoints` | `string[]` | `['100%']` | Bottom sheet snap points |
-| `enableDynamicSizing` | `boolean` | `false` | Enable dynamic modal sizing |
-| `modalBackgroundColor` | `string` | `'#0F0F0F'` | Modal background color |
-| `handleIndicatorColor` | `string` | `'#6B7280'` | Modal handle indicator color |
-| `onModalOpen` | `() => void` | optional | Callback when modal opens |
-| `onModalClose` | `() => void` | optional | Callback when modal closes |
+| Prop                   | Type         | Default     | Description                            |
+| ---------------------- | ------------ | ----------- | -------------------------------------- |
+| `icon`                 | `LucideIcon` | required    | Icon to display in the section header  |
+| `iconColor`            | `string`     | required    | Color of the icon                      |
+| `iconBackgroundColor`  | `string`     | required    | Background color of the icon container |
+| `title`                | `string`     | required    | Title text for the section             |
+| `subtitle`             | `string`     | required    | Subtitle text for the section          |
+| `children`             | `ReactNode`  | required    | Modal content to display               |
+| `modalSnapPoints`      | `string[]`   | `['100%']`  | Bottom sheet snap points               |
+| `enableDynamicSizing`  | `boolean`    | `false`     | Enable dynamic modal sizing            |
+| `modalBackgroundColor` | `string`     | `'#0F0F0F'` | Modal background color                 |
+| `handleIndicatorColor` | `string`     | `'#6B7280'` | Modal handle indicator color           |
+| `onModalOpen`          | `() => void` | optional    | Callback when modal opens              |
+| `onModalClose`         | `() => void` | optional    | Callback when modal closes             |
 
 ## Advanced Usage
 
@@ -55,7 +55,7 @@ function MyAdminSection() {
 ```tsx
 <ExpandableSectionWithModal
   // ... other props
-  modalSnapPoints={['50%', '90%']}
+  modalSnapPoints={["50%", "90%"]}
   enableDynamicSizing={true}
 >
   <MyModalContent />
@@ -80,11 +80,11 @@ function MyAdminSection() {
 <ExpandableSectionWithModal
   // ... other props
   onModalOpen={() => {
-    console.log('Modal opened');
+    console.log("Modal opened");
     // Refresh data, track analytics, etc.
   }}
   onModalClose={() => {
-    console.log('Modal closed');
+    console.log("Modal closed");
     // Cleanup, save state, etc.
   }}
 >
@@ -118,12 +118,10 @@ function MyModalContent({ onClose }: MyModalContentProps) {
         </TouchableOpacity>
         <Text>My Modal Title</Text>
       </View>
-      
+
       {/* Your content here */}
-      <ScrollView>
-        {/* Modal content */}
-      </ScrollView>
-      
+      <ScrollView>{/* Modal content */}</ScrollView>
+
       {/* Bottom spacing */}
       <View style={{ paddingBottom: insets.bottom }} />
     </View>
@@ -134,9 +132,9 @@ function MyModalContent({ onClose }: MyModalContentProps) {
 ## Complete Example: Log Dump Section
 
 ```tsx
-import { useEffect, useState } from 'react';
-import { FileText } from 'lucide-react-native';
-import { ExpandableSectionWithModal } from '~/components/admin';
+import { useEffect, useState } from "react";
+import { FileText } from "lucide-react-native";
+import { ExpandableSectionWithModal } from "~/components/admin";
 
 function LogDumpSection() {
   const [entries, setEntries] = useState([]);
@@ -155,13 +153,10 @@ function LogDumpSection() {
       subtitle={`${entries.length} entries`}
       onModalOpen={refreshEntries}
     >
-      <LogViewerModalContent 
-        entries={entries}
-        onClose={() => {}} 
-      />
+      <LogViewerModalContent entries={entries} onClose={() => {}} />
     </ExpandableSectionWithModal>
   );
 }
 ```
 
-This approach makes it easy to create consistent admin sections while keeping the modal content flexible and reusable. 
+This approach makes it easy to create consistent admin sections while keeping the modal content flexible and reusable.

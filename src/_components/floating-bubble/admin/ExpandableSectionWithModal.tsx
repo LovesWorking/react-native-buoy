@@ -1,9 +1,25 @@
-import { ReactNode, useRef, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal } from '@gorhom/bottom-sheet';
-import type { LucideIcon } from 'lucide-react-native';
+import { ReactNode, useState, useEffect } from "react";
+import {
+  Modal,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+  StyleSheet,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import type { LucideIcon } from "lucide-react-native";
+import { X } from "lucide-react-native";
 
-import { ExpandableSection } from './sections/ExpandableSection';
+import { ExpandableSection } from "./sections/ExpandableSection";
+
+const { height: screenHeight } = Dimensions.get("window");
 
 interface ExpandableSectionWithModalProps {
   icon: LucideIcon;
@@ -12,8 +28,8 @@ interface ExpandableSectionWithModalProps {
   title: string;
   subtitle: string;
   children: ReactNode | ((closeModal: () => void) => ReactNode); // Modal content or function that returns content
-  modalSnapPoints?: string[]; // Default to ['100%']
-  enableDynamicSizing?: boolean; // Default to false
+  modalSnapPoints?: string[]; // Kept for compatibility but not used
+  enableDynamicSizing?: boolean; // Kept for compatibility but not used
   modalBackgroundColor?: string; // Default to '#0F0F0F'
   handleIndicatorColor?: string; // Default to '#6B7280'
   onModalOpen?: () => void;
@@ -27,32 +43,46 @@ export function ExpandableSectionWithModal({
   title,
   subtitle,
   children,
-  modalSnapPoints = ['100%'],
-  enableDynamicSizing = false,
-  modalBackgroundColor = '#0F0F0F',
-  handleIndicatorColor = '#6B7280',
+  modalBackgroundColor = "#0F0F0F",
+  handleIndicatorColor = "#6B7280",
   onModalOpen,
   onModalClose,
 }: ExpandableSectionWithModalProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
+  const translateY = useSharedValue(screenHeight);
+  const backdropOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      backdropOpacity.value = withTiming(0.8, { duration: 300 });
+      translateY.value = withSpring(0, {
+        damping: 20,
+        stiffness: 90,
+      });
+    } else {
+      backdropOpacity.value = withTiming(0, { duration: 200 });
+      translateY.value = withTiming(screenHeight, { duration: 250 });
+    }
+  }, [isModalOpen]);
 
   const openModal = () => {
     setIsModalOpen(true);
-    bottomSheetModalRef.current?.present();
     onModalOpen?.();
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    bottomSheetModalRef.current?.dismiss();
     onModalClose?.();
   };
 
-  const renderBackdrop = (props: BottomSheetBackdropProps) => (
-    <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" opacity={0.8} />
-  );
+  const animatedBackdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
+
+  const animatedModalStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
   return (
     <>
@@ -67,29 +97,108 @@ export function ExpandableSectionWithModal({
         <></>
       </ExpandableSection>
 
-      <BottomSheetModal
-        sentry-label={`ignore ${title.toLowerCase()} modal`}
-        ref={bottomSheetModalRef}
-        snapPoints={modalSnapPoints}
-        index={0}
-        enableDynamicSizing={enableDynamicSizing}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{
-          backgroundColor: modalBackgroundColor,
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: handleIndicatorColor,
-          width: 40,
-          height: 5,
-        }}
-        style={{
-          marginTop: insets.top,
-        }}
-        onDismiss={closeModal}
+      <Modal
+        visible={isModalOpen}
+        transparent
+        animationType="none"
+        onRequestClose={closeModal}
       >
-        {typeof children === 'function' ? children(closeModal) : children}
-      </BottomSheetModal>
+        <View style={styles.container}>
+          {/* Backdrop */}
+          <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
+            <TouchableOpacity
+              style={styles.backdropTouchable}
+              onPress={closeModal}
+              activeOpacity={1}
+            />
+          </Animated.View>
+
+          {/* Modal Content */}
+          <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
+            <View
+              style={[
+                styles.modal,
+                {
+                  backgroundColor: modalBackgroundColor,
+                  paddingTop: insets.top,
+                },
+              ]}
+            >
+              {/* Close Button - moved to top */}
+              <View style={styles.headerContainer}>
+                <TouchableOpacity
+                  onPress={closeModal}
+                  style={styles.closeButton}
+                >
+                  <X size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Content */}
+              <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.contentContainer}
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.content}>
+                  {typeof children === "function"
+                    ? children(closeModal)
+                    : children}
+                </View>
+
+                {/* Bottom safe area padding */}
+                <View style={{ paddingBottom: insets.bottom + 20 }} />
+              </ScrollView>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "black",
+  },
+  backdropTouchable: {
+    flex: 1,
+  },
+  modalContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: screenHeight * 0.9,
+  },
+  modal: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    minHeight: 200,
+    flex: 1,
+  },
+  headerContainer: {
+    alignItems: "flex-end",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(156, 163, 175, 0.1)",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});
