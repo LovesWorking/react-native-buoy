@@ -1,4 +1,25 @@
-import { getClient } from "@sentry/react-native";
+// Safe import for optional Sentry dependency
+let sentryClient: any = null;
+let getSentryClient: (() => any) | null = null;
+let userProvidedGetClient: (() => any) | null = null;
+
+try {
+  // Dynamic import to avoid bundling if not installed
+  const sentry = require("@sentry/react-native");
+  getSentryClient = sentry.getClient;
+} catch (error) {
+  // Sentry not installed - will gracefully degrade
+  getSentryClient = null;
+}
+
+/**
+ * Configure Sentry client provider for dependency injection approach
+ * Use this if you prefer to manually provide the Sentry getClient function
+ * @param getClientFn - Function that returns the Sentry client instance
+ */
+export function configureSentryClient(getClientFn: () => any): void {
+  userProvidedGetClient = getClientFn;
+}
 
 // =============================================================================
 // TYPE DEFINITIONS
@@ -339,7 +360,17 @@ export class SentryEventLogger {
     }
 
     try {
-      const client = getClient();
+      // Use user-provided client function or auto-detected one
+      const clientGetter = userProvidedGetClient || getSentryClient;
+
+      if (!clientGetter) {
+        console.warn(
+          "Sentry SDK not available - event logging disabled. Either install @sentry/react-native or use configureSentryClient()"
+        );
+        return false;
+      }
+
+      const client = clientGetter();
 
       if (!client) {
         console.warn("Sentry client not available for event logging");

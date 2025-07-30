@@ -14,23 +14,57 @@ A comprehensive Sentry event listener and logger for React Native applications. 
 ## Installation
 
 ```bash
-npm install @your-org/sentry-event-logger
+npm install react-native-react-query-devtools
+```
+
+### Optional Sentry Integration
+
+The Sentry integration is **optional**. You have two ways to enable it:
+
+#### Option 1: Install Sentry as a peer dependency (Recommended)
+
+```bash
+npm install @sentry/react-native
+```
+
+The package will automatically detect and use your Sentry installation.
+
+#### Option 2: Dependency Injection (Advanced)
+
+If you prefer manual control or have a custom Sentry setup:
+
+```typescript
+import { configureSentryClient } from "react-native-react-query-devtools";
+import { getClient } from "@sentry/react-native";
+
+// Configure before calling setupSentryEventListeners
+configureSentryClient(getClient);
 ```
 
 ## Basic Usage
 
 ```typescript
-import { setupSentryEventListeners, getSentryEvents, setMaxSentryEvents } from '@your-org/sentry-event-logger';
+import {
+  setupSentryEventListeners,
+  getSentryEvents,
+  setMaxSentryEvents,
+} from "react-native-react-query-devtools";
 
 // Set up the event listeners (call this after Sentry.init())
-setupSentryEventListeners();
+const isEnabled = setupSentryEventListeners();
 
-// Configure max events to store (optional, default is 500)
-setMaxSentryEvents(100);
+if (isEnabled) {
+  console.log("Sentry event logging enabled");
 
-// Get all captured events
-const events = getSentryEvents();
-console.log(`Captured ${events.length} Sentry events`);
+  // Configure max events to store (optional, default is 500)
+  setMaxSentryEvents(100);
+
+  // Get all captured events
+  const events = getSentryEvents();
+  console.log(`Captured ${events.length} Sentry events`);
+} else {
+  console.log("Sentry event logging disabled - Sentry SDK not available");
+}
 ```
 
 ## Integration with Admin UI
@@ -38,16 +72,16 @@ console.log(`Captured ${events.length} Sentry events`);
 This package is designed to work seamlessly with the floating-bubble admin component:
 
 ```typescript
-import * as Sentry from '@sentry/react-native';
-import { 
-  FloatingStatusBubble, 
-  setupSentryEventListeners, 
-  setMaxSentryEvents 
-} from '@your-org/floating-status-bubble';
+import * as Sentry from "@sentry/react-native";
+import {
+  FloatingStatusBubble,
+  setupSentryEventListeners,
+  setMaxSentryEvents,
+} from "@your-org/floating-status-bubble";
 
 // Initialize Sentry first
 Sentry.init({
-  dsn: 'your-dsn-here',
+  dsn: "your-dsn-here",
   // ... other config
 });
 
@@ -72,27 +106,29 @@ function App() {
 ### Setup Functions
 
 #### `setupSentryEventListeners(): boolean`
+
 Sets up all Sentry event listeners. Returns `true` if successful, `false` otherwise.
 
 ```typescript
-import * as Sentry from '@sentry/react-native';
-import { setupSentryEventListeners } from '@your-org/sentry-event-logger';
+import * as Sentry from "@sentry/react-native";
+import { setupSentryEventListeners } from "@your-org/sentry-event-logger";
 
 Sentry.init({
-  dsn: 'your-dsn-here',
+  dsn: "your-dsn-here",
   // ... other config
 });
 
 // Setup event listeners after Sentry initialization
 const success = setupSentryEventListeners();
 if (success) {
-  console.log('Sentry event logger initialized');
+  console.log("Sentry event logger initialized");
 }
 ```
 
 ### Configuration Functions
 
 #### `setMaxSentryEvents(max: number): void`
+
 Configure the maximum number of events to store in memory.
 
 ```typescript
@@ -102,91 +138,107 @@ setMaxSentryEvents(200); // Store up to 200 events
 ### Data Access Functions
 
 #### `getSentryEvents(): SentryEventEntry[]`
+
 Get all stored Sentry events, ordered by most recent first.
 
 #### `getSentryEventsByType(type: SentryEventType): SentryEventEntry[]`
+
 Get events filtered by type.
 
 ```typescript
-import { getSentryEventsByType, SentryEventType } from '@your-org/sentry-event-logger';
+import {
+  getSentryEventsByType,
+  SentryEventType,
+} from "@your-org/sentry-event-logger";
 
 const errorEvents = getSentryEventsByType(SentryEventType.Error);
 const transactionEvents = getSentryEventsByType(SentryEventType.Transaction);
 ```
 
 #### `getSentryEventsByLevel(level: SentryEventLevel): SentryEventEntry[]`
+
 Get events filtered by severity level.
 
 ```typescript
-import { getSentryEventsByLevel, SentryEventLevel } from '@your-org/sentry-event-logger';
+import {
+  getSentryEventsByLevel,
+  SentryEventLevel,
+} from "@your-org/sentry-event-logger";
 
 const errorLevelEvents = getSentryEventsByLevel(SentryEventLevel.Error);
 const debugLevelEvents = getSentryEventsByLevel(SentryEventLevel.Debug);
 ```
 
 #### `getSentryEventCount(): number`
+
 Get the total number of stored events.
 
 #### `clearSentryEvents(): void`
+
 Clear all stored events from memory.
 
 ### Utility Functions
 
 #### `getEventEmoji(eventType: SentryEventType): string`
+
 Get an emoji representation for an event type (useful for UI display).
 
 #### `generateTestSentryEvents(): void`
+
 Generate sample test events for development and testing.
 
 ## Types
 
 ### `SentryEventEntry`
+
 The main event object stored in memory:
 
 ```typescript
 type SentryEventEntry = {
-  id: string;                    // Unique event ID
-  timestamp: number;             // Unix timestamp
-  source: 'envelope' | 'span' | 'transaction' | 'breadcrumb' | 'native';
-  eventType: SentryEventType;    // Categorized event type
-  level: SentryEventLevel;       // Severity level
-  message: string;               // Human-readable message
+  id: string; // Unique event ID
+  timestamp: number; // Unix timestamp
+  source: "envelope" | "span" | "transaction" | "breadcrumb" | "native";
+  eventType: SentryEventType; // Categorized event type
+  level: SentryEventLevel; // Severity level
+  message: string; // Human-readable message
   data: Record<string, unknown>; // Processed event data
-  rawData: unknown;              // Original Sentry data
+  rawData: unknown; // Original Sentry data
 };
 ```
 
 ### `SentryEventType`
+
 Event type enumeration:
 
 ```typescript
 enum SentryEventType {
-  Error = 'Error',
-  Transaction = 'Transaction', 
-  Span = 'Span',
-  Session = 'Session',
-  UserFeedback = 'User Feedback',
-  Profile = 'Profile',
-  Replay = 'Replay',
-  Attachment = 'Attachment',
-  ClientReport = 'Client Report',
-  Log = 'Log',
-  Breadcrumb = 'Breadcrumb',
-  Native = 'Native',
-  Unknown = 'Unknown',
+  Error = "Error",
+  Transaction = "Transaction",
+  Span = "Span",
+  Session = "Session",
+  UserFeedback = "User Feedback",
+  Profile = "Profile",
+  Replay = "Replay",
+  Attachment = "Attachment",
+  ClientReport = "Client Report",
+  Log = "Log",
+  Breadcrumb = "Breadcrumb",
+  Native = "Native",
+  Unknown = "Unknown",
 }
 ```
 
 ### `SentryEventLevel`
+
 Severity level enumeration:
 
 ```typescript
 enum SentryEventLevel {
-  Debug = 'debug',
-  Info = 'info', 
-  Warning = 'warning',
-  Error = 'error',
-  Fatal = 'fatal',
+  Debug = "debug",
+  Info = "info",
+  Warning = "warning",
+  Error = "error",
+  Fatal = "fatal",
 }
 ```
 
@@ -197,7 +249,7 @@ enum SentryEventLevel {
 You can also use the logger class directly for more control:
 
 ```typescript
-import { SentryEventLogger } from '@your-org/sentry-event-logger';
+import { SentryEventLogger } from "@your-org/sentry-event-logger";
 
 const customLogger = new SentryEventLogger();
 customLogger.setMaxEvents(50);
@@ -237,11 +289,15 @@ export default function App() {
 
 ```typescript
 // AdminPanel.tsx
-import { getSentryEvents, clearSentryEvents, getSentryEventCount } from '@your-org/sentry-event-logger';
+import {
+  getSentryEvents,
+  clearSentryEvents,
+  getSentryEventCount,
+} from "@your-org/sentry-event-logger";
 
 function AdminPanel() {
   const [events, setEvents] = useState(getSentryEvents());
-  
+
   const refreshEvents = () => {
     setEvents(getSentryEvents());
   };
@@ -256,8 +312,8 @@ function AdminPanel() {
       <h2>Sentry Events ({getSentryEventCount()})</h2>
       <button onClick={refreshEvents}>Refresh</button>
       <button onClick={handleClearEvents}>Clear</button>
-      
-      {events.map(event => (
+
+      {events.map((event) => (
         <div key={event.id}>
           <strong>{event.eventType}</strong> - {event.message}
           <small>{new Date(event.timestamp).toLocaleString()}</small>
@@ -280,13 +336,16 @@ function AdminPanel() {
 To test the logger during development:
 
 ```typescript
-import { generateTestSentryEvents, getSentryEvents } from '@your-org/sentry-event-logger';
+import {
+  generateTestSentryEvents,
+  getSentryEvents,
+} from "@your-org/sentry-event-logger";
 
 // Generate test events
 generateTestSentryEvents();
 
 // Verify events were captured
-console.log('Test events:', getSentryEvents());
+console.log("Test events:", getSentryEvents());
 ```
 
 ## License
