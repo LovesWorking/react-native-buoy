@@ -1,17 +1,25 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { Dimensions } from 'react-native';
-import { Gesture } from 'react-native-gesture-handler';
-import { clamp, runOnJS, useSharedValue, withSpring } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useEffect, useRef } from "react";
+import { Dimensions } from "react-native";
+import { Gesture } from "react-native-gesture-handler";
+import {
+  clamp,
+  runOnJS,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface UseDragGestureProps {
   bubbleWidth: number;
   onDraggingChange: (isDragging: boolean) => void;
 }
 
-export function useDragGesture({ bubbleWidth, onDraggingChange }: UseDragGestureProps) {
+export function useDragGesture({
+  bubbleWidth,
+  onDraggingChange,
+}: UseDragGestureProps) {
   const { top, bottom } = useSafeAreaInsets();
   const isInitialized = useRef(false);
 
@@ -26,12 +34,13 @@ export function useDragGesture({ bubbleWidth, onDraggingChange }: UseDragGesture
     (dragging: boolean) => {
       onDraggingChange(dragging);
     },
-    [onDraggingChange],
+    [onDraggingChange]
   );
 
   const panGesture = Gesture.Pan()
     .minDistance(5)
     .shouldCancelWhenOutside(false)
+    .runOnJS(true)
     .onBegin(() => {
       runOnJS(setDragging)(true);
       borderOpacity.value = withSpring(1);
@@ -44,9 +53,13 @@ export function useDragGesture({ bubbleWidth, onDraggingChange }: UseDragGesture
       translateX.value = clamp(
         offsetX.value + event.translationX,
         -bubbleWidth + handleWidth,
-        screenWidth - handleWidth,
+        screenWidth - handleWidth
       );
-      translateY.value = clamp(offsetY.value + event.translationY, top + 10, screenHeight - bottom - 32 - 10);
+      translateY.value = clamp(
+        offsetY.value + event.translationY,
+        top + 10,
+        screenHeight - bottom - 32 - 10
+      );
     })
     .onEnd(() => {
       const handleWidth = 24;

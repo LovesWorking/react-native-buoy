@@ -42,7 +42,7 @@ export function SentryEventLogDumpModalContent({
   onClose,
 }: SentryEventLogDumpModalContentProps) {
   // Create pan gesture using modern Gesture.Pan() API to fix Android FlashList integration with modal
-  const panGesture = Gesture.Pan();
+  const panGesture = Gesture.Pan().runOnJS(true);
 
   const [selectedEntry, setSelectedEntry] =
     useState<ConsoleTransportEntry | null>(null);
