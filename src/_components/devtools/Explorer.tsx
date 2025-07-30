@@ -43,7 +43,7 @@ function chunkArray<T extends { label: string; value: unknown }>(
 const Expander = ({ expanded }: { expanded: boolean }) => {
   return (
     <View style={[expanded ? styles.expanded : styles.collapsed]}>
-      <Svg width={16} height={16} viewBox="0 0 16 16" fill="#98A2B3">
+      <Svg width={16} height={16} viewBox="0 0 16 16" fill="#9CA3AF">
         <Path d="M6 12l4-4-4-4" />
       </Svg>
     </View>
@@ -406,6 +406,7 @@ export default function Explorer({
                         onChangeText={(newValue) =>
                           handleChange(valueType === "number", newValue)
                         }
+                        placeholderTextColor="#6B7280"
                       />
                       {valueType === "number" && (
                         <View style={styles.numberInputButtons}>
@@ -517,7 +518,7 @@ const styles = StyleSheet.create({
   },
   buttonStyle1: {
     backgroundColor: "transparent",
-    borderColor: "none",
+    borderColor: "transparent",
     borderWidth: 0,
     padding: 0,
     alignItems: "center",
@@ -528,7 +529,7 @@ const styles = StyleSheet.create({
   },
   buttonStyle: {
     backgroundColor: "transparent",
-    color: "#6B7280",
+    color: "#9CA3AF",
     borderWidth: 0,
     flexDirection: "row",
     alignItems: "center",
@@ -570,7 +571,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   textGray500: {
-    color: "#6B7280",
+    color: "#9CA3AF",
     fontSize: 12,
     marginLeft: 4,
   },
@@ -584,13 +585,13 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     paddingLeft: 16,
     borderLeftWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   multiEntryContainer: {
     marginLeft: 12,
     paddingLeft: 16,
     borderLeftWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   relativeOutlineNone: {
     position: "relative",
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     paddingLeft: 16,
     borderLeftWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   flexRowGapFullWidth: {
     flexDirection: "row",
@@ -616,31 +617,37 @@ const styles = StyleSheet.create({
     lineHeight: 44,
   },
   text344054: {
-    color: "#344054",
+    color: "#F9FAFB",
     height: "100%",
     marginRight: 4,
+    fontWeight: "500",
   },
   inputContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    borderWidth: 0,
-    height: 28,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    height: 32,
     margin: 2,
-    paddingVertical: 4,
-    paddingLeft: 8,
-    paddingRight: 6,
-    borderRadius: 4,
-    backgroundColor: "#EAECF0",
+    paddingVertical: 6,
+    paddingLeft: 12,
+    paddingRight: 8,
+    borderRadius: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
     flex: 1,
   },
   textNumber: {
-    color: "#6938EF",
+    color: "#3B82F6",
+    fontWeight: "500",
   },
   textInput: {
     flex: 1,
     marginRight: 8,
     paddingBottom: 2,
     paddingTop: 2,
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontFamily: "monospace",
   },
   textString: {},
   numberInputButtons: {
@@ -652,18 +659,24 @@ const styles = StyleSheet.create({
   booleanContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 6,
-    borderRadius: 4,
-    backgroundColor: "#F3F4F6",
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
     flex: 1,
   },
   booleanText: {
     marginLeft: 8,
-    color: "#6938EF",
+    color: "#F59E0B",
+    fontWeight: "500",
+    fontFamily: "monospace",
   },
   displayValueText: {
     flex: 1,
-    color: "#6938EF",
+    color: "#10B981",
     height: "100%",
+    fontWeight: "500",
+    fontFamily: "monospace",
   },
 });
