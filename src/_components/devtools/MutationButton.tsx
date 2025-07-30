@@ -19,13 +19,31 @@ export default function MutationButton({
   const mutationKey = mutation.options.mutationKey
     ? JSON.stringify(displayValue(mutation.options.mutationKey, false)) + " - "
     : "";
-  const submittedAt = new Date(mutation.state.submittedAt).toLocaleString();
+  const submittedAt = new Date(mutation.state.submittedAt).toLocaleTimeString();
   const value = `${mutationKey}${submittedAt}`;
 
   const { backgroundColor, textColor } = getMutationStatusColors({
     isPaused: mutation.state.isPaused,
     status: mutation.state.status,
   });
+  const getStatusInfo = () => {
+    if (mutation.state.isPaused) {
+      return { status: "Paused", color: "#8B5CF6", icon: <PauseCircle /> };
+    }
+    switch (mutation.state.status) {
+      case "success":
+        return { status: "Success", color: "#10B981", icon: <CheckCircle /> };
+      case "error":
+        return { status: "Error", color: "#EF4444", icon: <XCircle /> };
+      case "pending":
+        return { status: "Loading", color: "#3B82F6", icon: <LoadingCircle /> };
+      default:
+        return { status: "Idle", color: "#6B7280", icon: null };
+    }
+  };
+
+  const statusInfo = getStatusInfo();
+
   return (
     <TouchableOpacity
       onPress={() =>
@@ -36,36 +54,84 @@ export default function MutationButton({
         selected?.mutationId === mutation.mutationId && styles.selected,
       ]}
     >
-      <View style={[styles.iconContainer, { backgroundColor }]}>
-        {mutation.state.isPaused && <PauseCircle />}
-        {mutation.state.status === "success" && <CheckCircle />}
-        {mutation.state.status === "error" && <XCircle />}
-        {mutation.state.status === "pending" && <LoadingCircle />}
+      <View style={styles.rowContent}>
+        <View style={styles.statusSection}>
+          <View
+            style={[styles.statusDot, { backgroundColor: statusInfo.color }]}
+          />
+          <View style={styles.statusInfo}>
+            <Text style={[styles.statusLabel, { color: statusInfo.color }]}>
+              {statusInfo.status}
+            </Text>
+            <Text style={styles.submittedText}>{submittedAt}</Text>
+          </View>
+        </View>
+
+        <View style={styles.mutationSection}>
+          <Text
+            style={styles.mutationKey}
+            numberOfLines={1}
+            ellipsizeMode="middle"
+          >
+            {mutationKey || "Anonymous Mutation"}
+          </Text>
+        </View>
       </View>
-      <Text style={[styles.text]}>{value}</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    borderBottomWidth: 1,
-    borderBottomColor: "#d0d5dd",
-    backgroundColor: "white",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+    marginHorizontal: 8,
+    marginVertical: 3,
+    padding: 12,
   },
   selected: {
-    backgroundColor: "#eaecf0",
+    backgroundColor: "rgba(14, 165, 233, 0.05)",
+    borderColor: "rgba(14, 165, 233, 0.2)",
   },
-  iconContainer: {
-    padding: 8,
-    paddingVertical: 6,
+  rowContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  text: {
-    marginLeft: 8,
+  statusSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusInfo: {
+    flex: 1,
+  },
+  statusLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    lineHeight: 14,
+  },
+  submittedText: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    marginTop: 1,
+  },
+  mutationSection: {
+    flex: 2,
+    paddingHorizontal: 12,
+  },
+  mutationKey: {
+    fontFamily: "monospace",
     fontSize: 12,
-    minWidth: 18,
+    color: "#FFFFFF",
+    lineHeight: 16,
   },
 });

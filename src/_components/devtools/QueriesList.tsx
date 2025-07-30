@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Query } from "@tanstack/react-query";
 import {
-  FlatList,
   View,
   StyleSheet,
   SafeAreaView,
@@ -9,24 +8,41 @@ import {
   PanResponder,
   Animated,
   Dimensions,
+  ScrollView,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import QueryRow from "./QueryRow";
 import useAllQueries from "../_hooks/useAllQueries";
 import QueryInformation from "./QueryInformation";
+import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
 
 interface Props {
   selectedQuery: Query<any, any, any, any> | undefined;
   setSelectedQuery: React.Dispatch<
     React.SetStateAction<Query<any, any, any, any> | undefined>
   >;
+  activeFilter?: string | null;
 }
 
 export default function QueriesList({
   selectedQuery,
   setSelectedQuery,
+  activeFilter,
 }: Props) {
   // Holds all queries
   const allQueries = useAllQueries();
+
+  // Filter queries based on active filter
+  const filteredQueries = React.useMemo(() => {
+    if (!activeFilter) {
+      return allQueries;
+    }
+
+    return allQueries.filter((query) => {
+      const status = getQueryStatusLabel(query);
+      return status === activeFilter;
+    });
+  }, [allQueries, activeFilter]);
 
   // Height management for resizable query information panel
   const screenHeight = Dimensions.get("window").height;
@@ -109,18 +125,26 @@ export default function QueriesList({
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.listContainer}>
-        {allQueries.length > 0 ? (
-          <FlatList
-            data={allQueries}
+        {filteredQueries.length > 0 ? (
+          <FlashList
+            data={filteredQueries}
             renderItem={renderItem}
             keyExtractor={(item, index) =>
               `${JSON.stringify(item.queryKey)}-${index}`
             }
+            estimatedItemSize={60}
             contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator
+            removeClippedSubviews
+            renderScrollComponent={ScrollView}
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No queries found</Text>
+            <Text style={styles.emptyText}>
+              {activeFilter
+                ? `No ${activeFilter} queries found`
+                : "No queries found"}
+            </Text>
           </View>
         )}
       </View>
@@ -147,47 +171,55 @@ export default function QueriesList({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
+    backgroundColor: "#171717",
   },
   listContainer: {
     flex: 1,
-    width: "100%",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#171717",
+    paddingHorizontal: 8,
+    paddingTop: 8,
   },
   listContent: {
     flexGrow: 1,
+    paddingBottom: 16,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 32,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    margin: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
   },
   emptyText: {
-    color: "#6b7280",
-    fontSize: 16,
+    color: "#9CA3AF",
+    fontSize: 14,
+    textAlign: "center",
   },
   queryInformation: {
-    borderTopWidth: 2,
-    borderTopColor: "#d0d5dd",
-    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.06)",
+    backgroundColor: "#171717",
   },
   dragHandle: {
     height: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
   },
   dragIndicator: {
-    width: 50,
+    width: 40,
     height: 4,
-    backgroundColor: "#98a2b3",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 2,
-    opacity: 0.8,
   },
   queryInfoContent: {
     flex: 1,
+    backgroundColor: "#171717",
   },
 });

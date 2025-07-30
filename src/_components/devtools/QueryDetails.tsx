@@ -26,12 +26,12 @@ export default function QueryDetails({ query }: Props) {
         <QueryDetailsChip query={query} />
       </View>
       <View style={styles.row}>
-        <Text> Observers:</Text>
-        <Text>{`${query.getObserversCount()}`}</Text>
+        <Text style={styles.labelText}>Observers:</Text>
+        <Text style={styles.valueText}>{`${query.getObserversCount()}`}</Text>
       </View>
       <View style={styles.row}>
-        <Text> Last Updated:</Text>
-        <Text>{`${lastUpdated}`}</Text>
+        <Text style={styles.labelText}>Last Updated:</Text>
+        <Text style={styles.valueText}>{`${lastUpdated}`}</Text>
       </View>
     </View>
   );
@@ -39,29 +39,49 @@ export default function QueryDetails({ query }: Props) {
 const styles = StyleSheet.create({
   minWidth: {
     minWidth: 200,
-    fontSize: 12,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+    overflow: "hidden",
   },
   headerText: {
     textAlign: "left",
-    backgroundColor: "#EAECF0",
-    padding: 8,
-    fontWeight: "500",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    padding: 12,
+    fontWeight: "600",
+    fontSize: 13,
+    color: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 8,
+    alignItems: "center",
+    padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: "rgba(255, 255, 255, 0.03)",
   },
   flexOne: {
     flex: 1,
   },
   queryKeyText: {
-    flexWrap: "wrap",
-    alignItems: "center",
+    fontSize: 12,
+    color: "#E5E7EB",
+    fontFamily: "monospace",
     marginRight: 8,
+    lineHeight: 16,
+  },
+  labelText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    fontWeight: "500",
+  },
+  valueText: {
+    fontSize: 12,
+    color: "#FFFFFF",
+    fontWeight: "500",
+    fontVariant: ["tabular-nums"],
   },
 });

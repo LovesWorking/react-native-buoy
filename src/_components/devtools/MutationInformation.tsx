@@ -64,23 +64,34 @@ export default function MutationInformation({ selectedMutation }: Props) {
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
+    backgroundColor: "#171717",
   },
   scrollContent: {
     paddingBottom: 16,
+    paddingHorizontal: 8,
   },
   section: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   textHeader: {
     textAlign: "left",
-    backgroundColor: "#EAECF0",
-    padding: 8,
-    width: "100%",
-    fontSize: 12,
-    fontWeight: "500",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    padding: 12,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
   },
   padding: {
-    padding: 8,
-    backgroundColor: "#FAFAFA",
+    padding: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+    borderTopWidth: 0,
   },
 });

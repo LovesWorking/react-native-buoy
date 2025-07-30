@@ -6,7 +6,9 @@ import {
   StyleSheet,
   PanResponderInstance,
 } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import QueryStatusCount from "./QueryStatusCount";
+import MutationStatusCount from "./MutationStatusCount";
 import NetworkToggleButton from "./NetworkToggleButton";
 import ClearCacheButton from "./ClearCacheButton";
 
@@ -19,6 +21,8 @@ interface Props {
   isOffline: boolean;
   onToggleNetwork: () => void;
   onClearCache: () => void;
+  activeFilter?: string | null;
+  onFilterChange?: (filter: string | null) => void;
 }
 
 export default function DevToolsHeader({
@@ -30,6 +34,8 @@ export default function DevToolsHeader({
   isOffline,
   onToggleNetwork,
   onClearCache,
+  activeFilter,
+  onFilterChange,
 }: Props) {
   const handleTabChange = (newShowQueries: boolean) => {
     if (onTabChange) {
@@ -44,7 +50,8 @@ export default function DevToolsHeader({
       {/* Drag indicator */}
       <View style={styles.dragIndicator} />
 
-      <View style={styles.mainRow}>
+      {/* Title Row */}
+      <View style={styles.titleRow}>
         <TouchableOpacity
           style={styles.tanstackHeader}
           onPress={() => {
@@ -52,10 +59,40 @@ export default function DevToolsHeader({
           }}
           accessibilityLabel="Close Tanstack query devtools"
         >
-          <Text style={styles.tanstackText}>TANSTACK</Text>
-          <Text style={styles.reactNativeText}>React Native</Text>
+          <Text style={styles.tanstackText}>React Query</Text>
+          <Text style={styles.reactNativeText}>Dev Tools</Text>
         </TouchableOpacity>
 
+        <View style={styles.actionButtons}>
+          <NetworkToggleButton
+            isOffline={isOffline}
+            onToggle={onToggleNetwork}
+          />
+          <ClearCacheButton
+            type={showQueries ? "queries" : "mutations"}
+            onClear={onClearCache}
+          />
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowDevTools(false)}
+            activeOpacity={0.7}
+            accessibilityLabel="Close React Query Dev Tools"
+            accessibilityRole="button"
+          >
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M18 6L6 18M6 6l12 12"
+                stroke="#9CA3AF"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+            </Svg>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Tabs Row - Full Width */}
+      <View style={styles.tabsRow}>
         <View style={styles.toggleButtonsContainer}>
           <TouchableOpacity
             onPress={() => {
@@ -66,10 +103,6 @@ export default function DevToolsHeader({
               showQueries === true
                 ? styles.toggleButtonActive
                 : styles.toggleButtonInactive,
-              {
-                borderTopRightRadius: 0,
-                borderBottomRightRadius: 0,
-              },
             ]}
           >
             <Text
@@ -92,10 +125,6 @@ export default function DevToolsHeader({
               showQueries === false
                 ? styles.toggleButtonActive
                 : styles.toggleButtonInactive,
-              {
-                borderTopLeftRadius: 0,
-                borderBottomLeftRadius: 0,
-              },
             ]}
           >
             <Text
@@ -110,15 +139,21 @@ export default function DevToolsHeader({
             </Text>
           </TouchableOpacity>
         </View>
+      </View>
 
-        <ClearCacheButton
-          type={showQueries ? "queries" : "mutations"}
-          onClear={onClearCache}
-        />
-
-        <NetworkToggleButton isOffline={isOffline} onToggle={onToggleNetwork} />
-
-        <QueryStatusCount />
+      {/* Status Row - Centered */}
+      <View style={styles.statusRow}>
+        {showQueries ? (
+          <QueryStatusCount
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+          />
+        ) : (
+          <MutationStatusCount
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+          />
+        )}
       </View>
     </View>
   );
@@ -126,82 +161,104 @@ export default function DevToolsHeader({
 
 const styles = StyleSheet.create({
   devToolsHeader: {
-    padding: 4,
-    paddingBottom: 4,
-    paddingTop: 8,
-    borderColor: "#d0d5dd",
-    borderBottomWidth: 2,
+    backgroundColor: "#171717",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
     flexDirection: "column",
-    gap: 4,
-    minHeight: 60,
+    gap: 16,
   },
   dragIndicator: {
-    width: 50,
-    height: 5,
-    backgroundColor: "#98a2b3",
-    borderRadius: 3,
+    width: 40,
+    height: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 2,
     alignSelf: "center",
-    marginBottom: 6,
-    opacity: 0.8,
+    marginBottom: 8,
   },
-  mainRow: {
+  titleRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
+  },
+  tabsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: "rgba(156, 163, 175, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(156, 163, 175, 0.2)",
   },
   tanstackHeader: {
     flexDirection: "column",
     gap: 2,
-    marginHorizontal: 2,
-    paddingRight: 8,
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    padding: 0,
   },
   tanstackText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    lineHeight: 16,
-    color: "#475467",
+    fontSize: 18,
+    fontWeight: "600",
+    lineHeight: 18,
+    color: "#FFFFFF",
+    letterSpacing: -0.5,
   },
   reactNativeText: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#ea4037",
-    marginTop: -4,
+    fontWeight: "500",
+    color: "#0EA5E9",
+    marginTop: -2,
   },
   toggleButtonsContainer: {
     flexDirection: "row",
-    marginLeft: 1,
-    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 6,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    alignSelf: "center",
   },
   toggleButton: {
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: "#d0d5dd",
-    paddingHorizontal: 2,
-    maxWidth: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 70,
   },
   toggleButtonActive: {
-    backgroundColor: "#F2F4F7",
+    backgroundColor: "rgba(14, 165, 233, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(14, 165, 233, 0.2)",
   },
   toggleButtonInactive: {
-    backgroundColor: "#EAECF0",
+    backgroundColor: "transparent",
   },
   toggleButtonText: {
-    paddingRight: 4,
-    paddingLeft: 4,
     fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.2,
   },
   toggleButtonTextActive: {
-    color: "#344054",
+    color: "#0EA5E9",
   },
   toggleButtonTextInactive: {
-    color: "#909193",
+    color: "#9CA3AF",
   },
 });

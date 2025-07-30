@@ -1,5 +1,8 @@
-export { DevToolsBubble } from "./DevToolsBubble";
+// Main FloatingStatusBubble with integrated React Query dev tools
 export { FloatingStatusBubble } from "./_components/floating-bubble/admin/FloatingStatusBubble";
+
+// Legacy DevToolsBubble (deprecated - use FloatingStatusBubble with queryClient prop instead)
+export { DevToolsBubble } from "./DevToolsBubble";
 
 // Sentry event logging functionality
 export {
@@ -9,5 +12,10 @@ export {
   getSentryEvents,
 } from "./_components/floating-bubble/sentry/sentryEventListeners";
 
-// Sentry types
+// Types
 export type { SentryEventEntry } from "./_components/floating-bubble/sentry/sentryEventListeners";
+export type { RequiredEnvVar } from "./_components/floating-bubble/admin/sections/EnvVarsSection";
+export type {
+  Environment,
+  UserRole,
+} from "./_components/floating-bubble/admin/components";

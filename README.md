@@ -1,6 +1,67 @@
-# React Query Dev Tools (React Native)
+# React Native Dev Tools Suite
 
-**React Query Dev Tools** The same tool you know and love! Now available for React Native with enhanced features and modern UI!
+**Multi-Tool Development Suite** A comprehensive debugging solution for React Native apps featuring React Query dev tools, environment variable inspection, Sentry monitoring, and more in a unified floating interface.
+
+## 🚀 New Integrated FloatingStatusBubble
+
+The package now features a unified `FloatingStatusBubble` that combines React Query dev tools with other essential debugging tools:
+
+- **React Query Dev Tools**: Query/mutation inspection, cache management, network toggling
+- **Environment Variables**: Auto-discovery and validation of EXPO*PUBLIC* variables
+- **Sentry Logs**: Real-time error and event monitoring
+- **Extensible**: Add your own custom debugging sections
+
+## Migration from DevToolsBubble
+
+**Old approach (deprecated):**
+
+```tsx
+import { DevToolsBubble } from "rn-rq-dev-tools";
+
+<DevToolsBubble queryClient={queryClient} />;
+```
+
+**New approach (recommended):**
+
+```tsx
+import { FloatingStatusBubble } from "rn-rq-dev-tools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
+// Wrap your app with QueryClientProvider
+<QueryClientProvider client={queryClient}>
+  <FloatingStatusBubble
+    userRole="admin"
+    environment="development"
+    // queryClient prop is optional - automatically uses context
+    requiredEnvVars={["EXPO_PUBLIC_API_URL"]}
+  />
+</QueryClientProvider>;
+```
+
+## QueryClient Usage
+
+The React Query dev tools automatically detect the QueryClient from React Query context, so you don't need to pass it as a prop:
+
+```tsx
+// ✅ Recommended - uses QueryClient from context
+<FloatingStatusBubble userRole="admin" environment="development" />
+
+// ✅ Also works - explicit queryClient prop
+<FloatingStatusBubble
+  userRole="admin"
+  environment="development"
+  queryClient={customQueryClient}
+/>
+
+// ❌ Remove React Query dev tools if no QueryClient available
+<FloatingStatusBubble
+  userRole="admin"
+  environment="development"
+  removeSections={["react-query"]}
+/>
+```
 
 ![rn-dev-tools-hq](https://github.com/LovesWorking/LovesWorking/assets/111514077/3c6a2d9f-1320-48cc-92f3-affe02f877ea)
 

@@ -1,18 +1,20 @@
 import { ReactNode, useState } from "react";
 import { Dimensions, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { QueryClient } from "@tanstack/react-query";
 
 import { BubbleContent } from "./components/BubbleContent";
 import { DragHandle } from "./components/DragHandle";
 import { EnvVarsSection, RequiredEnvVar } from "./sections/EnvVarsSection";
 import { SentryLogDumpSection } from "./sections/SentryLogDumpSection";
+import { ReactQuerySection } from "./sections/ReactQuerySection";
 import { AdminModal } from "./AdminModal";
 import type { Environment, UserRole } from "./components";
 import { useBubbleWidth, useDragGesture, useWifiState } from "./hooks";
 
 const { width: screenWidth } = Dimensions.get("window");
 
-type DefaultSection = "sentry-logs" | "env-vars";
+type DefaultSection = "sentry-logs" | "env-vars" | "react-query";
 
 interface FloatingStatusBubbleProps {
   userRole: UserRole;
@@ -20,6 +22,7 @@ interface FloatingStatusBubbleProps {
   children?: ReactNode; // Additional admin modal content
   removeSections?: DefaultSection[]; // Array of default sections to disable
   requiredEnvVars?: RequiredEnvVar[]; // List of required environment variables to check
+  queryClient?: QueryClient; // React Query client for dev tools
 }
 
 export function FloatingStatusBubble({
@@ -28,6 +31,7 @@ export function FloatingStatusBubble({
   children,
   removeSections = [],
   requiredEnvVars,
+  queryClient,
 }: FloatingStatusBubbleProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -130,6 +134,9 @@ export function FloatingStatusBubble({
         {!removeSections.includes("sentry-logs") && <SentryLogDumpSection />}
         {!removeSections.includes("env-vars") && (
           <EnvVarsSection requiredEnvVars={requiredEnvVars} />
+        )}
+        {!removeSections.includes("react-query") && (
+          <ReactQuerySection queryClient={queryClient} />
         )}
 
         {/* User-provided additional sections */}

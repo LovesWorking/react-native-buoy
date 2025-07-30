@@ -16,6 +16,7 @@ import QueriesList from "./_components/devtools/QueriesList";
 import Svg, { Path } from "react-native-svg";
 import MutationsList from "./_components/devtools/MutationsList";
 import DevToolsHeader from "./_components/devtools/DevToolsHeader";
+import { getQueryStatusLabel } from "./_components/_util/getQueryStatusLabel";
 
 interface Props {
   setShowDevTools: React.Dispatch<React.SetStateAction<boolean>>;
@@ -31,6 +32,83 @@ export default function DevTools({
   queryClient,
 }: Props) {
   const [showQueries, setShowQueries] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  // Get intelligent default filter based on state priorities
+  const getDefaultFilter = React.useCallback(() => {
+    if (!queryClient) return null;
+
+    try {
+      if (showQueries) {
+        // Query priority order: error > fetching > paused > stale > fresh
+        const allQueries = queryClient.getQueryCache().findAll();
+        const statusCounts = {
+          error: 0,
+          fetching: 0,
+          paused: 0,
+          stale: 0,
+          fresh: 0,
+          inactive: 0,
+        };
+
+        allQueries.forEach((query) => {
+          const status = getQueryStatusLabel(query);
+          statusCounts[status as keyof typeof statusCounts] =
+            (statusCounts[status as keyof typeof statusCounts] || 0) + 1;
+        });
+
+        if (statusCounts.error > 0) return "error";
+        if (statusCounts.fetching > 0) return "fetching";
+        if (statusCounts.paused > 0) return "paused";
+        if (statusCounts.stale > 0) return "stale";
+
+        return null;
+      } else {
+        // Mutation priority order: error > pending > paused > success
+        const allMutations = queryClient.getMutationCache().getAll();
+        const mutationCounts = {
+          error: 0,
+          pending: 0,
+          paused: 0,
+          success: 0,
+        };
+
+        allMutations.forEach((mutation) => {
+          const status = mutation.state.status;
+          const isPaused = mutation.state.isPaused;
+
+          if (isPaused) {
+            mutationCounts.paused++;
+          } else if (status === "error") {
+            mutationCounts.error++;
+          } else if (status === "pending") {
+            mutationCounts.pending++;
+          } else if (status === "success") {
+            mutationCounts.success++;
+          }
+        });
+
+        if (mutationCounts.error > 0) return "error";
+        if (mutationCounts.pending > 0) return "pending";
+        if (mutationCounts.paused > 0) return "paused";
+
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  }, [queryClient, showQueries]);
+
+  // Apply intelligent default filter on component mount and when states change
+  // Currently disabled - user requested no default filtering
+  // React.useEffect(() => {
+  //   if (activeFilter === null) {
+  //     const defaultFilter = getDefaultFilter();
+  //     if (defaultFilter) {
+  //       setActiveFilter(defaultFilter);
+  //     }
+  //   }
+  // }, [getDefaultFilter, activeFilter]);
   const [selectedQuery, setSelectedQuery] = useState<
     Query<any, any, any, any> | undefined
   >(undefined);
@@ -44,8 +122,17 @@ export default function DevTools({
     if (newShowQueries !== showQueries) {
       setSelectedQuery(undefined);
       setSelectedMutation(undefined);
+      setActiveFilter(null); // Clear filter when switching tabs
     }
     setShowQueries(newShowQueries);
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (filter: string | null) => {
+    setActiveFilter(filter);
+    // Clear selection when filter changes
+    setSelectedQuery(undefined);
+    setSelectedMutation(undefined);
   };
 
   // Handle network toggle
@@ -75,22 +162,6 @@ export default function DevTools({
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => {
-          setShowDevTools(false);
-        }}
-        style={styles.closeButton}
-      >
-        <Svg width={8} height={8} viewBox="0 0 10 6" fill="none">
-          <Path
-            d="M1 1l4 4 4-4"
-            stroke="#475467"
-            strokeWidth={1.66667}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-      </TouchableOpacity>
       <View style={styles.devToolsPanel}>
         <DevToolsHeader
           showQueries={showQueries}
@@ -101,18 +172,24 @@ export default function DevTools({
           isOffline={isOffline}
           onToggleNetwork={handleToggleNetwork}
           onClearCache={handleClearCache}
+          activeFilter={activeFilter}
+          onFilterChange={handleFilterChange}
         />
-        {showQueries ? (
-          <QueriesList
-            selectedQuery={selectedQuery}
-            setSelectedQuery={setSelectedQuery}
-          />
-        ) : (
-          <MutationsList
-            selectedMutation={selectedMutation}
-            setSelectedMutation={setSelectedMutation}
-          />
-        )}
+        <View style={styles.contentContainer}>
+          {showQueries ? (
+            <QueriesList
+              selectedQuery={selectedQuery}
+              setSelectedQuery={setSelectedQuery}
+              activeFilter={activeFilter}
+            />
+          ) : (
+            <MutationsList
+              selectedMutation={selectedMutation}
+              setSelectedMutation={setSelectedMutation}
+              activeFilter={activeFilter}
+            />
+          )}
+        </View>
       </View>
     </View>
   );
@@ -120,34 +197,14 @@ export default function DevTools({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "column",
-  },
-  closeButton: {
-    position: "absolute",
-    right: -2,
-    top: -17,
-    zIndex: 50,
-    width: 22,
-    height: 15,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    backgroundColor: "white",
-    padding: 3,
-    margin: 3,
-    borderColor: "#98a2b3",
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#171717",
   },
   devToolsPanel: {
-    backgroundColor: "white",
-    minWidth: 300,
     flex: 1,
-    borderTopColor: "#98a2b3",
-    borderTopWidth: 1,
+    backgroundColor: "#171717",
   },
-  comingSoonText: {
-    margin: 3,
+  contentContainer: {
+    flex: 1,
+    backgroundColor: "#171717",
   },
 });

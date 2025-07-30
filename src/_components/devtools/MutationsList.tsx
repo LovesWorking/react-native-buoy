@@ -2,11 +2,13 @@ import React, { useState, useRef } from "react";
 import {
   ScrollView,
   View,
+  Text,
   StyleSheet,
   PanResponder,
   Animated,
   Dimensions,
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { Mutation } from "@tanstack/react-query";
 import MutationButton from "./MutationButton";
 import MutationInformation from "./MutationInformation";
@@ -17,13 +19,34 @@ interface Props {
   setSelectedMutation: React.Dispatch<
     React.SetStateAction<Mutation<any, any, any, any> | undefined>
   >;
+  activeFilter?: string | null;
 }
 
 export default function MutationsList({
   selectedMutation,
   setSelectedMutation,
+  activeFilter,
 }: Props) {
   const { mutations: allmutations } = useAllMutations();
+
+  // Helper function to get mutation status for filtering
+  const getMutationStatus = (mutation: Mutation<any, any, any, any>) => {
+    if (mutation.state.isPaused) return "paused";
+    const status = mutation.state.status;
+    return status; // 'idle', 'pending', 'success', 'error'
+  };
+
+  // Filter mutations based on active filter
+  const filteredMutations = React.useMemo(() => {
+    if (!activeFilter) {
+      return allmutations;
+    }
+
+    return allmutations.filter((mutation) => {
+      const status = getMutationStatus(mutation);
+      return status === activeFilter;
+    });
+  }, [allmutations, activeFilter]);
 
   // Height management for resizable mutation information panel
   const screenHeight = Dimensions.get("window").height;
@@ -85,20 +108,36 @@ export default function MutationsList({
     })
   ).current;
 
+  const renderMutation = ({ item }: { item: Mutation<any, any, any, any> }) => (
+    <MutationButton
+      selected={selectedMutation}
+      setSelectedMutation={setSelectedMutation}
+      mutation={item}
+    />
+  );
+
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {allmutations.map((mutation, inex) => {
-          return (
-            <MutationButton
-              selected={selectedMutation}
-              setSelectedMutation={setSelectedMutation}
-              mutation={mutation}
-              key={inex}
-            />
-          );
-        })}
-      </ScrollView>
+      {filteredMutations.length > 0 ? (
+        <FlashList
+          data={filteredMutations}
+          renderItem={renderMutation}
+          keyExtractor={(item, index) => `${item.mutationId}-${index}`}
+          estimatedItemSize={60}
+          showsVerticalScrollIndicator
+          removeClippedSubviews
+          renderScrollComponent={ScrollView}
+          style={styles.scrollView}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            {activeFilter
+              ? `No ${activeFilter} mutations found`
+              : "No mutations found"}
+          </Text>
+        </View>
+      )}
       {selectedMutation && (
         <Animated.View
           style={[styles.mutationInfo, { height: infoHeightAnim }]}
@@ -119,34 +158,51 @@ export default function MutationsList({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "column",
-    width: "100%",
+    backgroundColor: "#171717",
   },
   scrollView: {
     flex: 1,
-    flexDirection: "column",
+    backgroundColor: "#171717",
+    paddingHorizontal: 8,
+    paddingTop: 8,
   },
   mutationInfo: {
-    borderTopWidth: 2,
-    borderTopColor: "#d0d5dd",
-    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.06)",
+    backgroundColor: "#171717",
   },
   dragHandle: {
     height: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
   },
   dragIndicator: {
-    width: 50,
+    width: 40,
     height: 4,
-    backgroundColor: "#98a2b3",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 2,
-    opacity: 0.8,
   },
   mutationInfoContent: {
     flex: 1,
+    backgroundColor: "#171717",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    margin: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  emptyText: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    textAlign: "center",
   },
 });

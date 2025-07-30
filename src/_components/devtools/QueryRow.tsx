@@ -30,60 +30,21 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
     }
   };
 
-  // Map color names to actual color values
-  const getColorValue = (
-    colorName: "green" | "yellow" | "gray" | "blue" | "purple" | "red",
-    shade: "200" | "300" | "700" | "800" | "900"
-  ): string => {
-    const colors: Record<
-      "green" | "yellow" | "gray" | "blue" | "purple" | "red",
-      Record<"200" | "300" | "700" | "800" | "900", string>
-    > = {
-      green: {
-        "200": "#bbf7d0",
-        "300": "#86efac",
-        "700": "#15803d",
-        "800": "#166534",
-        "900": "#14532d",
-      },
-      yellow: {
-        "200": "#fef08a",
-        "300": "#fde047",
-        "700": "#a16207",
-        "800": "#854d0e",
-        "900": "#713f12",
-      },
-      gray: {
-        "200": "#e5e7eb",
-        "300": "#d1d5db",
-        "700": "#374151",
-        "800": "#1f2937",
-        "900": "#111827",
-      },
-      blue: {
-        "200": "#bfdbfe",
-        "300": "#93c5fd",
-        "700": "#1d4ed8",
-        "800": "#1e40af",
-        "900": "#1e3a8a",
-      },
-      purple: {
-        "200": "#e9d5ff",
-        "300": "#d8b4fe",
-        "700": "#7e22ce",
-        "800": "#6b21a8",
-        "900": "#581c87",
-      },
-      red: {
-        "200": "#fecaca",
-        "300": "#fca5a5",
-        "700": "#b91c1c",
-        "800": "#991b1b",
-        "900": "#7f1d1d",
-      },
-    };
-
-    return colors[colorName][shade];
+  // Modern status color mapping
+  const getStatusHexColor = (status: string): string => {
+    switch (status) {
+      case "fresh":
+        return "#10B981"; // Green
+      case "stale":
+      case "inactive":
+        return "#F59E0B"; // Orange
+      case "fetching":
+        return "#3B82F6"; // Blue
+      case "paused":
+        return "#8B5CF6"; // Purple
+      default:
+        return "#6B7280"; // Gray
+    }
   };
 
   const status = getQueryStatusLabel(query);
@@ -92,18 +53,12 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
   const isDisabled = query.isDisabled();
   const queryHash = displayValue(query.queryKey, false);
 
-  // Get background and text colors for observer count based on status
+  // Get modern observer count styles based on status
   const getObserverCountStyles = () => {
-    if (statusColor === "gray") {
-      return {
-        backgroundColor: getColorValue(statusColor, "200"),
-        color: getColorValue(statusColor, "700"),
-      };
-    }
-
+    const statusHexColor = getStatusHexColor(status);
     return {
-      backgroundColor: getColorValue(statusColor, "200"),
-      color: getColorValue(statusColor, "800"),
+      backgroundColor: `${statusHexColor}20`, // 20% opacity
+      borderRightColor: `${statusHexColor}40`, // 40% opacity
     };
   };
 
@@ -114,75 +69,116 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
       activeOpacity={0.7}
       accessibilityLabel={`Query key ${queryHash}`}
     >
-      {/* Observer count badge */}
-      <View style={[styles.observerCount, getObserverCountStyles()]}>
-        <Text
-          style={[
-            styles.observerCountText,
-            { color: getObserverCountStyles().color },
-          ]}
-        >
-          {observerCount}
-        </Text>
-      </View>
-
-      {/* Query hash/key */}
-      <Text style={styles.queryHash} numberOfLines={1} ellipsizeMode="middle">
-        {queryHash}
-      </Text>
-
-      {/* Disabled indicator */}
-      {isDisabled && (
-        <View style={styles.disabledIndicator}>
-          <Text style={styles.disabledText}>disabled</Text>
+      {/* Status indicator and content in one row */}
+      <View style={styles.rowContent}>
+        <View style={styles.statusSection}>
+          <View
+            style={[
+              styles.statusDot,
+              { backgroundColor: getStatusHexColor(status) },
+            ]}
+          />
+          <View style={styles.statusInfo}>
+            <Text
+              style={[styles.statusLabel, { color: getStatusHexColor(status) }]}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Text>
+            <Text style={styles.observerText}>
+              {observerCount} observer{observerCount !== 1 ? "s" : ""}
+            </Text>
+          </View>
         </View>
-      )}
+
+        <View style={styles.querySection}>
+          <Text
+            style={styles.queryHash}
+            numberOfLines={1}
+            ellipsizeMode="middle"
+          >
+            {queryHash}
+          </Text>
+          {isDisabled && <Text style={styles.disabledText}>Disabled</Text>}
+        </View>
+
+        <View style={styles.badgeSection}>
+          <Text
+            style={[styles.statusBadge, { color: getStatusHexColor(status) }]}
+          >
+            {observerCount}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   queryRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+    marginHorizontal: 8,
+    marginVertical: 3,
+    padding: 12,
   },
   selectedQueryRow: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "rgba(14, 165, 233, 0.05)",
+    borderColor: "rgba(14, 165, 233, 0.2)",
   },
-  observerCount: {
-    width: 32,
-    justifyContent: "center",
+  rowContent: {
+    flexDirection: "row",
     alignItems: "center",
-    marginRight: 0,
+    justifyContent: "space-between",
   },
-  observerCountText: {
+  statusSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusInfo: {
+    flex: 1,
+  },
+  statusLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    lineHeight: 14,
+  },
+  observerText: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    marginTop: 1,
+  },
+  querySection: {
+    flex: 2,
+    paddingHorizontal: 12,
+  },
+  queryHash: {
+    fontFamily: "monospace",
+    fontSize: 12,
+    color: "#FFFFFF",
+    lineHeight: 16,
+  },
+  badgeSection: {
+    alignItems: "flex-end",
+  },
+  statusBadge: {
     fontSize: 12,
     fontWeight: "600",
     fontVariant: ["tabular-nums"],
   },
-  queryHash: {
-    flex: 1,
-    fontFamily: "monospace",
-    fontSize: 14,
-    color: "#1f2937",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    textAlignVertical: "center",
-  },
-  disabledIndicator: {
-    backgroundColor: "#f3f4f6",
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 8,
-    alignSelf: "center",
-  },
   disabledText: {
-    fontSize: 12,
-    color: "#6b7280",
+    fontSize: 10,
+    color: "#EF4444",
+    fontWeight: "500",
+    marginTop: 2,
   },
 });
 

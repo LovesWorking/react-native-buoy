@@ -6,6 +6,8 @@ interface QueryStatusProps {
   color: "green" | "yellow" | "gray" | "blue" | "purple" | "red";
   count: number;
   showLabel?: boolean;
+  isActive?: boolean;
+  onPress?: () => void;
 }
 
 type ColorName = "green" | "yellow" | "gray" | "blue" | "purple" | "red";
@@ -16,77 +18,55 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
   color,
   count,
   showLabel = true,
+  isActive = false,
+  onPress,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Map color names to actual color values
-  const getColorValue = (colorName: ColorName, shade: ColorShade): string => {
-    const colors: Record<ColorName, Record<ColorShade, string>> = {
-      green: {
-        "100": "#dcfce7",
-        "200": "#bbf7d0",
-        "300": "#86efac",
-        "400": "#4ade80",
-        "500": "#22c55e",
-        "700": "#15803d",
-        "900": "#14532d",
-      },
+  // Modern color mapping for status indicators
+  const getStatusColors = (colorName: ColorName) => {
+    const colorMap = {
+      green: { bg: "rgba(16, 185, 129, 0.1)", dot: "#10B981", text: "#10B981" },
       yellow: {
-        "100": "#fef9c3",
-        "200": "#fef08a",
-        "300": "#fde047",
-        "400": "#facc15",
-        "500": "#eab308",
-        "700": "#a16207",
-        "900": "#713f12",
+        bg: "rgba(245, 158, 11, 0.1)",
+        dot: "#F59E0B",
+        text: "#F59E0B",
       },
-      gray: {
-        "100": "#f3f4f6",
-        "200": "#e5e7eb",
-        "300": "#d1d5db",
-        "400": "#9ca3af",
-        "500": "#6b7280",
-        "700": "#374151",
-        "900": "#111827",
-      },
-      blue: {
-        "100": "#dbeafe",
-        "200": "#bfdbfe",
-        "300": "#93c5fd",
-        "400": "#60a5fa",
-        "500": "#3b82f6",
-        "700": "#1d4ed8",
-        "900": "#1e3a8a",
-      },
+      blue: { bg: "rgba(59, 130, 246, 0.1)", dot: "#3B82F6", text: "#3B82F6" },
       purple: {
-        "100": "#f3e8ff",
-        "200": "#e9d5ff",
-        "300": "#d8b4fe",
-        "400": "#c084fc",
-        "500": "#a855f7",
-        "700": "#7e22ce",
-        "900": "#581c87",
+        bg: "rgba(139, 92, 246, 0.1)",
+        dot: "#8B5CF6",
+        text: "#8B5CF6",
       },
-      red: {
-        "100": "#fee2e2",
-        "200": "#fecaca",
-        "300": "#fca5a5",
-        "400": "#f87171",
-        "500": "#ef4444",
-        "700": "#b91c1c",
-        "900": "#7f1d1d",
-      },
+      red: { bg: "rgba(239, 68, 68, 0.1)", dot: "#EF4444", text: "#EF4444" },
+      gray: { bg: "rgba(107, 114, 128, 0.1)", dot: "#6B7280", text: "#6B7280" },
     };
 
-    return colors[colorName]?.[shade] || "#000000";
+    return colorMap[colorName] || colorMap.gray;
   };
+
+  const statusColors = getStatusColors(color);
+
+  // Create active style based on the status color
+  const activeStyle = isActive
+    ? {
+        backgroundColor: `${statusColors.dot}20`, // 20% opacity of the status color
+        borderColor: statusColors.dot,
+        transform: [{ scale: 1.05 }],
+      }
+    : {};
 
   return (
     <TouchableOpacity
-      style={[styles.queryStatusTag, !showLabel && styles.clickable]}
-      disabled={showLabel}
+      style={[
+        styles.queryStatusTag,
+        !showLabel && styles.clickable,
+        activeStyle,
+      ]}
+      disabled={!onPress}
       onPressIn={() => setIsHovered(true)}
       onPressOut={() => setIsHovered(false)}
+      onPress={onPress}
       activeOpacity={0.7}
     >
       {!showLabel && isHovered && (
@@ -95,28 +75,28 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
         </View>
       )}
 
-      <View
-        style={[styles.dot, { backgroundColor: getColorValue(color, "500") }]}
-      />
+      <View style={[styles.dot, { backgroundColor: statusColors.dot }]} />
 
-      {showLabel && <Text style={styles.label}>{label}</Text>}
+      {showLabel && (
+        <Text style={[styles.label, { color: statusColors.text }]}>
+          {label}
+        </Text>
+      )}
 
       <View
         style={[
           styles.countContainer,
-          count > 0 &&
-            color !== "gray" && {
-              backgroundColor: getColorValue(color, "100"),
-            },
+          count > 0 && {
+            backgroundColor: statusColors.bg,
+          },
         ]}
       >
         <Text
           style={[
             styles.count,
-            count > 0 &&
-              color !== "gray" && {
-                color: getColorValue(color, "700"),
-              },
+            count > 0 && {
+              color: getStatusColors(color).text,
+            },
           ]}
         >
           {count}
@@ -130,57 +110,58 @@ const styles = StyleSheet.create({
   queryStatusTag: {
     flexDirection: "row",
     gap: 6,
-    height: 26,
-    backgroundColor: "#f9fafb",
-    borderRadius: 4,
-    padding: 4,
-    paddingLeft: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 6,
+    padding: 6,
     alignItems: "center",
-    fontWeight: "500",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "rgba(255, 255, 255, 0.1)",
     position: "relative",
+    flexShrink: 1, // Allow badges to shrink if needed
+    minWidth: 32, // Minimum width for just dot + count
   },
   clickable: {
     // cursor: 'pointer', // This doesn't exist in React Native
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   countContainer: {
-    fontSize: 12,
-    paddingHorizontal: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#e5e7eb",
-    borderRadius: 2,
-    height: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 4,
+    minWidth: 20,
   },
   count: {
-    fontSize: 12,
-    color: "#6b7280",
+    fontSize: 10,
+    color: "#9CA3AF",
     fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   tooltip: {
     position: "absolute",
     zIndex: 1,
-    backgroundColor: "#f9fafb",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     top: "100%",
     left: "50%",
     transform: [{ translateX: -50 }, { translateY: 8 }],
-    padding: 2,
+    padding: 4,
     paddingHorizontal: 8,
     borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#9ca3af",
   },
   tooltipText: {
-    fontSize: 12,
+    fontSize: 11,
+    color: "#FFFFFF",
   },
 });
 

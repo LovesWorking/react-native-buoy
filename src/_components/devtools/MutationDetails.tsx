@@ -33,8 +33,8 @@ export default function MutationDetails({ selectedMutation }: Props) {
         <MutationDetailsChips status={selectedMutation.state.status} />
       </View>
       <View style={[styles.flexRow, styles.justifyBetween, styles.p1]}>
-        <Text>Submitted At:</Text>
-        <Text>{submittedAt}</Text>
+        <Text style={styles.labelText}>Submitted At:</Text>
+        <Text style={styles.valueText}>{submittedAt}</Text>
       </View>
     </View>
   );
@@ -43,38 +43,58 @@ export default function MutationDetails({ selectedMutation }: Props) {
 const styles = StyleSheet.create({
   container: {
     minWidth: 200,
-    fontSize: 12,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+    overflow: "hidden",
   },
   mutationDetailsText: {
     textAlign: "left",
-    backgroundColor: "#EAECF0",
-    padding: 8,
-    fontWeight: "500",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    padding: 12,
+    fontWeight: "600",
+    fontSize: 13,
+    color: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)",
   },
   flexRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 8,
+    alignItems: "center",
+    padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: "rgba(255, 255, 255, 0.03)",
   },
   justifyBetween: {
     justifyContent: "space-between",
   },
   p1: {
-    padding: 8,
+    padding: 12,
   },
   flex1: {
     flex: 1,
   },
   flexWrap: {
-    flexWrap: "wrap",
-    alignItems: "center",
+    fontSize: 12,
+    color: "#E5E7EB",
+    fontFamily: "monospace",
     marginRight: 8,
+    lineHeight: 16,
   },
   bgEAECF0: {
-    backgroundColor: "#EAECF0",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+  },
+  labelText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    fontWeight: "500",
+  },
+  valueText: {
+    fontSize: 12,
+    color: "#FFFFFF",
+    fontWeight: "500",
+    fontVariant: ["tabular-nums"],
   },
 });
