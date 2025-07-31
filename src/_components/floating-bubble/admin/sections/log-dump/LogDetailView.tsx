@@ -1,15 +1,10 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
+import { FlashList } from "@shopify/flash-list";
 
 import { ConsoleTransportEntry } from "../../logger/types";
-import { DataExplorer } from "../../../../_shared/DataExplorer";
+import { VirtualizedDataExplorer } from "../../../../_shared/VirtualizedDataExplorer";
 
 import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 
@@ -21,6 +16,113 @@ export const LogDetailView = ({
   onBack: () => void;
 }) => {
   const insets = useSafeAreaInsets();
+
+  // Create sections data for FlashList
+  const sections = [
+    {
+      id: "header",
+      type: "header",
+      data: {
+        type: entry.type,
+        level: entry.level,
+        timestamp: entry.timestamp,
+        message: entry.message,
+      },
+    },
+    ...(entry.metadata && Object.keys(entry.metadata).length > 0
+      ? [
+          {
+            id: "metadata",
+            type: "explorer",
+            title: "METADATA",
+            data: entry.metadata,
+          },
+        ]
+      : []),
+    {
+      id: "debugInfo",
+      type: "explorer",
+      title: "DEBUG INFO",
+      data: {
+        id: entry.id,
+        level: entry.level,
+        timestamp: entry.timestamp,
+      },
+    },
+  ];
+
+  const renderItem = ({ item }: { item: any }) => {
+    switch (item.type) {
+      case "header":
+        return (
+          <View>
+            {/* Level and timestamp */}
+            <View style={styles.metaRow}>
+              <View style={styles.metaLeft}>
+                {/* Type indicator */}
+                <View style={styles.typeIndicator}>
+                  {(() => {
+                    const IconComponent = getTypeIcon(item.data.type);
+                    return (
+                      <IconComponent
+                        size={14}
+                        color={getTypeColor(item.data.type)}
+                      />
+                    );
+                  })()}
+                  <Text
+                    style={[
+                      styles.typeText,
+                      { color: getTypeColor(item.data.type) },
+                    ]}
+                  >
+                    {item.data.type}
+                  </Text>
+                </View>
+
+                {/* Level indicator */}
+                <View
+                  style={[styles.levelDot, getLevelDotStyle(item.data.level)]}
+                />
+                <Text
+                  style={[
+                    styles.levelText,
+                    { color: getLevelTextColor(item.data.level) },
+                  ]}
+                >
+                  {item.data.level.toUpperCase()}
+                </Text>
+              </View>
+              <Text style={styles.timestamp}>
+                {formatTimestamp(item.data.timestamp)}
+              </Text>
+            </View>
+
+            {/* Message */}
+            <View style={styles.messageSection}>
+              <Text style={styles.sectionLabel}>MESSAGE</Text>
+              <View style={styles.messageContainer}>
+                <Text style={styles.messageText} selectable>
+                  {String(item.data.message)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        );
+      case "explorer":
+        return (
+          <View style={styles.explorerSection}>
+            <VirtualizedDataExplorer
+              title={item.title}
+              data={item.data}
+              maxDepth={6}
+            />
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -39,82 +141,23 @@ export const LogDetailView = ({
         <Text style={styles.headerTitle}>Log Details</Text>
       </View>
 
-      {/* Scrollable Content */}
-      <ScrollView
-        sentry-label="ignore log entries scroll view"
-        accessibilityLabel="Log entries scroll view"
-        accessibilityHint="Scroll through log entries"
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: 16 + insets.bottom },
-        ]}
-        showsVerticalScrollIndicator={true}
-      >
-        {/* Level and timestamp */}
-        <View style={styles.metaRow}>
-          <View style={styles.metaLeft}>
-            {/* Type indicator */}
-            <View style={styles.typeIndicator}>
-              {(() => {
-                const IconComponent = getTypeIcon(entry.type);
-                return (
-                  <IconComponent size={14} color={getTypeColor(entry.type)} />
-                );
-              })()}
-              <Text
-                style={[styles.typeText, { color: getTypeColor(entry.type) }]}
-              >
-                {entry.type}
-              </Text>
-            </View>
-
-            {/* Level indicator */}
-            <View style={[styles.levelDot, getLevelDotStyle(entry.level)]} />
-            <Text
-              style={[
-                styles.levelText,
-                { color: getLevelTextColor(entry.level) },
-              ]}
-            >
-              {entry.level.toUpperCase()}
-            </Text>
-          </View>
-          <Text style={styles.timestamp}>
-            {formatTimestamp(entry.timestamp)}
-          </Text>
-        </View>
-
-        {/* Message */}
-        <View style={styles.messageSection}>
-          <Text style={styles.sectionLabel}>MESSAGE</Text>
-          <View style={styles.messageContainer}>
-            <Text style={styles.messageText} selectable>
-              {String(entry.message)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Metadata if it exists */}
-        {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-          <DataExplorer
-            title="METADATA"
-            data={entry.metadata}
-            defaultExpanded={true}
-          />
-        )}
-
-        {/* Debug info */}
-        <DataExplorer
-          title="DEBUG INFO"
-          data={{
-            id: entry.id,
-            level: entry.level,
-            timestamp: entry.timestamp,
+      <View style={styles.flashListContainer}>
+        <FlashList
+          data={sections}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          estimatedItemSize={150}
+          getItemType={(item) => item.type}
+          contentContainerStyle={{
+            ...styles.contentContainer,
+            paddingBottom: 16 + insets.bottom,
           }}
-          defaultExpanded={true}
+          showsVerticalScrollIndicator={true}
+          sentry-label="ignore log entries list"
+          accessibilityLabel="Log entries list"
+          accessibilityHint="Scroll through log entries sections"
         />
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -180,11 +223,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginRight: 64,
   },
-  scrollView: {
+  flashListContainer: {
     flex: 1,
   },
-  scrollContent: {
+  contentContainer: {
     padding: 16,
+  },
+  explorerSection: {
+    marginVertical: 8,
   },
   metaRow: {
     flexDirection: "row",

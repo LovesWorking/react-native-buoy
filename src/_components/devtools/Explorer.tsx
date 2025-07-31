@@ -69,7 +69,8 @@ const CopyButton = ({ value }: { value: any }) => {
     }
 
     try {
-      const copied = await onCopy(JSON.stringify(value));
+      // Pass the raw value to onCopy - let the context handle safe stringification
+      const copied = await onCopy(value);
       if (copied) {
         setCopyState("SuccessCopy");
         setTimeout(() => setCopyState("NoCopy"), 1500);

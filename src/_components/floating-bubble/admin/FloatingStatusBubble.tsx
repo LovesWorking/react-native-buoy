@@ -11,6 +11,11 @@ import { ReactQuerySection } from "./sections/ReactQuerySection";
 import { AdminModal } from "./AdminModal";
 import type { Environment, UserRole } from "./components";
 import { useBubbleWidth, useDragGesture, useWifiState } from "./hooks";
+import {
+  CopyContext,
+  type ClipboardFunction,
+} from "../../../context/CopyContext";
+import { safeStringify } from "../../../_components/_util/safeStringify";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -23,6 +28,7 @@ interface FloatingStatusBubbleProps {
   removeSections?: DefaultSection[]; // Array of default sections to disable
   requiredEnvVars?: RequiredEnvVar[]; // List of required environment variables to check
   queryClient?: QueryClient; // React Query client for dev tools
+  onCopy?: ClipboardFunction; // Function to handle copying text to clipboard
 }
 
 export function FloatingStatusBubble({
@@ -32,6 +38,7 @@ export function FloatingStatusBubble({
   removeSections = [],
   requiredEnvVars,
   queryClient,
+  onCopy,
 }: FloatingStatusBubbleProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -129,19 +136,43 @@ export function FloatingStatusBubble({
         </Animated.View>
       )}
 
-      <AdminModal visible={isModalOpen} onDismiss={handleModalDismiss}>
-        {/* Default sections (conditionally rendered) */}
-        {!removeSections.includes("sentry-logs") && <SentryLogDumpSection />}
-        {!removeSections.includes("env-vars") && (
-          <EnvVarsSection requiredEnvVars={requiredEnvVars} />
-        )}
-        {!removeSections.includes("react-query") && (
-          <ReactQuerySection queryClient={queryClient} />
-        )}
+      <CopyContext.Provider
+        value={{
+          onCopy: async (value) => {
+            try {
+              // If it's already a string, use it directly
+              const textToCopy =
+                typeof value === "string"
+                  ? value
+                  : safeStringify(value, 2, {
+                      depthLimit: 100,
+                      edgesLimit: 1000,
+                    }); // Pretty print with limits
 
-        {/* User-provided additional sections */}
-        {children}
-      </AdminModal>
+              return onCopy ? onCopy(textToCopy) : false;
+            } catch (error) {
+              console.error("Copy failed in FloatingStatusBubble:", error);
+              console.error("Value type:", typeof value);
+              console.error("Value constructor:", value?.constructor?.name);
+              return false;
+            }
+          },
+        }}
+      >
+        <AdminModal visible={isModalOpen} onDismiss={handleModalDismiss}>
+          {/* Default sections (conditionally rendered) */}
+          {!removeSections.includes("sentry-logs") && <SentryLogDumpSection />}
+          {!removeSections.includes("env-vars") && (
+            <EnvVarsSection requiredEnvVars={requiredEnvVars} />
+          )}
+          {!removeSections.includes("react-query") && (
+            <ReactQuerySection queryClient={queryClient} />
+          )}
+
+          {/* User-provided additional sections */}
+          {children}
+        </AdminModal>
+      </CopyContext.Provider>
     </>
   );
 }
