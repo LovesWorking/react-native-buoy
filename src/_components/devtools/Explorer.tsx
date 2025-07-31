@@ -42,9 +42,14 @@ function chunkArray<T extends { label: string; value: unknown }>(
 }
 const Expander = ({ expanded }: { expanded: boolean }) => {
   return (
-    <View style={[expanded ? styles.expanded : styles.collapsed]}>
-      <Svg width={16} height={16} viewBox="0 0 16 16" fill="#9CA3AF">
-        <Path d="M6 12l4-4-4-4" />
+    <View
+      style={[
+        styles.expanderIcon,
+        expanded ? styles.expanded : styles.collapsed,
+      ]}
+    >
+      <Svg width={12} height={12} viewBox="0 0 16 16" fill="#6B7280">
+        <Path d="M6 12l4-4-4-4" strokeWidth={2} stroke="#6B7280" />
       </Svg>
     </View>
   );
@@ -185,6 +190,9 @@ const ToggleValueButton = ({
             backgroundColor: value
               ? "rgba(34, 197, 94, 0.1)"
               : "rgba(107, 114, 128, 0.1)",
+            borderColor: value
+              ? "rgba(34, 197, 94, 0.2)"
+              : "rgba(107, 114, 128, 0.2)",
           },
         ]}
       >
@@ -309,7 +317,7 @@ export default function Explorer({
                 onPress={() => toggleExpanded()}
               >
                 <Expander expanded={isExpanded} />
-                <Text>{label}</Text>
+                <Text style={styles.labelText}>{label}</Text>
                 <Text style={styles.textGray500}>{`${
                   String(valueType).toLowerCase() === "iterable"
                     ? "(Iterable) "
@@ -376,7 +384,7 @@ export default function Explorer({
                             <Expander
                               expanded={expandedPages.includes(index)}
                             />
-                            <Text>
+                            <Text style={styles.pageRangeText}>
                               [{index * 100}...{index * 100 + 99}]
                             </Text>
                           </TouchableOpacity>
@@ -454,9 +462,14 @@ export default function Explorer({
                             <Svg
                               fill="none"
                               viewBox="0 0 24 24"
-                              stroke="#6938EF"
+                              stroke="#6B7280"
+                              width={12}
+                              height={12}
                             >
-                              <Path d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                              <Path
+                                d="M4.5 15.75l7.5-7.5 7.5 7.5"
+                                strokeWidth={2}
+                              />
                             </Svg>
                           </TouchableOpacity>
                           <TouchableOpacity
@@ -478,11 +491,14 @@ export default function Explorer({
                             <Svg
                               fill="none"
                               viewBox="0 0 24 24"
-                              stroke="#6938EF"
+                              stroke="#6B7280"
+                              width={12}
+                              height={12}
                             >
                               <Path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
+                                strokeWidth={2}
                                 d="M19.5 8.25l-7.5 7.5-7.5-7.5"
                               />
                             </Svg>
@@ -526,20 +542,24 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   buttonStyle2: {
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(249, 115, 22, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(249, 115, 22, 0.2)",
+    borderRadius: 4,
     flexDirection: "row",
     padding: 0,
     alignItems: "center",
     justifyContent: "center",
-    width: 12,
-    height: 12,
+    width: 24,
+    height: 24,
     position: "relative",
     zIndex: 10,
   },
   buttonStyle1: {
-    backgroundColor: "transparent",
-    borderColor: "transparent",
-    borderWidth: 0,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    borderColor: "rgba(239, 68, 68, 0.2)",
+    borderWidth: 1,
+    borderRadius: 4,
     padding: 0,
     alignItems: "center",
     justifyContent: "center",
@@ -548,15 +568,23 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   buttonStyle: {
-    backgroundColor: "transparent",
-    color: "#9CA3AF",
-    borderWidth: 0,
+    backgroundColor: "rgba(107, 114, 128, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(107, 114, 128, 0.2)",
+    borderRadius: 4,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    width: 12,
-    height: 12,
+    width: 24,
+    height: 24,
     position: "relative",
+  },
+  expanderIcon: {
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 2,
   },
   expanded: {
     transform: [{ rotate: "90deg" }],
@@ -580,38 +608,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    marginVertical: 2,
   },
   expanderButton: {
     flexDirection: "row",
     alignItems: "center",
-    height: 24,
     backgroundColor: "transparent",
+    padding: 4,
+    gap: 6,
     borderWidth: 0,
-    padding: 2,
+    minHeight: 28,
+  },
+  labelText: {
+    color: "#F9FAFB",
+    fontSize: 14,
+    fontWeight: "500",
+    marginRight: 8,
   },
   textGray500: {
     color: "#9CA3AF",
+    fontSize: 11,
+    fontWeight: "400",
+  },
+  pageRangeText: {
+    color: "#F9FAFB",
     fontSize: 12,
-    marginLeft: 4,
+    fontWeight: "500",
+    fontFamily: "monospace",
   },
   flexRowGapItemsCenter: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    padding: 4,
+    gap: 8,
+    paddingLeft: 8,
   },
   singleEntryContainer: {
-    marginLeft: 12,
-    paddingLeft: 16,
-    borderLeftWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginLeft: 20,
+    marginTop: 4,
+    paddingLeft: 12,
+    borderLeftWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
   },
   multiEntryContainer: {
-    marginLeft: 12,
-    paddingLeft: 16,
-    borderLeftWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginLeft: 20,
+    marginTop: 4,
+    paddingLeft: 12,
+    borderLeftWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
   },
   relativeOutlineNone: {
     position: "relative",
@@ -620,39 +665,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "transparent",
+    padding: 4,
+    gap: 6,
     borderWidth: 0,
-    padding: 0,
+    marginBottom: 4,
+    minHeight: 24,
   },
   entriesContainer: {
-    marginLeft: 12,
-    paddingLeft: 16,
-    borderLeftWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginLeft: 20,
+    paddingLeft: 12,
+    borderLeftWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+    marginTop: 4,
   },
   flexRowGapFullWidth: {
     flexDirection: "row",
     width: "100%",
     alignItems: "center",
-    marginVertical: 6,
-    lineHeight: 44,
+    marginVertical: 3,
+    gap: 8,
   },
   text344054: {
     color: "#F9FAFB",
-    height: "100%",
-    marginRight: 4,
     fontWeight: "500",
+    fontSize: 12,
+    minWidth: 50,
   },
   inputContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-    height: 32,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    height: 36,
     margin: 2,
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingLeft: 12,
     paddingRight: 8,
-    borderRadius: 6,
+    borderRadius: 8,
     backgroundColor: "rgba(255, 255, 255, 0.03)",
     flex: 1,
   },
@@ -666,8 +716,9 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
     paddingTop: 2,
     color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "monospace",
+    fontWeight: "500",
   },
   textString: {},
   numberInputButtons: {
@@ -675,6 +726,14 @@ const styles = StyleSheet.create({
   },
   touchableButton: {
     width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: "rgba(107, 114, 128, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(107, 114, 128, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
   },
   booleanContainer: {
     flexDirection: "row",
@@ -695,24 +754,32 @@ const styles = StyleSheet.create({
   displayValueText: {
     flex: 1,
     color: "#10B981",
-    height: "100%",
     fontWeight: "500",
     fontFamily: "monospace",
+    fontSize: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.1)",
   },
   modernToggleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "rgba(255, 255, 255, 0.03)",
-    borderRadius: 8,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
-    padding: 12,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     marginVertical: 2,
     flex: 1,
+    height: 36,
   },
   toggleIconContainer: {
-    marginRight: 12,
+    marginRight: 6,
   },
   toggleIcon: {
     padding: 8,
@@ -733,7 +800,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     color: "#F9FAFB",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
     fontFamily: "monospace",
   },
@@ -742,13 +809,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   toggleBadge: {
-    marginLeft: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    marginLeft: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
   },
   toggleBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
