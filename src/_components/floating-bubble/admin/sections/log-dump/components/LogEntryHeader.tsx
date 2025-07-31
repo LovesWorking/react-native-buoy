@@ -1,17 +1,19 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { ChevronRight } from "lucide-react-native";
 
-import { ConsoleTransportEntry } from '../../../logger/types';
-import { formatTimestamp } from '../utils';
+import { ConsoleTransportEntry } from "../../../logger/types";
+import { formatTimestamp } from "../utils";
 
-import { LogEntryLevelIndicator } from './LogEntryLevelIndicator';
-import { LogEntryTypeIndicator } from './LogEntryTypeIndicator';
+import { LogEntryLevelIndicator } from "./LogEntryLevelIndicator";
+import { LogEntryTypeIndicator } from "./LogEntryTypeIndicator";
 
 interface LogEntryHeaderProps {
   entry: ConsoleTransportEntry;
 }
 
-export const LogEntryHeader = ({ entry }: LogEntryHeaderProps) => {
+// Memoized leaf component for header rendering performance [[memory:4875251]]
+export const LogEntryHeader = React.memo<LogEntryHeaderProps>(({ entry }) => {
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
@@ -24,28 +26,28 @@ export const LogEntryHeader = ({ entry }: LogEntryHeaderProps) => {
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   timestamp: {
-    color: '#6B7280',
+    color: "#6B7280",
     fontSize: 12,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
 });

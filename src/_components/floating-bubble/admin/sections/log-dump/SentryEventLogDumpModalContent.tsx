@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -33,6 +33,38 @@ import {
   generateTestSentryEvents,
   getSentryEvents,
 } from "../../../sentry/sentryEventListeners";
+
+// Stable constants to prevent re-creation on every render [[memory:4875251]]
+const ESTIMATED_ITEM_SIZE = 120;
+const END_REACHED_THRESHOLD = 0.8;
+const MAINTAIN_VISIBLE_CONTENT_POSITION = {
+  minIndexForVisible: 0,
+  autoscrollToTopThreshold: 1,
+};
+
+// Stable module-scope functions to prevent FlashList view recreation [[memory:4875251]]
+const keyExtractor = (item: ConsoleTransportEntry, index: number) => {
+  return `${item.id}-${index}-${item.timestamp}`;
+};
+
+const getItemType = (item: ConsoleTransportEntry) => {
+  // Optimize FlashList recycling by categorizing items for separate pools
+  return `${item.type}-${item.level}`;
+};
+
+// Stable renderItem function using ref pattern to avoid recreating FlashList items [[memory:4875251]]
+const createRenderSentryEventItem = (
+  selectEntryRef: React.MutableRefObject<
+    ((entry: ConsoleTransportEntry) => void) | undefined
+  >
+) => {
+  return ({ item }: { item: ConsoleTransportEntry }) => (
+    <SentryEventLogEntryItem
+      entry={item}
+      onSelectEntry={(entry) => selectEntryRef.current?.(entry)}
+    />
+  );
+};
 
 interface SentryEventLogDumpModalContentProps {
   onClose: () => void;
@@ -85,9 +117,21 @@ export function SentryEventLogDumpModalContent({
     setEntries(calculateEntries());
   }, []);
 
-  const selectEntry = (entry: ConsoleTransportEntry) => {
+  // Use "Latest Ref" pattern to avoid dependency arrays [[memory:4875251]]
+  const selectEntryRef = useRef<(entry: ConsoleTransportEntry) => void>(
+    (entry: ConsoleTransportEntry) => {
+      setSelectedEntry(entry);
+    }
+  );
+  selectEntryRef.current = (entry: ConsoleTransportEntry) => {
     setSelectedEntry(entry);
   };
+
+  // Create stable renderItem once per component lifecycle [[memory:4875251]]
+  const renderSentryEventItem = useMemo(
+    () => createRenderSentryEventItem(selectEntryRef),
+    []
+  );
 
   const goBackToList = () => {
     setSelectedEntry(null);
@@ -139,7 +183,8 @@ export function SentryEventLogDumpModalContent({
     });
   };
 
-  const getFilteredEntries = () => {
+  // Memoized filtering to prevent expensive recalculation on every render [[memory:4875251]]
+  const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
       const typeMatch =
         selectedTypes.size === 0 || selectedTypes.has(entry.type);
@@ -147,11 +192,7 @@ export function SentryEventLogDumpModalContent({
         selectedLevels.size === 0 || selectedLevels.has(entry.level);
       return typeMatch && levelMatch;
     });
-  };
-
-  const keyExtractor = (item: ConsoleTransportEntry, index: number) => {
-    return `${item.id}-${index}-${item.timestamp}`;
-  };
+  }, [entries, selectedTypes, selectedLevels]);
 
   // Auto-scroll when entries update
   useEffect(() => {
@@ -206,7 +247,7 @@ export function SentryEventLogDumpModalContent({
             <View>
               <Text style={styles.title}>Sentry Events</Text>
               <Text style={styles.subtitle}>
-                {getFilteredEntries().length} of {entries.length} events
+                {filteredEntries.length} of {entries.length} events
               </Text>
             </View>
           </View>
@@ -274,7 +315,7 @@ export function SentryEventLogDumpModalContent({
       </View>
 
       {/* Event Entries */}
-      {getFilteredEntries().length === 0 ? (
+      {filteredEntries.length === 0 ? (
         <View style={styles.emptyContainer}>
           {entries.length === 0 ? <EmptyState /> : <EmptyFilterState />}
         </View>
@@ -284,28 +325,21 @@ export function SentryEventLogDumpModalContent({
             <FlashList
               sentry-label="ignore sentry events list"
               ref={flatListRef}
-              data={getFilteredEntries()}
-              renderItem={({ item }: { item: ConsoleTransportEntry }) => (
-                <SentryEventLogEntryItem
-                  entry={item}
-                  onSelectEntry={selectEntry}
-                />
-              )}
+              data={filteredEntries}
+              renderItem={renderSentryEventItem}
               keyExtractor={keyExtractor}
-              estimatedItemSize={120}
+              getItemType={getItemType}
+              estimatedItemSize={ESTIMATED_ITEM_SIZE}
               inverted
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator
               removeClippedSubviews
-              onEndReachedThreshold={0.8}
-              maintainVisibleContentPosition={{
-                minIndexForVisible: 0,
-                autoscrollToTopThreshold: 1,
-              }}
+              onEndReachedThreshold={END_REACHED_THRESHOLD}
+              maintainVisibleContentPosition={MAINTAIN_VISIBLE_CONTENT_POSITION}
               renderScrollComponent={ScrollView}
             />
           </GestureDetector>
-          <View style={{ height: insets.bottom }} />
+          <View style={[styles.bottomInset, { height: insets.bottom }]} />
         </View>
       )}
     </View>
@@ -382,5 +416,8 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingTop: 16,
+  },
+  bottomInset: {
+    // Empty style for safe area bottom spacing
   },
 });
