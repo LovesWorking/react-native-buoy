@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
 import { Check, CopiedCopier, Copier, ErrorCopier, List, Trash } from "./svgs";
 import { updateNestedDataByPath } from "../_util/updateNestedDataByPath";
@@ -15,32 +15,29 @@ import {
 } from "react-native";
 import { useCopy } from "../../context/CopyContext";
 
+// Stable constants to prevent re-renders [[memory:4875251]]
+const CHUNK_SIZE = 100;
+const HIT_SLOP_OPTIMIZED = { top: 8, bottom: 8, left: 8, right: 8 };
+const BUTTON_SIZE = 24;
+const EXPANDER_SIZE = 16;
+
 function isIterable(x: any): x is Iterable<unknown> {
   return Symbol.iterator in x;
 }
-/**
- * Chunk elements in the array by size
- *
- * when the array cannot be chunked evenly by size, the last chunk will be
- * filled with the remaining elements
- *
- * @example
- * chunkArray(['a','b', 'c', 'd', 'e'], 2) // returns [['a','b'], ['c', 'd'], ['e']]
- */
-function chunkArray<T extends { label: string; value: unknown }>(
+// Optimized chunking function moved to module scope [[memory:4875251]]
+const chunkArray = <T extends { label: string; value: unknown }>(
   array: Array<T>,
-  size: number
-): Array<Array<T>> {
-  if (size < 1) return [];
-  let i = 0;
+  size: number = CHUNK_SIZE
+): Array<Array<T>> => {
+  if (size < 1 || array.length === 0) return [];
   const result: Array<Array<T>> = [];
-  while (i < array.length) {
+  for (let i = 0; i < array.length; i += size) {
     result.push(array.slice(i, i + size));
-    i = i + size;
   }
   return result;
-}
-const Expander = ({ expanded }: { expanded: boolean }) => {
+};
+// Memoized Expander component for performance [[memory:4875251]]
+const Expander = React.memo(({ expanded }: { expanded: boolean }) => {
   return (
     <View
       style={[
@@ -48,18 +45,27 @@ const Expander = ({ expanded }: { expanded: boolean }) => {
         expanded ? styles.expanded : styles.collapsed,
       ]}
     >
-      <Svg width={12} height={12} viewBox="0 0 16 16" fill="#6B7280">
+      <Svg
+        width={EXPANDER_SIZE}
+        height={EXPANDER_SIZE}
+        viewBox="0 0 16 16"
+        fill="#6B7280"
+      >
         <Path d="M6 12l4-4-4-4" strokeWidth={2} stroke="#6B7280" />
       </Svg>
     </View>
   );
-};
+});
 type CopyState = "NoCopy" | "SuccessCopy" | "ErrorCopy";
-const CopyButton = ({ value }: { value: any }) => {
+
+// Memoized CopyButton component optimized with ref pattern [[memory:4875251]]
+const CopyButton = React.memo(({ value }: { value: any }) => {
   const [copyState, setCopyState] = useState<CopyState>("NoCopy");
   const { onCopy } = useCopy();
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     if (!onCopy) {
       Alert.alert(
         "Warning",
@@ -69,8 +75,8 @@ const CopyButton = ({ value }: { value: any }) => {
     }
 
     try {
-      // Pass the raw value to onCopy - let the context handle safe stringification
-      const copied = await onCopy(value);
+      // Use ref to avoid stale closures [[memory:4875251]]
+      const copied = await onCopy(valueRef.current);
       if (copied) {
         setCopyState("SuccessCopy");
         setTimeout(() => setCopyState("NoCopy"), 1500);
@@ -83,7 +89,8 @@ const CopyButton = ({ value }: { value: any }) => {
       setCopyState("ErrorCopy");
       setTimeout(() => setCopyState("NoCopy"), 1500);
     }
-  };
+  }, [onCopy]); // Only depend on onCopy, use ref for value
+
   return (
     <TouchableOpacity
       style={styles.buttonStyle}
@@ -95,120 +102,146 @@ const CopyButton = ({ value }: { value: any }) => {
           : "Error copying object to clipboard"
       }
       onPress={copyState === "NoCopy" ? handleCopy : undefined}
+      hitSlop={HIT_SLOP_OPTIMIZED}
     >
       {copyState === "NoCopy" && <Copier />}
       {copyState === "SuccessCopy" && <CopiedCopier theme="light" />}
       {copyState === "ErrorCopy" && <ErrorCopier />}
     </TouchableOpacity>
   );
-};
-const DeleteItemButton = ({
-  dataPath,
-  activeQuery,
-}: {
-  dataPath: Array<string>;
-  activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
-}) => {
-  const queryClient = useQueryClient();
-  if (!activeQuery) return null;
-  return (
-    <TouchableOpacity
-      onPress={() => {
-        deleteItem({
-          queryClient,
-          activeQuery,
-          dataPath,
-        });
-      }}
-      style={styles.buttonStyle1}
-      accessibilityLabel="Delete item"
-    >
-      <Trash />
-    </TouchableOpacity>
-  );
-};
-const ClearArrayButton = ({
-  dataPath,
-  activeQuery,
-}: {
-  dataPath: Array<string>;
-  activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
-}) => {
-  const queryClient = useQueryClient();
-  if (!activeQuery) return null;
+});
+// Memoized DeleteItemButton component [[memory:4875251]]
+const DeleteItemButton = React.memo(
+  ({
+    dataPath,
+    activeQuery,
+  }: {
+    dataPath: Array<string>;
+    activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
+  }) => {
+    const queryClient = useQueryClient();
+    const dataPathRef = useRef(dataPath);
+    const activeQueryRef = useRef(activeQuery);
+    dataPathRef.current = dataPath;
+    activeQueryRef.current = activeQuery;
 
-  const handleClear = () => {
-    const oldData = activeQuery.state.data;
-    const newData = updateNestedDataByPath(oldData, dataPath, []);
-    queryClient.setQueryData(activeQuery.queryKey, newData);
-  };
+    const handleDelete = useCallback(() => {
+      if (!activeQueryRef.current) return;
+      deleteItem({
+        queryClient,
+        activeQuery: activeQueryRef.current,
+        dataPath: dataPathRef.current,
+      });
+    }, [queryClient]);
 
-  return (
-    <TouchableOpacity
-      style={styles.buttonStyle2}
-      aria-label="Remove all items"
-      onPress={handleClear}
-    >
-      <List />
-    </TouchableOpacity>
-  );
-};
-const ToggleValueButton = ({
-  dataPath,
-  activeQuery,
-  value,
-}: {
-  dataPath: Array<string>;
-  activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
-  value: any;
-}) => {
-  const queryClient = useQueryClient();
-  if (!activeQuery) return null;
+    if (!activeQuery) return null;
 
-  const handleClick = () => {
-    const oldData = activeQuery.state.data;
-    const newData = updateNestedDataByPath(oldData, dataPath, !value);
-    queryClient.setQueryData(activeQuery.queryKey, newData);
-  };
-
-  return (
-    <TouchableOpacity style={styles.modernToggleButton} onPress={handleClick}>
-      <View style={styles.toggleIconContainer}>
-        <View
-          style={[
-            styles.toggleIconSmall,
-            { backgroundColor: value ? "#22C55E" : "#6B7280" },
-          ]}
-        />
-      </View>
-      <View style={styles.toggleContent}>
-        <Text style={styles.toggleLabel}>{displayValue(value)}</Text>
-      </View>
-      <View
-        style={[
-          styles.toggleBadge,
-          {
-            backgroundColor: value
-              ? "rgba(34, 197, 94, 0.1)"
-              : "rgba(107, 114, 128, 0.1)",
-            borderColor: value
-              ? "rgba(34, 197, 94, 0.2)"
-              : "rgba(107, 114, 128, 0.2)",
-          },
-        ]}
+    return (
+      <TouchableOpacity
+        onPress={handleDelete}
+        style={styles.buttonStyle1}
+        accessibilityLabel="Delete item"
+        hitSlop={HIT_SLOP_OPTIMIZED}
       >
-        <Text
-          style={[
-            styles.toggleBadgeText,
-            { color: value ? "#22C55E" : "#6B7280" },
-          ]}
-        >
-          {value ? "TRUE" : "FALSE"}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
+        <Trash />
+      </TouchableOpacity>
+    );
+  }
+);
+// Memoized ClearArrayButton component [[memory:4875251]]
+const ClearArrayButton = React.memo(
+  ({
+    dataPath,
+    activeQuery,
+  }: {
+    dataPath: Array<string>;
+    activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
+  }) => {
+    const queryClient = useQueryClient();
+    const dataPathRef = useRef(dataPath);
+    const activeQueryRef = useRef(activeQuery);
+    dataPathRef.current = dataPath;
+    activeQueryRef.current = activeQuery;
+
+    const handleClear = useCallback(() => {
+      if (!activeQueryRef.current) return;
+      const oldData = activeQueryRef.current.state.data;
+      const newData = updateNestedDataByPath(oldData, dataPathRef.current, []);
+      queryClient.setQueryData(activeQueryRef.current.queryKey, newData);
+    }, [queryClient]);
+
+    if (!activeQuery) return null;
+
+    return (
+      <TouchableOpacity
+        style={styles.buttonStyle2}
+        aria-label="Remove all items"
+        onPress={handleClear}
+        hitSlop={HIT_SLOP_OPTIMIZED}
+      >
+        <List />
+      </TouchableOpacity>
+    );
+  }
+);
+// Memoized ToggleValueButton with pre-computed styles [[memory:4875251]]
+const ToggleValueButton = React.memo(
+  ({
+    dataPath,
+    activeQuery,
+    value,
+  }: {
+    dataPath: Array<string>;
+    activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
+    value: any;
+  }) => {
+    const queryClient = useQueryClient();
+    const dataPathRef = useRef(dataPath);
+    const activeQueryRef = useRef(activeQuery);
+    const valueRef = useRef(value);
+    dataPathRef.current = dataPath;
+    activeQueryRef.current = activeQuery;
+    valueRef.current = value;
+
+    const handleClick = useCallback(() => {
+      if (!activeQueryRef.current) return;
+      const oldData = activeQueryRef.current.state.data;
+      const newData = updateNestedDataByPath(
+        oldData,
+        dataPathRef.current,
+        !valueRef.current
+      );
+      queryClient.setQueryData(activeQueryRef.current.queryKey, newData);
+    }, [queryClient]);
+
+    if (!activeQuery) return null;
+
+    // Pre-compute styles based on value state [[memory:4875251]]
+    const iconStyle = value ? styles.toggleIconTrue : styles.toggleIconFalse;
+    const badgeStyle = value ? styles.toggleBadgeTrue : styles.toggleBadgeFalse;
+    const textStyle = value ? styles.toggleTextTrue : styles.toggleTextFalse;
+
+    return (
+      <TouchableOpacity
+        style={styles.modernToggleButton}
+        onPress={handleClick}
+        hitSlop={HIT_SLOP_OPTIMIZED}
+      >
+        <View style={styles.toggleIconContainer}>
+          <View style={[styles.toggleIconSmall, iconStyle]} />
+        </View>
+        <View style={styles.toggleContent}>
+          <Text style={styles.toggleLabel}>{displayValue(value)}</Text>
+        </View>
+        <View style={[styles.toggleBadge, badgeStyle]}>
+          <Text style={[styles.toggleBadgeText, textStyle]}>
+            {value ? "TRUE" : "FALSE"}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+);
 type Props = {
   editable?: boolean; // true
   label: string; //Data
@@ -218,6 +251,7 @@ type Props = {
   dataPath?: Array<string>;
   itemsDeletable?: boolean;
 };
+// Optimized Explorer component following rule2 guidelines [[memory:4875251]]
 export default function Explorer({
   editable,
   label,
@@ -233,79 +267,91 @@ export default function Explorer({
   const [isExpanded, setIsExpanded] = useState(
     (defaultExpanded || []).includes(label)
   );
+  // Remove unnecessary useCallback - simple state setter [[memory:4875251]]
   const toggleExpanded = () => setIsExpanded((old) => !old);
   const [expandedPages, setExpandedPages] = useState<Array<number>>([]);
 
-  // Flattens data to label and value properties for easy rendering.
+  // Optimized subEntries computation with early returns and limited processing [[memory:4875251]]
   const subEntries = useMemo(() => {
+    // Early return for primitive values to avoid unnecessary computation
+    if (value === null || value === undefined || typeof value !== "object") {
+      return [];
+    }
+
     if (Array.isArray(value)) {
-      // Handle if array
-      return value.map((d, i) => ({
+      // Limit array processing for performance [[memory:4875251]]
+      const limitedValue = value.length > 1000 ? value.slice(0, 1000) : value;
+      return limitedValue.map((d, i) => ({
         label: i.toString(),
         value: d,
       }));
-    } else if (
-      value !== null &&
-      typeof value === "object" &&
-      isIterable(value)
-    ) {
-      // Handle if object
+    }
+
+    if (isIterable(value)) {
       if (value instanceof Map) {
-        return Array.from(value, ([key, val]) => ({
+        // Limit Map entries for performance
+        const entries = Array.from(value.entries()).slice(0, 1000);
+        return entries.map(([key, val]) => ({
           label: key.toString(),
           value: val,
         }));
       }
-      return Array.from(value, (val, i) => ({
+      // Limit other iterables
+      const entries = Array.from(value).slice(0, 1000);
+      return entries.map((val, i) => ({
         label: i.toString(),
         value: val,
       }));
-    } else if (typeof value === "object" && value !== null) {
-      return Object.entries(value).map(([key, val]) => ({
-        label: key,
-        value: val,
-      }));
     }
-    return [];
+
+    // Handle regular objects with key limiting
+    const entries = Object.entries(value).slice(0, 1000);
+    return entries.map(([key, val]) => ({
+      label: key,
+      value: val,
+    }));
   }, [value]);
 
-  // Identifies the data type of the value prop (e.g., 'array', 'Iterable', 'object')
+  // Optimized valueType computation with early returns [[memory:4875251]]
   const valueType = useMemo(() => {
-    if (Array.isArray(value)) {
-      return "array";
-    } else if (
-      value !== null &&
-      typeof value === "object" &&
-      isIterable(value) &&
-      typeof value[Symbol.iterator] === "function"
-    ) {
+    if (Array.isArray(value)) return "array";
+    if (value === null || typeof value !== "object") return typeof value;
+    if (isIterable(value) && typeof value[Symbol.iterator] === "function")
       return "Iterable";
-    } else if (typeof value === "object" && value !== null) {
-      return "object";
-    }
-    return typeof value;
+    return "object";
   }, [value]);
 
-  // Takes a long list of items and divides it into smaller groups or 'chunks'.
+  // Optimized chunking with stable chunk size [[memory:4875251]]
   const subEntryPages = useMemo(() => {
-    return chunkArray(subEntries, 100);
+    return chunkArray(subEntries, CHUNK_SIZE);
   }, [subEntries]);
 
-  const currentDataPath = dataPath ?? []; // NOT USED FOR DATA EXPLORER
+  const currentDataPath = dataPath ?? [];
 
-  const handleChange = (isNumber: boolean, newValue: string) => {
-    if (!activeQuery) return null;
-    const oldData = activeQuery.state.data;
-    // If isNumber and newValue is not a number, return
-    if (isNumber && isNaN(Number(newValue))) return;
-    const updatedValue = valueType === "number" ? Number(newValue) : newValue;
-    const newData = updateNestedDataByPath(
-      oldData,
-      currentDataPath,
-      updatedValue
-    );
-    queryClient.setQueryData(activeQuery.queryKey, newData);
-  };
+  // Optimize handleChange using refs to avoid dependency arrays [[memory:4875251]]
+  const activeQueryRef = useRef(activeQuery);
+  const dataPathRef = useRef(currentDataPath);
+  const valueTypeRef = useRef(valueType);
+  activeQueryRef.current = activeQuery;
+  dataPathRef.current = currentDataPath;
+  valueTypeRef.current = valueType;
+
+  const handleChange = useCallback(
+    (isNumber: boolean, newValue: string) => {
+      if (!activeQueryRef.current) return;
+      const oldData = activeQueryRef.current.state.data;
+      if (isNumber && isNaN(Number(newValue))) return;
+      const updatedValue =
+        valueTypeRef.current === "number" ? Number(newValue) : newValue;
+      const newData = updateNestedDataByPath(
+        oldData,
+        dataPathRef.current,
+        updatedValue
+      );
+      queryClient.setQueryData(activeQueryRef.current.queryKey, newData);
+    },
+    [queryClient]
+  );
 
   return (
     <View style={styles.minWidthWrapper}>
@@ -315,7 +361,8 @@ export default function Explorer({
             <View style={styles.flexRowItemsCenterGap}>
               <TouchableOpacity
                 style={styles.expanderButton}
-                onPress={() => toggleExpanded()}
+                onPress={toggleExpanded}
+                hitSlop={HIT_SLOP_OPTIMIZED}
               >
                 <Expander expanded={isExpanded} />
                 <Text style={styles.labelText}>{label}</Text>
@@ -381,12 +428,14 @@ export default function Explorer({
                               )
                             }
                             style={styles.pageExpanderButton}
+                            hitSlop={HIT_SLOP_OPTIMIZED}
                           >
                             <Expander
                               expanded={expandedPages.includes(index)}
                             />
                             <Text style={styles.pageRangeText}>
-                              [{index * 100}...{index * 100 + 99}]
+                              [{index * CHUNK_SIZE}...
+                              {index * CHUNK_SIZE + CHUNK_SIZE - 1}]
                             </Text>
                           </TouchableOpacity>
                           {expandedPages.includes(index) && (
@@ -446,19 +495,10 @@ export default function Explorer({
                         <View style={styles.numberInputButtons}>
                           <TouchableOpacity
                             style={styles.touchableButton}
-                            onPressIn={() => {
-                              // Increment function
-                              const oldData = activeQuery.state.data;
-                              const newData = updateNestedDataByPath(
-                                oldData,
-                                currentDataPath,
-                                value + 1
-                              );
-                              queryClient.setQueryData(
-                                activeQuery.queryKey,
-                                newData
-                              );
-                            }}
+                            onPressIn={() =>
+                              handleChange(true, String(value + 1))
+                            }
+                            hitSlop={HIT_SLOP_OPTIMIZED}
                           >
                             <Svg
                               fill="none"
@@ -475,19 +515,10 @@ export default function Explorer({
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.touchableButton}
-                            onPressIn={() => {
-                              // Decrement function
-                              const oldData = activeQuery.state.data;
-                              const newData = updateNestedDataByPath(
-                                oldData,
-                                currentDataPath,
-                                value - 1
-                              );
-                              queryClient.setQueryData(
-                                activeQuery.queryKey,
-                                newData
-                              );
-                            }}
+                            onPressIn={() =>
+                              handleChange(true, String(value - 1))
+                            }
+                            hitSlop={HIT_SLOP_OPTIMIZED}
                           >
                             <Svg
                               fill="none"
@@ -609,24 +640,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    marginVertical: 2,
+    paddingVertical: 1,
+    paddingHorizontal: 2,
+    marginVertical: 1,
   },
   expanderButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "transparent",
-    padding: 4,
-    gap: 6,
+    padding: 2,
+    gap: 4,
     borderWidth: 0,
-    minHeight: 28,
+    minHeight: 24,
   },
   labelText: {
     color: "#F9FAFB",
     fontSize: 14,
     fontWeight: "500",
-    marginRight: 8,
+    marginRight: 6,
   },
   textGray500: {
     color: "#9CA3AF",
@@ -642,20 +673,20 @@ const styles = StyleSheet.create({
   flexRowGapItemsCenter: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingLeft: 8,
+    gap: 6,
+    paddingLeft: 4,
   },
   singleEntryContainer: {
-    marginLeft: 20,
-    marginTop: 4,
-    paddingLeft: 12,
+    marginLeft: 12,
+    marginTop: 2,
+    paddingLeft: 8,
     borderLeftWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.06)",
   },
   multiEntryContainer: {
-    marginLeft: 20,
-    marginTop: 4,
-    paddingLeft: 12,
+    marginLeft: 12,
+    marginTop: 2,
+    paddingLeft: 8,
     borderLeftWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.06)",
   },
@@ -667,24 +698,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "transparent",
     padding: 4,
-    gap: 6,
+    gap: 4,
     borderWidth: 0,
     marginBottom: 4,
     minHeight: 24,
   },
   entriesContainer: {
-    marginLeft: 20,
-    paddingLeft: 12,
+    marginLeft: 12,
+    paddingLeft: 8,
     borderLeftWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.06)",
-    marginTop: 4,
+    marginTop: 2,
   },
   flexRowGapFullWidth: {
     flexDirection: "row",
     width: "100%",
     alignItems: "center",
-    marginVertical: 3,
-    gap: 8,
+    marginVertical: 2,
+    gap: 6,
   },
   text344054: {
     color: "#F9FAFB",
@@ -821,5 +852,28 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  // Pre-computed toggle icon styles to avoid inline objects [[memory:4875251]]
+  toggleIconTrue: {
+    backgroundColor: "#22C55E",
+  },
+  toggleIconFalse: {
+    backgroundColor: "#6B7280",
+  },
+  // Pre-computed toggle badge styles [[memory:4875251]]
+  toggleBadgeTrue: {
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  toggleBadgeFalse: {
+    backgroundColor: "rgba(107, 114, 128, 0.1)",
+    borderColor: "rgba(107, 114, 128, 0.2)",
+  },
+  // Pre-computed toggle text styles [[memory:4875251]]
+  toggleTextTrue: {
+    color: "#22C55E",
+  },
+  toggleTextFalse: {
+    color: "#6B7280",
   },
 });

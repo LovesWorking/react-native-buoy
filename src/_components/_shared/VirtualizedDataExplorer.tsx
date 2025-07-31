@@ -27,31 +27,32 @@ const CHUNK_SIZE = 50; // Process data in chunks to avoid blocking UI
 const MAX_DEPTH_LIMIT = 15; // Prevent excessive nesting
 const MAX_ITEMS_PER_LEVEL = 500; // Limit items to prevent memory issues
 
-// Pre-computed indent styles to avoid inline calculations [[memory:4875251]]
+// Pre-computed indent styles with reduced indentation [[memory:4875251]]
 const INDENT_STYLES = Array.from(
   { length: MAX_DEPTH_LIMIT + 1 },
   (_, depth) =>
     StyleSheet.create({
-      container: { paddingLeft: 12 + depth * 16 },
+      container: { paddingLeft: depth === 0 ? 0 : 8 + depth * 12 }, // Start at 0 for root, then 8 + 12*depth
     }).container
 );
 
-// Stable type color cache to avoid repeated lookups [[memory:4875251]]
+// Enhanced type color cache with distinct colors for better differentiation [[memory:4875251]]
 const TYPE_COLOR_CACHE = new Map([
-  ["string", "#22D3EE"],
-  ["number", "#3B82F6"],
-  ["bigint", "#3B82F6"],
-  ["boolean", "#F59E0B"],
-  ["null", "#9CA3AF"],
-  ["undefined", "#9CA3AF"],
-  ["function", "#A855F7"],
-  ["symbol", "#A855F7"],
-  ["date", "#EC4899"],
-  ["error", "#EF4444"],
-  ["array", "#10B981"],
-  ["object", "#10B981"],
-  ["map", "#10B981"],
-  ["set", "#10B981"],
+  ["string", "#22D3EE"], // Cyan for strings
+  ["number", "#3B82F6"], // Blue for numbers
+  ["bigint", "#8B5CF6"], // Purple for bigint (distinct from number)
+  ["boolean", "#F59E0B"], // Orange for booleans
+  ["null", "#6B7280"], // Gray for null
+  ["undefined", "#9CA3AF"], // Light gray for undefined (distinct from null)
+  ["function", "#A855F7"], // Magenta for functions
+  ["symbol", "#D946EF"], // Hot pink for symbols (distinct from function)
+  ["date", "#EC4899"], // Pink for dates
+  ["error", "#EF4444"], // Red for errors
+  ["array", "#10B981"], // Green for arrays
+  ["object", "#F97316"], // Orange-red for objects (distinct from array)
+  ["map", "#06B6D4"], // Teal for maps (distinct from object/array)
+  ["set", "#84CC16"], // Lime for sets (distinct from map/array/object)
+  ["circular", "#F59E0B"], // Amber for circular references
 ]);
 
 // Stable type icon cache [[memory:4875251]]
@@ -68,37 +69,79 @@ const TYPE_ICON_CACHE = new Map([
   ["set", "Set"],
 ]);
 
-// Pre-computed stable styles
+// Pre-computed stable styles with React Query-inspired design
 const STABLE_STYLES = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    backgroundColor: "rgba(255, 255, 255, 0.03)", // bg-white/[0.03]
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
-    minHeight: 200, // Ensure minimum height for proper rendering
+    borderColor: "rgba(255, 255, 255, 0.08)", // border-white/[0.08]
+    // Remove flex: 1 and minHeight to allow natural sizing
   },
   header: {
+    flexDirection: "column",
+    paddingHorizontal: 16, // Increased padding like dev tools
+    paddingVertical: 12,
+  },
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    marginBottom: 6,
   },
   title: {
-    color: "#9CA3AF",
+    color: "#FFFFFF", // text-white
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500", // font-medium
   },
-  itemContainer: {
-    height: ITEM_HEIGHT,
+  description: {
+    color: "#9CA3AF", // text-gray-400
+    fontSize: 12,
+    marginTop: 2,
+  },
+  typeLegend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)", // border-white/[0.08]
+  },
+  typeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "rgba(255, 255, 255, 0.02)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  typeColor: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  typeName: {
+    fontSize: 10,
+    fontWeight: "500",
+    color: "#9CA3AF", // text-gray-400
+  },
+  itemContainer: {
+    minHeight: ITEM_HEIGHT,
+    backgroundColor: "transparent",
+  },
+  itemTouchable: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 12,
+    paddingRight: 50, // Reduced from 60 since copy button is closer
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)", // border-white/[0.05]
+  },
+  itemTouchablePressed: {
+    backgroundColor: "rgba(255, 255, 255, 0.02)", // bg-white/[0.02]
   },
   expanderContainer: {
     width: 20,
@@ -116,52 +159,45 @@ const STABLE_STYLES = StyleSheet.create({
     paddingLeft: 4,
   },
   labelText: {
-    color: "#F9FAFB",
+    color: "#FFFFFF", // text-white
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "500", // font-medium
     fontFamily: "monospace",
+    marginRight: 8,
   },
   valueText: {
     fontSize: 12,
     fontFamily: "monospace",
-    paddingHorizontal: 4,
-  },
-  typeIndicator: {
-    fontSize: 10,
-    fontFamily: "monospace",
-    opacity: 0.7,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 2,
-    borderWidth: 0.5,
-    marginHorizontal: 4,
-    minWidth: 20,
-    textAlign: "center",
+    flex: 1,
+    color: "#D1D5DB", // text-gray-300
   },
   copyButton: {
-    padding: 4,
+    padding: 6,
     borderRadius: 4,
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: [{ translateY: -12 }],
+    backgroundColor: "rgba(107, 114, 128, 0.1)", // bg-gray-500/10
   },
   loadingContainer: {
     padding: 16,
     alignItems: "center",
   },
   loadingText: {
-    color: "#9CA3AF",
+    color: "#9CA3AF", // text-gray-400
     fontSize: 12,
-    fontStyle: "italic",
   },
   noDataContainer: {
     padding: 16,
     alignItems: "center",
   },
   noDataText: {
-    color: "#9CA3AF",
+    color: "#9CA3AF", // text-gray-400
     fontSize: 12,
-    fontStyle: "italic",
   },
   listContent: {
-    paddingVertical: 0,
+    paddingBottom: 8,
   },
   headerTouchable: {
     flex: 1,
@@ -279,7 +315,7 @@ const Expander = React.memo(
           <Path
             d="M6 12l4-4-4-4"
             strokeWidth={2}
-            stroke="#6B7280"
+            stroke="#9CA3AF" // text-gray-400
             fill="none"
           />
         </Svg>
@@ -288,23 +324,37 @@ const Expander = React.memo(
   )
 );
 
-const TypeIndicator = React.memo(({ valueType }: { valueType: string }) => {
-  const color = getTypeColor(valueType);
-  return (
-    <Text
-      style={[
-        STABLE_STYLES.typeIndicator,
-        {
-          color,
-          backgroundColor: `${color}10`,
-          borderColor: `${color}30`,
-        },
-      ]}
-    >
-      {getTypeIcon(valueType)}
-    </Text>
-  );
-});
+// Type legend component to replace inline type indicators
+const TypeLegend = React.memo(
+  ({ visibleTypes }: { visibleTypes: string[] }) => {
+    const uniqueTypes = Array.from(new Set(visibleTypes)).slice(0, 8); // Limit to 8 most common types
+
+    return (
+      <View style={STABLE_STYLES.typeLegend}>
+        {uniqueTypes.map((type) => {
+          const color = getTypeColor(type);
+          return (
+            <View
+              key={type}
+              style={[
+                STABLE_STYLES.typeBadge,
+                {
+                  backgroundColor: `${color}10`,
+                  borderColor: `${color}30`,
+                },
+              ]}
+            >
+              <View
+                style={[STABLE_STYLES.typeColor, { backgroundColor: color }]}
+              />
+              <Text style={STABLE_STYLES.typeName}>{type}</Text>
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
+);
 
 const CopyButton = React.memo(({ value }: { value: any }) => {
   const [copyState, setCopyState] = useState<CopyState>("NoCopy");
@@ -527,7 +577,7 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
   return { flatData, isProcessing, toggleExpanded };
 };
 
-// Optimized virtualized item renderer with pre-computed styles [[memory:4875251]]
+// Optimized virtualized item renderer with full-row clickability [[memory:4875251]]
 const VirtualizedItem = React.memo(
   ({
     item,
@@ -536,13 +586,15 @@ const VirtualizedItem = React.memo(
     item: FlatDataItem;
     onToggleExpanded: (id: string) => void;
   }) => {
+    const [isPressed, setIsPressed] = useState(false);
+
     // Use pre-computed styles to avoid inline calculations [[memory:4875251]]
     const indentStyle =
       INDENT_STYLES[Math.min(item.depth, MAX_DEPTH_LIMIT)] || INDENT_STYLES[0];
     const color = getTypeColor(item.valueType);
 
     // Use inline handler since component is already memoized [[memory:4875251]]
-    const handleToggleExpanded = () => {
+    const handlePress = () => {
       if (item.isExpandable) {
         onToggleExpanded(item.id);
       }
@@ -550,29 +602,38 @@ const VirtualizedItem = React.memo(
 
     return (
       <View style={[STABLE_STYLES.itemContainer, indentStyle]}>
-        {item.isExpandable ? (
-          <Expander expanded={item.isExpanded} onPress={handleToggleExpanded} />
-        ) : (
-          <View style={STABLE_STYLES.expanderContainer} />
-        )}
-
-        <View style={STABLE_STYLES.labelContainer}>
-          <Text style={STABLE_STYLES.labelText}>{item.key}:</Text>
-
-          <TypeIndicator valueType={item.valueType} />
-
+        <TouchableOpacity
+          style={[
+            STABLE_STYLES.itemTouchable,
+            isPressed && STABLE_STYLES.itemTouchablePressed,
+          ]}
+          onPress={handlePress}
+          onPressIn={() => setIsPressed(true)}
+          onPressOut={() => setIsPressed(false)}
+          activeOpacity={item.isExpandable ? 0.7 : 1}
+          disabled={!item.isExpandable}
+        >
           {item.isExpandable ? (
-            <Text style={[STABLE_STYLES.valueText, { color: "#9CA3AF" }]}>
-              {item.valueType} ({item.childCount}{" "}
-              {item.childCount === 1 ? "item" : "items"})
-            </Text>
+            <Expander expanded={item.isExpanded} onPress={() => {}} />
           ) : (
-            <Text style={[STABLE_STYLES.valueText, { color }]}>
-              {formatValue(item.value, item.valueType)}
-            </Text>
+            <View style={STABLE_STYLES.expanderContainer} />
           )}
-        </View>
 
+          <View style={STABLE_STYLES.labelContainer}>
+            <Text style={STABLE_STYLES.labelText}>{item.key}:</Text>
+
+            {item.isExpandable ? (
+              <Text style={[STABLE_STYLES.valueText, { color: "#9CA3AF" }]}>
+                {item.valueType} ({item.childCount}{" "}
+                {item.childCount === 1 ? "item" : "items"})
+              </Text>
+            ) : (
+              <Text style={[STABLE_STYLES.valueText, { color }]}>
+                {formatValue(item.value, item.valueType)}
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
         <CopyButton value={item.value} />
       </View>
     );
@@ -582,18 +643,24 @@ const VirtualizedItem = React.memo(
 // Main virtualized data explorer component
 interface VirtualizedDataExplorerProps {
   title: string;
+  description?: string;
   data: unknown;
   maxDepth?: number;
 }
 
 export const VirtualizedDataExplorer: React.FC<
   VirtualizedDataExplorerProps
-> = ({ title, data, maxDepth = 10 }) => {
+> = ({ title, description, data, maxDepth = 10 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { flatData, isProcessing, toggleExpanded } = useDataFlattening(
     data,
     maxDepth
   );
+
+  // Calculate visible types for the legend
+  const visibleTypes = useMemo(() => {
+    return flatData.map((item) => item.valueType);
+  }, [flatData]);
 
   // Remove unnecessary useCallback - not passed to memoized components [[memory:4875251]]
   const toggleMainExpanded = () => {
@@ -619,7 +686,14 @@ export const VirtualizedDataExplorer: React.FC<
     return (
       <View style={STABLE_STYLES.container}>
         <View style={STABLE_STYLES.header}>
-          <Text style={STABLE_STYLES.title}>{title}</Text>
+          <View style={STABLE_STYLES.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={STABLE_STYLES.title}>{title}</Text>
+              {description && (
+                <Text style={STABLE_STYLES.description}>{description}</Text>
+              )}
+            </View>
+          </View>
         </View>
         <View style={STABLE_STYLES.noDataContainer}>
           <Text style={STABLE_STYLES.noDataText}>No data available</Text>
@@ -631,17 +705,28 @@ export const VirtualizedDataExplorer: React.FC<
   return (
     <View style={STABLE_STYLES.container}>
       <View style={STABLE_STYLES.header}>
-        <TouchableOpacity
-          onPress={toggleMainExpanded}
-          hitSlop={HIT_SLOP_10}
-          style={STABLE_STYLES.headerTouchable}
-        >
-          <Text style={STABLE_STYLES.title}>{title}</Text>
-          <View style={STABLE_STYLES.expanderMargin}>
-            <Expander expanded={isExpanded} onPress={toggleMainExpanded} />
-          </View>
-        </TouchableOpacity>
-        <CopyButton value={data} />
+        <View style={STABLE_STYLES.headerRow}>
+          <TouchableOpacity
+            onPress={toggleMainExpanded}
+            hitSlop={HIT_SLOP_10}
+            style={STABLE_STYLES.headerTouchable}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={STABLE_STYLES.title}>{title}</Text>
+              {description && (
+                <Text style={STABLE_STYLES.description}>{description}</Text>
+              )}
+            </View>
+            <View style={STABLE_STYLES.expanderMargin}>
+              <Expander expanded={isExpanded} onPress={toggleMainExpanded} />
+            </View>
+          </TouchableOpacity>
+          <CopyButton value={data} />
+        </View>
+
+        {isExpanded && visibleTypes.length > 0 && (
+          <TypeLegend visibleTypes={visibleTypes} />
+        )}
       </View>
 
       {isExpanded && (
@@ -651,15 +736,19 @@ export const VirtualizedDataExplorer: React.FC<
               <Text style={STABLE_STYLES.loadingText}>Processing data...</Text>
             </View>
           ) : (
-            <FlashList
-              data={flatData}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              estimatedItemSize={ITEM_HEIGHT}
-              getItemType={(item) => item.type}
-              showsVerticalScrollIndicator={true}
-              contentContainerStyle={STABLE_STYLES.listContent}
-            />
+            <View
+              style={{ height: Math.min(flatData.length * ITEM_HEIGHT, 400) }}
+            >
+              <FlashList
+                data={flatData}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                estimatedItemSize={ITEM_HEIGHT}
+                getItemType={(item) => item.type}
+                showsVerticalScrollIndicator={true}
+                contentContainerStyle={STABLE_STYLES.listContent}
+              />
+            </View>
           )}
         </>
       )}

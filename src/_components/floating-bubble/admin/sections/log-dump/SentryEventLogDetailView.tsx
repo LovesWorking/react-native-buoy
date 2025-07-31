@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 
@@ -37,18 +37,21 @@ export const SentryEventLogDetailView = ({
         id: "eventData",
         type: "explorer",
         title: "EVENT DATA",
+        description: "Parsed event data from the Sentry event payload",
         data: eventData,
       },
       {
         id: "rawData",
         type: "explorer",
         title: "RAW SENTRY DATA",
+        description: "Complete unprocessed Sentry event object",
         data: _sentryRawData,
       },
       {
         id: "debugInfo",
         type: "explorer",
         title: "DEBUG INFO",
+        description: "Internal logging metadata and identifiers",
         data: {
           id: entry.id,
           level: entry.level,
@@ -80,6 +83,7 @@ export const SentryEventLogDetailView = ({
           <View style={styles.explorerSection}>
             <VirtualizedDataExplorer
               title={item.title}
+              description={item.description}
               data={item.data}
               maxDepth={MAX_EXPLORER_DEPTH}
             />
@@ -125,6 +129,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
   },
+
   explorerSection: {
     marginVertical: 8,
   },

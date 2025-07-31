@@ -35,6 +35,8 @@ export const LogDetailView = ({
             id: "metadata",
             type: "explorer",
             title: "METADATA",
+            description:
+              "Additional context and data attached to this log entry",
             data: entry.metadata,
           },
         ]
@@ -43,6 +45,7 @@ export const LogDetailView = ({
       id: "debugInfo",
       type: "explorer",
       title: "DEBUG INFO",
+      description: "Internal logging metadata and identifiers",
       data: {
         id: entry.id,
         level: entry.level,
@@ -114,6 +117,7 @@ export const LogDetailView = ({
           <View style={styles.explorerSection}>
             <VirtualizedDataExplorer
               title={item.title}
+              description={item.description}
               data={item.data}
               maxDepth={6}
             />
