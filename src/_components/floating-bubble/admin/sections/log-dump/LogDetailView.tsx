@@ -5,13 +5,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import JSONTree from "react-native-json-tree";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
 
 import { ConsoleTransportEntry } from "../../logger/types";
+import { DataExplorer } from "../../../../_shared/DataExplorer";
 
-import { jsonTreeTheme } from "./constants";
 import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 
 export const LogDetailView = ({
@@ -98,53 +97,23 @@ export const LogDetailView = ({
 
         {/* Metadata if it exists */}
         {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-          <View style={styles.metadataSection}>
-            <Text style={styles.sectionLabel}>METADATA</Text>
-            <View style={styles.jsonContainer}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={true}
-                sentry-label="ignore metadata horizontal scroll"
-              >
-                <View style={styles.jsonContent}>
-                  <JSONTree
-                    data={entry.metadata}
-                    theme={jsonTreeTheme}
-                    invertTheme={false}
-                    hideRoot
-                    shouldExpandNode={() => true}
-                  />
-                </View>
-              </ScrollView>
-            </View>
-          </View>
+          <DataExplorer
+            title="METADATA"
+            data={entry.metadata}
+            defaultExpanded={true}
+          />
         )}
 
         {/* Debug info */}
-        <View style={styles.debugSection}>
-          <Text style={styles.sectionLabel}>DEBUG INFO</Text>
-          <View style={styles.jsonContainer}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={true}
-              sentry-label="ignore debug info horizontal scroll"
-            >
-              <View style={styles.jsonContent}>
-                <JSONTree
-                  data={{
-                    id: entry.id,
-                    level: entry.level,
-                    timestamp: entry.timestamp,
-                  }}
-                  theme={jsonTreeTheme}
-                  invertTheme={false}
-                  hideRoot
-                  shouldExpandNode={() => true}
-                />
-              </View>
-            </ScrollView>
-          </View>
-        </View>
+        <DataExplorer
+          title="DEBUG INFO"
+          data={{
+            id: entry.id,
+            level: entry.level,
+            timestamp: entry.timestamp,
+          }}
+          defaultExpanded={true}
+        />
       </ScrollView>
     </View>
   );

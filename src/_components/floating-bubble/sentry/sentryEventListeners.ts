@@ -1068,10 +1068,289 @@ export function generateTestSentryEvents(): void {
       data: { category: "http", remaining: 10, limit: 1000, test: true },
       rawData: { category: "http", message: "API rate limit approaching" },
     },
+
+    // COMPREHENSIVE DATA EXPLORER TEST EVENT - Shows ALL supported data types
+    (() => {
+      const testEventData: any = {
+        id: generateId(),
+        timestamp: now - 100,
+        source: "envelope",
+        eventType: SentryEventType.Error,
+        level: SentryEventLevel.Error,
+        message: "🔍 DataExplorer Test Event - All Data Types Showcase",
+        data: {
+          category: "dataexplorer_test",
+          test: true,
+          // All primitive types
+          stringValue: "Hello DataExplorer! 🚀",
+          numberValue: 42.125,
+          booleanTrue: true,
+          booleanFalse: false,
+          nullValue: null,
+          undefinedValue: undefined,
+          bigintValue: BigInt(9007199254740991),
+          symbolValue: Symbol("dataexplorer_test"),
+
+          // Date objects
+          dateISO: new Date("2023-12-25T10:30:00Z"),
+          dateNow: new Date(),
+
+          // Function
+          exampleFunction: function testFunction(x: number) {
+            return x * 2;
+          },
+          arrowFunction: (x: string) => `processed: ${x}`,
+
+          // RegExp
+          emailRegex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          phoneRegex: /^\+?[\d\s-()]+$/,
+
+          // Error objects
+          networkError: new Error("Network connection failed"),
+          validationError: new TypeError("Invalid parameter type"),
+          customError: (() => {
+            const err = new Error("Custom validation failed");
+            (err as any).code = "VALIDATION_ERROR";
+            (err as any).statusCode = 400;
+            (err as any).details = { field: "email", reason: "invalid_format" };
+            return err;
+          })(),
+
+          // Arrays with mixed types
+          mixedArray: [
+            "string",
+            123,
+            true,
+            null,
+            { nested: "object" },
+            [1, 2, 3],
+            new Date(),
+            /regex/,
+          ],
+
+          // Large array for range testing
+          largeDataSet: Array.from({ length: 150 }, (_, i) => ({
+            id: i,
+            name: `Item ${i}`,
+            category:
+              i % 3 === 0 ? "primary" : i % 3 === 1 ? "secondary" : "tertiary",
+            active: i % 2 === 0,
+            metadata: {
+              created: new Date(now - i * 1000 * 60),
+              tags: [`tag${i % 5}`, `category${i % 3}`],
+              score: Math.round(Math.random() * 100),
+            },
+          })),
+
+          // Maps
+          userPermissions: (() => {
+            const map = new Map();
+            map.set("read", true);
+            map.set("write", false);
+            map.set("admin", true);
+            map.set(Symbol("special"), "secret_access");
+            map.set(123, "numeric_key");
+            return map;
+          })(),
+
+          // Sets
+          uniqueCategories: new Set([
+            "error",
+            "warning",
+            "info",
+            "debug",
+            "trace",
+          ]),
+
+          // Nested objects with various depths
+          deeplyNested: {
+            level1: {
+              level2: {
+                level3: {
+                  level4: {
+                    level5: {
+                      treasure: "Found at level 5! 💎",
+                      coordinates: { x: 42, y: 128, z: -15 },
+                      timestamp: Date.now(),
+                    },
+                  },
+                },
+              },
+            },
+            metadata: {
+              version: "1.0.0",
+              author: "DataExplorer Team",
+              features: [
+                "circular_detection",
+                "smart_ranges",
+                "custom_renderers",
+              ],
+              stats: {
+                totalTypes: 15,
+                edgeCases: 8,
+                performance: "excellent",
+              },
+            },
+          },
+
+          // Object with various property types
+          complexObject: {
+            "string-key": "value1",
+            123: "numeric-key-value",
+            [Symbol("symbol-key")]: "symbol-value",
+            "special chars!@#$%": "special-key-value",
+            "unicode-🌟": "unicode-value",
+            very_long_property_name_that_should_test_wrapping: "long-key-value",
+          },
+
+          // Iterable objects
+          iterableObject: {
+            *[Symbol.iterator]() {
+              yield "first";
+              yield "second";
+              yield "third";
+            },
+          },
+
+          // Custom objects with prototypes
+          customInstance: (() => {
+            class CustomClass {
+              public name: string = "CustomInstance";
+              public type: string = "test";
+              public getValue() {
+                return 42;
+              }
+            }
+            return new CustomClass();
+          })(),
+
+          // Performance test data
+          performanceMetrics: {
+            renderTime: 16.7,
+            memoryUsage: "45.2 MB",
+            fps: 60,
+            bundleSize: "2.4 MB",
+            loadTime: new Date(now - 1500),
+            benchmarks: Array.from({ length: 50 }, (_, i) => ({
+              test: `performance_test_${i}`,
+              duration: Math.random() * 1000,
+              passed: Math.random() > 0.1,
+              metrics: {
+                cpu: Math.random() * 100,
+                memory: Math.random() * 512,
+                network: Math.random() * 1024,
+              },
+            })),
+          },
+
+          // Edge cases
+          edgeCases: {
+            emptyString: "",
+            emptyArray: [],
+            emptyObject: {},
+            emptyMap: new Map(),
+            emptySet: new Set(),
+            zeroNumber: 0,
+            negativeNumber: -42,
+            infinityValue: Infinity,
+            negativeInfinity: -Infinity,
+            nanValue: NaN,
+            veryLongString:
+              "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ".repeat(
+                10
+              ),
+            specialCharacters:
+              "Special chars: \n\t\r\\ \"'`~!@#$%^&*()_+-={}[]|;:,.<>?",
+          },
+        },
+        rawData: (() => {
+          // Create circular reference for testing circular detection
+          const rawData: any = {
+            message: "🔍 DataExplorer Test Event - All Data Types Showcase",
+            level: "error",
+            environment: "development",
+            platform: "react-native",
+            sdk: {
+              name: "sentry.javascript.react-native",
+              version: "5.0.0",
+            },
+            user: {
+              id: "dataexplorer_tester",
+              username: "test_user",
+              email: "test@dataexplorer.com",
+              ip_address: "127.0.0.1",
+            },
+            tags: {
+              component: "DataExplorer",
+              test_type: "comprehensive",
+              data_types: "all",
+            },
+            extra: {
+              test_metadata: {
+                created_at: new Date(now),
+                purpose: "Showcase all DataExplorer capabilities",
+                coverage: "100%",
+                features_tested: [
+                  "Type detection",
+                  "Circular reference handling",
+                  "Large array ranges",
+                  "Custom renderers",
+                  "Object key sorting",
+                  "Deep nesting",
+                  "Edge cases",
+                ],
+              },
+            },
+            breadcrumbs: Array.from({ length: 25 }, (_, i) => ({
+              timestamp: now - i * 1000,
+              level: ["info", "warning", "error", "debug"][i % 4],
+              category: ["navigation", "xhr", "user", "system"][i % 4],
+              message: `Breadcrumb ${i + 1}: Testing data explorer`,
+              data: {
+                index: i,
+                type: "test_breadcrumb",
+                metadata: { step: `step_${i}` },
+              },
+            })),
+            contexts: {
+              app: {
+                app_name: "DataExplorer Test App",
+                app_version: "1.0.0",
+                app_build: "123",
+              },
+              device: {
+                model: "iPhone 15 Pro",
+                orientation: "portrait",
+                memory_size: 8589934592,
+                battery_level: 85,
+              },
+              os: {
+                name: "iOS",
+                version: "17.0",
+                build: "21A329",
+              },
+            },
+          };
+
+          // Add circular reference to test circular detection
+          rawData.circularRef = rawData;
+          rawData.extra.circular_test = rawData;
+
+          return rawData;
+        })(),
+      };
+
+      // Add circular references to test circular detection in main data
+      testEventData.data.circularSelf = testEventData.data;
+      testEventData.data.circularParent = testEventData;
+      testEventData.data.deeplyNested.circularRef = testEventData.data;
+
+      return testEventData;
+    })(),
   ];
 
   testEvents.forEach((event) => eventStore.add(event));
   console.log(
-    `Generated ${testEvents.length} comprehensive test Sentry events covering all event types and log categories`
+    `Generated ${testEvents.length} comprehensive test Sentry events covering all event types and log categories, including a COMPREHENSIVE DataExplorer showcase event with ALL supported data types!`
   );
 }

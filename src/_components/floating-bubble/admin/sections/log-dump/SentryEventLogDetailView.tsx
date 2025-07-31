@@ -1,14 +1,20 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ConsoleTransportEntry } from '../../logger/types';
+import { ConsoleTransportEntry } from "../../logger/types";
 
-import { DetailHeader } from './components/DetailHeader';
-import { LazyJSONSection } from './components/LazyJSONSection';
-import { MessageSection } from './components/MessageSection';
-import { SentryInfoCard } from './components/SentryInfoCard';
+import { DetailHeader } from "./components/DetailHeader";
+import { MessageSection } from "./components/MessageSection";
+import { SentryInfoCard } from "./components/SentryInfoCard";
+import { DataExplorer } from "../../../../_shared/DataExplorer";
 
-export const SentryEventLogDetailView = ({ entry, onBack }: { entry: ConsoleTransportEntry; onBack: () => void }) => {
+export const SentryEventLogDetailView = ({
+  entry,
+  onBack,
+}: {
+  entry: ConsoleTransportEntry;
+  onBack: () => void;
+}) => {
   const insets = useSafeAreaInsets();
 
   // Filter out Sentry-specific metadata for the general event data
@@ -23,18 +29,29 @@ export const SentryEventLogDetailView = ({ entry, onBack }: { entry: ConsoleTran
         accessibilityLabel="Sentry log entries scroll view"
         accessibilityHint="Scroll through sentry log entries"
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 16 + insets.bottom }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 16 + insets.bottom },
+        ]}
         showsVerticalScrollIndicator={true}
         removeClippedSubviews={true}
       >
         <SentryInfoCard metadata={entry.metadata} />
         <MessageSection message={entry.message} />
 
-        <LazyJSONSection title="EVENT DATA" data={eventData} defaultExpanded={false} />
+        <DataExplorer
+          title="EVENT DATA"
+          data={eventData}
+          defaultExpanded={false}
+        />
 
-        <LazyJSONSection title="RAW SENTRY DATA" data={_sentryRawData} defaultExpanded={false} />
+        <DataExplorer
+          title="RAW SENTRY DATA"
+          data={_sentryRawData}
+          defaultExpanded={false}
+        />
 
-        <LazyJSONSection
+        <DataExplorer
           title="DEBUG INFO"
           data={{
             id: entry.id,
