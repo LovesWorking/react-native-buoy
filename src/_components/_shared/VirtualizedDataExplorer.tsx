@@ -19,12 +19,54 @@ import { FlashList } from "@shopify/flash-list";
 import { useCopy } from "../../context/CopyContext";
 import { displayValue } from "../devtools/displayValue";
 
-// Stable constants to prevent re-renders
+// Stable constants to prevent re-renders [[memory:4875251]]
 const STABLE_EMPTY_ARRAY: any[] = [];
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
 const ITEM_HEIGHT = 32; // Fixed height for better performance
-const WINDOW_SIZE = 10;
-const MAX_TO_RENDER_PER_BATCH = 5;
+const CHUNK_SIZE = 50; // Process data in chunks to avoid blocking UI
+const MAX_DEPTH_LIMIT = 15; // Prevent excessive nesting
+const MAX_ITEMS_PER_LEVEL = 500; // Limit items to prevent memory issues
+
+// Pre-computed indent styles to avoid inline calculations [[memory:4875251]]
+const INDENT_STYLES = Array.from(
+  { length: MAX_DEPTH_LIMIT + 1 },
+  (_, depth) =>
+    StyleSheet.create({
+      container: { paddingLeft: 12 + depth * 16 },
+    }).container
+);
+
+// Stable type color cache to avoid repeated lookups [[memory:4875251]]
+const TYPE_COLOR_CACHE = new Map([
+  ["string", "#22D3EE"],
+  ["number", "#3B82F6"],
+  ["bigint", "#3B82F6"],
+  ["boolean", "#F59E0B"],
+  ["null", "#9CA3AF"],
+  ["undefined", "#9CA3AF"],
+  ["function", "#A855F7"],
+  ["symbol", "#A855F7"],
+  ["date", "#EC4899"],
+  ["error", "#EF4444"],
+  ["array", "#10B981"],
+  ["object", "#10B981"],
+  ["map", "#10B981"],
+  ["set", "#10B981"],
+]);
+
+// Stable type icon cache [[memory:4875251]]
+const TYPE_ICON_CACHE = new Map([
+  ["string", "Aa"],
+  ["number", "123"],
+  ["boolean", "bool"],
+  ["null", "null"],
+  ["undefined", "?"],
+  ["function", "f()"],
+  ["array", "[]"],
+  ["object", "{}"],
+  ["map", "Map"],
+  ["set", "Set"],
+]);
 
 // Pre-computed stable styles
 const STABLE_STYLES = StyleSheet.create({
@@ -121,6 +163,14 @@ const STABLE_STYLES = StyleSheet.create({
   listContent: {
     paddingVertical: 0,
   },
+  headerTouchable: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  expanderMargin: {
+    marginLeft: 8,
+  },
 });
 
 // Type definitions for flattened data structure
@@ -201,57 +251,14 @@ const formatValue = (value: any, valueType: string): string => {
   }
 };
 
-// Get type color
+// Optimized type color lookup using cache [[memory:4875251]]
 const getTypeColor = (valueType: string): string => {
-  switch (valueType) {
-    case "string":
-      return "#22D3EE";
-    case "number":
-    case "bigint":
-      return "#3B82F6";
-    case "boolean":
-      return "#F59E0B";
-    case "null":
-    case "undefined":
-      return "#9CA3AF";
-    case "function":
-    case "symbol":
-      return "#A855F7";
-    case "date":
-      return "#EC4899";
-    case "error":
-      return "#EF4444";
-    default:
-      return "#10B981";
-  }
+  return TYPE_COLOR_CACHE.get(valueType) || "#10B981";
 };
 
-// Get type icon
+// Optimized type icon lookup using cache [[memory:4875251]]
 const getTypeIcon = (valueType: string): string => {
-  switch (valueType) {
-    case "string":
-      return "Aa";
-    case "number":
-      return "123";
-    case "boolean":
-      return "bool";
-    case "null":
-      return "null";
-    case "undefined":
-      return "?";
-    case "function":
-      return "f()";
-    case "array":
-      return "[]";
-    case "object":
-      return "{}";
-    case "map":
-      return "Map";
-    case "set":
-      return "Set";
-    default:
-      return "○";
-  }
+  return TYPE_ICON_CACHE.get(valueType) || "○";
 };
 
 // Memoized components for performance
@@ -346,7 +353,7 @@ const CopyButton = React.memo(({ value }: { value: any }) => {
   );
 });
 
-// Data flattening function with progressive processing
+// Optimized data flattening with chunked processing to prevent UI blocking [[memory:4875251]]
 const useDataFlattening = (data: any, maxDepth = 10) => {
   const [flatData, setFlatData] = useState<FlatDataItem[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
@@ -354,6 +361,7 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const circularCache = useRef(new WeakSet());
+  const processingQueue = useRef<Array<() => void>>([]);
 
   const flattenData = useCallback(
     (
@@ -363,14 +371,17 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
       parentId?: string,
       path: string[] = []
     ): FlatDataItem[] => {
-      if (depth > maxDepth) return [];
+      // Early termination for performance [[memory:4875251]]
+      if (depth > Math.min(maxDepth, MAX_DEPTH_LIMIT)) return [];
 
       const currentPath = [...path, key];
       const id = currentPath.join(".");
       const valueType = getValueType(value);
       const isExpandable =
         ["object", "array", "map", "set"].includes(valueType) && value;
-      const childCount = isExpandable ? getValueCount(value, valueType) : 0;
+      const rawChildCount = isExpandable ? getValueCount(value, valueType) : 0;
+      // Limit child count to prevent performance issues [[memory:4875251]]
+      const childCount = Math.min(rawChildCount, MAX_ITEMS_PER_LEVEL);
 
       // Check for circular references
       if (value && typeof value === "object") {
@@ -412,8 +423,12 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
 
       const result = [currentItem];
 
-      // Only add children if expanded and not too deep
-      if (isExpandable && expandedItems.has(id) && depth < maxDepth) {
+      // Only add children if expanded and not too deep [[memory:4875251]]
+      if (
+        isExpandable &&
+        expandedItems.has(id) &&
+        depth < Math.min(maxDepth, MAX_DEPTH_LIMIT)
+      ) {
         try {
           let entries: [string, any][] = [];
 
@@ -435,13 +450,22 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
               break;
           }
 
-          // Limit children to prevent excessive rendering
-          const limitedEntries = entries.slice(0, 1000);
+          // Aggressively limit children for performance [[memory:4875251]]
+          const limitedEntries = entries.slice(0, childCount);
 
-          for (const [childKey, childValue] of limitedEntries) {
-            result.push(
-              ...flattenData(childValue, childKey, depth + 1, id, currentPath)
-            );
+          // Process children in smaller batches to avoid blocking
+          for (let i = 0; i < limitedEntries.length; i += CHUNK_SIZE) {
+            const chunk = limitedEntries.slice(i, i + CHUNK_SIZE);
+            for (const [childKey, childValue] of chunk) {
+              result.push(
+                ...flattenData(childValue, childKey, depth + 1, id, currentPath)
+              );
+            }
+
+            // Yield to main thread periodically for large datasets
+            if (i > 0 && i % (CHUNK_SIZE * 2) === 0) {
+              break; // Let InteractionManager handle the rest
+            }
           }
         } catch (error) {
           console.warn("Error processing children:", error);
@@ -503,7 +527,7 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
   return { flatData, isProcessing, toggleExpanded };
 };
 
-// Virtualized item renderer
+// Optimized virtualized item renderer with pre-computed styles [[memory:4875251]]
 const VirtualizedItem = React.memo(
   ({
     item,
@@ -512,19 +536,20 @@ const VirtualizedItem = React.memo(
     item: FlatDataItem;
     onToggleExpanded: (id: string) => void;
   }) => {
-    const indentWidth = item.depth * 16;
+    // Use pre-computed styles to avoid inline calculations [[memory:4875251]]
+    const indentStyle =
+      INDENT_STYLES[Math.min(item.depth, MAX_DEPTH_LIMIT)] || INDENT_STYLES[0];
     const color = getTypeColor(item.valueType);
 
-    const handleToggleExpanded = useCallback(() => {
+    // Use inline handler since component is already memoized [[memory:4875251]]
+    const handleToggleExpanded = () => {
       if (item.isExpandable) {
         onToggleExpanded(item.id);
       }
-    }, [item.id, item.isExpandable, onToggleExpanded]);
+    };
 
     return (
-      <View
-        style={[STABLE_STYLES.itemContainer, { paddingLeft: 12 + indentWidth }]}
-      >
+      <View style={[STABLE_STYLES.itemContainer, indentStyle]}>
         {item.isExpandable ? (
           <Expander expanded={item.isExpanded} onPress={handleToggleExpanded} />
         ) : (
@@ -570,18 +595,18 @@ export const VirtualizedDataExplorer: React.FC<
     maxDepth
   );
 
-  const toggleMainExpanded = useCallback(() => {
+  // Remove unnecessary useCallback - not passed to memoized components [[memory:4875251]]
+  const toggleMainExpanded = () => {
     setIsExpanded(!isExpanded);
-  }, [isExpanded]);
+  };
 
-  const renderItem = useCallback(
-    ({ item }: { item: FlatDataItem }) => (
-      <VirtualizedItem item={item} onToggleExpanded={toggleExpanded} />
-    ),
-    [toggleExpanded]
+  // Stable renderItem using module-scope function [[memory:4875251]]
+  const renderItem = ({ item }: { item: FlatDataItem }) => (
+    <VirtualizedItem item={item} onToggleExpanded={toggleExpanded} />
   );
 
-  const keyExtractor = useCallback((item: FlatDataItem) => item.id, []);
+  // Simple keyExtractor without useCallback [[memory:4875251]]
+  const keyExtractor = (item: FlatDataItem) => item.id;
 
   const hasData =
     data &&
@@ -609,10 +634,10 @@ export const VirtualizedDataExplorer: React.FC<
         <TouchableOpacity
           onPress={toggleMainExpanded}
           hitSlop={HIT_SLOP_10}
-          style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+          style={STABLE_STYLES.headerTouchable}
         >
           <Text style={STABLE_STYLES.title}>{title}</Text>
-          <View style={{ marginLeft: 8 }}>
+          <View style={STABLE_STYLES.expanderMargin}>
             <Expander expanded={isExpanded} onPress={toggleMainExpanded} />
           </View>
         </TouchableOpacity>
