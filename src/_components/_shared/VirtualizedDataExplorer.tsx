@@ -23,9 +23,11 @@ import { displayValue } from "../devtools/displayValue";
 const STABLE_EMPTY_ARRAY: any[] = [];
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
 const ITEM_HEIGHT = 32; // Fixed height for better performance
+const LONG_ITEM_HEIGHT = 48; // Height for items with long keys
 const CHUNK_SIZE = 50; // Process data in chunks to avoid blocking UI
 const MAX_DEPTH_LIMIT = 15; // Prevent excessive nesting
 const MAX_ITEMS_PER_LEVEL = 500; // Limit items to prevent memory issues
+const LONG_KEY_THRESHOLD = 30; // Keys longer than this use vertical layout
 
 // Pre-computed indent styles with reduced indentation [[memory:4875251]]
 const INDENT_STYLES = Array.from(
@@ -158,12 +160,36 @@ const STABLE_STYLES = StyleSheet.create({
     alignItems: "center",
     paddingLeft: 4,
   },
+  labelContainerVertical: {
+    flex: 1,
+    flexDirection: "column",
+    paddingLeft: 4,
+    paddingVertical: 2,
+  },
+  labelContainerVerticalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 2,
+  },
   labelText: {
     color: "#FFFFFF", // text-white
     fontSize: 12,
     fontWeight: "500", // font-medium
     fontFamily: "monospace",
     marginRight: 8,
+  },
+  labelTextTruncated: {
+    color: "#FFFFFF", // text-white
+    fontSize: 12,
+    fontWeight: "500", // font-medium
+    fontFamily: "monospace",
+    flex: 1,
+  },
+  valueTextVertical: {
+    fontSize: 12,
+    fontFamily: "monospace",
+    color: "#D1D5DB", // text-gray-300
+    paddingLeft: 16, // Indent the value
   },
   valueText: {
     fontSize: 12,
@@ -587,11 +613,15 @@ const VirtualizedItem = React.memo(
     onToggleExpanded: (id: string) => void;
   }) => {
     const [isPressed, setIsPressed] = useState(false);
+    const [showFullKey, setShowFullKey] = useState(false);
 
     // Use pre-computed styles to avoid inline calculations [[memory:4875251]]
     const indentStyle =
       INDENT_STYLES[Math.min(item.depth, MAX_DEPTH_LIMIT)] || INDENT_STYLES[0];
     const color = getTypeColor(item.valueType);
+
+    // Check if key is long and needs special layout
+    const isLongKey = item.key.length > LONG_KEY_THRESHOLD;
 
     // Use inline handler since component is already memoized [[memory:4875251]]
     const handlePress = () => {
@@ -600,12 +630,25 @@ const VirtualizedItem = React.memo(
       }
     };
 
+    const handleKeyPress = () => {
+      if (isLongKey) {
+        setShowFullKey(!showFullKey);
+      }
+    };
+
+    // Truncate long keys for display
+    const displayKey =
+      isLongKey && !showFullKey
+        ? `${item.key.substring(0, LONG_KEY_THRESHOLD)}...`
+        : item.key;
+
     return (
       <View style={[STABLE_STYLES.itemContainer, indentStyle]}>
         <TouchableOpacity
           style={[
             STABLE_STYLES.itemTouchable,
             isPressed && STABLE_STYLES.itemTouchablePressed,
+            isLongKey && { minHeight: LONG_ITEM_HEIGHT, paddingVertical: 6 },
           ]}
           onPress={handlePress}
           onPressIn={() => setIsPressed(true)}
@@ -619,20 +662,53 @@ const VirtualizedItem = React.memo(
             <View style={STABLE_STYLES.expanderContainer} />
           )}
 
-          <View style={STABLE_STYLES.labelContainer}>
-            <Text style={STABLE_STYLES.labelText}>{item.key}:</Text>
+          {isLongKey ? (
+            // Vertical layout for long keys
+            <View style={STABLE_STYLES.labelContainerVertical}>
+              <View style={STABLE_STYLES.labelContainerVerticalRow}>
+                <TouchableOpacity onPress={handleKeyPress} style={{ flex: 1 }}>
+                  <Text
+                    style={STABLE_STYLES.labelTextTruncated}
+                    numberOfLines={showFullKey ? undefined : 1}
+                  >
+                    {displayKey}:
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-            {item.isExpandable ? (
-              <Text style={[STABLE_STYLES.valueText, { color: "#9CA3AF" }]}>
-                {item.valueType} ({item.childCount}{" "}
-                {item.childCount === 1 ? "item" : "items"})
-              </Text>
-            ) : (
-              <Text style={[STABLE_STYLES.valueText, { color }]}>
-                {formatValue(item.value, item.valueType)}
-              </Text>
-            )}
-          </View>
+              {item.isExpandable ? (
+                <Text
+                  style={[
+                    STABLE_STYLES.valueTextVertical,
+                    { color: "#9CA3AF" },
+                  ]}
+                >
+                  {item.valueType} ({item.childCount}{" "}
+                  {item.childCount === 1 ? "item" : "items"})
+                </Text>
+              ) : (
+                <Text style={[STABLE_STYLES.valueTextVertical, { color }]}>
+                  {formatValue(item.value, item.valueType)}
+                </Text>
+              )}
+            </View>
+          ) : (
+            // Horizontal layout for normal keys
+            <View style={STABLE_STYLES.labelContainer}>
+              <Text style={STABLE_STYLES.labelText}>{item.key}:</Text>
+
+              {item.isExpandable ? (
+                <Text style={[STABLE_STYLES.valueText, { color: "#9CA3AF" }]}>
+                  {item.valueType} ({item.childCount}{" "}
+                  {item.childCount === 1 ? "item" : "items"})
+                </Text>
+              ) : (
+                <Text style={[STABLE_STYLES.valueText, { color }]}>
+                  {formatValue(item.value, item.valueType)}
+                </Text>
+              )}
+            </View>
+          )}
         </TouchableOpacity>
         <CopyButton value={item.value} />
       </View>
@@ -672,6 +748,20 @@ export const VirtualizedDataExplorer: React.FC<
   const renderItem = ({ item }: { item: FlatDataItem }) => (
     <VirtualizedItem item={item} onToggleExpanded={toggleExpanded} />
   );
+
+  // Calculate average item size for better FlashList performance [[memory:4875251]]
+  const averageItemSize = useMemo(() => {
+    const longKeyCount = flatData.filter(
+      (item) => item.key.length > LONG_KEY_THRESHOLD
+    ).length;
+    const normalKeyCount = flatData.length - longKeyCount;
+
+    if (flatData.length === 0) return ITEM_HEIGHT;
+
+    const totalHeight =
+      longKeyCount * LONG_ITEM_HEIGHT + normalKeyCount * ITEM_HEIGHT;
+    return Math.round(totalHeight / flatData.length);
+  }, [flatData]);
 
   // Simple keyExtractor without useCallback [[memory:4875251]]
   const keyExtractor = (item: FlatDataItem) => item.id;
@@ -713,7 +803,7 @@ export const VirtualizedDataExplorer: React.FC<
             data={flatData}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
-            estimatedItemSize={ITEM_HEIGHT}
+            estimatedItemSize={averageItemSize}
             getItemType={(item) => item.type}
             showsVerticalScrollIndicator={true}
             contentContainerStyle={STABLE_STYLES.listContent}
@@ -779,13 +869,15 @@ export const VirtualizedDataExplorer: React.FC<
             </View>
           ) : (
             <View
-              style={{ height: Math.min(flatData.length * ITEM_HEIGHT, 400) }}
+              style={{
+                height: Math.min(flatData.length * averageItemSize, 400),
+              }}
             >
               <FlashList
                 data={flatData}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                estimatedItemSize={ITEM_HEIGHT}
+                estimatedItemSize={averageItemSize}
                 getItemType={(item) => item.type}
                 showsVerticalScrollIndicator={true}
                 contentContainerStyle={STABLE_STYLES.listContent}

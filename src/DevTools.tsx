@@ -23,6 +23,7 @@ interface Props {
   onSelectionChange?: (hasSelection: boolean) => void;
   panResponder?: PanResponderInstance;
   queryClient: QueryClient;
+  containerHeight?: number; // For modal environments
 }
 
 export default function DevTools({
@@ -30,6 +31,7 @@ export default function DevTools({
   onSelectionChange,
   panResponder,
   queryClient,
+  containerHeight,
 }: Props) {
   const [showQueries, setShowQueries] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -181,6 +183,7 @@ export default function DevTools({
               selectedQuery={selectedQuery}
               setSelectedQuery={setSelectedQuery}
               activeFilter={activeFilter}
+              containerHeight={containerHeight}
             />
           ) : (
             <MutationsList

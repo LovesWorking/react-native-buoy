@@ -66,8 +66,9 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
     <TouchableOpacity
       style={[styles.queryRow, isSelected && styles.selectedQueryRow]}
       onPress={() => onSelect(query)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
       accessibilityLabel={`Query key ${queryHash}`}
+      accessibilityState={{ selected: isSelected }}
     >
       {/* Status indicator and content in one row */}
       <View style={styles.rowContent}>
@@ -122,10 +123,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     marginVertical: 3,
     padding: 12,
+    transform: [{ scale: 1 }],
   },
   selectedQueryRow: {
-    backgroundColor: "rgba(14, 165, 233, 0.05)",
-    borderColor: "rgba(14, 165, 233, 0.2)",
+    backgroundColor: "rgba(14, 165, 233, 0.1)",
+    borderColor: "rgba(14, 165, 233, 0.3)",
+    transform: [{ scale: 1.01 }],
+    shadowColor: "#0EA5E9",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   rowContent: {
     flexDirection: "row",

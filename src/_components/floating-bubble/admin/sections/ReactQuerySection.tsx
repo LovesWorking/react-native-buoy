@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Dimensions } from "react-native";
 import { Database } from "lucide-react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ExpandableSectionWithModal } from "../ExpandableSectionWithModal";
 import DevTools from "../../../../DevTools";
@@ -14,6 +15,11 @@ export function ReactQuerySection({
 }: ReactQuerySectionProps) {
   // Use provided queryClient
   const queryClient = propQueryClient;
+  const insets = useSafeAreaInsets();
+
+  // Calculate available height for modal content
+  const { height: screenHeight } = Dimensions.get("window");
+  const availableHeight = screenHeight - insets.top; // Account for safe area
 
   // Simple static subtitle generation without continuous subscriptions
   const getSubtitle = () => {
@@ -74,7 +80,11 @@ export function ReactQuerySection({
     >
       {(closeModal) => (
         <QueryClientProvider client={queryClient}>
-          <DevTools setShowDevTools={closeModal} queryClient={queryClient} />
+          <DevTools
+            setShowDevTools={closeModal}
+            queryClient={queryClient}
+            containerHeight={availableHeight}
+          />
         </QueryClientProvider>
       )}
     </ExpandableSectionWithModal>

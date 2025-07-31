@@ -1,12 +1,19 @@
-import { ReactNode, useState } from 'react';
-import { Dimensions, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { LucideIcon } from 'lucide-react-native';
-import { X } from 'lucide-react-native';
+import { ReactNode, useState } from "react";
+import {
+  Dimensions,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { LucideIcon } from "lucide-react-native";
+import { X } from "lucide-react-native";
 
-import { ExpandableSection } from './sections/ExpandableSection';
+import { ExpandableSection } from "./sections/ExpandableSection";
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get("window");
 
 interface ExpandableSectionWithModalProps {
   icon: LucideIcon;
@@ -32,8 +39,8 @@ export function ExpandableSectionWithModal({
   title,
   subtitle,
   children,
-  modalBackgroundColor = '#0F0F0F',
-  handleIndicatorColor = '#6B7280', // Kept for compatibility
+  modalBackgroundColor = "#0F0F0F",
+  handleIndicatorColor = "#6B7280", // Kept for compatibility
   showModalHeader = true,
   fullScreen = false,
   onModalOpen,
@@ -88,13 +95,23 @@ export function ExpandableSectionWithModal({
           </View>
 
           {/* Modal Content */}
-          <View style={fullScreen ? styles.fullScreenModalContainer : styles.modalContainer}>
+          <View
+            style={
+              fullScreen
+                ? styles.fullScreenModalContainer
+                : styles.modalContainer
+            }
+          >
             <View
               style={[
                 fullScreen ? styles.fullScreenModal : styles.modal,
                 {
                   backgroundColor: modalBackgroundColor,
-                  paddingTop: fullScreen ? insets.top : showModalHeader ? insets.top : 0,
+                  paddingTop: fullScreen
+                    ? insets.top
+                    : showModalHeader
+                    ? insets.top
+                    : 0,
                 },
               ]}
             >
@@ -119,16 +136,24 @@ export function ExpandableSectionWithModal({
                   style={styles.scrollView}
                   contentContainerStyle={styles.contentContainer}
                   showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled={true}
+                  scrollEventThrottle={16}
                 >
-                  <View style={styles.content}>{typeof children === 'function' ? children(closeModal) : children}</View>
+                  <View style={styles.content}>
+                    {typeof children === "function"
+                      ? children(closeModal)
+                      : children}
+                  </View>
 
                   {/* Bottom safe area padding */}
                   <View style={{ paddingBottom: insets.bottom + 20 }} />
                 </ScrollView>
               ) : (
-                /* Direct content without ScrollView wrapper when no header */
-                <View style={styles.directContent}>
-                  {typeof children === 'function' ? children(closeModal) : children}
+                /* Direct content without ScrollView wrapper when no header - allows internal gesture handling */
+                <View style={styles.directContent} pointerEvents="box-none">
+                  {typeof children === "function"
+                    ? children(closeModal)
+                    : children}
                 </View>
               )}
             </View>
@@ -145,20 +170,20 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
   },
   backdropTouchable: {
     flex: 1,
   },
   modalContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     maxHeight: screenHeight * 0.9,
   },
   fullScreenModalContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -176,7 +201,7 @@ const styles = StyleSheet.create({
     minHeight: screenHeight,
   },
   headerContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 8,
@@ -184,7 +209,7 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+    backgroundColor: "rgba(156, 163, 175, 0.1)",
   },
   scrollView: {
     flex: 1,

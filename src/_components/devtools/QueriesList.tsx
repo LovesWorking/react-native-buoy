@@ -22,12 +22,14 @@ interface Props {
     React.SetStateAction<Query<any, any, any, any> | undefined>
   >;
   activeFilter?: string | null;
+  containerHeight?: number; // Optional prop for modal environments
 }
 
 export default function QueriesList({
   selectedQuery,
   setSelectedQuery,
   activeFilter,
+  containerHeight,
 }: Props) {
   // Holds all queries
   const allQueries = useAllQueries();
@@ -45,10 +47,10 @@ export default function QueriesList({
   }, [allQueries, activeFilter]);
 
   // Height management for resizable query information panel
-  const screenHeight = Dimensions.get("window").height;
-  const defaultInfoHeight = screenHeight * 0.4; // 40% of screen height
+  const screenHeight = containerHeight || Dimensions.get("window").height;
+  const defaultInfoHeight = screenHeight * 0.4; // 40% of available height
   const minInfoHeight = 150;
-  const maxInfoHeight = screenHeight * 0.7; // 70% of screen height
+  const maxInfoHeight = screenHeight * 0.7; // 70% of available height
 
   const infoHeightAnim = useRef(new Animated.Value(defaultInfoHeight)).current;
   const [currentInfoHeight, setCurrentInfoHeight] = useState(defaultInfoHeight);
@@ -57,12 +59,14 @@ export default function QueriesList({
   // Pan responder for dragging the query information panel
   const infoPanResponder = useRef(
     PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (evt, gestureState) => {
         return (
           Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
           Math.abs(gestureState.dy) > 10
         );
       },
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
         infoHeightAnim.stopAnimation((value) => {
           setCurrentInfoHeight(value);
@@ -105,19 +109,29 @@ export default function QueriesList({
   ).current;
 
   // Function to handle query selection
+  // Function to handle query selection with stable comparison
   const handleQuerySelect = (query: Query<any, any, any, any>) => {
-    // If deselecting (i.e., clicking the same query), just update the state
-    if (query === selectedQuery) {
+    // Compare queries by their queryKey and queryHash for stable selection
+    const isCurrentlySelected =
+      selectedQuery?.queryHash === query.queryHash &&
+      JSON.stringify(selectedQuery?.queryKey) ===
+        JSON.stringify(query.queryKey);
+
+    if (isCurrentlySelected) {
       setSelectedQuery(undefined);
       return;
     }
-    setSelectedQuery(query); // Update the selected query
+    setSelectedQuery(query);
   };
 
   const renderItem = ({ item }: { item: Query<any, any, any, any> }) => (
     <QueryRow
       query={item}
-      isSelected={selectedQuery === item}
+      isSelected={
+        selectedQuery?.queryHash === item.queryHash &&
+        JSON.stringify(selectedQuery?.queryKey) ===
+          JSON.stringify(item.queryKey)
+      }
       onSelect={handleQuerySelect}
     />
   );
@@ -129,14 +143,17 @@ export default function QueriesList({
           <FlashList
             data={filteredQueries}
             renderItem={renderItem}
-            keyExtractor={(item, index) =>
-              `${JSON.stringify(item.queryKey)}-${index}`
-            }
-            estimatedItemSize={60}
+            keyExtractor={(item) => item.queryHash}
+            estimatedItemSize={70}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator
             removeClippedSubviews
+            overrideItemLayout={(layout, item) => {
+              layout.size = 70; // Fixed size for better recycling
+            }}
+            drawDistance={200}
             renderScrollComponent={ScrollView}
+            extraData={selectedQuery?.queryHash} // Re-render only when selection changes
           />
         ) : (
           <View style={styles.emptyContainer}>
