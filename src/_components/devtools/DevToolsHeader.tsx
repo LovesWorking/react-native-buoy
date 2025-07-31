@@ -50,19 +50,53 @@ export default function DevToolsHeader({
       {/* Drag indicator */}
       <View style={styles.dragIndicator} />
 
-      {/* Title Row */}
-      <View style={styles.titleRow}>
-        <TouchableOpacity
-          style={styles.tanstackHeader}
-          onPress={() => {
-            setShowDevTools(false);
-          }}
-          accessibilityLabel="Close Tanstack query devtools"
-        >
-          <Text style={styles.tanstackText}>React Query</Text>
-          <Text style={styles.reactNativeText}>Dev Tools</Text>
-        </TouchableOpacity>
+      {/* Main Content Row */}
+      <View style={styles.mainRow}>
+        {/* Left Section: Toggle Buttons */}
+        <View style={styles.toggleButtonsContainer}>
+          <TouchableOpacity
+            onPress={() => handleTabChange(true)}
+            style={[
+              styles.toggleButton,
+              showQueries
+                ? styles.toggleButtonActive
+                : styles.toggleButtonInactive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.toggleButtonText,
+                showQueries
+                  ? styles.toggleButtonTextActive
+                  : styles.toggleButtonTextInactive,
+              ]}
+            >
+              Queries
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleTabChange(false)}
+            style={[
+              styles.toggleButton,
+              !showQueries
+                ? styles.toggleButtonActive
+                : styles.toggleButtonInactive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.toggleButtonText,
+                !showQueries
+                  ? styles.toggleButtonTextActive
+                  : styles.toggleButtonTextInactive,
+              ]}
+            >
+              Mutations
+            </Text>
+          </TouchableOpacity>
+        </View>
 
+        {/* Right Section: Action Buttons */}
         <View style={styles.actionButtons}>
           <NetworkToggleButton
             isOffline={isOffline}
@@ -91,56 +125,6 @@ export default function DevToolsHeader({
         </View>
       </View>
 
-      {/* Tabs Row - Full Width */}
-      <View style={styles.tabsRow}>
-        <View style={styles.toggleButtonsContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              handleTabChange(true);
-            }}
-            style={[
-              styles.toggleButton,
-              showQueries === true
-                ? styles.toggleButtonActive
-                : styles.toggleButtonInactive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.toggleButtonText,
-                showQueries === true
-                  ? styles.toggleButtonTextActive
-                  : styles.toggleButtonTextInactive,
-              ]}
-            >
-              Queries
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              handleTabChange(false);
-            }}
-            style={[
-              styles.toggleButton,
-              showQueries === false
-                ? styles.toggleButtonActive
-                : styles.toggleButtonInactive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.toggleButtonText,
-                showQueries === false
-                  ? styles.toggleButtonTextActive
-                  : styles.toggleButtonTextInactive,
-              ]}
-            >
-              Mutations
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Status Row - Centered */}
       <View style={styles.statusRow}>
         {showQueries ? (
@@ -162,31 +146,27 @@ export default function DevToolsHeader({
 const styles = StyleSheet.create({
   devToolsHeader: {
     backgroundColor: "#171717",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.06)",
     flexDirection: "column",
-    gap: 16,
+    gap: 12,
   },
   dragIndicator: {
-    width: 40,
-    height: 4,
+    width: 32,
+    height: 3,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 2,
+    borderRadius: 1.5,
     alignSelf: "center",
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  titleRow: {
+  mainRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-  tabsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 4,
   },
   statusRow: {
     flexDirection: "row",
@@ -196,11 +176,11 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   closeButton: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: 6,
     backgroundColor: "rgba(156, 163, 175, 0.1)",
     justifyContent: "center",
@@ -208,39 +188,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(156, 163, 175, 0.2)",
   },
-  tanstackHeader: {
-    flexDirection: "column",
-    gap: 2,
-  },
-  tanstackText: {
-    fontSize: 18,
-    fontWeight: "600",
-    lineHeight: 18,
-    color: "#FFFFFF",
-    letterSpacing: -0.5,
-  },
-  reactNativeText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#0EA5E9",
-    marginTop: -2,
-  },
   toggleButtonsContainer: {
     flexDirection: "row",
     backgroundColor: "rgba(255, 255, 255, 0.03)",
     borderRadius: 6,
-    padding: 3,
+    padding: 2,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
-    alignSelf: "center",
   },
   toggleButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 4,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 70,
+    minWidth: 65,
   },
   toggleButtonActive: {
     backgroundColor: "rgba(14, 165, 233, 0.1)",
