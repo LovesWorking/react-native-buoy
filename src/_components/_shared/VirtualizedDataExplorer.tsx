@@ -646,12 +646,13 @@ interface VirtualizedDataExplorerProps {
   description?: string;
   data: unknown;
   maxDepth?: number;
+  rawMode?: boolean; // When true, shows data directly without container/header/badges
 }
 
 export const VirtualizedDataExplorer: React.FC<
   VirtualizedDataExplorerProps
-> = ({ title, description, data, maxDepth = 10 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+> = ({ title, description, data, maxDepth = 10, rawMode = false }) => {
+  const [isExpanded, setIsExpanded] = useState(rawMode); // Auto-expand in raw mode
   const { flatData, isProcessing, toggleExpanded } = useDataFlattening(
     data,
     maxDepth
@@ -682,6 +683,47 @@ export const VirtualizedDataExplorer: React.FC<
       ? data.length > 0
       : Object.keys(data as object).length > 0);
 
+  // Raw mode: render data directly without header/container
+  if (rawMode) {
+    if (!hasData) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <Text style={STABLE_STYLES.noDataText}>No data available</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={{ flex: 1 }}>
+        {isProcessing ? (
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <Text style={STABLE_STYLES.loadingText}>Processing data...</Text>
+          </View>
+        ) : (
+          <FlashList
+            data={flatData}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            estimatedItemSize={ITEM_HEIGHT}
+            getItemType={(item) => item.type}
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={STABLE_STYLES.listContent}
+          />
+        )}
+      </View>
+    );
+  }
+
+  // Standard mode: render with header and container
   if (!hasData) {
     return (
       <View style={STABLE_STYLES.container}>

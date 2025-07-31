@@ -2,11 +2,55 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
 import { FlashList } from "@shopify/flash-list";
+import { useState } from "react";
 
 import { ConsoleTransportEntry } from "../../logger/types";
 import { VirtualizedDataExplorer } from "../../../../_shared/VirtualizedDataExplorer";
 
 import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
+
+// Fullscreen data explorer modal
+const DataExplorerModal = ({
+  title,
+  description,
+  data,
+  onBack,
+}: {
+  title: string;
+  description: string;
+  data: any;
+  onBack: () => void;
+}) => {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={styles.modalContainer}>
+      {/* Header */}
+      <View style={styles.modalHeader}>
+        <TouchableOpacity
+          onPress={onBack}
+          style={styles.backButton}
+          accessibilityLabel="Back to log details"
+        >
+          <ChevronLeft size={16} color="#8B5CF6" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        <View style={styles.modalHeaderContent}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <Text style={styles.modalDescription}>{description}</Text>
+        </View>
+      </View>
+
+      {/* Raw data display - no header, badges, or containers */}
+      <VirtualizedDataExplorer
+        title="Data Explorer"
+        data={data}
+        maxDepth={6}
+        rawMode={true}
+      />
+    </View>
+  );
+};
 
 export const LogDetailView = ({
   entry,
@@ -16,6 +60,7 @@ export const LogDetailView = ({
   onBack: () => void;
 }) => {
   const insets = useSafeAreaInsets();
+  const [activeModal, setActiveModal] = useState<string | null>(null);
 
   // Create sections data for FlashList
   const sections = [
@@ -33,7 +78,7 @@ export const LogDetailView = ({
       ? [
           {
             id: "metadata",
-            type: "explorer",
+            type: "dataCard",
             title: "METADATA",
             description:
               "Additional context and data attached to this log entry",
@@ -112,21 +157,48 @@ export const LogDetailView = ({
             </View>
           </View>
         );
-      case "explorer":
+      case "dataCard":
         return (
-          <View style={styles.explorerSection}>
-            <VirtualizedDataExplorer
-              title={item.title}
-              description={item.description}
-              data={item.data}
-              maxDepth={6}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.dataCard}
+            onPress={() => setActiveModal(item.id)}
+            accessibilityLabel={`Open ${item.title} in full screen`}
+          >
+            <View style={styles.dataCardContent}>
+              <Text style={styles.dataCardTitle}>{item.title}</Text>
+              <Text style={styles.dataCardDescription}>{item.description}</Text>
+              <View style={styles.dataCardFooter}>
+                <Text style={styles.dataCardAction}>Tap to explore data</Text>
+                <ChevronLeft
+                  size={16}
+                  color="#8B5CF6"
+                  style={{ transform: [{ rotate: "180deg" }] }}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
         );
       default:
         return null;
     }
   };
+
+  // Get the current modal data
+  const currentModalData = sections.find(
+    (section) => section.id === activeModal
+  );
+
+  // If modal is active, show it instead of the main view
+  if (activeModal && currentModalData) {
+    return (
+      <DataExplorerModal
+        title={currentModalData.title || "Data Explorer"}
+        description={currentModalData.description || "Explore the data"}
+        data={currentModalData.data}
+        onBack={() => setActiveModal(null)}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -313,5 +385,65 @@ const styles = StyleSheet.create({
   },
   jsonContent: {
     flex: 1,
+  },
+  // Data card styles
+  dataCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)", // bg-white/[0.03]
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)", // border-white/[0.08]
+    marginVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dataCardContent: {
+    flex: 1,
+  },
+  dataCardTitle: {
+    color: "#FFFFFF", // text-white
+    fontSize: 14,
+    fontWeight: "500", // font-medium
+    marginBottom: 4,
+  },
+  dataCardDescription: {
+    color: "#9CA3AF", // text-gray-400
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  dataCardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  dataCardAction: {
+    color: "#8B5CF6", // text-purple-400
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
+  },
+  modalHeaderContent: {
+    flex: 1,
+  },
+  modalTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  modalDescription: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    marginTop: 2,
   },
 });
