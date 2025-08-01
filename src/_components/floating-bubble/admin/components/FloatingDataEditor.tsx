@@ -38,9 +38,18 @@ import triggerError from "../../../_util/actions/triggerError";
 
 // Stable constants moved to module scope to prevent re-renders
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const MIN_HEIGHT = 200;
+const MIN_HEIGHT = 150;
 const DEFAULT_HEIGHT = 400;
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
+
+// Stable color map to prevent object recreation
+const STATUS_COLOR_MAP: Record<string, string> = {
+  blue: "#3B82F6",
+  gray: "#6B7280",
+  purple: "#8B5CF6",
+  yellow: "#F59E0B",
+  green: "#10B981",
+};
 
 interface FloatingDataEditorProps {
   visible: boolean;
@@ -58,6 +67,7 @@ export function FloatingDataEditor({
   queryClient,
 }: FloatingDataEditorProps) {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isTopMode, setIsTopMode] = useState(false); // false = bottom sheet, true = top sheet
   const allQueries = useSafeQueries();
   const insets = useSafeAreaInsets();
 
@@ -72,11 +82,12 @@ export function FloatingDataEditor({
   // Simple height calculation with animation support
   const currentHeight = isMinimized ? 60 : currentPanelHeight;
 
-  // Sophisticated PanResponder for resizing (copied from QueriesList)
+  // PanResponder for resizing (only enabled for bottom mode)
   const resizePanResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => !isTopMode, // Only allow resize in bottom mode
       onMoveShouldSetPanResponder: (evt, gestureState) => {
+        if (isTopMode) return false; // Disable resize in top mode
         return (
           Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
           Math.abs(gestureState.dy) > 10
@@ -84,6 +95,7 @@ export function FloatingDataEditor({
       },
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
+        if (isTopMode) return; // No resize in top mode
         panelHeightAnim.stopAnimation((value) => {
           setCurrentPanelHeight(value);
           currentPanelHeightRef.current = value;
@@ -91,7 +103,8 @@ export function FloatingDataEditor({
         });
       },
       onPanResponderMove: (evt, gestureState) => {
-        // Use the ref value which is always current
+        if (isTopMode) return; // No resize in top mode
+        // Bottom mode: dragging up (negative dy) increases height
         const newHeight = currentPanelHeightRef.current - gestureState.dy;
         const clampedHeight = Math.max(
           MIN_HEIGHT,
@@ -100,15 +113,18 @@ export function FloatingDataEditor({
         panelHeightAnim.setValue(clampedHeight);
       },
       onPanResponderRelease: (evt, gestureState) => {
-        const finalHeight = Math.max(
+        if (isTopMode) return; // No resize in top mode
+        // Bottom mode: dragging up (negative dy) increases height
+        const finalHeight = currentPanelHeightRef.current - gestureState.dy;
+        const clampedFinalHeight = Math.max(
           MIN_HEIGHT,
-          Math.min(MAX_HEIGHT, currentPanelHeightRef.current - gestureState.dy)
+          Math.min(MAX_HEIGHT, finalHeight)
         );
-        setCurrentPanelHeight(finalHeight);
-        currentPanelHeightRef.current = finalHeight;
+        setCurrentPanelHeight(clampedFinalHeight);
+        currentPanelHeightRef.current = clampedFinalHeight;
 
         Animated.timing(panelHeightAnim, {
-          toValue: finalHeight,
+          toValue: clampedFinalHeight,
           duration: 200,
           useNativeDriver: false,
         }).start();
@@ -120,13 +136,19 @@ export function FloatingDataEditor({
     setIsMinimized(!isMinimized);
   };
 
-  const renderActionButtons = () => {
-    if (!selectedQuery) return null;
+  const toggleModalPosition = () => {
+    setIsTopMode(!isTopMode);
+  };
 
+  // Moved to module scope to prevent re-creation on every render
+  const createActionButtons = (
+    selectedQuery: Query<any, any, any, any>,
+    queryClient: QueryClient
+  ) => {
     const queryStatus = selectedQuery.state.status;
     const isFetching = getQueryStatusLabel(selectedQuery) === "fetching";
 
-    const actions = [
+    return [
       {
         label: "Refetch",
         bgColorClass: "btnRefetch" as const,
@@ -149,21 +171,6 @@ export function FloatingDataEditor({
         onPress: () => triggerError({ query: selectedQuery, queryClient }),
       },
     ];
-
-    return (
-      <View style={styles.actionsGrid}>
-        {actions.map((action, index) => (
-          <ActionButton
-            key={index}
-            onClick={action.onPress}
-            text={action.label}
-            bgColorClass={action.bgColorClass}
-            textColorClass={action.textColorClass}
-            disabled={action.disabled}
-          />
-        ))}
-      </View>
-    );
   };
 
   if (!visible) return null;
@@ -177,20 +184,34 @@ export function FloatingDataEditor({
       statusBarTranslucent={true}
     >
       <QueryClientProvider client={queryClient}>
-        <View style={styles.overlay}>
+        <View
+          style={[
+            styles.overlay,
+            isTopMode && { ...styles.overlayTop, paddingTop: insets.top },
+          ]}
+        >
           <Animated.View
             style={[
               styles.panel,
-              { height: isMinimized ? 60 : panelHeightAnim },
+              isTopMode ? styles.panelTop : styles.panelBottom,
+              {
+                height: isMinimized
+                  ? 60
+                  : isTopMode
+                  ? panelHeightAnim
+                  : panelHeightAnim,
+              },
             ]}
           >
             <View style={styles.header}>
-              <View
-                {...resizePanResponder.panHandlers}
-                style={styles.resizeHandle}
-              >
-                <GripHorizontal color="#6B7280" size={20} />
-              </View>
+              {!isTopMode && (
+                <View
+                  {...resizePanResponder.panHandlers}
+                  style={styles.resizeHandle}
+                >
+                  <GripHorizontal color="#6B7280" size={20} />
+                </View>
+              )}
 
               <View style={styles.headerContent}>
                 {selectedQuery && (
@@ -223,14 +244,14 @@ export function FloatingDataEditor({
 
                 <View style={styles.controls}>
                   <Pressable
-                    onPress={toggleMinimize}
+                    onPress={toggleModalPosition}
                     style={styles.controlButton}
                     hitSlop={HIT_SLOP}
                   >
-                    {isMinimized ? (
-                      <Maximize2 color="#9CA3AF" size={16} />
-                    ) : (
+                    {isTopMode ? (
                       <Minimize2 color="#9CA3AF" size={16} />
+                    ) : (
+                      <Maximize2 color="#9CA3AF" size={16} />
                     )}
                   </Pressable>
 
@@ -301,7 +322,22 @@ export function FloatingDataEditor({
                     </ScrollView>
                     {/* Action Footer */}
                     <View style={styles.actionFooter}>
-                      {renderActionButtons()}
+                      {selectedQuery && (
+                        <View style={styles.actionsGrid}>
+                          {createActionButtons(selectedQuery, queryClient).map(
+                            (action, index) => (
+                              <ActionButton
+                                key={index}
+                                onClick={action.onPress}
+                                text={action.label}
+                                bgColorClass={action.bgColorClass}
+                                textColorClass={action.textColorClass}
+                                disabled={action.disabled}
+                              />
+                            )
+                          )}
+                        </View>
+                      )}
                     </View>
                   </>
                 ) : (
@@ -333,16 +369,8 @@ export function FloatingDataEditor({
                           isStale: query.isStale(),
                         });
 
-                        const colorMap: Record<string, string> = {
-                          blue: "#3B82F6",
-                          gray: "#6B7280",
-                          purple: "#8B5CF6",
-                          yellow: "#F59E0B",
-                          green: "#10B981",
-                        };
-
                         const statusColor =
-                          colorMap[statusColorName] || "#6B7280";
+                          STATUS_COLOR_MAP[statusColorName] || "#6B7280";
 
                         return (
                           <TouchableOpacity
@@ -367,6 +395,8 @@ export function FloatingDataEditor({
                 )}
               </View>
             )}
+
+            {/* No resize handle for top mode - resize disabled */}
           </Animated.View>
         </View>
       </QueryClientProvider>
@@ -380,21 +410,35 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     backgroundColor: "transparent", // Allows interaction with app behind
   },
+  overlayTop: {
+    justifyContent: "flex-start",
+  },
   panel: {
     backgroundColor: "#1F1F1F",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
     borderWidth: 1,
-    borderBottomWidth: 0,
     borderColor: "rgba(255, 255, 255, 0.1)",
     shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 16,
+  },
+  panelBottom: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderBottomWidth: 0,
     shadowOffset: {
       width: 0,
       height: -4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 16,
+  },
+  panelTop: {
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    borderTopWidth: 0,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
   },
   header: {
     borderTopLeftRadius: 16,
@@ -408,6 +452,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+  },
+  resizeHandleBottom: {
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   headerContent: {
     flexDirection: "row",
