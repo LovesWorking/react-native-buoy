@@ -37,6 +37,7 @@ export function ReactQueryDevToolsBubble({
   const { panGesture, translateX, translateY } = useDragGesture({
     bubbleWidth,
     onDraggingChange: setIsDragging,
+    storageKey: "react_query_bubble", // Unique storage key for React Query bubble
   });
 
   const handlePress = () => {
@@ -137,7 +138,6 @@ export function ReactQueryDevToolsBubble({
             selectedQuery={selectedQuery}
             onQuerySelect={handleQuerySelect}
             onClose={handleModalDismiss}
-            queryClient={queryClient}
           />
         </ErrorBoundary>
       </QueryClientProvider>

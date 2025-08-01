@@ -17,7 +17,8 @@ export function Search() {
     <Svg width={14} height={14} viewBox="0 0 14 14" fill="none">
       <Path
         d="M13 13L9 9m1.333-3.333a4.667 4.667 0 11-9.333 0 4.667 4.667 0 019.333 0z"
-        stroke="#667085"
+        stroke="#9CA3AF"
+        strokeWidth="1.5"
       />
     </Svg>
   );
@@ -28,7 +29,8 @@ export function Trash() {
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
       <Path
         d="M9 3h6M3 6h18m-2 0l-.701 10.52c-.105 1.578-.158 2.367-.499 2.965a3 3 0 01-1.298 1.215c-.62.3-1.41.3-2.993.3h-3.018c-1.582 0-2.373 0-2.993-.3A3 3 0 016.2 19.485c-.34-.598-.394-1.387-.499-2.966L5 6m5 4.5v5m4-5v5"
-        stroke="#667085"
+        stroke="#EF4444"
+        strokeWidth="1.5"
       />
     </Svg>
   );
@@ -37,7 +39,7 @@ export function Trash() {
 export function ChevronDown() {
   return (
     <Svg width={10} height={6} viewBox="0 0 10 6" fill="none">
-      <Path d="M1 1l4 4 4-4" stroke="#667085" />
+      <Path d="M1 1l4 4 4-4" stroke="#9CA3AF" strokeWidth="1.5" />
     </Svg>
   );
 }
@@ -45,7 +47,11 @@ export function ChevronDown() {
 export function ArrowUp() {
   return (
     <Svg width={12} height={12} viewBox="0 0 16 16" fill="none">
-      <Path d="M8 13.333V2.667m0 0l-4 4m4-4l4 4" stroke="#667085" />
+      <Path
+        d="M8 13.333V2.667m0 0l-4 4m4-4l4 4"
+        stroke="#10B981"
+        strokeWidth="1.5"
+      />
     </Svg>
   );
 }
@@ -53,7 +59,11 @@ export function ArrowUp() {
 export function ArrowDown() {
   return (
     <Svg width={12} height={12} viewBox="0 0 16 16" fill="none">
-      <Path d="M8 2.667v10.666m0 0l-4-4m4 4l4-4" stroke="#667085" />
+      <Path
+        d="M8 2.667v10.666m0 0l-4-4m4 4l4-4"
+        stroke="#F59E0B"
+        strokeWidth="1.5"
+      />
     </Svg>
   );
 }
@@ -69,7 +79,11 @@ export function ArrowLeft() {
         transform: "rotate(90deg)",
       }}
     >
-      <Path d="M8 2.667v10.666m0 0l-4-4m4 4l4-4" stroke="#667085" />
+      <Path
+        d="M8 2.667v10.666m0 0l-4-4m4 4l4-4"
+        stroke="#8B5CF6"
+        strokeWidth="1.5"
+      />
     </Svg>
   );
 }
@@ -85,7 +99,11 @@ export function ArrowRight() {
         transform: "rotate(-90deg)",
       }}
     >
-      <Path d="M8 2.667v10.666m0 0l-4-4m4 4l4-4" stroke="#667085" />
+      <Path
+        d="M8 2.667v10.666m0 0l-4-4m4 4l4-4"
+        stroke="#8B5CF6"
+        strokeWidth="1.5"
+      />
     </Svg>
   );
 }
@@ -176,10 +194,10 @@ export function Copier() {
     <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
       <Path
         d="M8 8V5.2C8 4.0799 8 3.51984 8.21799 3.09202C8.40973 2.71569 8.71569 2.40973 9.09202 2.21799C9.51984 2 10.0799 2 11.2 2H18.8C19.9201 2 20.4802 2 20.908 2.21799C21.2843 2.40973 21.5903 2.71569 21.782 3.09202C22 3.51984 22 4.0799 22 5.2V12.8C22 13.9201 22 14.4802 21.782 14.908C21.5903 15.2843 21.2843 15.5903 20.908 15.782C20.4802 16 19.9201 16 18.8 16H16M5.2 22H12.8C13.9201 22 14.4802 22 14.908 21.782C15.2843 21.5903 15.5903 21.2843 15.782 20.908C16 20.4802 16 19.9201 16 18.8V11.2C16 10.0799 16 9.51984 15.782 9.09202C15.5903 8.71569 15.2843 8.40973 14.908 8.21799C14.4802 8 13.9201 8 12.8 8H5.2C4.0799 8 3.51984 8 3.09202 8.21799C2.71569 8.40973 2.40973 8.71569 2.21799 9.09202C2 9.51984 2 10.0799 2 11.2V18.8C2 19.9201 2 20.4802 2.21799 20.908C2.40973 21.2843 2.71569 21.5903 3.09202 21.782C3.51984 22 4.07989 22 5.2 22Z"
-        strokeWidth="2"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        stroke="#667085"
+        stroke="#3B82F6"
       />
     </Svg>
   );

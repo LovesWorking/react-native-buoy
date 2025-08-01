@@ -8,6 +8,16 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+// AsyncStorage import with fallback for when it's not available
+let AsyncStorage: any = null;
+try {
+  AsyncStorage = require("@react-native-async-storage/async-storage").default;
+} catch (error) {
+  // AsyncStorage not available - will fall back to in-memory storage
+  console.warn(
+    "AsyncStorage not found. Panel position will not persist across app restarts. To enable persistence, install @react-native-async-storage/async-storage"
+  );
+}
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -23,6 +33,8 @@ import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { X, ChevronLeft, Maximize2, Minimize2 } from "lucide-react-native";
 import Explorer from "../../../devtools/Explorer";
 import { QueryBrowser } from "../../../devtools/index";
+import QueryStatusCount from "../../../devtools/QueryStatusCount";
+import QueryDetails from "../../../devtools/QueryDetails";
 import useAllQueries from "../../../_hooks/useAllQueries";
 import ActionButton from "../../../devtools/ActionButton";
 import triggerLoading from "../../../_util/actions/triggerLoading";
@@ -36,7 +48,82 @@ const MIN_HEIGHT = 150;
 const MIN_WIDTH = 300;
 const DEFAULT_HEIGHT = 400; // Smaller default height for bottom sheet
 const DEFAULT_WIDTH = SCREEN_WIDTH - 40; // Leave 20px margin on each side
-const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
+const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
+
+// Storage keys for persisting panel state
+const STORAGE_KEYS = {
+  PANEL_DIMENSIONS: "@floating_data_editor_panel_dimensions",
+  PANEL_HEIGHT: "@floating_data_editor_panel_height",
+  IS_FLOATING_MODE: "@floating_data_editor_is_floating_mode",
+} as const;
+
+// Fallback in-memory storage when AsyncStorage is not available
+const memoryStorage: Record<string, string> = {};
+
+// Helper functions for persisting panel state with AsyncStorage fallback
+const setItem = async (key: string, value: string) => {
+  if (AsyncStorage) {
+    await AsyncStorage.setItem(key, value);
+  } else {
+    memoryStorage[key] = value;
+  }
+};
+
+const getItem = async (key: string): Promise<string | null> => {
+  if (AsyncStorage) {
+    return await AsyncStorage.getItem(key);
+  } else {
+    return memoryStorage[key] || null;
+  }
+};
+
+const savePanelDimensions = async (dimensions: {
+  width: number;
+  height: number;
+  top: number;
+  left: number;
+}) => {
+  try {
+    await setItem(STORAGE_KEYS.PANEL_DIMENSIONS, JSON.stringify(dimensions));
+  } catch (error) {
+    console.warn("Failed to save panel dimensions:", error);
+  }
+};
+
+const savePanelHeight = async (height: number) => {
+  try {
+    await setItem(STORAGE_KEYS.PANEL_HEIGHT, height.toString());
+  } catch (error) {
+    console.warn("Failed to save panel height:", error);
+  }
+};
+
+const saveFloatingMode = async (isFloating: boolean) => {
+  try {
+    await setItem(STORAGE_KEYS.IS_FLOATING_MODE, isFloating.toString());
+  } catch (error) {
+    console.warn("Failed to save floating mode:", error);
+  }
+};
+
+const loadPanelState = async () => {
+  try {
+    const [dimensionsStr, heightStr, floatingModeStr] = await Promise.all([
+      getItem(STORAGE_KEYS.PANEL_DIMENSIONS),
+      getItem(STORAGE_KEYS.PANEL_HEIGHT),
+      getItem(STORAGE_KEYS.IS_FLOATING_MODE),
+    ]);
+
+    const dimensions = dimensionsStr ? JSON.parse(dimensionsStr) : null;
+    const height = heightStr ? parseInt(heightStr, 10) : null;
+    const isFloating = floatingModeStr ? floatingModeStr === "true" : null;
+
+    return { dimensions, height, isFloating };
+  } catch (error) {
+    console.warn("Failed to load panel state:", error);
+    return { dimensions: null, height: null, isFloating: null };
+  }
+};
 
 // Stable callbacks moved to module scope to prevent re-renders
 const RESIZE_HANDLERS: Array<
@@ -54,8 +141,10 @@ const getQueryBreadcrumb = (query: Query<any, any, any, any>) => {
 // Custom corner resize handle component with drag feedback
 const CornerResizeHandle = ({
   handler,
+  isActive,
 }: {
   handler: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+  isActive?: boolean;
 }) => {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -64,7 +153,7 @@ const CornerResizeHandle = ({
       style={[
         cornerHandleStyles.cornerHandle,
         cornerHandleStyles[handler],
-        isDragging && cornerHandleStyles.cornerHandleDragging,
+        (isDragging || isActive) && cornerHandleStyles.cornerHandleDragging,
       ]}
       onTouchStart={() => setIsDragging(true)}
       onTouchEnd={() => setIsDragging(false)}
@@ -74,14 +163,7 @@ const CornerResizeHandle = ({
   );
 };
 
-// Updated render function to return the component
-const renderCornerHandle = ({
-  handler,
-}: {
-  handler: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
-}) => {
-  return <CornerResizeHandle handler={handler} />;
-};
+// Updated render function moved inside component for access to state
 
 interface FloatingDataEditorProps {
   visible: boolean;
@@ -97,6 +179,10 @@ export function FloatingDataEditor({
   onClose,
 }: FloatingDataEditorProps) {
   const [isFloatingMode, setIsFloatingMode] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [isStateLoaded, setIsStateLoaded] = useState(false);
   const insets = useSafeAreaInsets();
   const allQueries = useAllQueries(); // For stats display
 
@@ -114,6 +200,52 @@ export function FloatingDataEditor({
     left: 20,
   });
 
+  // Load persisted state on component mount
+  useEffect(() => {
+    const loadState = async () => {
+      const { dimensions, height, isFloating } = await loadPanelState();
+
+      if (dimensions) {
+        // Validate stored dimensions are within current screen bounds
+        const validatedDimensions = {
+          width: Math.max(
+            MIN_WIDTH,
+            Math.min(dimensions.width, SCREEN_WIDTH - 40)
+          ),
+          height: Math.max(
+            MIN_HEIGHT,
+            Math.min(dimensions.height, SCREEN_HEIGHT - 200)
+          ),
+          top: Math.max(
+            0,
+            Math.min(dimensions.top, SCREEN_HEIGHT - MIN_HEIGHT)
+          ),
+          left: Math.max(
+            0,
+            Math.min(dimensions.left, SCREEN_WIDTH - MIN_WIDTH)
+          ),
+        };
+        setPanelDimensions(validatedDimensions);
+      }
+
+      if (height !== null) {
+        const validatedHeight = Math.max(
+          MIN_HEIGHT,
+          Math.min(height, SCREEN_HEIGHT - insets.top)
+        );
+        setPanelHeight(validatedHeight);
+      }
+
+      if (isFloating !== null) {
+        setIsFloatingMode(isFloating);
+      }
+
+      setIsStateLoaded(true);
+    };
+
+    loadState();
+  }, [insets.top, insets.bottom]);
+
   // Update container bounds when screen orientation changes
   useEffect(() => {
     const subscription = Dimensions.addEventListener("change", ({ window }) => {
@@ -127,20 +259,52 @@ export function FloatingDataEditor({
 
   // Simple callback functions for drag/resize events
   const handleDragEnd = (dimensions: any) => {
-    setPanelDimensions((prev) => ({
-      ...prev,
+    const newDimensions = {
+      ...panelDimensions,
       top: dimensions.top,
       left: dimensions.left,
-    }));
+    };
+    setPanelDimensions(newDimensions);
+    setIsDragging(false);
+    // Save to storage
+    savePanelDimensions(newDimensions);
   };
 
   const handleResizeEnd = (dimensions: any) => {
     setPanelDimensions(dimensions);
+    setIsResizing(false);
+    // Save to storage
+    savePanelDimensions(dimensions);
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleResizeStart = () => {
+    setIsResizing(true);
+  };
+
+  // Updated render function to return the component with access to state
+  const renderCornerHandle = ({
+    handler,
+  }: {
+    handler: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+  }) => {
+    return (
+      <CornerResizeHandle
+        handler={handler}
+        isActive={isDragging || isResizing}
+      />
+    );
   };
 
   // Toggle between floating and bottom sheet modes
   const toggleFloatingMode = () => {
-    setIsFloatingMode(!isFloatingMode);
+    const newMode = !isFloatingMode;
+    setIsFloatingMode(newMode);
+    // Save to storage
+    saveFloatingMode(newMode);
   };
 
   // Bottom sheet height management (for non-floating mode)
@@ -156,12 +320,24 @@ export function FloatingDataEditor({
     sharedHeight.value = panelHeight;
   }, [panelHeight]);
 
+  // Save panel height to storage when it changes (debounced to avoid excessive writes)
+  useEffect(() => {
+    if (isStateLoaded) {
+      const timeoutId = setTimeout(() => {
+        savePanelHeight(panelHeight);
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [panelHeight, isStateLoaded]);
+
   // Header-based resize gesture for bottom sheet mode
   const resizeGesture = Gesture.Pan()
     .enabled(!isFloatingMode)
     .onBegin(() => {
       "worklet";
       offsetHeight.value = sharedHeight.value;
+      runOnJS(setIsResizing)(true);
     })
     .onUpdate((event) => {
       "worklet";
@@ -176,12 +352,33 @@ export function FloatingDataEditor({
     .onEnd(() => {
       "worklet";
       // Final height is already set via runOnJS
+      runOnJS(setIsResizing)(false);
+    })
+    .onFinalize(() => {
+      "worklet";
+      runOnJS(setIsResizing)(false);
     });
 
   // Animated style for smooth height transitions
   const animatedPanelStyle = useAnimatedStyle(() => ({
     height: sharedHeight.value,
   }));
+
+  // Animated border style for drag/resize feedback
+  const animatedBorderStyle = useAnimatedStyle(() => {
+    const normalBorder = "rgba(255, 255, 255, 0.1)";
+    const activeBorder = "rgba(34, 197, 94, 1)";
+    const isActive = isDragging || isResizing;
+
+    return {
+      borderColor: isActive ? activeBorder : normalBorder,
+      borderWidth: isActive ? 2 : 1,
+      shadowColor: isActive ? "rgba(34, 197, 94, 0.6)" : "#000",
+      shadowOpacity: isActive ? 0.8 : 0.3,
+      shadowRadius: isActive ? 12 : 8,
+      elevation: isActive ? 20 : 16,
+    };
+  });
 
   // Moved to module scope to prevent re-creation on every render
   const createActionButtons = (selectedQuery: Query<any, any, any, any>) => {
@@ -213,7 +410,7 @@ export function FloatingDataEditor({
     ];
   };
 
-  if (!visible) return null;
+  if (!visible || !isStateLoaded) return null;
 
   // Helper function to render the common content
   const renderPanelContent = () => (
@@ -222,7 +419,9 @@ export function FloatingDataEditor({
         {/* Drag indicator at top of header for visual feedback */}
         {!isFloatingMode && (
           <View style={styles.dragIndicator}>
-            <View style={styles.resizeGrip} />
+            <View
+              style={[styles.resizeGrip, isResizing && styles.resizeGripActive]}
+            />
           </View>
         )}
         <View style={styles.headerContent}>
@@ -244,23 +443,11 @@ export function FloatingDataEditor({
                 </Text>
               </View>
             ) : (
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{allQueries.length}</Text>
-                  <Text style={styles.statLabel}>
-                    {allQueries.length === 1 ? "query" : "queries"}
-                  </Text>
-                </View>
-                <View style={styles.statSeparator} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>
-                    {
-                      allQueries.filter((q) => q.state.status === "success")
-                        .length
-                    }
-                  </Text>
-                  <Text style={styles.statLabel}>active</Text>
-                </View>
+              <View style={styles.filterContainer}>
+                <QueryStatusCount
+                  activeFilter={activeFilter}
+                  onFilterChange={setActiveFilter}
+                />
               </View>
             )}
 
@@ -297,48 +484,66 @@ export function FloatingDataEditor({
               style={styles.explorerScrollContainer}
               contentContainerStyle={styles.explorerScrollContent}
             >
-              {selectedQuery.state.data ? (
+              {/* Data Explorer Section - Moved to top for immediate data editing */}
+              <View style={styles.section}>
+                {selectedQuery.state.data ? (
+                  <Explorer
+                    key={selectedQuery?.queryHash}
+                    editable={true}
+                    label="Data"
+                    value={selectedQuery?.state.data}
+                    defaultExpanded={["Data"]}
+                    activeQuery={selectedQuery}
+                  />
+                ) : (
+                  <View style={styles.emptyState}>
+                    {selectedQuery.state.status === "pending" ||
+                    getQueryStatusLabel(selectedQuery) === "fetching" ? (
+                      <>
+                        <Text style={styles.emptyTitle}>
+                          {selectedQuery.state.status === "pending"
+                            ? "Loading..."
+                            : "Refetching..."}
+                        </Text>
+                        <Text style={styles.emptyDescription}>
+                          Please wait while the query is being executed.
+                        </Text>
+                      </>
+                    ) : selectedQuery.state.status === "error" ? (
+                      <>
+                        <Text style={styles.emptyTitle}>Query Error</Text>
+                        <Text style={styles.emptyDescription}>
+                          {selectedQuery.state.error?.message ||
+                            "An error occurred while fetching data."}
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text style={styles.emptyTitle}>No Data Available</Text>
+                        <Text style={styles.emptyDescription}>
+                          This query has no data to edit. Try refetching the
+                          query first.
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                )}
+              </View>
+
+              {/* Query Details Section */}
+              <View style={styles.section}>
+                <QueryDetails query={selectedQuery} />
+              </View>
+
+              {/* Query Explorer Section */}
+              <View style={styles.section}>
                 <Explorer
-                  key={selectedQuery?.queryHash}
-                  editable={true}
-                  label="Data"
-                  value={selectedQuery?.state.data}
-                  defaultExpanded={["Data"]}
+                  label="Query"
+                  value={selectedQuery}
+                  defaultExpanded={["Query", "queryKey"]}
                   activeQuery={selectedQuery}
                 />
-              ) : (
-                <View style={styles.emptyState}>
-                  {selectedQuery.state.status === "pending" ||
-                  getQueryStatusLabel(selectedQuery) === "fetching" ? (
-                    <>
-                      <Text style={styles.emptyTitle}>
-                        {selectedQuery.state.status === "pending"
-                          ? "Loading..."
-                          : "Refetching..."}
-                      </Text>
-                      <Text style={styles.emptyDescription}>
-                        Please wait while the query is being executed.
-                      </Text>
-                    </>
-                  ) : selectedQuery.state.status === "error" ? (
-                    <>
-                      <Text style={styles.emptyTitle}>Query Error</Text>
-                      <Text style={styles.emptyDescription}>
-                        {selectedQuery.state.error?.message ||
-                          "An error occurred while fetching data."}
-                      </Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={styles.emptyTitle}>No Data Available</Text>
-                      <Text style={styles.emptyDescription}>
-                        This query has no data to edit. Try refetching the query
-                        first.
-                      </Text>
-                    </>
-                  )}
-                </View>
-              )}
+              </View>
             </ScrollView>
             {/* Action Footer with Safe Area */}
             <View
@@ -370,6 +575,7 @@ export function FloatingDataEditor({
               <QueryBrowser
                 selectedQuery={selectedQuery}
                 onQuerySelect={onQuerySelect}
+                activeFilter={activeFilter}
                 emptyStateMessage="No React Query queries are currently active.
 
 To see queries here:
@@ -416,13 +622,17 @@ To see queries here:
             isResizable={true}
             resizeHandlers={RESIZE_HANDLERS}
             renderHandler={renderCornerHandle}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onResizeStart={handleResizeStart}
             onResizeEnd={handleResizeEnd}
             style={styles.dragResizableContainer}
           >
-            <View style={[styles.panel, styles.panelFloating]}>
+            <Animated.View
+              style={[styles.panel, styles.panelFloating, animatedBorderStyle]}
+            >
               {renderPanelContent()}
-            </View>
+            </Animated.View>
           </DragResizable>
         </View>
       ) : (
@@ -432,7 +642,12 @@ To see queries here:
           pointerEvents="box-none"
         >
           <Animated.View
-            style={[styles.panel, styles.panelBottomSheet, animatedPanelStyle]}
+            style={[
+              styles.panel,
+              styles.panelBottomSheet,
+              animatedPanelStyle,
+              animatedBorderStyle,
+            ]}
           >
             {/* Header as resize handle for bottom sheet */}
             <GestureDetector gesture={resizeGesture}>
@@ -507,6 +722,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.2)", // Match DevToolsHeader drag indicator
     borderRadius: 1.5,
   },
+  resizeGripActive: {
+    backgroundColor: "rgba(34, 197, 94, 0.8)",
+    height: 4,
+  },
 
   // Header matching DevToolsHeader exactly
   header: {
@@ -532,7 +751,7 @@ const styles = StyleSheet.create({
   // Header content matching DevToolsHeader patterns but single row for floating
   headerContent: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 2,
     paddingBottom: 2,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.06)", // Exact match with DevToolsHeader
@@ -551,6 +770,8 @@ const styles = StyleSheet.create({
   headerControls: {
     flexDirection: "row",
     gap: 6,
+    zIndex: 1001, // Higher than corner handles (1000) to ensure button clicks work
+    paddingRight: 4, // Add some padding to move buttons away from edge
   },
   backButton: {
     width: 28,
@@ -561,6 +782,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(156, 163, 175, 0.2)", // Match main dev tools button
+    zIndex: 1002, // Ensure button is above corner handles
   },
 
   // Breadcrumb navigation
@@ -583,32 +805,11 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
 
-  // Stats display matching main dev tools patterns
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  // Filter container for QueryStatusCount component
+  filterContainer: {
     flex: 1, // Take available space when no back button
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 3,
-  },
-  statNumber: {
-    color: "#0EA5E9", // Exact match with DevToolsHeader toggle active color
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  statLabel: {
-    color: "#9CA3AF", // Exact match with DevToolsHeader inactive text
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  statSeparator: {
-    width: 1,
-    height: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.1)", // Match main dev tools border
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Control buttons matching DevToolsHeader exactly
@@ -621,6 +822,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(156, 163, 175, 0.2)", // Exact match with DevToolsHeader
+    zIndex: 1002, // Ensure buttons are above corner handles
   },
   controlButtonSecondary: {
     backgroundColor: "rgba(156, 163, 175, 0.1)",
@@ -643,8 +845,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   explorerScrollContent: {
-    padding: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 8,
     flexGrow: 1,
+  },
+  // Section layout matching QueryInformation
+  section: {
+    marginBottom: 16,
+  },
+  headerText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    marginBottom: 8,
+    textAlign: "left",
+  },
+  contentView: {
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    padding: 16,
   },
 
   // Empty states matching main dev tools

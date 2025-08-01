@@ -11,7 +11,6 @@ interface QueryStatusProps {
 }
 
 type ColorName = "green" | "yellow" | "gray" | "blue" | "purple" | "red";
-type ColorShade = "100" | "200" | "300" | "400" | "500" | "700" | "900";
 
 const QueryStatus: React.FC<QueryStatusProps> = ({
   label,
@@ -21,8 +20,6 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
   isActive = false,
   onPress,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   // Modern color mapping for status indicators
   const getStatusColors = (colorName: ColorName) => {
     const colorMap = {
@@ -53,8 +50,13 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
         backgroundColor: `${statusColors.dot}20`, // 20% opacity of the status color
         borderColor: statusColors.dot,
         transform: [{ scale: 1.05 }],
+        borderBottomWidth: 1.5,
+        borderBottomColor: statusColors.dot,
       }
-    : {};
+    : {
+        borderBottomWidth: 1.5,
+        borderBottomColor: statusColors.dot,
+      };
 
   return (
     <TouchableOpacity
@@ -64,19 +66,9 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
         activeStyle,
       ]}
       disabled={!onPress}
-      onPressIn={() => setIsHovered(true)}
-      onPressOut={() => setIsHovered(false)}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {!showLabel && isHovered && (
-        <View style={styles.tooltip}>
-          <Text style={styles.tooltipText}>{label}</Text>
-        </View>
-      )}
-
-      <View style={[styles.dot, { backgroundColor: statusColors.dot }]} />
-
       {showLabel && (
         <Text style={[styles.label, { color: statusColors.text }]}>
           {label}
@@ -98,6 +90,8 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
               color: getStatusColors(color).text,
             },
           ]}
+          numberOfLines={1}
+          ellipsizeMode="middle"
         >
           {count}
         </Text>
@@ -109,7 +103,7 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
 const styles = StyleSheet.create({
   queryStatusTag: {
     flexDirection: "row",
-    gap: 6,
+    gap: 4, // Reduced gap since no dot
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderRadius: 6,
     padding: 6,
@@ -118,15 +112,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.1)",
     position: "relative",
     flexShrink: 1, // Allow badges to shrink if needed
-    minWidth: 32, // Minimum width for just dot + count
+    minWidth: 24, // Reduced minimum width since no dot
   },
   clickable: {
     // cursor: 'pointer', // This doesn't exist in React Native
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
   label: {
     fontSize: 11,
