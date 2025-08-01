@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -22,10 +22,18 @@ import {
 
 import {
   X,
-  Minimize2,
-  Maximize2,
+  ArrowUpToLine,
+  ArrowDownToLine,
   GripHorizontal,
   ChevronLeft,
+  Database,
+  Activity,
+  Zap,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Server,
 } from "lucide-react-native";
 import Explorer from "../../../devtools/Explorer";
 import { useSafeQueries } from "../hooks/useSafeQueries";
@@ -39,16 +47,127 @@ import triggerError from "../../../_util/actions/triggerError";
 // Stable constants moved to module scope to prevent re-renders
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const MIN_HEIGHT = 150;
-const DEFAULT_HEIGHT = 400;
-const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
+const DEFAULT_HEIGHT = 500;
+const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 
-// Stable color map to prevent object recreation
+// Project-consistent color system matching existing dev tools
+const THEME_COLORS = {
+  // Background colors matching project patterns
+  background: {
+    primary: "#171717", // Matches DevToolsHeader
+    secondary: "#2A2A2A", // Matches ActionMenu containers
+    glass: "rgba(42, 42, 42, 0.95)", // Slightly transparent version
+  },
+  // Status colors exactly matching existing components
+  status: {
+    success: "#10B981", // Green - matches all status components
+    pending: "#F59E0B", // Yellow - matches warning states
+    error: "#EF4444", // Red - matches error states
+    stale: "#8B5CF6", // Purple - matches stale states
+    fetching: "#3B82F6", // Blue - matches fetching states
+    inactive: "#6B7280", // Gray - matches inactive states
+  },
+  // Text colors matching project standards
+  text: {
+    primary: "#FFFFFF",
+    secondary: "#E5E7EB", // Matches ActionMenu text
+    tertiary: "#9CA3AF", // Matches subtitle text
+    disabled: "#6B7280", // Matches disabled states
+    accent: "#0EA5E9", // Blue accent matching toggle buttons
+  },
+  // Border and surface patterns from existing components
+  border: {
+    subtle: "rgba(255, 255, 255, 0.06)", // Matches DevToolsHeader
+    medium: "rgba(255, 255, 255, 0.1)", // Standard border
+    strong: "rgba(255, 255, 255, 0.2)", // Drag indicator
+  },
+  surface: {
+    subtle: "rgba(255, 255, 255, 0.02)", // Disabled states
+    light: "rgba(255, 255, 255, 0.05)", // Hover states
+    medium: "rgba(255, 255, 255, 0.1)", // Active states
+  },
+};
+
+// Enhanced status color mapping
 const STATUS_COLOR_MAP: Record<string, string> = {
-  blue: "#3B82F6",
-  gray: "#6B7280",
-  purple: "#8B5CF6",
-  yellow: "#F59E0B",
-  green: "#10B981",
+  blue: THEME_COLORS.status.fetching,
+  gray: THEME_COLORS.status.inactive,
+  purple: THEME_COLORS.status.stale,
+  yellow: THEME_COLORS.status.pending,
+  green: THEME_COLORS.status.success,
+  red: THEME_COLORS.status.error,
+};
+
+// Helper component for animated status indicator
+const StatusIndicator = ({ query }: { query: Query<any, any, any, any> }) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const status = query.state.status;
+  const isFetching = getQueryStatusLabel(query) === "fetching";
+
+  useEffect(() => {
+    if (isFetching || status === "pending") {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 0.6,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isFetching, status, pulseAnim]);
+
+  const getStatusIcon = () => {
+    if (isFetching)
+      return <RefreshCw color={THEME_COLORS.status.fetching} size={16} />;
+    if (status === "pending")
+      return <Clock color={THEME_COLORS.status.pending} size={16} />;
+    if (status === "error")
+      return <AlertTriangle color={THEME_COLORS.status.error} size={16} />;
+    if (status === "success")
+      return <CheckCircle color={THEME_COLORS.status.success} size={16} />;
+    return <Activity color={THEME_COLORS.status.inactive} size={16} />;
+  };
+
+  return (
+    <Animated.View style={[styles.statusIndicator, { opacity: pulseAnim }]}>
+      {getStatusIcon()}
+    </Animated.View>
+  );
+};
+
+// Enhanced breadcrumb component
+const QueryBreadcrumb = ({ query }: { query: Query<any, any, any, any> }) => {
+  const queryKey = Array.isArray(query.queryKey)
+    ? query.queryKey
+    : [query.queryKey];
+
+  return (
+    <View style={styles.breadcrumbContainer}>
+      <Database color={THEME_COLORS.text.tertiary} size={14} />
+      <Text style={styles.breadcrumbSeparator}>›</Text>
+      {queryKey.map((key, index) => (
+        <React.Fragment key={index}>
+          <Text style={styles.breadcrumbItem} numberOfLines={1}>
+            {String(key)}
+          </Text>
+          {index < queryKey.length - 1 && (
+            <Text style={styles.breadcrumbSeparator}>›</Text>
+          )}
+        </React.Fragment>
+      ))}
+    </View>
+  );
 };
 
 interface FloatingDataEditorProps {
@@ -209,7 +328,7 @@ export function FloatingDataEditor({
                   {...resizePanResponder.panHandlers}
                   style={styles.resizeHandle}
                 >
-                  <GripHorizontal color="#6B7280" size={20} />
+                  <View style={styles.resizeGrip} />
                 </View>
               )}
 
@@ -220,47 +339,86 @@ export function FloatingDataEditor({
                     style={styles.backButton}
                     hitSlop={HIT_SLOP}
                   >
-                    <ChevronLeft color="#9CA3AF" size={20} />
+                    <ChevronLeft
+                      color={THEME_COLORS.text.secondary}
+                      size={20}
+                    />
                   </Pressable>
                 )}
 
                 <View style={styles.titleSection}>
-                  <Text style={styles.title}>
-                    {selectedQuery ? "Data Editor" : "Query Browser"}
-                  </Text>
+                  <View style={styles.titleRow}>
+                    <View style={styles.titleWithIcon}>
+                      {selectedQuery ? (
+                        <>
+                          <Zap color={THEME_COLORS.text.accent} size={16} />
+                          <Text style={styles.title}>Data Editor</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Server color={THEME_COLORS.text.accent} size={16} />
+                          <Text style={styles.title}>Query Browser</Text>
+                        </>
+                      )}
+                    </View>
+                    {selectedQuery && <StatusIndicator query={selectedQuery} />}
+                  </View>
+
                   {selectedQuery ? (
-                    <Text style={styles.subtitle}>
-                      {Array.isArray(selectedQuery.queryKey)
-                        ? selectedQuery.queryKey.join(" › ")
-                        : String(selectedQuery.queryKey)}
-                    </Text>
+                    <QueryBreadcrumb query={selectedQuery} />
                   ) : (
-                    <Text style={styles.subtitle}>
-                      {allQueries.length}{" "}
-                      {allQueries.length === 1 ? "query" : "queries"} available
-                    </Text>
+                    <View style={styles.statsRow}>
+                      <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>
+                          {allQueries.length}
+                        </Text>
+                        <Text style={styles.statLabel}>
+                          {allQueries.length === 1 ? "query" : "queries"}
+                        </Text>
+                      </View>
+                      <View style={styles.statSeparator} />
+                      <View style={styles.statItem}>
+                        <Text style={styles.statNumber}>
+                          {
+                            allQueries.filter(
+                              (q) => q.state.status === "success"
+                            ).length
+                          }
+                        </Text>
+                        <Text style={styles.statLabel}>active</Text>
+                      </View>
+                    </View>
                   )}
                 </View>
 
                 <View style={styles.controls}>
                   <Pressable
                     onPress={toggleModalPosition}
-                    style={styles.controlButton}
+                    style={[
+                      styles.controlButton,
+                      styles.controlButtonSecondary,
+                    ]}
                     hitSlop={HIT_SLOP}
                   >
                     {isTopMode ? (
-                      <Minimize2 color="#9CA3AF" size={16} />
+                      <ArrowDownToLine
+                        color={THEME_COLORS.text.secondary}
+                        size={16}
+                      />
                     ) : (
-                      <Maximize2 color="#9CA3AF" size={16} />
+                      <ArrowUpToLine
+                        color={THEME_COLORS.text.secondary}
+                        size={16}
+                      />
                     )}
                   </Pressable>
 
                   <Pressable
                     onPress={onClose}
-                    style={styles.controlButton}
+                    style={[styles.controlButton, styles.controlButtonDanger]}
                     hitSlop={HIT_SLOP}
                   >
-                    <X color="#9CA3AF" size={16} />
+                    <X color={THEME_COLORS.text.primary} size={16} />
                   </Pressable>
                 </View>
               </View>
@@ -405,108 +563,192 @@ export function FloatingDataEditor({
 }
 
 const styles = StyleSheet.create({
+  // Base overlay without background - allows app interaction
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "transparent", // Allows interaction with app behind
+    backgroundColor: "transparent", // No background overlay for dev tool usage
   },
   overlayTop: {
     justifyContent: "flex-start",
   },
   panel: {
-    backgroundColor: "#1F1F1F",
+    backgroundColor: THEME_COLORS.background.secondary, // #2A2A2A
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: THEME_COLORS.border.medium,
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 16,
   },
   panelBottom: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 14, // Matches ActionMenu radius
+    borderTopRightRadius: 14,
     borderBottomWidth: 0,
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
+    shadowOffset: { width: 0, height: -4 },
   },
   panelTop: {
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
     borderTopWidth: 0,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
   },
+
+  // Compact header matching DevToolsHeader
   header: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
     overflow: "hidden",
+    backgroundColor: THEME_COLORS.background.primary, // #171717
   },
   resizeHandle: {
-    height: 20,
+    height: 16, // Smaller like DevToolsHeader drag indicator
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    backgroundColor: THEME_COLORS.surface.light,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
   },
-  resizeHandleBottom: {
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+  resizeGrip: {
+    width: 32,
+    height: 3,
+    backgroundColor: THEME_COLORS.border.strong, // Matches drag indicator
+    borderRadius: 1.5,
   },
+
+  // Compact header content matching DevToolsHeader
   headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12, // Matches DevToolsHeader
+    paddingVertical: 8, // Smaller padding for compact header
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+    borderBottomColor: THEME_COLORS.border.subtle,
+    backgroundColor: THEME_COLORS.background.primary,
   },
   backButton: {
-    padding: 8,
+    width: 28,
+    height: 28,
     borderRadius: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: THEME_COLORS.surface.light,
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: THEME_COLORS.border.medium,
     marginRight: 12,
   },
+
+  // Compact title section
   titleSection: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
+  titleWithIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   title: {
-    color: "#FFFFFF",
-    fontSize: 16,
+    color: THEME_COLORS.text.primary,
+    fontSize: 16, // Smaller title
+    fontWeight: "600",
+    letterSpacing: -0.2,
+  },
+
+  // Compact status indicator
+  statusIndicator: {
+    padding: 4,
+    borderRadius: 6,
+    backgroundColor: THEME_COLORS.surface.light,
+    borderWidth: 1,
+    borderColor: THEME_COLORS.border.medium,
+  },
+
+  // Breadcrumb navigation
+  breadcrumbContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+  },
+  breadcrumbItem: {
+    color: THEME_COLORS.text.secondary,
+    fontSize: 13,
+    fontWeight: "500",
+    fontFamily: "monospace",
+    maxWidth: 120,
+  },
+  breadcrumbSeparator: {
+    color: THEME_COLORS.text.tertiary,
+    fontSize: 12,
+    fontWeight: "400",
+  },
+
+  // Compact stats display
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 2,
+  },
+  statItem: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 3,
+  },
+  statNumber: {
+    color: THEME_COLORS.text.accent, // Blue accent like toggle buttons
+    fontSize: 14,
     fontWeight: "600",
   },
-  subtitle: {
-    color: "#9CA3AF",
-    fontSize: 12,
-    marginTop: 2,
-    fontFamily: "monospace",
+  statLabel: {
+    color: THEME_COLORS.text.tertiary,
+    fontSize: 11,
+    fontWeight: "500",
   },
+  statSeparator: {
+    width: 1,
+    height: 12,
+    backgroundColor: THEME_COLORS.border.medium,
+  },
+
+  // Compact control buttons matching DevToolsHeader
   controls: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
   },
   controlButton: {
-    padding: 8,
+    width: 28,
+    height: 28,
     borderRadius: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: THEME_COLORS.surface.light,
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: THEME_COLORS.border.medium,
   },
+  controlButtonSecondary: {
+    backgroundColor: THEME_COLORS.surface.light,
+  },
+  controlButtonDanger: {
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    borderColor: "rgba(239, 68, 68, 0.2)",
+  },
+
+  // Content area
   content: {
     flex: 1,
     overflow: "hidden",
+    backgroundColor: THEME_COLORS.background.secondary,
   },
+
+  // Explorer section
   explorerScrollContainer: {
     flex: 1,
   },
@@ -514,17 +756,8 @@ const styles = StyleSheet.create({
     padding: 16,
     flexGrow: 1,
   },
-  explorerContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    flexGrow: 1,
-  },
+
+  // Improved empty states
   emptyState: {
     flex: 1,
     justifyContent: "center",
@@ -532,17 +765,21 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   emptyTitle: {
-    color: "#FFFFFF",
+    color: THEME_COLORS.text.primary,
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 8,
+    textAlign: "center",
   },
   emptyDescription: {
-    color: "#9CA3AF",
+    color: THEME_COLORS.text.tertiary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
+    maxWidth: 280,
   },
+
+  // Query list matching project patterns
   queryListContainer: {
     flex: 1,
   },
@@ -556,9 +793,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 6,
     marginBottom: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: THEME_COLORS.surface.light,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: THEME_COLORS.border.medium,
   },
   statusDot: {
     width: 8,
@@ -567,19 +804,22 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   queryText: {
-    color: "#E5E7EB",
+    color: THEME_COLORS.text.secondary,
     fontSize: 14,
     flex: 1,
     fontFamily: "monospace",
+    fontWeight: "400",
   },
+
+  // Action footer matching project style
   actionFooter: {
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
+    borderTopColor: THEME_COLORS.border.subtle,
     paddingVertical: 16,
-    paddingHorizontal: 24,
-    backgroundColor: "#1F1F1F",
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    paddingHorizontal: 16,
+    backgroundColor: THEME_COLORS.background.primary,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   actionsGrid: {
     flexDirection: "row",
