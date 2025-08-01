@@ -10,7 +10,7 @@ import {
   Query,
   Mutation,
   onlineManager,
-  QueryClient,
+  useQueryClient,
 } from "@tanstack/react-query";
 import QueriesList from "./_components/devtools/QueriesList";
 import Svg, { Path } from "react-native-svg";
@@ -22,7 +22,6 @@ interface Props {
   setShowDevTools: React.Dispatch<React.SetStateAction<boolean>>;
   onSelectionChange?: (hasSelection: boolean) => void;
   panResponder?: PanResponderInstance;
-  queryClient: QueryClient;
   containerHeight?: number; // For modal environments
 }
 
@@ -30,9 +29,9 @@ export default function DevTools({
   setShowDevTools,
   onSelectionChange,
   panResponder,
-  queryClient,
   containerHeight,
 }: Props) {
+  const queryClient = useQueryClient();
   const [showQueries, setShowQueries] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 

@@ -1,6 +1,11 @@
-export { BubbleContent } from './BubbleContent';
-export { Divider } from './Divider';
-export { DragHandle } from './DragHandle';
-export { type Environment, EnvironmentIndicator } from './EnvironmentIndicator';
-export { type UserRole, UserStatus } from './UserStatus';
-export { WifiToggle } from './WifiToggle';
+export { BubbleContent } from "./BubbleContent";
+export { ReactQueryBubbleContent } from "./ReactQueryBubbleContent";
+export { BubbleQuerySelector } from "./BubbleQuerySelector";
+export { DevToolsModal } from "./DevToolsModal";
+export { ErrorBoundary } from "./ErrorBoundary";
+export { QueryDebugInfo } from "./QueryDebugInfo";
+export { Divider } from "./Divider";
+export { DragHandle } from "./DragHandle";
+export { type Environment, EnvironmentIndicator } from "./EnvironmentIndicator";
+export { type UserRole, UserStatus } from "./UserStatus";
+export { WifiToggle } from "./WifiToggle";

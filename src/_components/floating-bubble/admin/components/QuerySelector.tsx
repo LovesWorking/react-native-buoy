@@ -1,0 +1,289 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  Pressable,
+} from "react-native";
+import { Query } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react-native";
+import { getQueryStatusColor } from "../../../../_components/_util/getQueryStatusColor";
+import { getQueryStatusLabel } from "../../../../_components/_util/getQueryStatusLabel";
+import { QueryDebugInfo } from "./QueryDebugInfo";
+
+interface QuerySelectorProps {
+  queries: Query<any, any, any, any>[];
+  selectedQuery?: Query<any, any, any, any>;
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (query: Query<any, any, any, any>) => void;
+}
+
+export function QuerySelector({
+  queries,
+  selectedQuery,
+  isOpen,
+  onClose,
+  onSelect,
+}: QuerySelectorProps) {
+  // Debug logging
+  console.log("QuerySelector - queries received:", queries.length, queries);
+  const getQueryDisplayName = (query: Query<any, any, any, any>) => {
+    return Array.isArray(query.queryKey)
+      ? query.queryKey.join(" - ")
+      : String(query.queryKey);
+  };
+
+  return (
+    <Modal
+      visible={isOpen}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Query</Text>
+            <Text style={styles.modalSubtitle}>
+              {queries.length} {queries.length === 1 ? "query" : "queries"}{" "}
+              available
+            </Text>
+          </View>
+
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={true}
+          >
+            {(() => {
+              console.log(
+                "QuerySelector rendering logic - queries.length:",
+                queries.length
+              );
+              return queries.length === 0;
+            })() ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>No Queries Found</Text>
+                <Text style={styles.emptyDescription}>
+                  No React Query queries are currently active.{"\n\n"}
+                  To see queries here:{"\n"}• Make API calls using useQuery
+                  {"\n"}• Ensure queries are within QueryClientProvider{"\n"}•
+                  Check console for debugging info
+                </Text>
+                <QueryDebugInfo />
+              </View>
+            ) : (
+              (() => {
+                console.log(
+                  "About to render queries list, queries:",
+                  queries.length
+                );
+                return queries.map((query, index) => {
+                  const displayName = getQueryDisplayName(query);
+                  console.log(`Rendering query ${index}:`, displayName);
+
+                  const status = getQueryStatusLabel(query);
+                  const statusColorName = getQueryStatusColor({
+                    queryState: query.state,
+                    observerCount: query.getObserversCount(),
+                    isStale: query.isStale(),
+                  });
+
+                  // Convert color names to hex colors
+                  const colorMap: Record<string, string> = {
+                    blue: "#3B82F6",
+                    gray: "#6B7280",
+                    purple: "#8B5CF6",
+                    yellow: "#F59E0B",
+                    green: "#10B981",
+                  };
+
+                  const statusColor = colorMap[statusColorName] || "#6B7280";
+                  const isSelected = query === selectedQuery;
+
+                  return (
+                    <TouchableOpacity
+                      key={`${query.queryHash}-${index}`}
+                      style={[
+                        styles.queryItem,
+                        isSelected && styles.selectedQueryItem,
+                      ]}
+                      onPress={() => onSelect(query)}
+                    >
+                      <View
+                        style={[
+                          styles.statusDot,
+                          { backgroundColor: statusColor },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.queryText,
+                          isSelected && styles.selectedQueryText,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {displayName}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                });
+              })()
+            )}
+          </ScrollView>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
+export function QuerySelectorTrigger({
+  selectedQuery,
+  onPress,
+}: {
+  selectedQuery?: Query<any, any, any, any>;
+  onPress: () => void;
+}) {
+  const displayName = selectedQuery
+    ? Array.isArray(selectedQuery.queryKey)
+      ? selectedQuery.queryKey.join(" - ")
+      : String(selectedQuery.queryKey)
+    : "Select Query";
+
+  const status = selectedQuery ? getQueryStatusLabel(selectedQuery) : undefined;
+  const statusColorName = selectedQuery
+    ? getQueryStatusColor({
+        queryState: selectedQuery.state,
+        observerCount: selectedQuery.getObserversCount(),
+        isStale: selectedQuery.isStale(),
+      })
+    : "gray";
+
+  // Convert color names to hex colors
+  const colorMap: Record<string, string> = {
+    blue: "#3B82F6",
+    gray: "#6B7280",
+    purple: "#8B5CF6",
+    yellow: "#F59E0B",
+    green: "#10B981",
+  };
+
+  const statusColor = colorMap[statusColorName] || "#6B7280";
+
+  return (
+    <TouchableOpacity style={styles.trigger} onPress={onPress}>
+      {selectedQuery && (
+        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+      )}
+      <Text style={styles.triggerText} numberOfLines={1}>
+        {displayName}
+      </Text>
+      <ChevronDown color="#6B7280" size={14} />
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#1F1F1F",
+    borderRadius: 8,
+    width: "80%",
+    maxHeight: "80%",
+    minHeight: "50%",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    flex: 0,
+  },
+  modalHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+  },
+  modalTitle: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    color: "#9CA3AF",
+    fontSize: 12,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    padding: 8,
+    flexGrow: 1,
+  },
+  emptyState: {
+    padding: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitle: {
+    color: "#E5E7EB",
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptyDescription: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  queryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
+    borderRadius: 4,
+  },
+  selectedQueryItem: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  queryText: {
+    color: "#E5E7EB",
+    fontSize: 14,
+    flex: 1,
+  },
+  selectedQueryText: {
+    color: "#FFFFFF",
+    fontWeight: "500",
+  },
+  trigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    minWidth: 120,
+    maxWidth: 200,
+  },
+  triggerText: {
+    color: "#E5E7EB",
+    fontSize: 12,
+    flex: 1,
+    marginHorizontal: 6,
+  },
+});

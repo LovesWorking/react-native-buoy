@@ -82,7 +82,6 @@ export function ReactQuerySection({
         <QueryClientProvider client={queryClient}>
           <DevTools
             setShowDevTools={closeModal}
-            queryClient={queryClient}
             containerHeight={availableHeight}
           />
         </QueryClientProvider>

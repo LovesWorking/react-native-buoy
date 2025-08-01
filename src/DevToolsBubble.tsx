@@ -122,7 +122,6 @@ export function DevToolsBubble({
                 setShowDevTools={setShowDevTools}
                 onSelectionChange={setHasSelection}
                 panResponder={panResponder}
-                queryClient={queryClient}
               />
             </Animated.View>
           </QueryClientProvider>

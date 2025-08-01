@@ -3,9 +3,13 @@ import { Query, useQueryClient } from "@tanstack/react-query";
 function useAllQueries() {
   const queryClient = useQueryClient();
   const [queries, setQueries] = useState<Query<any, any, any, any>[]>([]);
+
+  console.log("useAllQueries - queryClient:", !!queryClient);
+
   useEffect(() => {
     const updateQueries = () => {
       const allQueries = queryClient.getQueryCache().findAll();
+      console.log("useAllQueries - found queries:", allQueries.length);
       setTimeout(() => {
         setQueries(allQueries);
       }, 1);
