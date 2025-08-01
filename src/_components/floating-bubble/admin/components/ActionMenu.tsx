@@ -136,7 +136,7 @@ export function ActionMenu({
       destructive: queryStatus !== "error",
       disabled: queryStatus === "pending",
       onPress: () => {
-        triggerError({ query: selectedQuery, queryClient });
+        triggerError({ query: selectedQuery });
         setIsOpen(false);
       },
     },

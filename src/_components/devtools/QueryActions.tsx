@@ -81,7 +81,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
         <ActionButton
           disabled={queryStatus === "pending"}
           onClick={() => {
-            triggerError({ query, queryClient });
+            triggerError({ query });
           }}
           bgColorClass="btnTriggerLoadiError"
           text={queryStatus === "error" ? "Restore" : "Trigger Error"}

@@ -27,7 +27,8 @@ function useQueryStatusCounts(): QueryStatusCounts {
       const newCounts = allQueries.reduce(
         (acc, query) => {
           const status = getQueryStatusLabel(query);
-          acc[status] = (acc[status] || 0) + 1;
+          acc[status as keyof QueryStatusCounts] =
+            (acc[status as keyof QueryStatusCounts] || 0) + 1;
           return acc;
         },
         { fresh: 0, stale: 0, fetching: 0, paused: 0, inactive: 0 }
