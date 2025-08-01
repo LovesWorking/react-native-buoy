@@ -9,7 +9,9 @@ import {
   Dimensions,
   ScrollView,
   TouchableOpacity,
+  Animated,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   Query,
@@ -18,7 +20,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { X, Minimize2, Maximize2, GripHorizontal } from "lucide-react-native";
+import {
+  X,
+  Minimize2,
+  Maximize2,
+  GripHorizontal,
+  ChevronLeft,
+} from "lucide-react-native";
 import Explorer from "../../../devtools/Explorer";
 import { useSafeQueries } from "../hooks/useSafeQueries";
 import { getQueryStatusColor } from "../../../_util/getQueryStatusColor";
@@ -31,7 +39,6 @@ import triggerError from "../../../_util/actions/triggerError";
 // Stable constants moved to module scope to prevent re-renders
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const MIN_HEIGHT = 200;
-const MAX_HEIGHT = SCREEN_HEIGHT * 0.8;
 const DEFAULT_HEIGHT = 400;
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 
@@ -51,32 +58,60 @@ export function FloatingDataEditor({
   queryClient,
 }: FloatingDataEditorProps) {
   const [isMinimized, setIsMinimized] = useState(false);
-  const [panelHeight, setPanelHeight] = useState(DEFAULT_HEIGHT);
-  const startHeight = useRef(DEFAULT_HEIGHT);
   const allQueries = useSafeQueries();
+  const insets = useSafeAreaInsets();
 
-  // Simple height calculation without expensive animations
-  const currentHeight = isMinimized ? 60 : panelHeight;
+  // Calculate max height based on screen height minus safe area insets
+  const MAX_HEIGHT = SCREEN_HEIGHT - insets.top;
 
-  // Fixed PanResponder for resizing
+  // Height management using Animated.Value for smooth resizing
+  const panelHeightAnim = useRef(new Animated.Value(DEFAULT_HEIGHT)).current;
+  const [currentPanelHeight, setCurrentPanelHeight] = useState(DEFAULT_HEIGHT);
+  const currentPanelHeightRef = useRef(DEFAULT_HEIGHT);
+
+  // Simple height calculation with animation support
+  const currentHeight = isMinimized ? 60 : currentPanelHeight;
+
+  // Sophisticated PanResponder for resizing (copied from QueriesList)
   const resizePanResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 10;
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return (
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
+          Math.abs(gestureState.dy) > 10
+        );
       },
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
-        startHeight.current = panelHeight;
+        panelHeightAnim.stopAnimation((value) => {
+          setCurrentPanelHeight(value);
+          currentPanelHeightRef.current = value;
+          panelHeightAnim.setValue(value);
+        });
       },
-      onPanResponderMove: (_, gestureState) => {
-        const newHeight = startHeight.current - gestureState.dy;
+      onPanResponderMove: (evt, gestureState) => {
+        // Use the ref value which is always current
+        const newHeight = currentPanelHeightRef.current - gestureState.dy;
         const clampedHeight = Math.max(
           MIN_HEIGHT,
           Math.min(MAX_HEIGHT, newHeight)
         );
-        setPanelHeight(clampedHeight);
+        panelHeightAnim.setValue(clampedHeight);
       },
-      onPanResponderRelease: () => {
-        // Complete
+      onPanResponderRelease: (evt, gestureState) => {
+        const finalHeight = Math.max(
+          MIN_HEIGHT,
+          Math.min(MAX_HEIGHT, currentPanelHeightRef.current - gestureState.dy)
+        );
+        setCurrentPanelHeight(finalHeight);
+        currentPanelHeightRef.current = finalHeight;
+
+        Animated.timing(panelHeightAnim, {
+          toValue: finalHeight,
+          duration: 200,
+          useNativeDriver: false,
+        }).start();
       },
     })
   ).current;
@@ -143,7 +178,12 @@ export function FloatingDataEditor({
     >
       <QueryClientProvider client={queryClient}>
         <View style={styles.overlay}>
-          <View style={[styles.panel, { height: currentHeight }]}>
+          <Animated.View
+            style={[
+              styles.panel,
+              { height: isMinimized ? 60 : panelHeightAnim },
+            ]}
+          >
             <View style={styles.header}>
               <View
                 {...resizePanResponder.panHandlers}
@@ -153,6 +193,16 @@ export function FloatingDataEditor({
               </View>
 
               <View style={styles.headerContent}>
+                {selectedQuery && (
+                  <Pressable
+                    onPress={() => onQuerySelect(undefined)}
+                    style={styles.backButton}
+                    hitSlop={HIT_SLOP}
+                  >
+                    <ChevronLeft color="#9CA3AF" size={20} />
+                  </Pressable>
+                )}
+
                 <View style={styles.titleSection}>
                   <Text style={styles.title}>
                     {selectedQuery ? "Data Editor" : "Query Browser"}
@@ -317,7 +367,7 @@ export function FloatingDataEditor({
                 )}
               </View>
             )}
-          </View>
+          </Animated.View>
         </View>
       </QueryClientProvider>
     </Modal>
@@ -367,6 +417,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginRight: 12,
   },
   titleSection: {
     flex: 1,
