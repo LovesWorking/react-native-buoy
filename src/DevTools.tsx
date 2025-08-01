@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  PanResponderInstance,
-} from "react-native";
+import { View, StyleSheet, PanResponderInstance } from "react-native";
 import {
   Query,
   Mutation,
@@ -13,10 +7,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import QueriesList from "./_components/devtools/QueriesList";
-import Svg, { Path } from "react-native-svg";
 import MutationsList from "./_components/devtools/MutationsList";
 import DevToolsHeader from "./_components/devtools/DevToolsHeader";
-import { getQueryStatusLabel } from "./_components/_util/getQueryStatusLabel";
 
 interface Props {
   setShowDevTools: React.Dispatch<React.SetStateAction<boolean>>;
@@ -35,81 +27,6 @@ export default function DevTools({
   const [showQueries, setShowQueries] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  // Get intelligent default filter based on state priorities
-  const getDefaultFilter = React.useCallback(() => {
-    if (!queryClient) return null;
-
-    try {
-      if (showQueries) {
-        // Query priority order: error > fetching > paused > stale > fresh
-        const allQueries = queryClient.getQueryCache().findAll();
-        const statusCounts = {
-          error: 0,
-          fetching: 0,
-          paused: 0,
-          stale: 0,
-          fresh: 0,
-          inactive: 0,
-        };
-
-        allQueries.forEach((query) => {
-          const status = getQueryStatusLabel(query);
-          statusCounts[status as keyof typeof statusCounts] =
-            (statusCounts[status as keyof typeof statusCounts] || 0) + 1;
-        });
-
-        if (statusCounts.error > 0) return "error";
-        if (statusCounts.fetching > 0) return "fetching";
-        if (statusCounts.paused > 0) return "paused";
-        if (statusCounts.stale > 0) return "stale";
-
-        return null;
-      } else {
-        // Mutation priority order: error > pending > paused > success
-        const allMutations = queryClient.getMutationCache().getAll();
-        const mutationCounts = {
-          error: 0,
-          pending: 0,
-          paused: 0,
-          success: 0,
-        };
-
-        allMutations.forEach((mutation) => {
-          const status = mutation.state.status;
-          const isPaused = mutation.state.isPaused;
-
-          if (isPaused) {
-            mutationCounts.paused++;
-          } else if (status === "error") {
-            mutationCounts.error++;
-          } else if (status === "pending") {
-            mutationCounts.pending++;
-          } else if (status === "success") {
-            mutationCounts.success++;
-          }
-        });
-
-        if (mutationCounts.error > 0) return "error";
-        if (mutationCounts.pending > 0) return "pending";
-        if (mutationCounts.paused > 0) return "paused";
-
-        return null;
-      }
-    } catch (error) {
-      return null;
-    }
-  }, [queryClient, showQueries]);
-
-  // Apply intelligent default filter on component mount and when states change
-  // Currently disabled - user requested no default filtering
-  // React.useEffect(() => {
-  //   if (activeFilter === null) {
-  //     const defaultFilter = getDefaultFilter();
-  //     if (defaultFilter) {
-  //       setActiveFilter(defaultFilter);
-  //     }
-  //   }
-  // }, [getDefaultFilter, activeFilter]);
   const [selectedQuery, setSelectedQuery] = useState<
     Query<any, any, any, any> | undefined
   >(undefined);
