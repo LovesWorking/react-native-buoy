@@ -3,15 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  PanResponder,
   Pressable,
-  Modal,
   Dimensions,
   ScrollView,
   TouchableOpacity,
-  Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import DragResizable from "../../../_shared/DragResizable";
 
 import {
   Query,
@@ -45,9 +43,11 @@ import refetch from "../../../_util/actions/refetch";
 import triggerError from "../../../_util/actions/triggerError";
 
 // Stable constants moved to module scope to prevent re-renders
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const MIN_HEIGHT = 150;
+const MIN_WIDTH = 300;
 const DEFAULT_HEIGHT = 500;
+const DEFAULT_WIDTH = SCREEN_WIDTH - 40; // Leave 20px margin on each side
 const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 
 // Project-consistent color system matching existing dev tools
@@ -88,7 +88,7 @@ const THEME_COLORS = {
   },
 };
 
-// Enhanced status color mapping
+// Enhanced status color mapping - moved to module scope to prevent re-creation
 const STATUS_COLOR_MAP: Record<string, string> = {
   blue: THEME_COLORS.status.fetching,
   gray: THEME_COLORS.status.inactive,
@@ -98,77 +98,76 @@ const STATUS_COLOR_MAP: Record<string, string> = {
   red: THEME_COLORS.status.error,
 };
 
-// Helper component for animated status indicator
-const StatusIndicator = ({ query }: { query: Query<any, any, any, any> }) => {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+// Stable callbacks moved to module scope to prevent re-renders
+const RESIZE_HANDLERS: Array<
+  "bottomLeft" | "bottomRight" | "topLeft" | "topRight"
+> = ["bottomLeft", "bottomRight", "topLeft", "topRight"];
+
+// Simplified status indicator without animations
+const getStatusIcon = (query: Query<any, any, any, any>) => {
   const status = query.state.status;
   const isFetching = getQueryStatusLabel(query) === "fetching";
 
-  useEffect(() => {
-    if (isFetching || status === "pending") {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 0.6,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulse.start();
-      return () => pulse.stop();
-    } else {
-      pulseAnim.setValue(1);
-    }
-  }, [isFetching, status, pulseAnim]);
-
-  const getStatusIcon = () => {
-    if (isFetching)
-      return <RefreshCw color={THEME_COLORS.status.fetching} size={16} />;
-    if (status === "pending")
-      return <Clock color={THEME_COLORS.status.pending} size={16} />;
-    if (status === "error")
-      return <AlertTriangle color={THEME_COLORS.status.error} size={16} />;
-    if (status === "success")
-      return <CheckCircle color={THEME_COLORS.status.success} size={16} />;
-    return <Activity color={THEME_COLORS.status.inactive} size={16} />;
-  };
-
-  return (
-    <Animated.View style={[styles.statusIndicator, { opacity: pulseAnim }]}>
-      {getStatusIcon()}
-    </Animated.View>
-  );
+  if (isFetching)
+    return <RefreshCw color={THEME_COLORS.status.fetching} size={16} />;
+  if (status === "pending")
+    return <Clock color={THEME_COLORS.status.pending} size={16} />;
+  if (status === "error")
+    return <AlertTriangle color={THEME_COLORS.status.error} size={16} />;
+  if (status === "success")
+    return <CheckCircle color={THEME_COLORS.status.success} size={16} />;
+  return <Activity color={THEME_COLORS.status.inactive} size={16} />;
 };
 
-// Enhanced breadcrumb component
-const QueryBreadcrumb = ({ query }: { query: Query<any, any, any, any> }) => {
+// Simplified breadcrumb without complex mapping
+const getQueryBreadcrumb = (query: Query<any, any, any, any>) => {
   const queryKey = Array.isArray(query.queryKey)
     ? query.queryKey
     : [query.queryKey];
-
-  return (
-    <View style={styles.breadcrumbContainer}>
-      <Database color={THEME_COLORS.text.tertiary} size={14} />
-      <Text style={styles.breadcrumbSeparator}>›</Text>
-      {queryKey.map((key, index) => (
-        <React.Fragment key={index}>
-          <Text style={styles.breadcrumbItem} numberOfLines={1}>
-            {String(key)}
-          </Text>
-          {index < queryKey.length - 1 && (
-            <Text style={styles.breadcrumbSeparator}>›</Text>
-          )}
-        </React.Fragment>
-      ))}
-    </View>
-  );
+  return queryKey.join(" › ");
 };
+
+// Optimized QueryListItem component to prevent unnecessary re-renders
+const QueryListItem = React.memo(
+  ({
+    query,
+    onQuerySelect,
+  }: {
+    query: Query<any, any, any, any>;
+    onQuerySelect: (query: Query<any, any, any, any>) => void;
+  }) => {
+    const displayName = Array.isArray(query.queryKey)
+      ? query.queryKey.join(" - ")
+      : String(query.queryKey);
+
+    const statusColorName = getQueryStatusColor({
+      queryState: query.state,
+      observerCount: query.getObserversCount(),
+      isStale: query.isStale(),
+    });
+
+    const statusColor = STATUS_COLOR_MAP[statusColorName] || "#6B7280";
+
+    // Use stable callback pattern
+    const handlePress = useRef(() => {
+      onQuerySelect(query);
+    });
+
+    // Update ref to latest query while keeping callback stable
+    handlePress.current = () => {
+      onQuerySelect(query);
+    };
+
+    return (
+      <TouchableOpacity style={styles.queryItem} onPress={handlePress.current}>
+        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+        <Text style={styles.queryText} numberOfLines={1}>
+          {displayName}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+);
 
 interface FloatingDataEditorProps {
   visible: boolean;
@@ -186,77 +185,49 @@ export function FloatingDataEditor({
   queryClient,
 }: FloatingDataEditorProps) {
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isTopMode, setIsTopMode] = useState(false); // false = bottom sheet, true = top sheet
   const allQueries = useSafeQueries();
   const insets = useSafeAreaInsets();
 
-  // Calculate max height based on screen height minus safe area insets
-  const MAX_HEIGHT = SCREEN_HEIGHT - insets.top;
+  // State for drag/resize container bounds
+  const [containerBounds, setContainerBounds] = useState({
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT - insets.top - insets.bottom,
+  });
 
-  // Height management using Animated.Value for smooth resizing
-  const panelHeightAnim = useRef(new Animated.Value(DEFAULT_HEIGHT)).current;
-  const [currentPanelHeight, setCurrentPanelHeight] = useState(DEFAULT_HEIGHT);
-  const currentPanelHeightRef = useRef(DEFAULT_HEIGHT);
+  // State for panel dimensions
+  const [panelDimensions, setPanelDimensions] = useState({
+    width: DEFAULT_WIDTH,
+    height: DEFAULT_HEIGHT,
+    top: 100,
+    left: 20,
+  });
 
-  // Simple height calculation with animation support
-  const currentHeight = isMinimized ? 60 : currentPanelHeight;
+  // Update container bounds when screen orientation changes
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener("change", ({ window }) => {
+      setContainerBounds({
+        width: window.width,
+        height: window.height - insets.top - insets.bottom,
+      });
+    });
+    return () => subscription?.remove();
+  }, [insets.top, insets.bottom]);
 
-  // PanResponder for resizing (only enabled for bottom mode)
-  const resizePanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !isTopMode, // Only allow resize in bottom mode
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        if (isTopMode) return false; // Disable resize in top mode
-        return (
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
-          Math.abs(gestureState.dy) > 10
-        );
-      },
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: () => {
-        if (isTopMode) return; // No resize in top mode
-        panelHeightAnim.stopAnimation((value) => {
-          setCurrentPanelHeight(value);
-          currentPanelHeightRef.current = value;
-          panelHeightAnim.setValue(value);
-        });
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        if (isTopMode) return; // No resize in top mode
-        // Bottom mode: dragging up (negative dy) increases height
-        const newHeight = currentPanelHeightRef.current - gestureState.dy;
-        const clampedHeight = Math.max(
-          MIN_HEIGHT,
-          Math.min(MAX_HEIGHT, newHeight)
-        );
-        panelHeightAnim.setValue(clampedHeight);
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        if (isTopMode) return; // No resize in top mode
-        // Bottom mode: dragging up (negative dy) increases height
-        const finalHeight = currentPanelHeightRef.current - gestureState.dy;
-        const clampedFinalHeight = Math.max(
-          MIN_HEIGHT,
-          Math.min(MAX_HEIGHT, finalHeight)
-        );
-        setCurrentPanelHeight(clampedFinalHeight);
-        currentPanelHeightRef.current = clampedFinalHeight;
+  // Simple callback functions for drag/resize events
+  const handleDragEnd = (dimensions: any) => {
+    setPanelDimensions((prev) => ({
+      ...prev,
+      top: dimensions.top,
+      left: dimensions.left,
+    }));
+  };
 
-        Animated.timing(panelHeightAnim, {
-          toValue: clampedFinalHeight,
-          duration: 200,
-          useNativeDriver: false,
-        }).start();
-      },
-    })
-  ).current;
+  const handleResizeEnd = (dimensions: any) => {
+    setPanelDimensions(dimensions);
+  };
 
   const toggleMinimize = () => {
     setIsMinimized(!isMinimized);
-  };
-
-  const toggleModalPosition = () => {
-    setIsTopMode(!isTopMode);
   };
 
   // Moved to module scope to prevent re-creation on every render
@@ -295,43 +266,38 @@ export function FloatingDataEditor({
   if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent={true}
-    >
-      <QueryClientProvider client={queryClient}>
-        <View
-          style={[
-            styles.overlay,
-            isTopMode && { ...styles.overlayTop, paddingTop: insets.top },
-          ]}
+    <QueryClientProvider client={queryClient}>
+      <View
+        style={styles.container}
+        onLayout={(event) => {
+          const { width, height } = event.nativeEvent.layout;
+          setContainerBounds({ width, height });
+        }}
+        pointerEvents="box-none"
+      >
+        <DragResizable
+          heightBound={containerBounds.height}
+          widthBound={containerBounds.width}
+          left={panelDimensions.left}
+          top={panelDimensions.top}
+          width={panelDimensions.width}
+          height={isMinimized ? 60 : panelDimensions.height}
+          minWidth={MIN_WIDTH}
+          minHeight={MIN_HEIGHT}
+          isDraggable={true}
+          isResizable={!isMinimized} // Disable resize when minimized
+          resizeHandlers={RESIZE_HANDLERS}
+          onDragEnd={handleDragEnd}
+          onResizeEnd={handleResizeEnd}
+          style={styles.dragResizableContainer}
         >
-          <Animated.View
+          <View
             style={[
               styles.panel,
-              isTopMode ? styles.panelTop : styles.panelBottom,
-              {
-                height: isMinimized
-                  ? 60
-                  : isTopMode
-                  ? panelHeightAnim
-                  : panelHeightAnim,
-              },
+              { height: isMinimized ? 60 : panelDimensions.height },
             ]}
           >
             <View style={styles.header}>
-              {!isTopMode && (
-                <View
-                  {...resizePanResponder.panHandlers}
-                  style={styles.resizeHandle}
-                >
-                  <View style={styles.resizeGrip} />
-                </View>
-              )}
-
               <View style={styles.headerContent}>
                 {selectedQuery && (
                   <Pressable
@@ -361,11 +327,21 @@ export function FloatingDataEditor({
                         </>
                       )}
                     </View>
-                    {selectedQuery && <StatusIndicator query={selectedQuery} />}
+                    {selectedQuery && (
+                      <View style={styles.statusIndicator}>
+                        {getStatusIcon(selectedQuery)}
+                      </View>
+                    )}
                   </View>
 
                   {selectedQuery ? (
-                    <QueryBreadcrumb query={selectedQuery} />
+                    <View style={styles.breadcrumbContainer}>
+                      <Database color={THEME_COLORS.text.tertiary} size={14} />
+                      <Text style={styles.breadcrumbSeparator}>›</Text>
+                      <Text style={styles.breadcrumbItem} numberOfLines={1}>
+                        {getQueryBreadcrumb(selectedQuery)}
+                      </Text>
+                    </View>
                   ) : (
                     <View style={styles.statsRow}>
                       <View style={styles.statItem}>
@@ -393,20 +369,20 @@ export function FloatingDataEditor({
 
                 <View style={styles.controls}>
                   <Pressable
-                    onPress={toggleModalPosition}
+                    onPress={toggleMinimize}
                     style={[
                       styles.controlButton,
                       styles.controlButtonSecondary,
                     ]}
                     hitSlop={HIT_SLOP}
                   >
-                    {isTopMode ? (
-                      <ArrowDownToLine
+                    {isMinimized ? (
+                      <ArrowUpToLine
                         color={THEME_COLORS.text.secondary}
                         size={16}
                       />
                     ) : (
-                      <ArrowUpToLine
+                      <ArrowDownToLine
                         color={THEME_COLORS.text.secondary}
                         size={16}
                       />
@@ -516,82 +492,53 @@ export function FloatingDataEditor({
                         </Text>
                       </View>
                     ) : (
-                      allQueries.map((query, index) => {
-                        const displayName = Array.isArray(query.queryKey)
-                          ? query.queryKey.join(" - ")
-                          : String(query.queryKey);
-
-                        const statusColorName = getQueryStatusColor({
-                          queryState: query.state,
-                          observerCount: query.getObserversCount(),
-                          isStale: query.isStale(),
-                        });
-
-                        const statusColor =
-                          STATUS_COLOR_MAP[statusColorName] || "#6B7280";
-
-                        return (
-                          <TouchableOpacity
-                            key={`${query.queryHash}-${index}`}
-                            style={styles.queryItem}
-                            onPress={() => onQuerySelect(query)}
-                          >
-                            <View
-                              style={[
-                                styles.statusDot,
-                                { backgroundColor: statusColor },
-                              ]}
-                            />
-                            <Text style={styles.queryText} numberOfLines={1}>
-                              {displayName}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })
+                      allQueries.map((query, index) => (
+                        <QueryListItem
+                          key={`${query.queryHash}-${index}`}
+                          query={query}
+                          onQuerySelect={onQuerySelect}
+                        />
+                      ))
                     )}
                   </ScrollView>
                 )}
               </View>
             )}
-
-            {/* No resize handle for top mode - resize disabled */}
-          </Animated.View>
-        </View>
-      </QueryClientProvider>
-    </Modal>
+          </View>
+        </DragResizable>
+      </View>
+    </QueryClientProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  // Base overlay without background - allows app interaction
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "transparent", // No background overlay for dev tool usage
+  // Container for DragResizable component
+  container: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "transparent",
+    pointerEvents: "box-none",
   },
-  overlayTop: {
-    justifyContent: "flex-start",
+
+  // Style for the DragResizable wrapper
+  dragResizableContainer: {
+    backgroundColor: "transparent",
   },
   panel: {
+    flex: 1,
     backgroundColor: THEME_COLORS.background.secondary, // #2A2A2A
     borderWidth: 1,
     borderColor: THEME_COLORS.border.medium,
+    borderRadius: 14,
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 16,
-  },
-  panelBottom: {
-    borderTopLeftRadius: 14, // Matches ActionMenu radius
-    borderTopRightRadius: 14,
-    borderBottomWidth: 0,
-    shadowOffset: { width: 0, height: -4 },
-  },
-  panelTop: {
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
-    borderTopWidth: 0,
     shadowOffset: { width: 0, height: 4 },
+    overflow: "hidden",
   },
 
   // Compact header matching DevToolsHeader
@@ -600,20 +547,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 14,
     overflow: "hidden",
     backgroundColor: THEME_COLORS.background.primary, // #171717
-  },
-  resizeHandle: {
-    height: 16, // Smaller like DevToolsHeader drag indicator
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: THEME_COLORS.surface.light,
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
-  },
-  resizeGrip: {
-    width: 32,
-    height: 3,
-    backgroundColor: THEME_COLORS.border.strong, // Matches drag indicator
-    borderRadius: 1.5,
   },
 
   // Compact header content matching DevToolsHeader
