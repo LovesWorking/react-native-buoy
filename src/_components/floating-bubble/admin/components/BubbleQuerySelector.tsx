@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import { Query } from "@tanstack/react-query";
 import { Search, AlertTriangle } from "lucide-react-native";
-import { useSafeQueries } from "../hooks/useSafeQueries";
 import { QuerySelector } from "./QuerySelector";
 import { getQueryStatusColor } from "../../../_util/getQueryStatusColor";
-import { getQueryStatusLabel } from "../../../_util/getQueryStatusLabel";
+import useAllQueries from "../../../_hooks/useAllQueries";
 
 interface BubbleQuerySelectorProps {
   selectedQuery?: Query<any, any, any, any>;
@@ -17,7 +16,7 @@ export function BubbleQuerySelector({
   onQuerySelect,
 }: BubbleQuerySelectorProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const allQueries = useSafeQueries();
+  const allQueries = useAllQueries();
 
   const handleSelect = (query: Query<any, any, any, any>) => {
     // If same query is selected, deselect it

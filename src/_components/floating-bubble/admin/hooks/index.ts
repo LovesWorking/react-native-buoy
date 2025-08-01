@@ -6,4 +6,3 @@ export {
   type UseDynamicEnvOptions,
 } from "./useDynamicEnv";
 export { useWifiState } from "./useWifiState";
-export { useSafeQueries } from "./useSafeQueries";

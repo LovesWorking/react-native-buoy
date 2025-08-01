@@ -11,25 +11,6 @@ interface QueryRowProps {
 }
 
 const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
-  // Map status to color names
-  const getStatusColor = (
-    status: string
-  ): "green" | "yellow" | "gray" | "blue" | "purple" | "red" => {
-    switch (status) {
-      case "fresh":
-        return "green";
-      case "stale":
-      case "inactive":
-        return "yellow";
-      case "fetching":
-        return "blue";
-      case "paused":
-        return "purple";
-      default:
-        return "gray";
-    }
-  };
-
   // Modern status color mapping
   const getStatusHexColor = (status: string): string => {
     switch (status) {
@@ -48,19 +29,9 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
   };
 
   const status = getQueryStatusLabel(query);
-  const statusColor = getStatusColor(status);
   const observerCount = query.getObserversCount();
   const isDisabled = query.isDisabled();
   const queryHash = displayValue(query.queryKey, false);
-
-  // Get modern observer count styles based on status
-  const getObserverCountStyles = () => {
-    const statusHexColor = getStatusHexColor(status);
-    return {
-      backgroundColor: `${statusHexColor}20`, // 20% opacity
-      borderRightColor: `${statusHexColor}40`, // 40% opacity
-    };
-  };
 
   return (
     <TouchableOpacity

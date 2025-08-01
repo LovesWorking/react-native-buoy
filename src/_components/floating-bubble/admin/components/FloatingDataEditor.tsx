@@ -20,25 +20,15 @@ import DragResizable from "../../../_shared/DragResizable";
 
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import {
-  X,
-  ChevronLeft,
-  Activity,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Maximize2,
-  Minimize2,
-} from "lucide-react-native";
+import { X, ChevronLeft, Maximize2, Minimize2 } from "lucide-react-native";
 import Explorer from "../../../devtools/Explorer";
-import { useSafeQueries } from "../hooks/useSafeQueries";
-import { getQueryStatusColor } from "../../../_util/getQueryStatusColor";
-import { getQueryStatusLabel } from "../../../_util/getQueryStatusLabel";
+import { QueryBrowser } from "../../../devtools/index";
+import useAllQueries from "../../../_hooks/useAllQueries";
 import ActionButton from "../../../devtools/ActionButton";
 import triggerLoading from "../../../_util/actions/triggerLoading";
 import refetch from "../../../_util/actions/refetch";
 import triggerError from "../../../_util/actions/triggerError";
+import { getQueryStatusLabel } from "../../../_util/getQueryStatusLabel";
 
 // Stable constants moved to module scope to prevent re-renders
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -47,16 +37,6 @@ const MIN_WIDTH = 300;
 const DEFAULT_HEIGHT = 400; // Smaller default height for bottom sheet
 const DEFAULT_WIDTH = SCREEN_WIDTH - 40; // Leave 20px margin on each side
 const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
-
-// Enhanced status color mapping - moved to module scope to prevent re-creation
-const STATUS_COLOR_MAP: Record<string, string> = {
-  blue: "#3B82F6",
-  gray: "#6B7280",
-  purple: "#8B5CF6",
-  yellow: "#F59E0B",
-  green: "#10B981",
-  red: "#EF4444",
-};
 
 // Stable callbacks moved to module scope to prevent re-renders
 const RESIZE_HANDLERS: Array<
@@ -71,103 +51,43 @@ const getQueryBreadcrumb = (query: Query<any, any, any, any>) => {
   return queryKey.join(" › ");
 };
 
-// Optimized QueryListItem component matching main dev tools QueryRow styling
-const QueryListItem = React.memo(
-  ({
-    query,
-    onQuerySelect,
-  }: {
-    query: Query<any, any, any, any>;
-    onQuerySelect: (query: Query<any, any, any, any>) => void;
-  }) => {
-    const displayName = Array.isArray(query.queryKey)
-      ? query.queryKey.join(" - ")
-      : String(query.queryKey);
+// Custom corner resize handle component with drag feedback
+const CornerResizeHandle = ({
+  handler,
+}: {
+  handler: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
 
-    const status = getQueryStatusLabel(query);
-    const observerCount = query.getObserversCount();
-    const isDisabled = query.isDisabled();
+  return (
+    <View
+      style={[
+        cornerHandleStyles.cornerHandle,
+        cornerHandleStyles[handler],
+        isDragging && cornerHandleStyles.cornerHandleDragging,
+      ]}
+      onTouchStart={() => setIsDragging(true)}
+      onTouchEnd={() => setIsDragging(false)}
+      onTouchCancel={() => setIsDragging(false)}
+      hitSlop={HIT_SLOP}
+    />
+  );
+};
 
-    // Get status color matching main dev tools exactly
-    const getStatusHexColor = (status: string): string => {
-      switch (status) {
-        case "fresh":
-          return "#10B981"; // Green
-        case "stale":
-        case "inactive":
-          return "#F59E0B"; // Orange
-        case "fetching":
-          return "#3B82F6"; // Blue
-        case "paused":
-          return "#8B5CF6"; // Purple
-        default:
-          return "#6B7280"; // Gray
-      }
-    };
-
-    const statusColor = getStatusHexColor(status);
-
-    // Use stable callback pattern
-    const handlePress = useRef(() => {
-      onQuerySelect(query);
-    });
-
-    // Update ref to latest query while keeping callback stable
-    handlePress.current = () => {
-      onQuerySelect(query);
-    };
-
-    return (
-      <TouchableOpacity
-        style={styles.queryItem}
-        onPress={handlePress.current}
-        activeOpacity={0.8}
-        accessibilityLabel={`Query key ${displayName}`}
-      >
-        {/* Row content matching main dev tools QueryRow */}
-        <View style={styles.rowContent}>
-          <View style={styles.statusSection}>
-            <View
-              style={[styles.statusDot, { backgroundColor: statusColor }]}
-            />
-            <View style={styles.statusInfo}>
-              <Text style={[styles.statusLabel, { color: statusColor }]}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </Text>
-              <Text style={styles.observerText}>
-                {observerCount} observer{observerCount !== 1 ? "s" : ""}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.querySection}>
-            <Text
-              style={styles.queryHash}
-              numberOfLines={1}
-              ellipsizeMode="middle"
-            >
-              {displayName}
-            </Text>
-            {isDisabled && <Text style={styles.disabledText}>Disabled</Text>}
-          </View>
-
-          <View style={styles.badgeSection}>
-            <Text style={[styles.statusBadge, { color: statusColor }]}>
-              {observerCount}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  }
-);
+// Updated render function to return the component
+const renderCornerHandle = ({
+  handler,
+}: {
+  handler: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+}) => {
+  return <CornerResizeHandle handler={handler} />;
+};
 
 interface FloatingDataEditorProps {
   visible: boolean;
   selectedQuery?: Query<any, any, any, any>;
   onQuerySelect: (query: Query<any, any, any, any> | undefined) => void;
   onClose: () => void;
-  queryClient: QueryClient;
 }
 
 export function FloatingDataEditor({
@@ -175,11 +95,10 @@ export function FloatingDataEditor({
   selectedQuery,
   onQuerySelect,
   onClose,
-  queryClient,
 }: FloatingDataEditorProps) {
   const [isFloatingMode, setIsFloatingMode] = useState(false);
-  const allQueries = useSafeQueries();
   const insets = useSafeAreaInsets();
+  const allQueries = useAllQueries(); // For stats display
 
   // State for drag/resize container bounds
   const [containerBounds, setContainerBounds] = useState({
@@ -237,7 +156,7 @@ export function FloatingDataEditor({
     sharedHeight.value = panelHeight;
   }, [panelHeight]);
 
-  // Smooth resize gesture using Reanimated (like the working drag hook)
+  // Header-based resize gesture for bottom sheet mode
   const resizeGesture = Gesture.Pan()
     .enabled(!isFloatingMode)
     .onBegin(() => {
@@ -265,10 +184,7 @@ export function FloatingDataEditor({
   }));
 
   // Moved to module scope to prevent re-creation on every render
-  const createActionButtons = (
-    selectedQuery: Query<any, any, any, any>,
-    queryClient: QueryClient
-  ) => {
+  const createActionButtons = (selectedQuery: Query<any, any, any, any>) => {
     const queryStatus = selectedQuery.state.status;
     const isFetching = getQueryStatusLabel(selectedQuery) === "fetching";
 
@@ -292,7 +208,7 @@ export function FloatingDataEditor({
         bgColorClass: "btnTriggerLoadiError" as const,
         textColorClass: "btnTriggerLoadiError" as const,
         disabled: queryStatus === "pending",
-        onPress: () => triggerError({ query: selectedQuery, queryClient }),
+        onPress: () => triggerError({ query: selectedQuery }),
       },
     ];
   };
@@ -303,18 +219,24 @@ export function FloatingDataEditor({
   const renderPanelContent = () => (
     <>
       <View style={styles.header}>
+        {/* Drag indicator at top of header for visual feedback */}
+        {!isFloatingMode && (
+          <View style={styles.dragIndicator}>
+            <View style={styles.resizeGrip} />
+          </View>
+        )}
         <View style={styles.headerContent}>
-          {selectedQuery && (
-            <Pressable
-              onPress={() => onQuerySelect(undefined)}
-              style={styles.backButton}
-              hitSlop={HIT_SLOP}
-            >
-              <ChevronLeft color="#E5E7EB" size={20} />
-            </Pressable>
-          )}
+          <View style={styles.mainHeaderRow}>
+            {selectedQuery && (
+              <Pressable
+                onPress={() => onQuerySelect(undefined)}
+                style={styles.backButton}
+                hitSlop={HIT_SLOP}
+              >
+                <ChevronLeft color="#E5E7EB" size={20} />
+              </Pressable>
+            )}
 
-          <View style={styles.compactHeaderRow}>
             {selectedQuery ? (
               <View style={styles.breadcrumbContainer}>
                 <Text style={styles.breadcrumbItem} numberOfLines={1}>
@@ -427,18 +349,16 @@ export function FloatingDataEditor({
             >
               {selectedQuery && (
                 <View style={styles.actionsGrid}>
-                  {createActionButtons(selectedQuery, queryClient).map(
-                    (action, index) => (
-                      <ActionButton
-                        key={index}
-                        onClick={action.onPress}
-                        text={action.label}
-                        bgColorClass={action.bgColorClass}
-                        textColorClass={action.textColorClass}
-                        disabled={action.disabled}
-                      />
-                    )
-                  )}
+                  {createActionButtons(selectedQuery).map((action, index) => (
+                    <ActionButton
+                      key={index}
+                      onClick={action.onPress}
+                      text={action.label}
+                      bgColorClass={action.bgColorClass}
+                      textColorClass={action.textColorClass}
+                      disabled={action.disabled}
+                    />
+                  ))}
                 </View>
               )}
             </View>
@@ -446,30 +366,19 @@ export function FloatingDataEditor({
         ) : (
           // Query Browser Mode
           <>
-            <ScrollView
-              style={styles.queryListContainer}
-              contentContainerStyle={styles.queryListContent}
-            >
-              {allQueries.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>No Queries Found</Text>
-                  <Text style={styles.emptyDescription}>
-                    No React Query queries are currently active.{"\n\n"}
-                    To see queries here:{"\n"}• Make API calls using useQuery
-                    {"\n"}• Ensure queries are within QueryClientProvider
-                    {"\n"}• Check console for debugging info
-                  </Text>
-                </View>
-              ) : (
-                allQueries.map((query, index) => (
-                  <QueryListItem
-                    key={`${query.queryHash}-${index}`}
-                    query={query}
-                    onQuerySelect={onQuerySelect}
-                  />
-                ))
-              )}
-            </ScrollView>
+            <View style={styles.queryListContainer}>
+              <QueryBrowser
+                selectedQuery={selectedQuery}
+                onQuerySelect={onQuerySelect}
+                emptyStateMessage="No React Query queries are currently active.
+
+To see queries here:
+• Make API calls using useQuery
+• Ensure queries are within QueryClientProvider
+• Check console for debugging info"
+                contentContainerStyle={styles.queryListContent}
+              />
+            </View>
             {/* Query Browser safe area */}
             {!isFloatingMode && (
               <View
@@ -483,7 +392,7 @@ export function FloatingDataEditor({
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       {isFloatingMode ? (
         // Floating Mode - Draggable and resizable
         <View
@@ -506,6 +415,7 @@ export function FloatingDataEditor({
             isDraggable={true}
             isResizable={true}
             resizeHandlers={RESIZE_HANDLERS}
+            renderHandler={renderCornerHandle}
             onDragEnd={handleDragEnd}
             onResizeEnd={handleResizeEnd}
             style={styles.dragResizableContainer}
@@ -524,18 +434,16 @@ export function FloatingDataEditor({
           <Animated.View
             style={[styles.panel, styles.panelBottomSheet, animatedPanelStyle]}
           >
-            {/* Resize handle for bottom sheet */}
+            {/* Header as resize handle for bottom sheet */}
             <GestureDetector gesture={resizeGesture}>
-              <View style={styles.resizeHandle}>
-                <View style={styles.resizeGrip} />
+              <View style={styles.headerResizeArea}>
+                {renderPanelContent()}
               </View>
             </GestureDetector>
-
-            {renderPanelContent()}
           </Animated.View>
         </View>
       )}
-    </QueryClientProvider>
+    </>
   );
 }
 
@@ -593,16 +501,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -4 },
   },
 
-  // Resize handle for bottom sheet
-  resizeHandle: {
-    height: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.05)", // Match main dev tools surface
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
-  },
-
   resizeGrip: {
     width: 32,
     height: 3,
@@ -618,24 +516,35 @@ const styles = StyleSheet.create({
     backgroundColor: "#171717", // Exact match with main dev tools
   },
 
-  // Header content matching DevToolsHeader patterns
-  headerContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.06)", // Exact match with DevToolsHeader
-    flexDirection: "column",
-    gap: 12,
+  // Drag indicator at top of header (like DevToolsHeader)
+  dragIndicator: {
+    height: 8,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#171717",
   },
 
-  // New compact single-row layout
-  compactHeaderRow: {
+  // Header resize area for bottom sheet mode
+  headerResizeArea: {
+    flex: 1,
+  },
+
+  // Header content matching DevToolsHeader patterns but single row for floating
+  headerContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.06)", // Exact match with DevToolsHeader
+    backgroundColor: "#171717",
+  },
+
+  // Main header row layout
+  mainHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    flex: 1,
+    minHeight: 32, // Ensure minimum height for buttons
   },
 
   // Header controls container
@@ -652,7 +561,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(156, 163, 175, 0.2)", // Match main dev tools button
-    marginRight: 12,
   },
 
   // Breadcrumb navigation
@@ -660,7 +568,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    marginTop: 4,
+    marginLeft: 12, // Space after back button
   },
   breadcrumbItem: {
     color: "#E5E7EB", // Exact match with main dev tools text
@@ -680,7 +588,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 2,
+    flex: 1, // Take available space when no back button
   },
   statItem: {
     flexDirection: "row",
@@ -769,69 +677,6 @@ const styles = StyleSheet.create({
     padding: 8, // Reduced to match main dev tools
     flexGrow: 1,
   },
-  queryItem: {
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
-    marginHorizontal: 8,
-    marginVertical: 3,
-    padding: 12,
-    transform: [{ scale: 1 }],
-  },
-  rowContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  statusSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusInfo: {
-    flex: 1,
-  },
-  statusLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    lineHeight: 14,
-  },
-  observerText: {
-    fontSize: 10,
-    color: "#9CA3AF",
-    marginTop: 1,
-  },
-  querySection: {
-    flex: 2,
-    paddingHorizontal: 12,
-  },
-  queryHash: {
-    fontFamily: "monospace",
-    fontSize: 12,
-    color: "#FFFFFF",
-    lineHeight: 16,
-  },
-  badgeSection: {
-    alignItems: "flex-end",
-  },
-  statusBadge: {
-    fontSize: 12,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-  },
-  disabledText: {
-    fontSize: 10,
-    color: "#EF4444",
-    fontWeight: "500",
-    marginTop: 2,
-  },
 
   // Action footer matching main dev tools exactly
   actionFooter: {
@@ -853,5 +698,44 @@ const styles = StyleSheet.create({
   // Query browser safe area with matching background
   queryBrowserSafeArea: {
     backgroundColor: "#2A2A2A", // Match main dev tools secondary background
+  },
+});
+
+// Corner handle styles for custom resize handles
+const cornerHandleStyles = StyleSheet.create({
+  cornerHandle: {
+    position: "absolute",
+    width: 20,
+    height: 20,
+    borderRadius: 10, // Perfect circle (width/height / 2)
+    zIndex: 1000,
+    // Invisible by default - no background or border
+  },
+  topLeft: {
+    top: 4,
+    left: 4,
+  },
+  topRight: {
+    top: 4,
+    right: 4,
+  },
+  bottomLeft: {
+    bottom: 4,
+    left: 4,
+  },
+  bottomRight: {
+    bottom: 4,
+    right: 4,
+  },
+  cornerHandleDragging: {
+    backgroundColor: "rgba(34, 197, 94, 0.1)", // Same green as FloatingStatusBubble
+    borderColor: "rgba(34, 197, 94, 1)", // Same green border as FloatingStatusBubble
+    borderWidth: 2,
+    // Add subtle shadow like the bubble
+    shadowColor: "rgba(34, 197, 94, 0.6)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });

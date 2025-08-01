@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export function QueryDebugInfo() {
   try {
     const queryClient = useQueryClient();
-    const queries = queryClient.getQueryCache().findAll();
+    const queries = queryClient.getQueryCache().getAll();
     const mutations = queryClient.getMutationCache().getAll();
 
     return (

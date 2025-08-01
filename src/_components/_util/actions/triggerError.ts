@@ -1,11 +1,11 @@
 import { Query, useQueryClient } from "@tanstack/react-query";
 
 interface Props {
-  queryClient: ReturnType<typeof useQueryClient>;
   query: Query;
 }
 
-export default function triggerError({ query, queryClient }: Props) {
+export default function triggerError({ query }: Props) {
+  const queryClient = useQueryClient();
   if (query.state.status !== "error") {
     // --ACTION-TRIGGER-ERROR logic--
     // This matches the ACTION-TRIGGER-ERROR case from the external sync system

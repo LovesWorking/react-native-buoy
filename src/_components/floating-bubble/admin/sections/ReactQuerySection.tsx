@@ -29,7 +29,7 @@ export function ReactQuerySection({
 
     try {
       // Get current snapshot without subscribing
-      const allQueries = queryClient.getQueryCache().findAll();
+      const allQueries = queryClient.getQueryCache().getAll();
       const allMutations = queryClient.getMutationCache().getAll();
 
       return `${allQueries.length} queries • ${allMutations.length} mutations`;

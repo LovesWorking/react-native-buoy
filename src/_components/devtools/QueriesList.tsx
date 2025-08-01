@@ -10,11 +10,8 @@ import {
   Dimensions,
   ScrollView,
 } from "react-native";
-import { FlashList } from "@shopify/flash-list";
-import QueryRow from "./QueryRow";
-import useAllQueries from "../_hooks/useAllQueries";
+import { QueryBrowser } from "./index";
 import QueryInformation from "./QueryInformation";
-import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
 
 interface Props {
   selectedQuery: Query<any, any, any, any> | undefined;
@@ -31,21 +28,6 @@ export default function QueriesList({
   activeFilter,
   containerHeight,
 }: Props) {
-  // Holds all queries
-  const allQueries = useAllQueries();
-
-  // Filter queries based on active filter
-  const filteredQueries = React.useMemo(() => {
-    if (!activeFilter) {
-      return allQueries;
-    }
-
-    return allQueries.filter((query) => {
-      const status = getQueryStatusLabel(query);
-      return status === activeFilter;
-    });
-  }, [allQueries, activeFilter]);
-
   // Height management for resizable query information panel
   const screenHeight = containerHeight || Dimensions.get("window").height;
   const defaultInfoHeight = screenHeight * 0.4; // 40% of available height
@@ -108,62 +90,20 @@ export default function QueriesList({
     })
   ).current;
 
-  // Function to handle query selection
-  // Function to handle query selection with stable comparison
-  const handleQuerySelect = (query: Query<any, any, any, any>) => {
-    // Compare queries by their queryKey and queryHash for stable selection
-    const isCurrentlySelected =
-      selectedQuery?.queryHash === query.queryHash &&
-      JSON.stringify(selectedQuery?.queryKey) ===
-        JSON.stringify(query.queryKey);
-
-    if (isCurrentlySelected) {
-      setSelectedQuery(undefined);
-      return;
-    }
+  // Simple wrapper for setSelectedQuery to match QueryBrowser interface
+  const handleQuerySelect = (query: Query<any, any, any, any> | undefined) => {
     setSelectedQuery(query);
   };
-
-  const renderItem = ({ item }: { item: Query<any, any, any, any> }) => (
-    <QueryRow
-      query={item}
-      isSelected={
-        selectedQuery?.queryHash === item.queryHash &&
-        JSON.stringify(selectedQuery?.queryKey) ===
-          JSON.stringify(item.queryKey)
-      }
-      onSelect={handleQuerySelect}
-    />
-  );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.listContainer}>
-        {filteredQueries.length > 0 ? (
-          <FlashList
-            data={filteredQueries}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.queryHash}
-            estimatedItemSize={70}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator
-            removeClippedSubviews
-            overrideItemLayout={(layout, item) => {
-              layout.size = 70; // Fixed size for better recycling
-            }}
-            drawDistance={200}
-            renderScrollComponent={ScrollView}
-            extraData={selectedQuery?.queryHash} // Re-render only when selection changes
-          />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {activeFilter
-                ? `No ${activeFilter} queries found`
-                : "No queries found"}
-            </Text>
-          </View>
-        )}
+        <QueryBrowser
+          selectedQuery={selectedQuery}
+          onQuerySelect={handleQuerySelect}
+          activeFilter={activeFilter}
+          contentContainerStyle={styles.listContent}
+        />
       </View>
       {selectedQuery && (
         <Animated.View
@@ -199,22 +139,6 @@ const styles = StyleSheet.create({
   listContent: {
     flexGrow: 1,
     paddingBottom: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
-    margin: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
-  },
-  emptyText: {
-    color: "#9CA3AF",
-    fontSize: 14,
-    textAlign: "center",
   },
   queryInformation: {
     borderTopWidth: 1,
