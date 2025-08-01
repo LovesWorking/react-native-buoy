@@ -5,11 +5,12 @@ import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import {
   ReactQueryBubbleContent,
-  DevToolsModal,
   DragHandle,
   ErrorBoundary,
+  FloatingDataEditor,
 } from "./components";
 import { useBubbleWidth, useDragGesture, useWifiState } from "./hooks";
+import useSelectedQuery from "../../_hooks/useSelectedQuery";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -22,9 +23,12 @@ export function ReactQueryDevToolsBubble({
 }: ReactQueryDevToolsBubbleProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedQuery, setSelectedQuery] = useState<
-    Query<any, any, any, any> | undefined
-  >(undefined);
+  const [selectedQueryKey, setSelectedQueryKey] = useState<any[] | undefined>(
+    undefined
+  );
+
+  // Use our custom hook to get live, fresh query data
+  const selectedQuery = useSelectedQuery(queryClient, selectedQueryKey);
 
   // Custom hooks for managing state and logic - matching FloatingStatusBubble exactly
   const { bubbleWidth, handleEnvLabelLayout, handleStatusLayout } =
@@ -43,6 +47,10 @@ export function ReactQueryDevToolsBubble({
 
   const handleModalDismiss = () => {
     setIsModalOpen(false);
+  };
+
+  const handleQuerySelect = (query: Query<any, any, any, any> | undefined) => {
+    setSelectedQueryKey(query?.queryKey);
   };
 
   // Animated styles - matching FloatingStatusBubble exactly
@@ -114,7 +122,6 @@ export function ReactQueryDevToolsBubble({
                     selectedQuery={selectedQuery}
                     onPress={handlePress}
                     onWifiToggle={handleWifiToggle}
-                    onQuerySelect={setSelectedQuery}
                     onEnvLabelLayout={handleEnvLabelLayout}
                     onStatusLayout={handleStatusLayout}
                   />
@@ -125,10 +132,12 @@ export function ReactQueryDevToolsBubble({
         )}
 
         <ErrorBoundary>
-          <DevToolsModal
+          <FloatingDataEditor
             visible={isModalOpen}
+            selectedQuery={selectedQuery}
+            onQuerySelect={handleQuerySelect}
+            onClose={handleModalDismiss}
             queryClient={queryClient}
-            onDismiss={handleModalDismiss}
           />
         </ErrorBoundary>
       </QueryClientProvider>

@@ -1,9 +1,9 @@
 export { BubbleContent } from "./BubbleContent";
 export { ReactQueryBubbleContent } from "./ReactQueryBubbleContent";
-export { BubbleQuerySelector } from "./BubbleQuerySelector";
 export { DevToolsModal } from "./DevToolsModal";
 export { ErrorBoundary } from "./ErrorBoundary";
 export { QueryDebugInfo } from "./QueryDebugInfo";
+export { FloatingDataEditor } from "./FloatingDataEditor";
 export { Divider } from "./Divider";
 export { DragHandle } from "./DragHandle";
 export { type Environment, EnvironmentIndicator } from "./EnvironmentIndicator";

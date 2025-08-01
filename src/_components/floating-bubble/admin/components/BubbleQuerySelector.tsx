@@ -19,9 +19,6 @@ export function BubbleQuerySelector({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const allQueries = useSafeQueries();
 
-  // Debug logging
-  console.log("BubbleQuerySelector - allQueries:", allQueries.length);
-
   const handleSelect = (query: Query<any, any, any, any>) => {
     // If same query is selected, deselect it
     if (query === selectedQuery) {

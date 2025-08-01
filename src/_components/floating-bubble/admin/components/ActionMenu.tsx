@@ -20,9 +20,14 @@ import triggerError from "../../../_util/actions/triggerError";
 interface ActionMenuProps {
   selectedQuery?: Query<any, any, any, any>;
   onQueryChange?: (query: Query<any, any, any, any> | undefined) => void;
+  onEditData?: () => void;
 }
 
-export function ActionMenu({ selectedQuery, onQueryChange }: ActionMenuProps) {
+export function ActionMenu({
+  selectedQuery,
+  onQueryChange,
+  onEditData,
+}: ActionMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const queryClient = useQueryClient();
 
@@ -73,6 +78,14 @@ export function ActionMenu({ selectedQuery, onQueryChange }: ActionMenuProps) {
   const isFetching = getQueryStatusLabel(selectedQuery) === "fetching";
 
   const actions = [
+    {
+      label: "Edit Data",
+      disabled: !selectedQuery.state.data,
+      onPress: () => {
+        onEditData?.();
+        setIsOpen(false);
+      },
+    },
     {
       label: "Refetch",
       disabled: isFetching,

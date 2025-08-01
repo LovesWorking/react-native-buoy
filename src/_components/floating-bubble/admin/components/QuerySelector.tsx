@@ -29,8 +29,6 @@ export function QuerySelector({
   onClose,
   onSelect,
 }: QuerySelectorProps) {
-  // Debug logging
-  console.log("QuerySelector - queries received:", queries.length, queries);
   const getQueryDisplayName = (query: Query<any, any, any, any>) => {
     return Array.isArray(query.queryKey)
       ? query.queryKey.join(" - ")
@@ -59,13 +57,7 @@ export function QuerySelector({
             contentContainerStyle={styles.scrollViewContent}
             showsVerticalScrollIndicator={true}
           >
-            {(() => {
-              console.log(
-                "QuerySelector rendering logic - queries.length:",
-                queries.length
-              );
-              return queries.length === 0;
-            })() ? (
+            {queries.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>No Queries Found</Text>
                 <Text style={styles.emptyDescription}>
@@ -77,62 +69,55 @@ export function QuerySelector({
                 <QueryDebugInfo />
               </View>
             ) : (
-              (() => {
-                console.log(
-                  "About to render queries list, queries:",
-                  queries.length
-                );
-                return queries.map((query, index) => {
-                  const displayName = getQueryDisplayName(query);
-                  console.log(`Rendering query ${index}:`, displayName);
+              queries.map((query, index) => {
+                const displayName = getQueryDisplayName(query);
 
-                  const status = getQueryStatusLabel(query);
-                  const statusColorName = getQueryStatusColor({
-                    queryState: query.state,
-                    observerCount: query.getObserversCount(),
-                    isStale: query.isStale(),
-                  });
-
-                  // Convert color names to hex colors
-                  const colorMap: Record<string, string> = {
-                    blue: "#3B82F6",
-                    gray: "#6B7280",
-                    purple: "#8B5CF6",
-                    yellow: "#F59E0B",
-                    green: "#10B981",
-                  };
-
-                  const statusColor = colorMap[statusColorName] || "#6B7280";
-                  const isSelected = query === selectedQuery;
-
-                  return (
-                    <TouchableOpacity
-                      key={`${query.queryHash}-${index}`}
-                      style={[
-                        styles.queryItem,
-                        isSelected && styles.selectedQueryItem,
-                      ]}
-                      onPress={() => onSelect(query)}
-                    >
-                      <View
-                        style={[
-                          styles.statusDot,
-                          { backgroundColor: statusColor },
-                        ]}
-                      />
-                      <Text
-                        style={[
-                          styles.queryText,
-                          isSelected && styles.selectedQueryText,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {displayName}
-                      </Text>
-                    </TouchableOpacity>
-                  );
+                const status = getQueryStatusLabel(query);
+                const statusColorName = getQueryStatusColor({
+                  queryState: query.state,
+                  observerCount: query.getObserversCount(),
+                  isStale: query.isStale(),
                 });
-              })()
+
+                // Convert color names to hex colors
+                const colorMap: Record<string, string> = {
+                  blue: "#3B82F6",
+                  gray: "#6B7280",
+                  purple: "#8B5CF6",
+                  yellow: "#F59E0B",
+                  green: "#10B981",
+                };
+
+                const statusColor = colorMap[statusColorName] || "#6B7280";
+                const isSelected = query === selectedQuery;
+
+                return (
+                  <TouchableOpacity
+                    key={`${query.queryHash}-${index}`}
+                    style={[
+                      styles.queryItem,
+                      isSelected && styles.selectedQueryItem,
+                    ]}
+                    onPress={() => onSelect(query)}
+                  >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        { backgroundColor: statusColor },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.queryText,
+                        isSelected && styles.selectedQueryText,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {displayName}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
             )}
           </ScrollView>
         </View>
