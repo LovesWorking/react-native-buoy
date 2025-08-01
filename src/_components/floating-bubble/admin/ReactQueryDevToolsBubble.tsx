@@ -8,6 +8,8 @@ import {
   DragHandle,
   ErrorBoundary,
   FloatingDataEditor,
+  type Environment,
+  type UserRole,
 } from "./components";
 import { useBubbleWidth, useDragGesture, useWifiState } from "./hooks";
 import useSelectedQuery from "../../_hooks/useSelectedQuery";
@@ -16,10 +18,14 @@ const { width: screenWidth } = Dimensions.get("window");
 
 interface ReactQueryDevToolsBubbleProps {
   queryClient: QueryClient;
+  userRole: UserRole;
+  environment: Environment;
 }
 
 export function ReactQueryDevToolsBubble({
   queryClient,
+  userRole,
+  environment,
 }: ReactQueryDevToolsBubbleProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -30,9 +36,9 @@ export function ReactQueryDevToolsBubble({
   // Use our custom hook to get live, fresh query data
   const selectedQuery = useSelectedQuery(queryClient, selectedQueryKey);
 
-  // Custom hooks for managing state and logic - matching FloatingStatusBubble exactly
+  // Custom hooks for managing state and logic - with query button support
   const { bubbleWidth, handleEnvLabelLayout, handleStatusLayout } =
-    useBubbleWidth();
+    useBubbleWidth({ hasQueryButton: true });
   const { isOnline, handleWifiToggle } = useWifiState();
   const { panGesture, translateX, translateY } = useDragGesture({
     bubbleWidth,
@@ -40,10 +46,22 @@ export function ReactQueryDevToolsBubble({
     storageKey: "react_query_bubble", // Unique storage key for React Query bubble
   });
 
-  const handlePress = () => {
+  const handleQueryPress = () => {
     if (!isDragging) {
       setIsModalOpen(true);
     }
+  };
+
+  const handleStatusPress = () => {
+    // This could open a different modal or perform a different action
+    // For now, we'll open the same modal as the query press
+    if (!isDragging) {
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleQueryLayout = () => {
+    // Layout handler for the query button - can be empty for now
   };
 
   const handleModalDismiss = () => {
@@ -118,13 +136,17 @@ export function ReactQueryDevToolsBubble({
 
                 <ErrorBoundary>
                   <ReactQueryBubbleContent
+                    environment={environment}
+                    userRole={userRole}
                     isOnline={isOnline}
                     isDragging={isDragging}
                     selectedQuery={selectedQuery}
-                    onPress={handlePress}
-                    onWifiToggle={handleWifiToggle}
-                    onEnvLabelLayout={handleEnvLabelLayout}
+                    onEnvironmentLayout={handleEnvLabelLayout}
                     onStatusLayout={handleStatusLayout}
+                    onQueryLayout={handleQueryLayout}
+                    onStatusPress={handleStatusPress}
+                    onQueryPress={handleQueryPress}
+                    onWifiToggle={handleWifiToggle}
                   />
                 </ErrorBoundary>
               </Animated.View>

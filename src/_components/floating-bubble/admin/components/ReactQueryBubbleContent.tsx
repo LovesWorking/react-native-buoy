@@ -1,32 +1,41 @@
 import React from "react";
 import { Pressable, LayoutChangeEvent, Text, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { Query, QueryClient } from "@tanstack/react-query";
+import { Query } from "@tanstack/react-query";
 import { TanstackLogo } from "../../../devtools/svgs";
-import { Database } from "lucide-react-native";
 
 import { Divider } from "./Divider";
 import { WifiToggle } from "./WifiToggle";
+import { type Environment, EnvironmentIndicator } from "./EnvironmentIndicator";
+import { type UserRole, UserStatus } from "./UserStatus";
 import { getQueryStatusColor } from "../../../_util/getQueryStatusColor";
 
 interface ReactQueryBubbleContentProps {
+  environment: Environment;
+  userRole: UserRole;
   isOnline: boolean;
   isDragging: boolean;
   selectedQuery?: Query<any, any, any, any>;
-  onPress: () => void;
-  onWifiToggle: () => void;
-  onEnvLabelLayout: (event: LayoutChangeEvent) => void;
+  onEnvironmentLayout: (event: LayoutChangeEvent) => void;
   onStatusLayout: (event: LayoutChangeEvent) => void;
+  onQueryLayout: (event: LayoutChangeEvent) => void;
+  onStatusPress: () => void;
+  onQueryPress: () => void;
+  onWifiToggle: () => void;
 }
 
 export function ReactQueryBubbleContent({
+  environment,
+  userRole,
   isOnline,
   isDragging,
   selectedQuery,
-  onPress,
-  onWifiToggle,
-  onEnvLabelLayout,
+  onEnvironmentLayout,
   onStatusLayout,
+  onQueryLayout,
+  onStatusPress,
+  onQueryPress,
+  onWifiToggle,
 }: ReactQueryBubbleContentProps) {
   const contentLayout = useAnimatedStyle(() => {
     return {
@@ -67,36 +76,47 @@ export function ReactQueryBubbleContent({
           </Text>
         );
       } catch (err) {
-        return <Database color="#EF4444" size={14} />;
+        return <TanstackLogo />;
       }
     }
 
-    return <Database color="#9CA3AF" size={14} />;
+    return <TanstackLogo />;
   };
 
   return (
     <Animated.View style={contentLayout}>
-      {/* TanStack Logo Button */}
-      <Pressable
-        onPress={onPress}
-        style={styles.logoButton}
-        hitSlop={8}
-        onLayout={onEnvLabelLayout}
-      >
-        <TanstackLogo />
-      </Pressable>
+      {/* Environment Indicator */}
+      <EnvironmentIndicator
+        environment={environment}
+        onLayout={onEnvironmentLayout}
+      />
 
       <Divider />
 
-      {/* Unified Query/Data Button */}
-      <Animated.View onLayout={onStatusLayout}>
-        <Pressable onPress={onPress} style={styles.queryButton} hitSlop={8}>
+      {/* User Status */}
+      <UserStatus
+        userRole={userRole}
+        onPress={onStatusPress}
+        isDragging={isDragging}
+        onLayout={onStatusLayout}
+      />
+
+      <Divider />
+
+      {/* React Query Status Button */}
+      <Animated.View onLayout={onQueryLayout}>
+        <Pressable
+          onPress={onQueryPress}
+          style={styles.queryButton}
+          hitSlop={8}
+        >
           {getQueryIndicator()}
         </Pressable>
       </Animated.View>
 
       <Divider />
 
+      {/* WiFi Toggle */}
       <WifiToggle
         isOnline={isOnline}
         onToggle={onWifiToggle}
@@ -107,10 +127,6 @@ export function ReactQueryBubbleContent({
 }
 
 const styles = StyleSheet.create({
-  logoButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
   queryButton: {
     width: 24,
     height: 24,
