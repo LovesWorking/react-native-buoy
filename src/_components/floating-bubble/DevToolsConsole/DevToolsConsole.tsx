@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft, Terminal } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
-import { ExpandableSectionHeader } from "../sections/ExpandableSectionHeader";
-import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
+import { ExpandableSectionHeader } from "../admin/sections/ExpandableSectionHeader";
+import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
+import { useDebugSections } from "./useDebugSections";
+import { RequiredEnvVar } from "../admin/sections/env-vars/types";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
@@ -22,21 +24,31 @@ export interface DebugSection {
   onClose?: () => void;
 }
 
-interface ReusableDebugModalProps {
+interface DevToolsConsoleProps {
   visible: boolean;
   onClose: () => void;
-  sections: DebugSection[];
-  defaultTitle?: string;
-  modalTitle?: string;
+  requiredEnvVars: RequiredEnvVar[];
+  getSentrySubtitle: () => string;
+  getRnBetterDevToolsSubtitle: () => string;
+  envVarsSubtitle: string;
 }
 
-export function ReusableDebugModal({
+export function DevToolsConsole({
   visible,
   onClose,
-  sections,
-  defaultTitle = "Debug Console",
-  modalTitle,
-}: ReusableDebugModalProps) {
+  requiredEnvVars,
+  getSentrySubtitle,
+  getRnBetterDevToolsSubtitle,
+  envVarsSubtitle,
+}: DevToolsConsoleProps) {
+  // Sections configuration using composition pattern
+  const sections = useDebugSections({
+    requiredEnvVars,
+    getSentrySubtitle,
+    getRnBetterDevToolsSubtitle,
+    envVarsSubtitle,
+  });
+
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
 
@@ -61,7 +73,7 @@ export function ReusableDebugModal({
   // Helper function to render the content-specific header elements
   const renderHeaderContent = () => {
     const currentSection = sections.find((s) => s.id === selectedSection);
-
+    const title = currentSection?.title || "Dev Tools Console";
     return (
       <View style={styles.headerContainer}>
         {selectedSection && (
@@ -76,9 +88,7 @@ export function ReusableDebugModal({
 
         <View style={styles.titleContainer}>
           <Text style={styles.title} numberOfLines={1}>
-            {selectedSection && currentSection
-              ? currentSection.title || "NO TITLE"
-              : modalTitle || defaultTitle || "DEFAULT TITLE"}
+            {title}
           </Text>
         </View>
       </View>
@@ -96,7 +106,7 @@ export function ReusableDebugModal({
     <BaseFloatingModal
       visible={visible}
       onClose={handleCloseModal}
-      storagePrefix="@reusable_debug_modal"
+      storagePrefix="@devtools_console"
       showToggleButton={true}
       customHeaderContent={renderHeaderContent()}
       headerSubtitle={getHeaderSubtitle()}

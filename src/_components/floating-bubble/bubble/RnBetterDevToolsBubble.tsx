@@ -13,12 +13,11 @@ import {
   UserRole,
   BubblePresentation,
   CopyContextProvider,
-  useDebugSections,
 } from "../admin/components";
 import { type BubbleConfig } from "../admin/components/RnBetterDevToolsBubbleContent";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
 import { ReactQueryModal } from "../reactQueryModal/ReactQueryModal";
-import { ReusableDebugModal } from "../admin/components/ReusableDebugModal";
+import { DevToolsConsole, useDebugSections } from "../DevToolsConsole";
 
 interface RnBetterDevToolsBubbleProps {
   queryClient: QueryClient;
@@ -73,15 +72,6 @@ export function RnBetterDevToolsBubble({
     isDragging,
   };
 
-  // Sections configuration using composition pattern
-  const debugSections = useDebugSections({
-    queryClient,
-    requiredEnvVars,
-    getSentrySubtitle,
-    getRnBetterDevToolsSubtitle,
-    envVarsSubtitle,
-  });
-
   const isAModalOpen = isModalOpen || isDebugModalOpen;
   return (
     <ErrorBoundary>
@@ -109,12 +99,14 @@ export function RnBetterDevToolsBubble({
             onClose={handleModalDismiss}
           />
 
-          {/* Copy Context Provider - Specialized component for copy functionality */}
-          <ReusableDebugModal
+          {/* DevTools Console - Specialized component for debug sections */}
+          <DevToolsConsole
             visible={isDebugModalOpen}
             onClose={handleDebugModalDismiss}
-            sections={debugSections}
-            modalTitle="Dev Tools Console"
+            requiredEnvVars={requiredEnvVars}
+            getSentrySubtitle={getSentrySubtitle}
+            getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
+            envVarsSubtitle={envVarsSubtitle}
           />
         </CopyContextProvider>
       </QueryClientProvider>
