@@ -1,5 +1,11 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  GestureResponderEvent,
+} from "react-native";
 
 interface QueryStatusProps {
   label: string;
@@ -7,7 +13,8 @@ interface QueryStatusProps {
   count: number;
   showLabel?: boolean;
   isActive?: boolean;
-  onPress?: () => void;
+  onPress?: (event: GestureResponderEvent) => void;
+  onTouchStart?: (event: GestureResponderEvent) => void;
 }
 
 type ColorName = "green" | "yellow" | "gray" | "blue" | "purple" | "red";
@@ -19,8 +26,9 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
   showLabel = true,
   isActive = false,
   onPress,
+  onTouchStart,
 }) => {
-  // Modern color mapping for status indicators
+  // Modern color mapping for status indicators - hybrid approach
   const getStatusColors = (colorName: ColorName) => {
     const colorMap = {
       green: { bg: "rgba(16, 185, 129, 0.1)", dot: "#10B981", text: "#10B981" },
@@ -38,13 +46,12 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
       red: { bg: "rgba(239, 68, 68, 0.1)", dot: "#EF4444", text: "#EF4444" },
       gray: { bg: "rgba(107, 114, 128, 0.1)", dot: "#6B7280", text: "#6B7280" },
     };
-
     return colorMap[colorName] || colorMap.gray;
   };
 
   const statusColors = getStatusColors(color);
 
-  // Create active style based on the status color
+  // Create active style based on the status color (from old version)
   const activeStyle = isActive
     ? {
         backgroundColor: `${statusColors.dot}20`, // 20% opacity of the status color
@@ -67,10 +74,15 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
       ]}
       disabled={!onPress}
       onPress={onPress}
+      onPressIn={onTouchStart}
       activeOpacity={0.7}
     >
       {showLabel && (
-        <Text style={[styles.label, { color: statusColors.text }]}>
+        <Text
+          style={[styles.label, { color: statusColors.text }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {label}
         </Text>
       )}
@@ -103,54 +115,47 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
 const styles = StyleSheet.create({
   queryStatusTag: {
     flexDirection: "row",
-    gap: 4, // Reduced gap since no dot
+    gap: 6, // Spacing between label and count
     backgroundColor: "rgba(255, 255, 255, 0.05)",
-    borderRadius: 6,
-    padding: 6,
+    borderRadius: 8, // Slightly more rounded than old version
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
     position: "relative",
-    flexShrink: 1, // Allow badges to shrink if needed
-    minWidth: 24, // Reduced minimum width since no dot
+    flexShrink: 0, // Don't shrink below content size
+    flexGrow: 0, // Don't grow unless needed
+    minHeight: 28, // Ensure adequate height for text
+    maxHeight: 28, // Increased height limit for better text display
   },
   clickable: {
-    // cursor: 'pointer', // This doesn't exist in React Native
+    // Placeholder for clickable styles
   },
   label: {
-    fontSize: 11,
+    fontSize: 12, // Slightly larger than old version
     fontWeight: "500",
-    color: "#FFFFFF",
+    color: "#FFFFFF", // Will be overridden by dynamic color
+    flexShrink: 1, // Allow label to shrink if needed
+    minWidth: 0, // Allow text to shrink below intrinsic width
   },
   countContainer: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    height: 20,
+    paddingHorizontal: 8, // More padding for better balance
+    paddingVertical: 3,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 4,
-    minWidth: 20,
+    borderRadius: 6, // More rounded
+    minWidth: 24, // Ensure space for 2+ digits
+    flexShrink: 0, // Don't shrink the count container
   },
   count: {
-    fontSize: 10,
-    color: "#9CA3AF",
+    fontSize: 11, // Slightly larger for better readability
+    color: "#9CA3AF", // Will be overridden by dynamic color
     fontVariant: ["tabular-nums"],
     fontWeight: "600",
-  },
-  tooltip: {
-    position: "absolute",
-    zIndex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    top: "100%",
-    left: "50%",
-    transform: [{ translateX: -50 }, { translateY: 8 }],
-    padding: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-  tooltipText: {
-    fontSize: 11,
-    color: "#FFFFFF",
+    textAlign: "center",
   },
 });
 

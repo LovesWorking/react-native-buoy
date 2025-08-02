@@ -62,9 +62,9 @@ export function ReactQueryModalHeader({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    minHeight: 50, // Ensure adequate height
+    minHeight: 32, // Match FloatingModalHeader minHeight exactly
     justifyContent: "center",
-    paddingHorizontal: 8,
+    // Remove horizontal padding - let content handle its own spacing
   },
 
   detailsView: {
@@ -72,15 +72,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     gap: 12,
-    minHeight: 40,
-    paddingVertical: 4,
+    minHeight: 32, // Match FloatingModalHeader minHeight
+    paddingLeft: 4, // Only left padding for consistent spacing
+    paddingRight: 0, // No right padding - buttons handle their own spacing
   },
 
   browserView: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    minHeight: 40,
+    alignItems: "stretch", // Let QueryStatusCount use full width
+    minHeight: 32, // Match FloatingModalHeader minHeight
+    paddingLeft: 4, // Consistent left spacing
+    paddingRight: 4, // Minimal right padding to match left
   },
 
   backButton: {
