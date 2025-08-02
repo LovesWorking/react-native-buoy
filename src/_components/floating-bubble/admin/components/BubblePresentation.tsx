@@ -7,7 +7,7 @@ import Animated, {
 import { PanGesture } from "react-native-gesture-handler";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { DragHandle } from "./DragHandle";
-import { ReactQueryBubbleContent } from "./ReactQueryBubbleContent";
+import { RnBetterDevToolsBubbleContent } from "./RnBetterDevToolsBubbleContent";
 import { type Environment } from "./EnvironmentIndicator";
 import { type UserRole } from "./UserStatus";
 
@@ -110,7 +110,7 @@ export function BubblePresentation({
           <DragHandle panGesture={panGesture} translateX={translateX} />
 
           <ErrorBoundary>
-            <ReactQueryBubbleContent
+            <RnBetterDevToolsBubbleContent
               environment={environment}
               userRole={userRole}
               isOnline={isOnline}

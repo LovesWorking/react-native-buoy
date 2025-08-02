@@ -11,7 +11,7 @@ interface DebugSectionsFactoryProps {
   queryClient: QueryClient;
   requiredEnvVars: RequiredEnvVar[];
   getSentrySubtitle: () => string;
-  getReactQuerySubtitle: () => string;
+  getRnBetterDevToolsSubtitle: () => string;
   envVarsSubtitle: string;
   onClose: () => void;
 }
@@ -25,7 +25,7 @@ export function DebugSectionsFactory({
   queryClient,
   requiredEnvVars,
   getSentrySubtitle,
-  getReactQuerySubtitle,
+  getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
   onClose,
 }: DebugSectionsFactoryProps) {
@@ -42,7 +42,7 @@ export function useDebugSections({
   queryClient,
   requiredEnvVars,
   getSentrySubtitle,
-  getReactQuerySubtitle,
+  getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
 }: Omit<DebugSectionsFactoryProps, "onClose">): DebugSection[] {
   return [
@@ -77,9 +77,9 @@ export function useDebugSections({
       },
     },
     {
-      id: "react-query",
-      title: "React Query Dev Tools",
-      subtitle: getReactQuerySubtitle(),
+      id: "rn-better-dev-tools",
+      title: "RN Better Dev Tools",
+      subtitle: getRnBetterDevToolsSubtitle(),
       icon: FlaskConical,
       iconColor: "#F59E0B",
       iconBackgroundColor: "rgba(245, 158, 11, 0.1)",

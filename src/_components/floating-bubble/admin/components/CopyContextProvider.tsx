@@ -31,7 +31,7 @@ export function CopyContextProvider({
 
       return onCopy ? onCopy(textToCopy) : false;
     } catch (error) {
-      console.error("Copy failed in ReactQueryDevToolsBubble:", error);
+      console.error("Copy failed in RnBetterDevToolsBubble:", error);
       console.error("Value type:", typeof value);
       console.error("Value constructor:", value?.constructor?.name);
       return false;

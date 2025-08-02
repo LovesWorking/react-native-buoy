@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ReactQueryDevToolsBubble Error:", error, errorInfo);
+    console.error("RnBetterDevToolsBubble Error:", error, errorInfo);
   }
 
   handleRetry = () => {

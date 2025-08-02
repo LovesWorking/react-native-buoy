@@ -5,7 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
  * Separated from UI concerns following composition principles
  */
 export function useReactQueryState(queryClient: QueryClient) {
-  const getReactQuerySubtitle = () => {
+  const getRnBetterDevToolsSubtitle = () => {
     try {
       const allQueries = queryClient.getQueryCache().getAll();
       const allMutations = queryClient.getMutationCache().getAll();
@@ -16,6 +16,6 @@ export function useReactQueryState(queryClient: QueryClient) {
   };
 
   return {
-    getReactQuerySubtitle,
+    getRnBetterDevToolsSubtitle,
   };
 }

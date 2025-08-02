@@ -103,7 +103,7 @@ export function RnBetterDevToolsBubbleContent({
 
       <Divider />
 
-      {/* React Query Status Button */}
+      {/* RN Better Dev Tools Status Button */}
       <Animated.View onLayout={onQueryLayout}>
         <Pressable
           onPress={onQueryPress}

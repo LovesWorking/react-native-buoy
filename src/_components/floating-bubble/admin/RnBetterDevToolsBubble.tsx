@@ -1,4 +1,3 @@
-import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   useBubbleWidth,
@@ -21,7 +20,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FloatingDataEditor } from "./components/FloatingDataEditor";
 import { ReusableDebugModal } from "./components/ReusableDebugModal";
 
-interface ReactQueryDevToolsBubbleProps {
+interface RnBetterDevToolsBubbleProps {
   queryClient: QueryClient;
   userRole: UserRole;
   environment: Environment;
@@ -30,21 +29,21 @@ interface ReactQueryDevToolsBubbleProps {
 }
 
 /**
- * ReactQueryDevToolsBubble refactored following composition principles:
+ * RnBetterDevToolsBubble refactored following composition principles:
  * - Decomposed by responsibility into specialized components
  * - Extracted reusable logic into custom hooks
  * - Composed using specialized components instead of large configurations
  */
-export function ReactQueryDevToolsBubble({
+export function RnBetterDevToolsBubble({
   queryClient,
   userRole,
   environment,
   requiredEnvVars = [],
   onCopy,
-}: ReactQueryDevToolsBubbleProps) {
+}: RnBetterDevToolsBubbleProps) {
   // Specialized hooks for different concerns following composition principles
   const { getSentrySubtitle } = useSentryEvents();
-  const { getReactQuerySubtitle } = useReactQueryState(queryClient);
+  const { getRnBetterDevToolsSubtitle } = useReactQueryState(queryClient);
   const envVarsSubtitle = useEnvVarsSubtitle(requiredEnvVars);
 
   // Modal management hook - extracted from main component logic
@@ -68,7 +67,7 @@ export function ReactQueryDevToolsBubble({
   const { panGesture, translateX, translateY } = useDragGesture({
     bubbleWidth,
     onDraggingChange: setDraggingState,
-    storageKey: "react_query_bubble",
+    storageKey: "rn_better_dev_tools_bubble",
   });
 
   // Sections configuration using composition pattern
@@ -76,7 +75,7 @@ export function ReactQueryDevToolsBubble({
     queryClient,
     requiredEnvVars,
     getSentrySubtitle,
-    getReactQuerySubtitle,
+    getRnBetterDevToolsSubtitle,
     envVarsSubtitle,
   });
 

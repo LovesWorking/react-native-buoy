@@ -1,8 +1,8 @@
-// Main FloatingStatusBubble with integrated React Query dev tools
+// Main FloatingStatusBubble with integrated RN Better dev tools
 export { FloatingStatusBubble } from "./_components/floating-bubble/admin/FloatingStatusBubble";
 
-// Standalone React Query DevTools bubble
-export { ReactQueryDevToolsBubble } from "./_components/floating-bubble/admin/ReactQueryDevToolsBubble";
+// Standalone RN Better DevTools bubble
+export { RnBetterDevToolsBubble } from "./_components/floating-bubble/admin/RnBetterDevToolsBubble";
 
 // Legacy DevToolsBubble (deprecated - use FloatingStatusBubble with queryClient prop instead)
 export { DevToolsBubble } from "./DevToolsBubble";
