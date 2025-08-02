@@ -17,7 +17,7 @@ import {
   useDebugSections,
 } from "../admin/components";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
-import { FloatingDataEditor } from "../admin/components/FloatingDataEditor";
+import { ReactQueryModal } from "../reactQueryModal/ReactQueryModal";
 import { ReusableDebugModal } from "../admin/components/ReusableDebugModal";
 
 interface RnBetterDevToolsBubbleProps {
@@ -99,7 +99,7 @@ export function RnBetterDevToolsBubble({
 
         {/* Floating Data Editor Modal */}
         <ErrorBoundary>
-          <FloatingDataEditor
+          <ReactQueryModal
             visible={isModalOpen}
             selectedQueryKey={selectedQueryKey}
             onQuerySelect={handleQuerySelect}
