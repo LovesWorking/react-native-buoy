@@ -11,7 +11,6 @@ import {
 } from "./RnBetterDevToolsBubbleContent";
 import { type Environment } from "../../bubble/EnvironmentIndicator";
 import { type UserRole } from "./UserStatus";
-const { width: screenWidth } = Dimensions.get("window");
 
 interface DragState {
   translateX: SharedValue<number>;
@@ -66,11 +65,8 @@ export function BubblePresentation({
   });
 
   const bubbleLayout = useAnimatedStyle(() => {
-    const centerX = translateX.value + bubbleWidth / 2;
-    const isOnLeft = centerX < screenWidth / 2;
-
     return {
-      flexDirection: isOnLeft ? "row-reverse" : "row",
+      flexDirection: "row",
       alignItems: "center",
       width: bubbleWidth,
     };
