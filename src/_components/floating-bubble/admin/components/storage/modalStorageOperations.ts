@@ -42,6 +42,14 @@ export interface PanelState {
   isFloating: boolean | null;
 }
 
+export interface ModalVisibilityState {
+  isModalOpen: boolean;
+  isDebugModalOpen: boolean;
+  selectedQueryKey?: string; // JSON stringified QueryKey
+  selectedSection?: string; // For DevTools sections
+  activeFilter?: string | null; // React Query filter state: "fresh", "stale", "fetching", "paused", "inactive"
+}
+
 // Storage operations
 export const savePanelDimensions = async (
   storagePrefix: string,
@@ -97,5 +105,78 @@ export const loadPanelState = async (
   } catch (error) {
     console.warn("Failed to load panel state:", error);
     return { dimensions: null, height: null, isFloating: null };
+  }
+};
+
+// Modal visibility state operations
+export const saveModalVisibilityState = async (
+  storagePrefix: string,
+  state: ModalVisibilityState
+) => {
+  try {
+    const stateJson = JSON.stringify(state);
+    console.log("🔵 [MODAL PERSIST] Saving modal state:", {
+      storagePrefix,
+      state,
+      stateJson,
+      key: `${storagePrefix}_modal_state`,
+    });
+    await setItem(`${storagePrefix}_modal_state`, stateJson);
+    console.log("✅ [MODAL PERSIST] Modal state saved successfully");
+  } catch (error) {
+    console.error(
+      "❌ [MODAL PERSIST] Failed to save modal visibility state:",
+      error
+    );
+  }
+};
+
+export const loadModalVisibilityState = async (
+  storagePrefix: string
+): Promise<ModalVisibilityState | null> => {
+  try {
+    const key = `${storagePrefix}_modal_state`;
+    console.log("🔍 [MODAL PERSIST] Loading modal state from storage:", {
+      storagePrefix,
+      key,
+    });
+
+    const stateStr = await getItem(key);
+    console.log("🔍 [MODAL PERSIST] Raw storage value:", { stateStr });
+
+    if (stateStr) {
+      const parsedState = JSON.parse(stateStr);
+      console.log(
+        "✅ [MODAL PERSIST] Modal state loaded successfully:",
+        parsedState
+      );
+      return parsedState;
+    }
+
+    console.log("ℹ️ [MODAL PERSIST] No modal state found in storage");
+    return null;
+  } catch (error) {
+    console.error(
+      "❌ [MODAL PERSIST] Failed to load modal visibility state:",
+      error
+    );
+    return null;
+  }
+};
+
+export const clearModalVisibilityState = async (storagePrefix: string) => {
+  try {
+    const key = `${storagePrefix}_modal_state`;
+    console.log("🗑️ [MODAL PERSIST] Clearing modal state:", {
+      storagePrefix,
+      key,
+    });
+    await setItem(key, "");
+    console.log("✅ [MODAL PERSIST] Modal state cleared successfully");
+  } catch (error) {
+    console.error(
+      "❌ [MODAL PERSIST] Failed to clear modal visibility state:",
+      error
+    );
   }
 };

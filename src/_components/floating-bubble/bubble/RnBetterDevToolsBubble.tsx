@@ -39,11 +39,16 @@ export function RnBetterDevToolsBubble({
   const { getRnBetterDevToolsSubtitle } = useReactQueryState(queryClient);
   const envVarsSubtitle = useEnvVarsSubtitle(requiredEnvVars);
 
-  // Modal management hook - extracted from main component logic
+  // Modal management hook with persistence - extracted from main component logic
   const {
     isModalOpen,
     isDebugModalOpen,
     selectedQueryKey,
+    selectedSection,
+    activeFilter,
+    isStateRestored,
+    setSelectedSection,
+    setActiveFilter,
     handleModalDismiss,
     handleDebugModalDismiss,
     handleQuerySelect,
@@ -53,6 +58,28 @@ export function RnBetterDevToolsBubble({
 
   // Hide bubble when any modal is open to prevent visual overlap
   const isAnyModalOpen = isModalOpen || isDebugModalOpen;
+
+  console.log("🎭 [BUBBLE] Current modal states:", {
+    isModalOpen,
+    isDebugModalOpen,
+    selectedQueryKey,
+    selectedSection,
+    activeFilter,
+    isStateRestored,
+    isAnyModalOpen,
+  });
+
+  // Don't render anything until state is restored to prevent flash
+  if (!isStateRestored) {
+    console.log("⏳ [BUBBLE] Waiting for state restoration...");
+    return null;
+  }
+
+  console.log("🎨 [BUBBLE] Rendering with restored state:", {
+    willShowReactQueryModal: isModalOpen,
+    willShowDevToolsConsole: isDebugModalOpen,
+    willShowBubble: !isAnyModalOpen,
+  });
 
   return (
     <ErrorBoundary>
@@ -71,16 +98,18 @@ export function RnBetterDevToolsBubble({
             />
           )}
 
-          {/* Floating Data Editor Modal */}
+          {/* Floating Data Editor Modal - Auto-opens if restored state indicates it was open */}
           <ReactQueryModal
             key="react-query-modal"
             visible={isModalOpen}
             selectedQueryKey={selectedQueryKey}
             onQuerySelect={handleQuerySelect}
             onClose={handleModalDismiss}
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
           />
 
-          {/* DevTools Console - Specialized component for debug sections */}
+          {/* DevTools Console - Auto-opens if restored state indicates it was open */}
           <DevToolsConsole
             key="devtools-console-modal"
             visible={isDebugModalOpen}
@@ -89,6 +118,8 @@ export function RnBetterDevToolsBubble({
             getSentrySubtitle={getSentrySubtitle}
             getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
             envVarsSubtitle={envVarsSubtitle}
+            selectedSection={selectedSection}
+            setSelectedSection={setSelectedSection}
           />
         </CopyContextProvider>
       </QueryClientProvider>

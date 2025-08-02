@@ -10,6 +10,8 @@ interface DevToolsConsoleProps {
   getSentrySubtitle: () => string;
   getRnBetterDevToolsSubtitle: () => string;
   envVarsSubtitle: string;
+  selectedSection?: string | null;
+  setSelectedSection?: (section: string | null) => void;
 }
 
 /**
@@ -28,12 +30,27 @@ export function DevToolsConsole({
   getSentrySubtitle,
   getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
+  selectedSection: externalSelectedSection,
+  setSelectedSection: externalSetSelectedSection,
 }: DevToolsConsoleProps) {
-  const [selectedSection, setSelectedSection] = useState<SectionType | null>(
-    null
-  );
+  // Use external state if provided (for persistence), otherwise use internal state
+  const [internalSelectedSection, setInternalSelectedSection] =
+    useState<SectionType | null>(null);
+  const selectedSection =
+    (externalSelectedSection as SectionType | null) || internalSelectedSection;
+  const setSelectedSection =
+    externalSetSelectedSection || setInternalSelectedSection;
+
+  console.log("🛠️ [DEV TOOLS CONSOLE] Render with props:", {
+    visible,
+    externalSelectedSection,
+    finalSelectedSection: selectedSection,
+    willShowSectionList: visible && selectedSection === null,
+    willShowModal: selectedSection !== null,
+  });
 
   const handleSectionSelect = (sectionType: SectionType) => {
+    console.log("📑 [DEV TOOLS CONSOLE] Section selected:", sectionType);
     setSelectedSection(sectionType);
   };
 

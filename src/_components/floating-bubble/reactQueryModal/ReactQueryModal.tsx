@@ -8,6 +8,8 @@ interface ReactQueryModalProps {
   selectedQueryKey?: QueryKey;
   onQuerySelect: (query: Query | undefined) => void;
   onClose: () => void;
+  activeFilter?: string | null;
+  onFilterChange?: (filter: string | null) => void;
 }
 
 /**
@@ -24,6 +26,8 @@ export function ReactQueryModal({
   selectedQueryKey,
   onQuerySelect,
   onClose,
+  activeFilter,
+  onFilterChange,
 }: ReactQueryModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
 
@@ -41,6 +45,8 @@ export function ReactQueryModal({
         selectedQueryKey={selectedQueryKey}
         onQuerySelect={onQuerySelect}
         onClose={onClose}
+        activeFilter={activeFilter}
+        onFilterChange={onFilterChange}
       />
 
       {/* Data Editor Modal - shown when a query is selected */}
@@ -49,6 +55,8 @@ export function ReactQueryModal({
         selectedQueryKey={selectedQueryKey}
         onQuerySelect={onQuerySelect}
         onClose={onClose}
+        activeFilter={activeFilter}
+        onFilterChange={onFilterChange}
       />
     </>
   );

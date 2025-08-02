@@ -6,6 +6,7 @@ export { useWifiState } from "./useWifiState";
 export { useSentryEvents } from "./useSentryEvents";
 export { useReactQueryState } from "./useReactQueryState";
 export { useModalManager } from "./useModalManager";
+export { useModalPersistence } from "./useModalPersistence";
 export { useActionButtons } from "./useActionButtons";
 export { useModalState } from "./useModalState";
 export { useModalResize } from "./useModalResize";

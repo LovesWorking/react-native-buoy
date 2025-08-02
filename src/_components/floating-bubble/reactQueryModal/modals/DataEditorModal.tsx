@@ -10,6 +10,8 @@ interface DataEditorModalProps {
   selectedQueryKey?: QueryKey;
   onQuerySelect: (query: Query | undefined) => void;
   onClose: () => void;
+  activeFilter?: string | null;
+  onFilterChange?: (filter: string | null) => void;
 }
 
 /**
@@ -21,9 +23,16 @@ export function DataEditorModal({
   selectedQueryKey,
   onQuerySelect,
   onClose,
+  activeFilter: externalActiveFilter,
+  onFilterChange: externalOnFilterChange,
 }: DataEditorModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  // Use external filter state if provided (for persistence), otherwise use internal state
+  const [internalActiveFilter, setInternalActiveFilter] = useState<
+    string | null
+  >(null);
+  const activeFilter = externalActiveFilter ?? internalActiveFilter;
+  const setActiveFilter = externalOnFilterChange ?? setInternalActiveFilter;
 
   if (!visible || !selectedQuery) return null;
 
@@ -35,6 +44,14 @@ export function DataEditorModal({
       onFilterChange={setActiveFilter}
     />
   );
+
+  console.log("📝 [DATA EDITOR MODAL] Render with filter:", {
+    visible,
+    activeFilter,
+    externalActiveFilter,
+    willUseExternalFilter: !!externalOnFilterChange,
+    hasSelectedQuery: !!selectedQuery,
+  });
 
   return (
     <BaseFloatingModal

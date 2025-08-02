@@ -10,6 +10,8 @@ interface QueryBrowserModalProps {
   selectedQueryKey?: QueryKey;
   onQuerySelect: (query: Query | undefined) => void;
   onClose: () => void;
+  activeFilter?: string | null;
+  onFilterChange?: (filter: string | null) => void;
 }
 
 /**
@@ -21,9 +23,16 @@ export function QueryBrowserModal({
   selectedQueryKey,
   onQuerySelect,
   onClose,
+  activeFilter: externalActiveFilter,
+  onFilterChange: externalOnFilterChange,
 }: QueryBrowserModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  // Use external filter state if provided (for persistence), otherwise use internal state
+  const [internalActiveFilter, setInternalActiveFilter] = useState<
+    string | null
+  >(null);
+  const activeFilter = externalActiveFilter ?? internalActiveFilter;
+  const setActiveFilter = externalOnFilterChange ?? setInternalActiveFilter;
 
   if (!visible) return null;
 
@@ -35,6 +44,13 @@ export function QueryBrowserModal({
       onFilterChange={setActiveFilter}
     />
   );
+
+  console.log("🔍 [QUERY BROWSER MODAL] Render with filter:", {
+    visible,
+    activeFilter,
+    externalActiveFilter,
+    willUseExternalFilter: !!externalOnFilterChange,
+  });
 
   return (
     <BaseFloatingModal
