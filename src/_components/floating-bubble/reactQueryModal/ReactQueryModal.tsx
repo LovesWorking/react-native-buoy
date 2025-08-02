@@ -1,11 +1,7 @@
-import { useState } from "react";
-import { View, StyleSheet } from "react-native";
 import { Query, QueryKey } from "@tanstack/react-query";
-import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
 import { useGetQueryByQueryKey } from "../../_hooks/useSelectedQuery";
-import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
-import { QueryBrowserMode } from "../admin/components/QueryBrowserMode";
-import { DataEditorMode } from "../admin/components/DataEditorMode";
+import { QueryBrowserModal } from "./modals/QueryBrowserModal";
+import { DataEditorModal } from "./modals/DataEditorModal";
 
 interface ReactQueryModalProps {
   visible: boolean;
@@ -14,6 +10,15 @@ interface ReactQueryModalProps {
   onClose: () => void;
 }
 
+/**
+ * Refactored ReactQueryModal following composition principles
+ *
+ * Applied principles:
+ * - Decompose by Responsibility: Separated query browser and data editor modals
+ * - Prefer Composition over Configuration: Uses specialized modal components
+ * - Extract Reusable Logic: Modal routing logic based on query selection
+ * - Utilize Render Props: Each modal handles its own rendering responsibility
+ */
 export function ReactQueryModal({
   visible,
   selectedQueryKey,
@@ -21,45 +26,30 @@ export function ReactQueryModal({
   onClose,
 }: ReactQueryModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  const renderHeaderContent = () => (
-    <ReactQueryModalHeader
-      selectedQuery={selectedQuery}
-      activeFilter={activeFilter}
-      onQuerySelect={onQuerySelect}
-      onFilterChange={setActiveFilter}
-    />
-  );
+  // Show query browser when modal is visible but no query selected
+  const showQueryBrowser = visible && !selectedQuery;
+
+  // Show data editor when a query is selected
+  const showDataEditor = visible && !!selectedQuery;
 
   return (
-    <BaseFloatingModal
-      visible={visible}
-      onClose={onClose}
-      storagePrefix="@floating_data_editor"
-      showToggleButton={true}
-      customHeaderContent={renderHeaderContent()}
-    >
-      <View style={styles.content}>
-        {selectedQuery ? (
-          <DataEditorMode selectedQuery={selectedQuery} />
-        ) : (
-          <QueryBrowserMode
-            selectedQuery={selectedQuery}
-            onQuerySelect={onQuerySelect}
-            activeFilter={activeFilter}
-          />
-        )}
-      </View>
-    </BaseFloatingModal>
+    <>
+      {/* Query Browser Modal - shown when no query is selected */}
+      <QueryBrowserModal
+        visible={showQueryBrowser}
+        selectedQueryKey={selectedQueryKey}
+        onQuerySelect={onQuerySelect}
+        onClose={onClose}
+      />
+
+      {/* Data Editor Modal - shown when a query is selected */}
+      <DataEditorModal
+        visible={showDataEditor}
+        selectedQueryKey={selectedQueryKey}
+        onQuerySelect={onQuerySelect}
+        onClose={onClose}
+      />
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  // Content area
-  content: {
-    flex: 1,
-    overflow: "hidden",
-    backgroundColor: "#2A2A2A", // Match main dev tools secondary background
-  },
-});

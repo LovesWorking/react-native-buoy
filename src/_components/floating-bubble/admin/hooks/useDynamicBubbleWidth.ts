@@ -18,10 +18,14 @@ export function useDynamicBubbleWidth() {
   // Use useLayoutEffect for synchronous measurement (React Native New Architecture)
   // This ensures measurements happen before paint, preventing visual jumps
   useLayoutEffect(() => {
+    let isMounted = true; // Cleanup flag to prevent state updates on unmounted components
+
     if (contentRef.current) {
       // Use measure() to get the actual rendered width of the content
       contentRef.current.measure(
         (x: number, y: number, width: number, height: number) => {
+          if (!isMounted) return; // Prevent state updates after unmount
+
           if (width > 0) {
             // Add padding to the measured content width
             const paddingHorizontal = 12; // 6px on each side for content padding
@@ -47,6 +51,11 @@ export function useDynamicBubbleWidth() {
         }
       );
     }
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }); // No dependencies - measure on every render to catch content changes
 
   return {

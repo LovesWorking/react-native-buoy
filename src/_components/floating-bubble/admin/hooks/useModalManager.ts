@@ -8,7 +8,6 @@ import { Query, QueryKey } from "@tanstack/react-query";
 export function useModalManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [selectedQueryKey, setSelectedQueryKey] = useState<
     QueryKey | undefined
   >(undefined);
@@ -26,31 +25,21 @@ export function useModalManager() {
   };
 
   const handleQueryPress = () => {
-    if (!isDragging) {
-      setIsModalOpen(true);
-    }
+    setIsModalOpen(true);
   };
 
   const handleStatusPress = () => {
-    if (!isDragging) {
-      setIsDebugModalOpen(true);
-    }
-  };
-
-  const setDraggingState = (dragging: boolean) => {
-    setIsDragging(dragging);
+    setIsDebugModalOpen(true);
   };
 
   return {
     isModalOpen,
     isDebugModalOpen,
-    isDragging,
     selectedQueryKey,
     handleModalDismiss,
     handleDebugModalDismiss,
     handleQuerySelect,
     handleQueryPress,
     handleStatusPress,
-    setDraggingState,
   };
 }

@@ -1,9 +1,5 @@
 import { Dimensions, StyleSheet } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  SharedValue,
-} from "react-native-reanimated";
-import { PanGesture } from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { DragHandle } from "./DragHandle";
 import {
   RnBetterDevToolsBubbleContent,
@@ -11,20 +7,13 @@ import {
 } from "./RnBetterDevToolsBubbleContent";
 import { type Environment } from "../../bubble/EnvironmentIndicator";
 import { type UserRole } from "./UserStatus";
-
-interface DragState {
-  translateX: SharedValue<number>;
-  translateY: SharedValue<number>;
-  panGesture: PanGesture;
-  isDragging: boolean;
-}
+import { useDynamicBubbleWidth } from "../hooks/useDynamicBubbleWidth";
+import { useDragGesture } from "../hooks/useDragGesture";
+import { useState } from "react";
 
 interface BubblePresentationProps {
   environment?: Environment;
   userRole?: UserRole;
-  dragState: DragState;
-  bubbleWidth: number;
-  contentRef: React.RefObject<any>; // For dynamic width measurement
   onStatusPress?: () => void;
   onQueryPress?: () => void;
   config?: BubbleConfig;
@@ -32,19 +21,28 @@ interface BubblePresentationProps {
 
 /**
  * Pure presentation component for the floating bubble UI
- * Follows "Decompose by Responsibility" principle - handles only UI rendering
+ * Encapsulates all UI-related logic including width measurement and drag gestures
+ * Follows composition over props principle to reduce prop drilling
  */
 export function BubblePresentation({
   environment,
   userRole,
-  dragState,
-  bubbleWidth,
-  contentRef,
   onStatusPress,
   onQueryPress,
   config,
 }: BubblePresentationProps) {
-  const { translateX, translateY, panGesture, isDragging } = dragState;
+  // Internal state for drag interaction
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Dynamic width measurement - automatically adapts to content changes
+  const { contentRef, bubbleWidth } = useDynamicBubbleWidth();
+
+  // Drag gesture handling with position persistence
+  const { panGesture, translateX, translateY } = useDragGesture({
+    bubbleWidth,
+    onDraggingChange: setIsDragging,
+    storageKey: "rn_better_dev_tools_bubble",
+  });
   // Animated styles - matching FloatingStatusBubble exactly
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -112,8 +110,8 @@ export function BubblePresentation({
             environment={environment}
             userRole={userRole}
             isDragging={isDragging}
-            onStatusPress={onStatusPress}
-            onQueryPress={onQueryPress}
+            onStatusPress={() => !isDragging && onStatusPress?.()}
+            onQueryPress={() => !isDragging && onQueryPress?.()}
             config={config}
           />
         </Animated.View>

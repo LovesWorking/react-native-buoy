@@ -1,7 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  useDynamicBubbleWidth,
-  useDragGesture,
   useSentryEvents,
   useReactQueryState,
   useModalManager,
@@ -45,46 +43,28 @@ export function RnBetterDevToolsBubble({
   const {
     isModalOpen,
     isDebugModalOpen,
-    isDragging,
     selectedQueryKey,
     handleModalDismiss,
     handleDebugModalDismiss,
     handleQuerySelect,
     handleQueryPress,
     handleStatusPress,
-    setDraggingState,
   } = useModalManager();
 
-  // Dynamic width measurement - automatically adapts to content changes
-  const { contentRef, bubbleWidth, isFirstMeasurement } =
-    useDynamicBubbleWidth();
-  const { panGesture, translateX, translateY } = useDragGesture({
-    bubbleWidth,
-    onDraggingChange: setDraggingState,
-    storageKey: "rn_better_dev_tools_bubble",
-  });
+  // Hide bubble when any modal is open to prevent visual overlap
+  const isAnyModalOpen = isModalOpen || isDebugModalOpen;
 
-  // Create stable drag state object to reduce prop drilling
-  const dragState = {
-    translateX,
-    translateY,
-    panGesture,
-    isDragging,
-  };
-
-  const isAModalOpen = isModalOpen || isDebugModalOpen;
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <CopyContextProvider onCopy={onCopy}>
-          {/* Bubble Presentation - Pure UI component following composition principles */}
-          {!isAModalOpen && (
+          {/* Bubble Presentation - Encapsulates all UI logic internally */}
+          {/* Hidden when modals are open to prevent visual conflicts */}
+          {!isAnyModalOpen && (
             <BubblePresentation
+              key="bubble-presentation"
               environment={environment}
               userRole={userRole}
-              dragState={dragState}
-              bubbleWidth={bubbleWidth}
-              contentRef={contentRef}
               onStatusPress={handleStatusPress}
               onQueryPress={handleQueryPress}
               config={config}
@@ -93,6 +73,7 @@ export function RnBetterDevToolsBubble({
 
           {/* Floating Data Editor Modal */}
           <ReactQueryModal
+            key="react-query-modal"
             visible={isModalOpen}
             selectedQueryKey={selectedQueryKey}
             onQuerySelect={handleQuerySelect}
@@ -101,6 +82,7 @@ export function RnBetterDevToolsBubble({
 
           {/* DevTools Console - Specialized component for debug sections */}
           <DevToolsConsole
+            key="devtools-console-modal"
             visible={isDebugModalOpen}
             onClose={handleDebugModalDismiss}
             requiredEnvVars={requiredEnvVars}
