@@ -50,8 +50,7 @@ export function DevToolsConsole({
   };
 
   const handleCloseModal = () => {
-    // setSelectedSection(null);
-    onClose();
+    handleSectionPress("env-vars");
   };
 
   // Helper function to get section title

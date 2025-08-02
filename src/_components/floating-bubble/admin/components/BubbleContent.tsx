@@ -59,11 +59,7 @@ export function BubbleContent({
 
       <Divider />
 
-      <WifiToggle
-        isOnline={isOnline}
-        onToggle={onWifiToggle}
-        isDragging={isDragging}
-      />
+      <WifiToggle isDragging={isDragging} />
     </Animated.View>
   );
 }

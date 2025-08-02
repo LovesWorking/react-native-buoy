@@ -5,7 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 
 import { BubbleContent } from "./components/BubbleContent";
 import { DragHandle } from "./components/DragHandle";
-import { EnvVarsSection, RequiredEnvVar } from "./sections/EnvVarsSection";
+import { EnvVarsSection } from "./sections/EnvVarsSection";
 import { SentryLogDumpSection } from "./sections/SentryLogDumpSection";
 import { ReactQuerySection } from "./sections/ReactQuerySection";
 import { AdminModal } from "./AdminModal";
@@ -16,6 +16,7 @@ import {
   type ClipboardFunction,
 } from "../../../context/CopyContext";
 import { safeStringify } from "../../../_components/_util/safeStringify";
+import { RequiredEnvVar } from "./sections/env-vars/types";
 
 const { width: screenWidth } = Dimensions.get("window");
 

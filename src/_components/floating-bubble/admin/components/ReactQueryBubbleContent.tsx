@@ -119,11 +119,7 @@ export function RnBetterDevToolsBubbleContent({
       <Divider />
 
       {/* WiFi Toggle */}
-      <WifiToggle
-        isOnline={isOnline}
-        onToggle={onWifiToggle}
-        isDragging={isDragging}
-      />
+      <WifiToggle isDragging={isDragging} />
     </Animated.View>
   );
 }
