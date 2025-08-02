@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
 import Animated, { AnimatedStyleProp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import DragResizable from "../../_shared/DragResizable";
+import { DragResizable } from "./DragResizable";
 import { FloatingModalHeader } from "./FloatingModalHeader";
 import { CornerResizeHandle } from "../admin/components/CornerResizeHandle";
 import { PanelDimensions } from "../admin/components/storage/modalStorageOperations";

@@ -85,6 +85,7 @@ export default function QueryBrowser({
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       estimatedItemSize={ESTIMATED_ITEM_SIZE}
+      style={styles.listStyle}
       contentContainerStyle={contentContainerStyle || styles.listContent}
       showsVerticalScrollIndicator
       removeClippedSubviews
@@ -104,8 +105,10 @@ export default function QueryBrowser({
 
 const styles = StyleSheet.create({
   listContent: {
-    flexGrow: 1,
     paddingBottom: 16,
+  },
+  listStyle: {
+    flexGrow: 1,
   },
   emptyContainer: {
     flex: 1,

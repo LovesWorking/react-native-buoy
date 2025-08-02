@@ -303,7 +303,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   explorerSection: {
     marginVertical: 8,

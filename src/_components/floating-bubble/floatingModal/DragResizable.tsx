@@ -1,4 +1,4 @@
-import { useCallback, useRef, type PropsWithChildren } from "react";
+import { useCallback, type PropsWithChildren } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -51,7 +51,7 @@ type Props = {
   renderHandler?: (prop: { handler: Handlers }) => React.ReactNode;
 };
 
-function DragResizable(props: PropsWithChildren<Props>) {
+export function DragResizable(props: PropsWithChildren<Props>) {
   const {
     left,
     top,
@@ -333,5 +333,3 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
 });
-
-export default DragResizable;
