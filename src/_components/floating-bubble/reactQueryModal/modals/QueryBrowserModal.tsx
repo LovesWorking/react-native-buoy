@@ -12,6 +12,7 @@ interface QueryBrowserModalProps {
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
+  enableSharedModalDimensions?: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ export function QueryBrowserModal({
   onClose,
   activeFilter: externalActiveFilter,
   onFilterChange: externalOnFilterChange,
+  enableSharedModalDimensions = false,
 }: QueryBrowserModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
   // Use external filter state if provided (for persistence), otherwise use internal state
@@ -45,11 +47,15 @@ export function QueryBrowserModal({
     />
   );
 
+  const storagePrefix = enableSharedModalDimensions
+    ? "@react_query_modal"
+    : "@query_browser_modal";
+
   return (
     <BaseFloatingModal
       visible={visible}
       onClose={onClose}
-      storagePrefix="@query_browser_modal"
+      storagePrefix={storagePrefix}
       showToggleButton={true}
       customHeaderContent={renderHeaderContent()}
     >

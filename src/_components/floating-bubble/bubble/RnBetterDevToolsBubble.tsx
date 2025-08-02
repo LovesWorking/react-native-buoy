@@ -24,6 +24,7 @@ interface RnBetterDevToolsBubbleProps {
   requiredEnvVars?: RequiredEnvVar[];
   onCopy?: ClipboardFunction;
   config?: BubbleConfig;
+  enableSharedModalDimensions?: boolean;
 }
 
 export function RnBetterDevToolsBubble({
@@ -33,6 +34,7 @@ export function RnBetterDevToolsBubble({
   requiredEnvVars = [],
   onCopy,
   config = {},
+  enableSharedModalDimensions = false,
 }: RnBetterDevToolsBubbleProps) {
   // Specialized hooks for different concerns following composition principles
   const { getSentrySubtitle } = useSentryEvents();
@@ -90,6 +92,7 @@ export function RnBetterDevToolsBubble({
             onClose={handleModalDismiss}
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
+            enableSharedModalDimensions={enableSharedModalDimensions}
           />
 
           {/* DevTools Console - Auto-opens if restored state indicates it was open */}
@@ -103,6 +106,7 @@ export function RnBetterDevToolsBubble({
             envVarsSubtitle={envVarsSubtitle}
             selectedSection={selectedSection}
             setSelectedSection={setSelectedSection}
+            enableSharedModalDimensions={enableSharedModalDimensions}
           />
         </CopyContextProvider>
       </QueryClientProvider>

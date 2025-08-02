@@ -70,13 +70,10 @@ export const useModalState = ({
       if (dimensions) {
         // Validate stored dimensions are within current screen bounds
         const validatedDimensions = {
-          width: Math.max(
-            MIN_WIDTH,
-            Math.min(dimensions.width, SCREEN_WIDTH - 40)
-          ),
+          width: Math.max(MIN_WIDTH, Math.min(dimensions.width, SCREEN_WIDTH)),
           height: Math.max(
             MIN_HEIGHT,
-            Math.min(dimensions.height, SCREEN_HEIGHT - 200)
+            Math.min(dimensions.height, SCREEN_HEIGHT)
           ),
           top: Math.max(
             0,

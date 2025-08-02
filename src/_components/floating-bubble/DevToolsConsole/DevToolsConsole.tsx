@@ -12,6 +12,7 @@ interface DevToolsConsoleProps {
   envVarsSubtitle: string;
   selectedSection?: string | null;
   setSelectedSection?: (section: string | null) => void;
+  enableSharedModalDimensions?: boolean;
 }
 
 /**
@@ -32,6 +33,7 @@ export function DevToolsConsole({
   envVarsSubtitle,
   selectedSection: externalSelectedSection,
   setSelectedSection: externalSetSelectedSection,
+  enableSharedModalDimensions = false,
 }: DevToolsConsoleProps) {
   // Use external state if provided (for persistence), otherwise use internal state
   const [internalSelectedSection, setInternalSelectedSection] =
@@ -54,6 +56,10 @@ export function DevToolsConsole({
     onClose();
   };
 
+  const handleBack = () => {
+    setSelectedSection(null);
+  };
+
   // Show section list when main modal is visible but no section selected
   const showSectionList = visible && selectedSection === null;
 
@@ -71,6 +77,7 @@ export function DevToolsConsole({
         getSentrySubtitle={getSentrySubtitle}
         getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
         envVarsSubtitle={envVarsSubtitle}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
 
       {/* Specialized Section Detail Modals - each handles its own visibility */}
@@ -81,6 +88,8 @@ export function DevToolsConsole({
         getSentrySubtitle={getSentrySubtitle}
         getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
         envVarsSubtitle={envVarsSubtitle}
+        onBack={handleBack}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
     </>
   );

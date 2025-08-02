@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    minHeight: 32, // Ensure minimum height for buttons
+    minHeight: 32,
   },
 
   // Custom header content container

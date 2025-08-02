@@ -12,6 +12,7 @@ interface DataEditorModalProps {
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
+  enableSharedModalDimensions?: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ export function DataEditorModal({
   onClose,
   activeFilter: externalActiveFilter,
   onFilterChange: externalOnFilterChange,
+  enableSharedModalDimensions = false,
 }: DataEditorModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
   // Use external filter state if provided (for persistence), otherwise use internal state
@@ -45,11 +47,15 @@ export function DataEditorModal({
     />
   );
 
+  const storagePrefix = enableSharedModalDimensions
+    ? "@react_query_modal"
+    : "@data_editor_modal";
+
   return (
     <BaseFloatingModal
       visible={visible}
       onClose={onClose}
-      storagePrefix="@data_editor_modal"
+      storagePrefix={storagePrefix}
       showToggleButton={true}
       customHeaderContent={renderHeaderContent()}
     >

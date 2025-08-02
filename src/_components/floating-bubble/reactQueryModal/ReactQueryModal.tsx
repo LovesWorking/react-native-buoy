@@ -10,6 +10,7 @@ interface ReactQueryModalProps {
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
+  enableSharedModalDimensions?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export function ReactQueryModal({
   onClose,
   activeFilter,
   onFilterChange,
+  enableSharedModalDimensions = false,
 }: ReactQueryModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
 
@@ -47,6 +49,7 @@ export function ReactQueryModal({
         onClose={onClose}
         activeFilter={activeFilter}
         onFilterChange={onFilterChange}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
 
       {/* Data Editor Modal - shown when a query is selected */}
@@ -57,6 +60,7 @@ export function ReactQueryModal({
         onClose={onClose}
         activeFilter={activeFilter}
         onFilterChange={onFilterChange}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
     </>
   );

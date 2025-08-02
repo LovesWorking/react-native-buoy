@@ -7,6 +7,7 @@ import {
   ReactQuerySection,
 } from "./sections";
 import { SectionType } from "./DevToolsModalRouter";
+import { Text, View } from "react-native";
 
 interface DevToolsSectionListModalProps {
   visible: boolean;
@@ -16,6 +17,7 @@ interface DevToolsSectionListModalProps {
   getSentrySubtitle: () => string;
   getRnBetterDevToolsSubtitle: () => string;
   envVarsSubtitle: string;
+  enableSharedModalDimensions?: boolean;
 }
 
 /**
@@ -30,17 +32,42 @@ export function DevToolsSectionListModal({
   getSentrySubtitle,
   getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
+  enableSharedModalDimensions = false,
 }: DevToolsSectionListModalProps) {
   if (!visible) return null;
+
+  const storagePrefix = enableSharedModalDimensions
+    ? "@dev_tools_console_modal"
+    : "@devtools_section_list";
+
+  const renderHeaderContent = () => (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        flex: 1,
+        gap: 12,
+        minHeight: 32,
+        paddingLeft: 4,
+      }}
+    >
+      <Text
+        style={{ color: "#E5E7EB", fontSize: 14, fontWeight: "500", flex: 1 }}
+        numberOfLines={1}
+      >
+        Developer Tools Console
+      </Text>
+    </View>
+  );
 
   return (
     <BaseFloatingModal
       visible={visible}
       onClose={onClose}
-      storagePrefix="@devtools_section_list"
+      storagePrefix={storagePrefix}
       showToggleButton={true}
-      customHeaderContent={null}
-      headerSubtitle="Developer Tools Console"
+      customHeaderContent={renderHeaderContent()}
+      headerSubtitle={undefined}
     >
       <ConsoleSectionList>
         <SentryLogsSection

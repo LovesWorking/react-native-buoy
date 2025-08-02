@@ -13,6 +13,8 @@ interface DevToolsModalRouterProps {
   getSentrySubtitle: () => string;
   getRnBetterDevToolsSubtitle: () => string;
   envVarsSubtitle: string;
+  onBack?: () => void;
+  enableSharedModalDimensions?: boolean;
 }
 
 /**
@@ -27,6 +29,8 @@ export function DevToolsModalRouter({
   getSentrySubtitle,
   getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
+  onBack,
+  enableSharedModalDimensions = false,
 }: DevToolsModalRouterProps) {
   return (
     <>
@@ -34,6 +38,8 @@ export function DevToolsModalRouter({
         visible={selectedSection === "sentry-logs"}
         onClose={onClose}
         getSentrySubtitle={getSentrySubtitle}
+        onBack={onBack}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
 
       <EnvVarsModal
@@ -41,12 +47,16 @@ export function DevToolsModalRouter({
         onClose={onClose}
         requiredEnvVars={requiredEnvVars}
         envVarsSubtitle={envVarsSubtitle}
+        onBack={onBack}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
 
       <ReactQueryModal
         visible={selectedSection === "rn-better-dev-tools"}
         onClose={onClose}
         getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
+        onBack={onBack}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
     </>
   );
