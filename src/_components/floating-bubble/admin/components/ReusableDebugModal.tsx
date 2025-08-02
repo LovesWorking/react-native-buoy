@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, Terminal } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { ExpandableSectionHeader } from "../sections/ExpandableSectionHeader";
-import { BaseFloatingModal } from "./BaseFloatingModal";
+import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };

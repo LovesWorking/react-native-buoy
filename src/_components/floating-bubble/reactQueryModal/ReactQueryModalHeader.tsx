@@ -54,17 +54,17 @@ function QueryDetailsHeader({
   onQuerySelect,
 }: QueryDetailsHeaderProps) {
   return (
-    <View style={styles.headerContainer}>
-      {/* <Pressable
+    <View style={styles.detailsRow}>
+      <Pressable
         onPress={() => onQuerySelect(undefined)}
         style={styles.backButton}
         hitSlop={HIT_SLOP}
       >
         <ChevronLeft color="#E5E7EB" size={20} />
-      </Pressable> */}
+      </Pressable>
       <View style={styles.breadcrumbContainer}>
         <Text style={styles.breadcrumbItem} numberOfLines={1}>
-          teststsetests
+          {getQueryBreadcrumb(selectedQuery)}
         </Text>
       </View>
     </View>
@@ -91,11 +91,13 @@ function QueryBrowserHeader({
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flex: 1,
-    justifyContent: "center",
+  detailsRow: {
+    flexDirection: "row",
     alignItems: "center",
+    minHeight: 32, // Ensure minimum height for buttons
+    gap: 12, // Space between back button and breadcrumb
   },
+
   backButton: {
     width: 28,
     height: 28,
@@ -108,19 +110,18 @@ const styles = StyleSheet.create({
     zIndex: 1002, // Ensure button is above corner handles
   },
 
-  // Breadcrumb navigation
+  // Breadcrumb container to allow proper flex behavior
   breadcrumbContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     flex: 1,
-    marginLeft: 12, // Space after back button
+    justifyContent: "center",
   },
+
+  // Breadcrumb navigation
   breadcrumbItem: {
     color: "#E5E7EB", // Exact match with main dev tools text
     fontSize: 13,
     fontWeight: "500",
     fontFamily: "monospace",
-    flex: 1,
   },
 
   // Filter container for QueryStatusCount component

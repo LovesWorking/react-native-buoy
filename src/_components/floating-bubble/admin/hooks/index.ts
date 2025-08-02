@@ -6,3 +6,6 @@ export { useSentryEvents } from "./useSentryEvents";
 export { useReactQueryState } from "./useReactQueryState";
 export { useModalManager } from "./useModalManager";
 export { useActionButtons } from "./useActionButtons";
+export { useModalState } from "./useModalState";
+export { useModalResize } from "./useModalResize";
+export type { ModalState, ModalStateConfig } from "./useModalState";

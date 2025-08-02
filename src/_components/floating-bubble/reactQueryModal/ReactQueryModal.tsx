@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Query, QueryKey } from "@tanstack/react-query";
-import { BaseFloatingModal } from "../admin/components/BaseFloatingModal";
+import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
 import { useGetQueryByQueryKey } from "../../_hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { QueryBrowserMode } from "../admin/components/QueryBrowserMode";
