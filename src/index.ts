@@ -2,7 +2,7 @@
 export { FloatingStatusBubble } from "./_components/floating-bubble/admin/FloatingStatusBubble";
 
 // Standalone RN Better DevTools bubble
-export { RnBetterDevToolsBubble } from "./_components/floating-bubble/admin/RnBetterDevToolsBubble";
+export { RnBetterDevToolsBubble } from "./_components/floating-bubble/bubble/RnBetterDevToolsBubble";
 
 // Legacy DevToolsBubble (deprecated - use FloatingStatusBubble with queryClient prop instead)
 export { DevToolsBubble } from "./DevToolsBubble";

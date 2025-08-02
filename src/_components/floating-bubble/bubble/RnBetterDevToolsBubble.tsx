@@ -6,8 +6,8 @@ import {
   useSentryEvents,
   useReactQueryState,
   useModalManager,
-} from "./hooks";
-import { RequiredEnvVar, useEnvVarsSubtitle } from "./sections/env-vars";
+} from "../admin/hooks";
+import { RequiredEnvVar, useEnvVarsSubtitle } from "../admin/sections/env-vars";
 import { type ClipboardFunction } from "../../../context/CopyContext";
 import {
   Environment,
@@ -15,10 +15,10 @@ import {
   BubblePresentation,
   CopyContextProvider,
   useDebugSections,
-} from "./components";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { FloatingDataEditor } from "./components/FloatingDataEditor";
-import { ReusableDebugModal } from "./components/ReusableDebugModal";
+} from "../admin/components";
+import { ErrorBoundary } from "../admin/components/ErrorBoundary";
+import { FloatingDataEditor } from "../admin/components/FloatingDataEditor";
+import { ReusableDebugModal } from "../admin/components/ReusableDebugModal";
 
 interface RnBetterDevToolsBubbleProps {
   queryClient: QueryClient;
@@ -28,12 +28,6 @@ interface RnBetterDevToolsBubbleProps {
   onCopy?: ClipboardFunction;
 }
 
-/**
- * RnBetterDevToolsBubble refactored following composition principles:
- * - Decomposed by responsibility into specialized components
- * - Extracted reusable logic into custom hooks
- * - Composed using specialized components instead of large configurations
- */
 export function RnBetterDevToolsBubble({
   queryClient,
   userRole,
@@ -63,7 +57,6 @@ export function RnBetterDevToolsBubble({
   // UI state management hooks
   const { bubbleWidth, handleEnvLabelLayout, handleStatusLayout } =
     useBubbleWidth({ hasQueryButton: true });
-  const { isOnline, handleWifiToggle } = useWifiState();
   const { panGesture, translateX, translateY } = useDragGesture({
     bubbleWidth,
     onDraggingChange: setDraggingState,
@@ -91,7 +84,6 @@ export function RnBetterDevToolsBubble({
           <BubblePresentation
             environment={environment}
             userRole={userRole}
-            isOnline={isOnline}
             isDragging={isDragging}
             bubbleWidth={bubbleWidth}
             translateX={translateX}
@@ -102,7 +94,6 @@ export function RnBetterDevToolsBubble({
             onQueryLayout={handleQueryLayout}
             onStatusPress={handleStatusPress}
             onQueryPress={handleQueryPress}
-            onWifiToggle={handleWifiToggle}
           />
         )}
 

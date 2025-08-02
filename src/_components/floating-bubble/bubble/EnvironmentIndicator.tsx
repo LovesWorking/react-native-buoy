@@ -1,7 +1,7 @@
-import { LayoutChangeEvent, Text, View } from 'react-native';
-import { FlaskConical, TestTube2 } from 'lucide-react-native';
+import { LayoutChangeEvent, Text, View } from "react-native";
+import { FlaskConical, TestTube2, Bug, Zap } from "lucide-react-native";
 
-export type Environment = 'local' | 'dev' | 'prod';
+export type Environment = "local" | "dev" | "qa" | "staging" | "prod";
 
 interface EnvironmentIndicatorProps {
   environment: Environment;
@@ -17,46 +17,63 @@ interface EnvironmentConfig {
 
 function getEnvironmentConfig(environment: Environment): EnvironmentConfig {
   switch (environment) {
-    case 'local':
+    case "local":
       return {
-        label: 'LOCAL',
-        backgroundColor: '#06B6D4',
+        label: "LOCAL",
+        backgroundColor: "#06B6D4",
         icon: FlaskConical,
         isLocal: true,
       };
-    case 'prod':
+    case "dev":
       return {
-        label: 'PROD',
-        backgroundColor: '#DC2626',
-        icon: TestTube2,
+        label: "DEV",
+        backgroundColor: "#F97316",
+        icon: FlaskConical,
         isLocal: false,
       };
-    case 'dev':
+    case "qa":
       return {
-        label: 'DEV',
-        backgroundColor: '#F97316',
-        icon: FlaskConical,
+        label: "QA",
+        backgroundColor: "#8B5CF6",
+        icon: Bug,
+        isLocal: false,
+      };
+    case "staging":
+      return {
+        label: "STAGING",
+        backgroundColor: "#10B981",
+        icon: Zap,
+        isLocal: false,
+      };
+    case "prod":
+      return {
+        label: "PROD",
+        backgroundColor: "#DC2626",
+        icon: TestTube2,
         isLocal: false,
       };
     default:
       return {
-        label: 'LOCAL',
-        backgroundColor: '#06B6D4',
+        label: "LOCAL",
+        backgroundColor: "#06B6D4",
         icon: FlaskConical,
         isLocal: true,
       };
   }
 }
 
-export function EnvironmentIndicator({ environment, onLayout }: EnvironmentIndicatorProps) {
+export function EnvironmentIndicator({
+  environment,
+  onLayout,
+}: EnvironmentIndicatorProps) {
   const envConfig = getEnvironmentConfig(environment);
 
   return (
     <View
       onLayout={onLayout}
       style={{
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: "row",
+        alignItems: "center",
         paddingVertical: 6,
         flexShrink: 0,
       }}
@@ -78,9 +95,9 @@ export function EnvironmentIndicator({ environment, onLayout }: EnvironmentIndic
       <Text
         style={{
           fontSize: 11,
-          fontWeight: '600',
-          fontFamily: 'Poppins-SemiBold',
-          color: '#F9FAFB',
+          fontWeight: "600",
+          fontFamily: "Poppins-SemiBold",
+          color: "#F9FAFB",
           letterSpacing: 0.5,
         }}
       >

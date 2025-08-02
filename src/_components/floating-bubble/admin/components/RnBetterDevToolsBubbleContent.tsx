@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable, LayoutChangeEvent, Text, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Query } from "@tanstack/react-query";
@@ -6,36 +5,32 @@ import { TanstackLogo } from "../../../devtools/svgs";
 
 import { Divider } from "./Divider";
 import { WifiToggle } from "./WifiToggle";
-import { type Environment, EnvironmentIndicator } from "./EnvironmentIndicator";
+import {
+  type Environment,
+  EnvironmentIndicator,
+} from "../../bubble/EnvironmentIndicator";
 import { type UserRole, UserStatus } from "./UserStatus";
-import { getQueryStatusColor } from "../../../_util/getQueryStatusColor";
 
 interface RnBetterDevToolsBubbleContentProps {
   environment: Environment;
   userRole: UserRole;
-  isOnline: boolean;
   isDragging: boolean;
-  selectedQuery?: Query<any, any, any, any>;
   onEnvironmentLayout: (event: LayoutChangeEvent) => void;
   onStatusLayout: (event: LayoutChangeEvent) => void;
   onQueryLayout: (event: LayoutChangeEvent) => void;
   onStatusPress: () => void;
   onQueryPress: () => void;
-  onWifiToggle: () => void;
 }
 
 export function RnBetterDevToolsBubbleContent({
   environment,
   userRole,
-  isOnline,
   isDragging,
-  selectedQuery,
   onEnvironmentLayout,
   onStatusLayout,
   onQueryLayout,
   onStatusPress,
   onQueryPress,
-  onWifiToggle,
 }: RnBetterDevToolsBubbleContentProps) {
   const contentLayout = useAnimatedStyle(() => {
     return {
@@ -47,41 +42,6 @@ export function RnBetterDevToolsBubbleContent({
       gap: 6,
     };
   });
-
-  const getQueryIndicator = () => {
-    if (selectedQuery) {
-      try {
-        const statusColor = getQueryStatusColor({
-          queryState: selectedQuery.state,
-          observerCount: selectedQuery.getObserversCount(),
-          isStale: selectedQuery.isStale(),
-        });
-
-        const colorMap: Record<string, string> = {
-          blue: "#3B82F6",
-          gray: "#6B7280",
-          purple: "#8B5CF6",
-          yellow: "#F59E0B",
-          green: "#10B981",
-        };
-
-        return (
-          <Text
-            style={[
-              styles.statusIndicator,
-              { color: colorMap[statusColor] || "#9CA3AF" },
-            ]}
-          >
-            ●
-          </Text>
-        );
-      } catch (err) {
-        return <TanstackLogo />;
-      }
-    }
-
-    return <TanstackLogo />;
-  };
 
   return (
     <Animated.View style={contentLayout}>
@@ -110,18 +70,14 @@ export function RnBetterDevToolsBubbleContent({
           style={styles.queryButton}
           hitSlop={8}
         >
-          {getQueryIndicator()}
+          <TanstackLogo />
         </Pressable>
       </Animated.View>
 
       <Divider />
 
       {/* WiFi Toggle */}
-      <WifiToggle
-        isOnline={isOnline}
-        onToggle={onWifiToggle}
-        isDragging={isDragging}
-      />
+      <WifiToggle isDragging={isDragging} />
     </Animated.View>
   );
 }

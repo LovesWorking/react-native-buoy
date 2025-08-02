@@ -1,10 +1,13 @@
-import { LayoutChangeEvent } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { LayoutChangeEvent } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
-import { Divider } from './Divider';
-import { type Environment, EnvironmentIndicator } from './EnvironmentIndicator';
-import { type UserRole, UserStatus } from './UserStatus';
-import { WifiToggle } from './WifiToggle';
+import { Divider } from "./Divider";
+import {
+  type Environment,
+  EnvironmentIndicator,
+} from "../../bubble/EnvironmentIndicator";
+import { type UserRole, UserStatus } from "./UserStatus";
+import { WifiToggle } from "./WifiToggle";
 
 interface BubbleContentProps {
   environment: Environment;
@@ -29,10 +32,10 @@ export function BubbleContent({
 }: BubbleContentProps) {
   const contentLayout = useAnimatedStyle(() => {
     return {
-      flexDirection: 'row', // Always keep content in the same order
+      flexDirection: "row", // Always keep content in the same order
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: 6,
       gap: 6,
     };
@@ -40,15 +43,27 @@ export function BubbleContent({
 
   return (
     <Animated.View style={contentLayout}>
-      <EnvironmentIndicator environment={environment} onLayout={onEnvironmentLayout} />
+      <EnvironmentIndicator
+        environment={environment}
+        onLayout={onEnvironmentLayout}
+      />
 
       <Divider />
 
-      <UserStatus userRole={userRole} onPress={onStatusPress} isDragging={isDragging} onLayout={onStatusLayout} />
+      <UserStatus
+        userRole={userRole}
+        onPress={onStatusPress}
+        isDragging={isDragging}
+        onLayout={onStatusLayout}
+      />
 
       <Divider />
 
-      <WifiToggle isOnline={isOnline} onToggle={onWifiToggle} isDragging={isDragging} />
+      <WifiToggle
+        isOnline={isOnline}
+        onToggle={onWifiToggle}
+        isDragging={isDragging}
+      />
     </Animated.View>
   );
 }

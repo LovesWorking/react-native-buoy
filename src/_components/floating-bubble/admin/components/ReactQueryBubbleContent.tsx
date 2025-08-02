@@ -6,7 +6,10 @@ import { TanstackLogo } from "../../../devtools/svgs";
 
 import { Divider } from "./Divider";
 import { WifiToggle } from "./WifiToggle";
-import { type Environment, EnvironmentIndicator } from "./EnvironmentIndicator";
+import {
+  type Environment,
+  EnvironmentIndicator,
+} from "../../bubble/EnvironmentIndicator";
 import { type UserRole, UserStatus } from "./UserStatus";
 import { getQueryStatusColor } from "../../../_util/getQueryStatusColor";
 

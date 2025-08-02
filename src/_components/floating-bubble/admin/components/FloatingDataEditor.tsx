@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Query, QueryKey } from "@tanstack/react-query";
@@ -8,7 +8,6 @@ import Explorer from "../../../devtools/Explorer";
 import { QueryBrowser } from "../../../devtools/index";
 import QueryStatusCount from "../../../devtools/QueryStatusCount";
 import QueryDetails from "../../../devtools/QueryDetails";
-import useAllQueries from "../../../_hooks/useAllQueries";
 import ActionButton from "../../../devtools/ActionButton";
 import triggerLoading from "../../../_util/actions/triggerLoading";
 import refetch from "../../../_util/actions/refetch";
@@ -20,7 +19,7 @@ import { useGetQueryByQueryKey } from "../../../_hooks/useSelectedQuery";
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
 
 // Simplified breadcrumb without complex mapping
-const getQueryBreadcrumb = (query: Query<any, any, any, any>) => {
+const getQueryBreadcrumb = (query: Query) => {
   const queryKey = Array.isArray(query.queryKey)
     ? query.queryKey
     : [query.queryKey];
@@ -30,7 +29,7 @@ const getQueryBreadcrumb = (query: Query<any, any, any, any>) => {
 interface FloatingDataEditorProps {
   visible: boolean;
   selectedQueryKey?: QueryKey;
-  onQuerySelect: (query: Query<any, any, any, any> | undefined) => void;
+  onQuerySelect: (query: Query | undefined) => void;
   onClose: () => void;
 }
 
@@ -45,7 +44,7 @@ export function FloatingDataEditor({
   const insets = useSafeAreaInsets();
 
   // Moved to module scope to prevent re-creation on every render
-  const createActionButtons = (selectedQuery: Query<any, any, any, any>) => {
+  const createActionButtons = (selectedQuery: Query) => {
     const queryStatus = selectedQuery.state.status;
     const isFetching = getQueryStatusLabel(selectedQuery) === "fetching";
 

@@ -1,17 +1,13 @@
 import { TouchableOpacity } from "react-native";
 import { Wifi, WifiOff } from "lucide-react-native";
+import { useWifiState } from "../hooks/useWifiState";
 
 interface WifiToggleProps {
-  isOnline: boolean;
-  onToggle: () => void;
   isDragging: boolean;
 }
 
-export function WifiToggle({
-  isOnline,
-  onToggle,
-  isDragging,
-}: WifiToggleProps) {
+export function WifiToggle({ isDragging }: WifiToggleProps) {
+  const { isOnline, handleWifiToggle } = useWifiState();
   return (
     <TouchableOpacity
       sentry-label={`ignore toggle WiFi ${isOnline ? "On" : "Off"}`}
@@ -20,7 +16,7 @@ export function WifiToggle({
       accessibilityHint={`Tap to turn WiFi ${
         isOnline ? "off" : "on"
       } for React Query`}
-      onPress={onToggle}
+      onPress={handleWifiToggle}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       disabled={isDragging}
       activeOpacity={0.7}

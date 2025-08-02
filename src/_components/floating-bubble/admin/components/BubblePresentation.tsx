@@ -1,4 +1,3 @@
-import React from "react";
 import { Dimensions, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -8,15 +7,15 @@ import { PanGesture } from "react-native-gesture-handler";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { DragHandle } from "./DragHandle";
 import { RnBetterDevToolsBubbleContent } from "./RnBetterDevToolsBubbleContent";
-import { type Environment } from "./EnvironmentIndicator";
+import { type Environment } from "../../bubble/EnvironmentIndicator";
 import { type UserRole } from "./UserStatus";
+import { useWifiState } from "../hooks/useWifiState";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 interface BubblePresentationProps {
   environment: Environment;
   userRole: UserRole;
-  isOnline: boolean;
   isDragging: boolean;
   bubbleWidth: number;
   translateX: SharedValue<number>;
@@ -27,7 +26,6 @@ interface BubblePresentationProps {
   onQueryLayout: (event: any) => void;
   onStatusPress: () => void;
   onQueryPress: () => void;
-  onWifiToggle: () => void;
 }
 
 /**
@@ -37,7 +35,6 @@ interface BubblePresentationProps {
 export function BubblePresentation({
   environment,
   userRole,
-  isOnline,
   isDragging,
   bubbleWidth,
   translateX,
@@ -48,7 +45,6 @@ export function BubblePresentation({
   onQueryLayout,
   onStatusPress,
   onQueryPress,
-  onWifiToggle,
 }: BubblePresentationProps) {
   // Animated styles - matching FloatingStatusBubble exactly
   const animatedStyle = useAnimatedStyle(() => ({
@@ -113,14 +109,12 @@ export function BubblePresentation({
             <RnBetterDevToolsBubbleContent
               environment={environment}
               userRole={userRole}
-              isOnline={isOnline}
               isDragging={isDragging}
               onEnvironmentLayout={onEnvironmentLayout}
               onStatusLayout={onStatusLayout}
               onQueryLayout={onQueryLayout}
               onStatusPress={onStatusPress}
               onQueryPress={onQueryPress}
-              onWifiToggle={onWifiToggle}
             />
           </ErrorBoundary>
         </Animated.View>
