@@ -1,4 +1,5 @@
 export { useBubbleWidth } from "./useBubbleWidth";
+export { useDynamicBubbleWidth } from "./useDynamicBubbleWidth";
 export { useDragGesture } from "./useDragGesture";
 export { useDynamicEnv } from "./useDynamicEnv";
 export { useWifiState } from "./useWifiState";

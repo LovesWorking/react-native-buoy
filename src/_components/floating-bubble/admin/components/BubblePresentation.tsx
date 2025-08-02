@@ -4,26 +4,25 @@ import Animated, {
   SharedValue,
 } from "react-native-reanimated";
 import { PanGesture } from "react-native-gesture-handler";
-import { ErrorBoundary } from "./ErrorBoundary";
 import { DragHandle } from "./DragHandle";
 import { RnBetterDevToolsBubbleContent } from "./RnBetterDevToolsBubbleContent";
 import { type Environment } from "../../bubble/EnvironmentIndicator";
 import { type UserRole } from "./UserStatus";
-import { useWifiState } from "../hooks/useWifiState";
-
 const { width: screenWidth } = Dimensions.get("window");
+
+interface DragState {
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  panGesture: PanGesture;
+  isDragging: boolean;
+}
 
 interface BubblePresentationProps {
   environment: Environment;
   userRole: UserRole;
-  isDragging: boolean;
+  dragState: DragState;
   bubbleWidth: number;
-  translateX: SharedValue<number>;
-  translateY: SharedValue<number>;
-  panGesture: PanGesture;
-  onEnvironmentLayout: (event: any) => void;
-  onStatusLayout: (event: any) => void;
-  onQueryLayout: (event: any) => void;
+  contentRef: React.RefObject<any>; // For dynamic width measurement
   onStatusPress: () => void;
   onQueryPress: () => void;
 }
@@ -35,17 +34,13 @@ interface BubblePresentationProps {
 export function BubblePresentation({
   environment,
   userRole,
-  isDragging,
+  dragState,
   bubbleWidth,
-  translateX,
-  translateY,
-  panGesture,
-  onEnvironmentLayout,
-  onStatusLayout,
-  onQueryLayout,
+  contentRef,
   onStatusPress,
   onQueryPress,
 }: BubblePresentationProps) {
+  const { translateX, translateY, panGesture, isDragging } = dragState;
   // Animated styles - matching FloatingStatusBubble exactly
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -77,49 +72,51 @@ export function BubblePresentation({
   });
 
   return (
-    <ErrorBoundary>
+    <Animated.View
+      style={[
+        {
+          position: "absolute",
+          zIndex: 1001,
+        },
+        animatedStyle,
+      ]}
+      sentry-label="ignore react query dev tools bubble"
+    >
       <Animated.View
+        ref={contentRef}
         style={[
           {
-            position: "absolute",
-            zIndex: 1001,
+            alignItems: "center",
+            backgroundColor: "#171717",
+            borderRadius: 6,
+            elevation: 8,
+            overflow: "hidden",
+            width: bubbleWidth,
           },
-          animatedStyle,
+          bubbleLayout,
+          isDragging ? styles.dragShadow : styles.normalShadow,
+          animatedBorderStyle,
         ]}
-        sentry-label="ignore react query dev tools bubble"
       >
         <Animated.View
-          style={[
-            {
-              alignItems: "center",
-              backgroundColor: "#171717",
-              borderRadius: 6,
-              elevation: 8,
-              overflow: "hidden",
-              width: bubbleWidth,
-            },
-            bubbleLayout,
-            isDragging ? styles.dragShadow : styles.normalShadow,
-            animatedBorderStyle,
-          ]}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            width: "100%",
+          }}
         >
           <DragHandle panGesture={panGesture} translateX={translateX} />
 
-          <ErrorBoundary>
-            <RnBetterDevToolsBubbleContent
-              environment={environment}
-              userRole={userRole}
-              isDragging={isDragging}
-              onEnvironmentLayout={onEnvironmentLayout}
-              onStatusLayout={onStatusLayout}
-              onQueryLayout={onQueryLayout}
-              onStatusPress={onStatusPress}
-              onQueryPress={onQueryPress}
-            />
-          </ErrorBoundary>
+          <RnBetterDevToolsBubbleContent
+            environment={environment}
+            userRole={userRole}
+            isDragging={isDragging}
+            onStatusPress={onStatusPress}
+            onQueryPress={onQueryPress}
+          />
         </Animated.View>
       </Animated.View>
-    </ErrorBoundary>
+    </Animated.View>
   );
 }
 

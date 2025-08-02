@@ -3,17 +3,6 @@ import { Query } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react-native";
 import QueryStatusCount from "../../devtools/QueryStatusCount";
 
-// Stable constants moved to module scope to prevent re-renders
-const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
-
-// Simplified breadcrumb without complex mapping
-const getQueryBreadcrumb = (query: Query) => {
-  const queryKey = Array.isArray(query.queryKey)
-    ? query.queryKey
-    : [query.queryKey];
-  return queryKey.join(" › ");
-};
-
 interface ReactQueryModalHeaderProps {
   selectedQuery: Query | undefined;
   activeFilter: string | null;
@@ -27,107 +16,90 @@ export function ReactQueryModalHeader({
   onQuerySelect,
   onFilterChange,
 }: ReactQueryModalHeaderProps) {
-  if (selectedQuery) {
+  // Simple function to get query display text
+  const getQueryText = (query: Query) => {
+    if (!query?.queryKey) return "Unknown Query";
+    const keys = Array.isArray(query.queryKey)
+      ? query.queryKey
+      : [query.queryKey];
     return (
-      <QueryDetailsHeader
-        selectedQuery={selectedQuery}
-        onQuerySelect={onQuerySelect}
-      />
+      keys
+        .filter((k) => k != null)
+        .map((k) => String(k))
+        .join(" › ") || "Unknown Query"
     );
-  }
+  };
 
   return (
-    <QueryBrowserHeader
-      activeFilter={activeFilter}
-      onFilterChange={onFilterChange}
-    />
-  );
-}
-
-interface QueryDetailsHeaderProps {
-  selectedQuery: Query;
-  onQuerySelect: (query: Query | undefined) => void;
-}
-
-function QueryDetailsHeader({
-  selectedQuery,
-  onQuerySelect,
-}: QueryDetailsHeaderProps) {
-  return (
-    <View style={styles.detailsRow}>
-      <Pressable
-        onPress={() => onQuerySelect(undefined)}
-        style={styles.backButton}
-        hitSlop={HIT_SLOP}
-      >
-        <ChevronLeft color="#E5E7EB" size={20} />
-      </Pressable>
-      <View style={styles.breadcrumbContainer}>
-        <Text style={styles.breadcrumbItem} numberOfLines={1}>
-          {getQueryBreadcrumb(selectedQuery)}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-interface QueryBrowserHeaderProps {
-  activeFilter: string | null;
-  onFilterChange: (filter: string | null) => void;
-}
-
-function QueryBrowserHeader({
-  activeFilter,
-  onFilterChange,
-}: QueryBrowserHeaderProps) {
-  return (
-    <View style={styles.filterContainer}>
-      <QueryStatusCount
-        activeFilter={activeFilter}
-        onFilterChange={onFilterChange}
-      />
+    <View style={styles.container}>
+      {selectedQuery ? (
+        // Query Details View - Show back button and query name
+        <View style={styles.detailsView}>
+          <Pressable
+            onPress={() => onQuerySelect(undefined)}
+            style={styles.backButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <ChevronLeft color="#FFFFFF" size={18} />
+          </Pressable>
+          <Text style={styles.queryText} numberOfLines={1}>
+            {getQueryText(selectedQuery)}
+          </Text>
+        </View>
+      ) : (
+        // Query Browser View - Show filter/status counts
+        <View style={styles.browserView}>
+          <QueryStatusCount
+            activeFilter={activeFilter}
+            onFilterChange={onFilterChange}
+          />
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  detailsRow: {
+  container: {
+    flex: 1,
+    minHeight: 50, // Ensure adequate height
+    justifyContent: "center",
+    paddingHorizontal: 8,
+  },
+
+  detailsView: {
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 32, // Ensure minimum height for buttons
-    gap: 12, // Space between back button and breadcrumb
+    flex: 1,
+    gap: 12,
+    minHeight: 40,
+    paddingVertical: 4,
+  },
+
+  browserView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 40,
   },
 
   backButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: "rgba(156, 163, 175, 0.1)", // Match main dev tools button
+    width: 36, // Larger for better touch target
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: "rgba(156, 163, 175, 0.15)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(156, 163, 175, 0.2)", // Match main dev tools button
-    zIndex: 1002, // Ensure button is above corner handles
+    borderColor: "rgba(156, 163, 175, 0.3)",
   },
 
-  // Breadcrumb container to allow proper flex behavior
-  breadcrumbContainer: {
+  queryText: {
     flex: 1,
-    justifyContent: "center",
-  },
-
-  // Breadcrumb navigation
-  breadcrumbItem: {
-    color: "#E5E7EB", // Exact match with main dev tools text
-    fontSize: 13,
+    color: "#E5E7EB",
+    fontSize: 14,
     fontWeight: "500",
     fontFamily: "monospace",
-  },
-
-  // Filter container for QueryStatusCount component
-  filterContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 4,
   },
 });

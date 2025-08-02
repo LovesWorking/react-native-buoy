@@ -1,8 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  useBubbleWidth,
+  useDynamicBubbleWidth,
   useDragGesture,
-  useWifiState,
   useSentryEvents,
   useReactQueryState,
   useModalManager,
@@ -54,14 +53,22 @@ export function RnBetterDevToolsBubble({
     setDraggingState,
   } = useModalManager();
 
-  // UI state management hooks
-  const { bubbleWidth, handleEnvLabelLayout, handleStatusLayout } =
-    useBubbleWidth({ hasQueryButton: true });
+  // Dynamic width measurement - automatically adapts to content changes
+  const { contentRef, bubbleWidth, isFirstMeasurement } =
+    useDynamicBubbleWidth();
   const { panGesture, translateX, translateY } = useDragGesture({
     bubbleWidth,
     onDraggingChange: setDraggingState,
     storageKey: "rn_better_dev_tools_bubble",
   });
+
+  // Create stable drag state object to reduce prop drilling
+  const dragState = {
+    translateX,
+    translateY,
+    panGesture,
+    isDragging,
+  };
 
   // Sections configuration using composition pattern
   const debugSections = useDebugSections({
@@ -72,43 +79,33 @@ export function RnBetterDevToolsBubble({
     envVarsSubtitle,
   });
 
-  const handleQueryLayout = () => {
-    // Layout handler for the query button - can be empty for now
-  };
-
+  const isAModalOpen = isModalOpen || isDebugModalOpen;
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        {/* Bubble Presentation - Pure UI component following composition principles */}
-        {!isModalOpen && !isDebugModalOpen && (
-          <BubblePresentation
-            environment={environment}
-            userRole={userRole}
-            isDragging={isDragging}
-            bubbleWidth={bubbleWidth}
-            translateX={translateX}
-            translateY={translateY}
-            panGesture={panGesture}
-            onEnvironmentLayout={handleEnvLabelLayout}
-            onStatusLayout={handleStatusLayout}
-            onQueryLayout={handleQueryLayout}
-            onStatusPress={handleStatusPress}
-            onQueryPress={handleQueryPress}
-          />
-        )}
+        <CopyContextProvider onCopy={onCopy}>
+          {/* Bubble Presentation - Pure UI component following composition principles */}
+          {!isAModalOpen && (
+            <BubblePresentation
+              environment={environment}
+              userRole={userRole}
+              dragState={dragState}
+              bubbleWidth={bubbleWidth}
+              contentRef={contentRef}
+              onStatusPress={handleStatusPress}
+              onQueryPress={handleQueryPress}
+            />
+          )}
 
-        {/* Floating Data Editor Modal */}
-        <ErrorBoundary>
+          {/* Floating Data Editor Modal */}
           <ReactQueryModal
             visible={isModalOpen}
             selectedQueryKey={selectedQueryKey}
             onQuerySelect={handleQuerySelect}
             onClose={handleModalDismiss}
           />
-        </ErrorBoundary>
 
-        {/* Copy Context Provider - Specialized component for copy functionality */}
-        <CopyContextProvider onCopy={onCopy}>
+          {/* Copy Context Provider - Specialized component for copy functionality */}
           <ReusableDebugModal
             visible={isDebugModalOpen}
             onClose={handleDebugModalDismiss}

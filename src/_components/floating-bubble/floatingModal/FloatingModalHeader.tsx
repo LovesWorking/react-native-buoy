@@ -177,6 +177,8 @@ const styles = StyleSheet.create({
   // Custom header content container
   customHeaderContent: {
     flex: 1,
+    minHeight: 32, // Ensure minimum height for visibility
+    justifyContent: "center", // Center content vertically
   },
 
   // Header controls container

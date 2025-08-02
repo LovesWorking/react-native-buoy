@@ -1,6 +1,5 @@
-import { Pressable, LayoutChangeEvent, Text, StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { Query } from "@tanstack/react-query";
 import { TanstackLogo } from "../../../devtools/svgs";
 
 import { Divider } from "./Divider";
@@ -15,9 +14,6 @@ interface RnBetterDevToolsBubbleContentProps {
   environment: Environment;
   userRole: UserRole;
   isDragging: boolean;
-  onEnvironmentLayout: (event: LayoutChangeEvent) => void;
-  onStatusLayout: (event: LayoutChangeEvent) => void;
-  onQueryLayout: (event: LayoutChangeEvent) => void;
   onStatusPress: () => void;
   onQueryPress: () => void;
 }
@@ -26,9 +22,6 @@ export function RnBetterDevToolsBubbleContent({
   environment,
   userRole,
   isDragging,
-  onEnvironmentLayout,
-  onStatusLayout,
-  onQueryLayout,
   onStatusPress,
   onQueryPress,
 }: RnBetterDevToolsBubbleContentProps) {
@@ -46,10 +39,7 @@ export function RnBetterDevToolsBubbleContent({
   return (
     <Animated.View style={contentLayout}>
       {/* Environment Indicator */}
-      <EnvironmentIndicator
-        environment={environment}
-        onLayout={onEnvironmentLayout}
-      />
+      <EnvironmentIndicator environment={environment} />
 
       <Divider />
 
@@ -58,21 +48,14 @@ export function RnBetterDevToolsBubbleContent({
         userRole={userRole}
         onPress={onStatusPress}
         isDragging={isDragging}
-        onLayout={onStatusLayout}
       />
 
       <Divider />
 
       {/* RN Better Dev Tools Status Button */}
-      <Animated.View onLayout={onQueryLayout}>
-        <Pressable
-          onPress={onQueryPress}
-          style={styles.queryButton}
-          hitSlop={8}
-        >
-          <TanstackLogo />
-        </Pressable>
-      </Animated.View>
+      <Pressable onPress={onQueryPress} style={styles.queryButton} hitSlop={8}>
+        <TanstackLogo />
+      </Pressable>
 
       <Divider />
 
