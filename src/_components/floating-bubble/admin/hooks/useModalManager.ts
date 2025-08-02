@@ -30,69 +30,34 @@ export function useModalManager() {
 
   // Restore saved modal state on component mount
   useEffect(() => {
-    console.log("🚀 [MODAL MANAGER] Starting modal state restoration...");
-
     const restoreState = async () => {
       try {
-        console.log("🔍 [MODAL MANAGER] Loading saved state...");
         const savedState = await loadSavedState();
 
-        console.log("📋 [MODAL MANAGER] Loaded state:", savedState);
-
         if (savedState) {
-          console.log("🔄 [MODAL MANAGER] Restoring modal states:", {
-            willSetIsModalOpen: savedState.isModalOpen,
-            willSetIsDebugModalOpen: savedState.isDebugModalOpen,
-            selectedQueryKey: savedState.selectedQueryKey,
-            selectedSection: savedState.selectedSection,
-            activeFilter: savedState.activeFilter,
-          });
-
           setIsModalOpen(savedState.isModalOpen);
           setIsDebugModalOpen(savedState.isDebugModalOpen);
 
           if (savedState.selectedQueryKey) {
             try {
               const queryKey = JSON.parse(savedState.selectedQueryKey);
-              console.log("🔑 [MODAL MANAGER] Restoring query key:", queryKey);
               setSelectedQueryKey(queryKey);
             } catch (error) {
-              console.error(
-                "❌ [MODAL MANAGER] Failed to parse saved query key:",
-                error
-              );
+              // Silently fail if query key can't be parsed
             }
           }
 
           if (savedState.selectedSection) {
-            console.log(
-              "📑 [MODAL MANAGER] Restoring selected section:",
-              savedState.selectedSection
-            );
             setSelectedSection(savedState.selectedSection);
           }
 
           if (savedState.activeFilter) {
-            console.log(
-              "🔍 [MODAL MANAGER] Restoring active filter:",
-              savedState.activeFilter
-            );
             setActiveFilter(savedState.activeFilter);
           }
-
-          console.log("✅ [MODAL MANAGER] Modal state restoration completed");
-        } else {
-          console.log(
-            "ℹ️ [MODAL MANAGER] No saved state found, using defaults"
-          );
         }
       } catch (error) {
-        console.error(
-          "❌ [MODAL MANAGER] Failed to restore modal state:",
-          error
-        );
+        // Silently fail if state can't be restored
       } finally {
-        console.log("🏁 [MODAL MANAGER] Setting isStateRestored = true");
         setIsStateRestored(true);
       }
     };

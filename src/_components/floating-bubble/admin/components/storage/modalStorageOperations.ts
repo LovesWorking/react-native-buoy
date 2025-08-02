@@ -115,14 +115,7 @@ export const saveModalVisibilityState = async (
 ) => {
   try {
     const stateJson = JSON.stringify(state);
-    console.log("🔵 [MODAL PERSIST] Saving modal state:", {
-      storagePrefix,
-      state,
-      stateJson,
-      key: `${storagePrefix}_modal_state`,
-    });
     await setItem(`${storagePrefix}_modal_state`, stateJson);
-    console.log("✅ [MODAL PERSIST] Modal state saved successfully");
   } catch (error) {
     console.error(
       "❌ [MODAL PERSIST] Failed to save modal visibility state:",
@@ -136,24 +129,10 @@ export const loadModalVisibilityState = async (
 ): Promise<ModalVisibilityState | null> => {
   try {
     const key = `${storagePrefix}_modal_state`;
-    console.log("🔍 [MODAL PERSIST] Loading modal state from storage:", {
-      storagePrefix,
-      key,
-    });
-
     const stateStr = await getItem(key);
-    console.log("🔍 [MODAL PERSIST] Raw storage value:", { stateStr });
-
     if (stateStr) {
-      const parsedState = JSON.parse(stateStr);
-      console.log(
-        "✅ [MODAL PERSIST] Modal state loaded successfully:",
-        parsedState
-      );
-      return parsedState;
+      return JSON.parse(stateStr);
     }
-
-    console.log("ℹ️ [MODAL PERSIST] No modal state found in storage");
     return null;
   } catch (error) {
     console.error(
@@ -167,12 +146,7 @@ export const loadModalVisibilityState = async (
 export const clearModalVisibilityState = async (storagePrefix: string) => {
   try {
     const key = `${storagePrefix}_modal_state`;
-    console.log("🗑️ [MODAL PERSIST] Clearing modal state:", {
-      storagePrefix,
-      key,
-    });
     await setItem(key, "");
-    console.log("✅ [MODAL PERSIST] Modal state cleared successfully");
   } catch (error) {
     console.error(
       "❌ [MODAL PERSIST] Failed to clear modal visibility state:",

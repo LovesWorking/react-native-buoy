@@ -45,13 +45,6 @@ export function QueryBrowserModal({
     />
   );
 
-  console.log("🔍 [QUERY BROWSER MODAL] Render with filter:", {
-    visible,
-    activeFilter,
-    externalActiveFilter,
-    willUseExternalFilter: !!externalOnFilterChange,
-  });
-
   return (
     <BaseFloatingModal
       visible={visible}

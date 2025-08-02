@@ -60,32 +60,15 @@ export function useModalPersistence({
 
   // Auto-save state when modal state changes
   useEffect(() => {
-    console.log("🔄 [MODAL PERSIST] State change detected:", {
-      isModalOpen,
-      isDebugModalOpen,
-      selectedQueryKey,
-      selectedSection,
-      activeFilter,
-      isStateRestored,
-      storagePrefix,
-    });
-
     // Don't persist anything until state restoration is complete to avoid race condition
     if (!isStateRestored) {
-      console.log(
-        "⏸️ [MODAL PERSIST] Skipping persistence until state is restored"
-      );
       return;
     }
 
     // Only save if a modal is actually open to avoid saving closed state
     if (isModalOpen || isDebugModalOpen) {
-      console.log("💾 [MODAL PERSIST] Saving state because modal is open");
       saveCurrentState();
     } else {
-      console.log(
-        "🗑️ [MODAL PERSIST] Clearing state because all modals are closed"
-      );
       // Clear saved state when all modals are closed
       clearSavedState();
     }

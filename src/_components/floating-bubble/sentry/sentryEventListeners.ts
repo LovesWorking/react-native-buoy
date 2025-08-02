@@ -604,9 +604,6 @@ export class SentryEventLogger {
     // Disabled: Dynamic requires cause Metro bundler issues
     // Native bridge interception is optional functionality
     // All other Sentry event capture (errors, transactions, spans, breadcrumbs) will work normally
-    if (__DEV__) {
-      console.log("Native bridge interception skipped for Metro compatibility");
-    }
   }
 }
 

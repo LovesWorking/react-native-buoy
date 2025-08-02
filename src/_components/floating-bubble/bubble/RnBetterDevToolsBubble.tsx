@@ -59,27 +59,10 @@ export function RnBetterDevToolsBubble({
   // Hide bubble when any modal is open to prevent visual overlap
   const isAnyModalOpen = isModalOpen || isDebugModalOpen;
 
-  console.log("🎭 [BUBBLE] Current modal states:", {
-    isModalOpen,
-    isDebugModalOpen,
-    selectedQueryKey,
-    selectedSection,
-    activeFilter,
-    isStateRestored,
-    isAnyModalOpen,
-  });
-
   // Don't render anything until state is restored to prevent flash
   if (!isStateRestored) {
-    console.log("⏳ [BUBBLE] Waiting for state restoration...");
     return null;
   }
-
-  console.log("🎨 [BUBBLE] Rendering with restored state:", {
-    willShowReactQueryModal: isModalOpen,
-    willShowDevToolsConsole: isDebugModalOpen,
-    willShowBubble: !isAnyModalOpen,
-  });
 
   return (
     <ErrorBoundary>

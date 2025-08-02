@@ -41,16 +41,7 @@ export function DevToolsConsole({
   const setSelectedSection =
     externalSetSelectedSection || setInternalSelectedSection;
 
-  console.log("🛠️ [DEV TOOLS CONSOLE] Render with props:", {
-    visible,
-    externalSelectedSection,
-    finalSelectedSection: selectedSection,
-    willShowSectionList: visible && selectedSection === null,
-    willShowModal: selectedSection !== null,
-  });
-
   const handleSectionSelect = (sectionType: SectionType) => {
-    console.log("📑 [DEV TOOLS CONSOLE] Section selected:", sectionType);
     setSelectedSection(sectionType);
   };
 

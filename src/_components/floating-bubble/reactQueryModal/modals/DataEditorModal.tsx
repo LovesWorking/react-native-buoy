@@ -45,14 +45,6 @@ export function DataEditorModal({
     />
   );
 
-  console.log("📝 [DATA EDITOR MODAL] Render with filter:", {
-    visible,
-    activeFilter,
-    externalActiveFilter,
-    willUseExternalFilter: !!externalOnFilterChange,
-    hasSelectedQuery: !!selectedQuery,
-  });
-
   return (
     <BaseFloatingModal
       visible={visible}
