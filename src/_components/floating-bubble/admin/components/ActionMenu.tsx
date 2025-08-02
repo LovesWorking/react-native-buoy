@@ -23,7 +23,7 @@ interface ActionMenuProps {
   onEditData?: () => void;
 }
 
-export function ActionMenu({
+function ActionMenu({
   selectedQuery,
   onQueryChange,
   onEditData,

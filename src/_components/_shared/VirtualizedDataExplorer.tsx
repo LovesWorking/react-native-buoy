@@ -889,5 +889,3 @@ export const VirtualizedDataExplorer: React.FC<
     </View>
   );
 };
-
-export default VirtualizedDataExplorer;

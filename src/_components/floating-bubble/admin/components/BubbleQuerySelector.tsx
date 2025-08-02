@@ -11,7 +11,7 @@ interface BubbleQuerySelectorProps {
   onQuerySelect: (query: Query<any, any, any, any> | undefined) => void;
 }
 
-export function BubbleQuerySelector({
+function BubbleQuerySelector({
   selectedQuery,
   onQuerySelect,
 }: BubbleQuerySelectorProps) {

@@ -36,7 +36,7 @@ interface DataExplorerProps {
  * - Advanced cell recycling with getItemType optimization
  * - Superior performance on low-end devices
  */
-export const DataExplorer: React.FC<DataExplorerProps> = ({
+const DataExplorer: React.FC<DataExplorerProps> = ({
   title,
   data,
   maxDepth = 10,
@@ -45,5 +45,3 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({
     <VirtualizedDataExplorer title={title} data={data} maxDepth={maxDepth} />
   );
 };
-
-export type { DataExplorerProps };

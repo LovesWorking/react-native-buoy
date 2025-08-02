@@ -646,31 +646,6 @@ export function clearSentryEvents(): void {
 }
 
 /**
- * Get Sentry events by type
- */
-export function getSentryEventsByType(
-  type: SentryEventType
-): SentryEventEntry[] {
-  return sentryEventLogger.getEventsByType(type);
-}
-
-/**
- * Get Sentry events by level
- */
-export function getSentryEventsByLevel(
-  level: SentryEventLevel
-): SentryEventEntry[] {
-  return sentryEventLogger.getEventsByLevel(level);
-}
-
-/**
- * Get count of stored Sentry events
- */
-export function getSentryEventCount(): number {
-  return sentryEventLogger.getEventCount();
-}
-
-/**
  * Generate test Sentry events for testing the logger
  */
 export function generateTestSentryEvents(): void {

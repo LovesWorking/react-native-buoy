@@ -43,13 +43,3 @@ export { LogDumpSection } from "./sections/LogDumpSection";
 
 // Examples
 export { ExampleCustomSection } from "./ExampleCustomSection";
-
-// Usage examples
-export {
-  BasicFloatingStatusBubble,
-  CustomOrderFloatingStatusBubble,
-  MultiSectionFloatingStatusBubble,
-  NoSentryLogsFloatingStatusBubble,
-  NPMPackageUsageExample,
-  ProductionFloatingStatusBubble,
-} from "./FloatingStatusBubbleUsageExample";

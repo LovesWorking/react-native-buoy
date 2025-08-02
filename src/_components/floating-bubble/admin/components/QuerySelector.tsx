@@ -126,7 +126,7 @@ export function QuerySelector({
   );
 }
 
-export function QuerySelectorTrigger({
+function QuerySelectorTrigger({
   selectedQuery,
   onPress,
 }: {

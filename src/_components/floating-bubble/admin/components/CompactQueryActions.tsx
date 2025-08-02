@@ -6,7 +6,7 @@ interface CompactQueryActionsProps {
   queryClient: QueryClient;
 }
 
-export function CompactQueryActions({ queryClient }: CompactQueryActionsProps) {
+function CompactQueryActions({ queryClient }: CompactQueryActionsProps) {
   return (
     <View style={styles.container}>
       <TouchableOpacity
