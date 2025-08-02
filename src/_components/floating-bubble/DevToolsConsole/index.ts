@@ -1,3 +1,5 @@
 export { DevToolsConsole } from "./DevToolsConsole";
-export { useDebugSections } from "./useDebugSections";
-export type { DebugSection } from "./DevToolsConsole";
+export { ConsoleSection } from "./ConsoleSection";
+export { ConsoleSectionList } from "./ConsoleSectionList";
+export { ConsoleSectionDetail } from "./ConsoleSectionDetail";
+export * from "./sections";

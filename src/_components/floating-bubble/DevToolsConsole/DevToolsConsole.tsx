@@ -1,28 +1,24 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
-import type { LucideIcon } from "lucide-react-native";
-import { ExpandableSectionHeader } from "../admin/sections/ExpandableSectionHeader";
 import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
-import { useDebugSections } from "./useDebugSections";
 import { RequiredEnvVar } from "../admin/sections/env-vars/types";
+import { ConsoleSectionList } from "./ConsoleSectionList";
+import { ConsoleSectionDetail } from "./ConsoleSectionDetail";
+import {
+  SentryLogsSection,
+  SentryLogsContent,
+  EnvVarsSection,
+  EnvVarsDetailContent,
+  ReactQuerySection,
+  ReactQueryDetailContent,
+} from "./sections";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
 
-// Section definition interface
-export interface DebugSection {
-  id: string;
-  title: string;
-  subtitle?: string;
-  icon: LucideIcon;
-  iconColor: string;
-  iconBackgroundColor: string;
-  content: (onClose: () => void) => React.ReactNode;
-  onOpen?: () => void;
-  onClose?: () => void;
-}
+// Available section types for navigation
+type SectionType = "sentry-logs" | "env-vars" | "rn-better-dev-tools";
 
 interface DevToolsConsoleProps {
   visible: boolean;
@@ -41,39 +37,54 @@ export function DevToolsConsole({
   getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
 }: DevToolsConsoleProps) {
-  // Sections configuration using composition pattern
-  const sections = useDebugSections({
-    requiredEnvVars,
-    getSentrySubtitle,
-    getRnBetterDevToolsSubtitle,
-    envVarsSubtitle,
-  });
+  const [selectedSection, setSelectedSection] = useState<SectionType | null>(
+    null
+  );
 
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  const insets = useSafeAreaInsets();
-
-  const handleSectionPress = (section: DebugSection) => {
-    setSelectedSection(section.id);
-    section.onOpen?.();
+  const handleSectionPress = (sectionType: SectionType) => {
+    setSelectedSection(sectionType);
   };
 
   const handleBackPress = () => {
-    const currentSection = sections.find((s) => s.id === selectedSection);
-    currentSection?.onClose?.();
     setSelectedSection(null);
   };
 
   const handleCloseModal = () => {
-    const currentSection = sections.find((s) => s.id === selectedSection);
-    currentSection?.onClose?.();
-    setSelectedSection(null);
+    // setSelectedSection(null);
     onClose();
+  };
+
+  // Helper function to get section title
+  const getSectionTitle = () => {
+    switch (selectedSection) {
+      case "sentry-logs":
+        return "Sentry Logs";
+      case "env-vars":
+        return "Environment Variables";
+      case "rn-better-dev-tools":
+        return "RN Better Dev Tools";
+      default:
+        return "Dev Tools Console";
+    }
+  };
+
+  // Helper function to get section subtitle
+  const getSectionSubtitle = () => {
+    switch (selectedSection) {
+      case "sentry-logs":
+        return getSentrySubtitle();
+      case "env-vars":
+        return envVarsSubtitle;
+      case "rn-better-dev-tools":
+        return getRnBetterDevToolsSubtitle();
+      default:
+        return undefined;
+    }
   };
 
   // Helper function to render the content-specific header elements
   const renderHeaderContent = () => {
-    const currentSection = sections.find((s) => s.id === selectedSection);
-    const title = currentSection?.title || "Dev Tools Console";
+    const title = getSectionTitle();
     return (
       <View style={styles.headerContainer}>
         {selectedSection && (
@@ -95,11 +106,18 @@ export function DevToolsConsole({
     );
   };
 
-  // Get the subtitle for the currently selected section
-  const getHeaderSubtitle = () => {
-    if (!selectedSection) return undefined;
-    const currentSection = sections.find((s) => s.id === selectedSection);
-    return currentSection?.subtitle;
+  // Render section detail content using composition
+  const renderSectionContent = () => {
+    switch (selectedSection) {
+      case "sentry-logs":
+        return <SentryLogsContent onClose={handleCloseModal} />;
+      case "env-vars":
+        return <EnvVarsDetailContent requiredEnvVars={requiredEnvVars} />;
+      case "rn-better-dev-tools":
+        return <ReactQueryDetailContent onClose={handleCloseModal} />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -109,58 +127,30 @@ export function DevToolsConsole({
       storagePrefix="@devtools_console"
       showToggleButton={true}
       customHeaderContent={renderHeaderContent()}
-      headerSubtitle={getHeaderSubtitle()}
+      headerSubtitle={getSectionSubtitle()}
     >
       {/* Main content */}
       <View style={styles.content}>
         {selectedSection ? (
-          // Detail View - Show selected section content
-          <>
-            <ScrollView
-              style={styles.detailScrollContainer}
-              contentContainerStyle={styles.detailScrollContent}
-            >
-              {(() => {
-                const section = sections.find((s) => s.id === selectedSection);
-                return section?.content(handleCloseModal) || null;
-              })()}
-            </ScrollView>
-            {/* Safe area for detail view */}
-            <View style={[styles.detailSafeArea, { height: insets.bottom }]} />
-          </>
+          // Detail View - Show selected section content using composition
+          <ConsoleSectionDetail>{renderSectionContent()}</ConsoleSectionDetail>
         ) : (
-          // Section List View - Show all sections
-          <>
-            <ScrollView
-              style={styles.sectionListContainer}
-              contentContainerStyle={styles.sectionListContent}
-            >
-              {sections.map((section) => (
-                <Pressable
-                  key={section.id}
-                  onPress={() => handleSectionPress(section)}
-                  style={styles.sectionCard}
-                  android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}
-                >
-                  <View style={styles.sectionCardContent}>
-                    <ExpandableSectionHeader
-                      title={section.title}
-                      subtitle={section.subtitle || ""}
-                      icon={section.icon}
-                      iconColor={section.iconColor}
-                      iconBackgroundColor={section.iconBackgroundColor}
-                      isExpanded={false}
-                      onPress={() => handleSectionPress(section)}
-                    />
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
-            {/* Safe area for section list */}
-            <View
-              style={[styles.sectionListSafeArea, { height: insets.bottom }]}
+          // Section List View - Show all sections using composition
+          <ConsoleSectionList>
+            <SentryLogsSection
+              onPress={() => handleSectionPress("sentry-logs")}
+              getSentrySubtitle={getSentrySubtitle}
             />
-          </>
+            <EnvVarsSection
+              onPress={() => handleSectionPress("env-vars")}
+              envVarsSubtitle={envVarsSubtitle}
+              requiredEnvVars={requiredEnvVars}
+            />
+            <ReactQuerySection
+              onPress={() => handleSectionPress("rn-better-dev-tools")}
+              getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
+            />
+          </ConsoleSectionList>
         )}
       </View>
     </BaseFloatingModal>
@@ -202,49 +192,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     overflow: "hidden",
-    backgroundColor: "#2A2A2A",
-  },
-
-  // Section list styles
-  sectionListContainer: {
-    flex: 1,
-  },
-
-  sectionListContent: {
-    paddingHorizontal: 12, // Match AdminModal contentContainer
-    paddingVertical: 8,
-    flexGrow: 1,
-  },
-
-  sectionCard: {
-    backgroundColor: "#1F1F1F", // Match ExpandableSection background
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)", // Match ExpandableSection border
-    overflow: "hidden",
-    marginBottom: 16, // Match ExpandableSection spacing
-  },
-
-  sectionCardContent: {
-    padding: 24, // Match ExpandableSection padding
-  },
-
-  // Detail view styles
-  detailScrollContainer: {
-    flex: 1,
-  },
-
-  detailScrollContent: {
-    padding: 8,
-    flexGrow: 1,
-  },
-
-  // Safe area styles
-  sectionListSafeArea: {
-    backgroundColor: "#2A2A2A",
-  },
-
-  detailSafeArea: {
     backgroundColor: "#2A2A2A",
   },
 });
