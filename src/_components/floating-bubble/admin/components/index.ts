@@ -1,6 +1,7 @@
 export { type Environment } from "../../bubble/EnvironmentIndicator";
 export { type UserRole } from "./UserStatus";
 export { BubblePresentation } from "./BubblePresentation";
+export { type BubbleConfig } from "./RnBetterDevToolsBubbleContent";
 export { CopyContextProvider } from "./CopyContextProvider";
 export { useDebugSections } from "./DebugSectionsFactory";
 export { FloatingDataEditor } from "../../reactQueryModal/ReactQueryModal";

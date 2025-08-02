@@ -5,7 +5,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { PanGesture } from "react-native-gesture-handler";
 import { DragHandle } from "./DragHandle";
-import { RnBetterDevToolsBubbleContent } from "./RnBetterDevToolsBubbleContent";
+import {
+  RnBetterDevToolsBubbleContent,
+  type BubbleConfig,
+} from "./RnBetterDevToolsBubbleContent";
 import { type Environment } from "../../bubble/EnvironmentIndicator";
 import { type UserRole } from "./UserStatus";
 const { width: screenWidth } = Dimensions.get("window");
@@ -18,13 +21,14 @@ interface DragState {
 }
 
 interface BubblePresentationProps {
-  environment: Environment;
-  userRole: UserRole;
+  environment?: Environment;
+  userRole?: UserRole;
   dragState: DragState;
   bubbleWidth: number;
   contentRef: React.RefObject<any>; // For dynamic width measurement
-  onStatusPress: () => void;
-  onQueryPress: () => void;
+  onStatusPress?: () => void;
+  onQueryPress?: () => void;
+  config?: BubbleConfig;
 }
 
 /**
@@ -39,6 +43,7 @@ export function BubblePresentation({
   contentRef,
   onStatusPress,
   onQueryPress,
+  config,
 }: BubblePresentationProps) {
   const { translateX, translateY, panGesture, isDragging } = dragState;
   // Animated styles - matching FloatingStatusBubble exactly
@@ -83,7 +88,6 @@ export function BubblePresentation({
       sentry-label="ignore react query dev tools bubble"
     >
       <Animated.View
-        ref={contentRef}
         style={[
           {
             alignItems: "center",
@@ -99,10 +103,11 @@ export function BubblePresentation({
         ]}
       >
         <Animated.View
+          ref={contentRef}
           style={{
             flexDirection: "row",
             alignItems: "center",
-            width: "100%",
+            // Let content size naturally for measurement
           }}
         >
           <DragHandle panGesture={panGesture} translateX={translateX} />
@@ -113,6 +118,7 @@ export function BubblePresentation({
             isDragging={isDragging}
             onStatusPress={onStatusPress}
             onQueryPress={onQueryPress}
+            config={config}
           />
         </Animated.View>
       </Animated.View>

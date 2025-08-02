@@ -15,16 +15,18 @@ import {
   CopyContextProvider,
   useDebugSections,
 } from "../admin/components";
+import { type BubbleConfig } from "../admin/components/RnBetterDevToolsBubbleContent";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
 import { ReactQueryModal } from "../reactQueryModal/ReactQueryModal";
 import { ReusableDebugModal } from "../admin/components/ReusableDebugModal";
 
 interface RnBetterDevToolsBubbleProps {
   queryClient: QueryClient;
-  userRole: UserRole;
-  environment: Environment;
+  userRole?: UserRole;
+  environment?: Environment;
   requiredEnvVars?: RequiredEnvVar[];
   onCopy?: ClipboardFunction;
+  config?: BubbleConfig;
 }
 
 export function RnBetterDevToolsBubble({
@@ -33,6 +35,7 @@ export function RnBetterDevToolsBubble({
   environment,
   requiredEnvVars = [],
   onCopy,
+  config = {},
 }: RnBetterDevToolsBubbleProps) {
   // Specialized hooks for different concerns following composition principles
   const { getSentrySubtitle } = useSentryEvents();
@@ -94,6 +97,7 @@ export function RnBetterDevToolsBubble({
               contentRef={contentRef}
               onStatusPress={handleStatusPress}
               onQueryPress={handleQueryPress}
+              config={config}
             />
           )}
 

@@ -21,4 +21,5 @@ export type { RequiredEnvVar } from "./_components/floating-bubble/admin/section
 export type {
   Environment,
   UserRole,
+  BubbleConfig,
 } from "./_components/floating-bubble/admin/components";

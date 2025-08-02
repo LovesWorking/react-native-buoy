@@ -10,12 +10,20 @@ import {
 } from "../../bubble/EnvironmentIndicator";
 import { type UserRole, UserStatus } from "./UserStatus";
 
+export interface BubbleConfig {
+  showEnvironment?: boolean;
+  showUserStatus?: boolean;
+  showQueryButton?: boolean;
+  showWifiToggle?: boolean;
+}
+
 interface RnBetterDevToolsBubbleContentProps {
-  environment: Environment;
-  userRole: UserRole;
+  environment?: Environment;
+  userRole?: UserRole;
   isDragging: boolean;
-  onStatusPress: () => void;
-  onQueryPress: () => void;
+  onStatusPress?: () => void;
+  onQueryPress?: () => void;
+  config?: BubbleConfig;
 }
 
 export function RnBetterDevToolsBubbleContent({
@@ -24,43 +32,86 @@ export function RnBetterDevToolsBubbleContent({
   isDragging,
   onStatusPress,
   onQueryPress,
+  config = {},
 }: RnBetterDevToolsBubbleContentProps) {
+  // Determine which components should be shown based on props and config
+  const shouldShowEnvironment =
+    config.showEnvironment !== false && environment !== undefined;
+  const shouldShowUserStatus =
+    config.showUserStatus !== false && userRole !== undefined;
+  const shouldShowQueryButton =
+    config.showQueryButton !== false && onQueryPress !== undefined;
+  const shouldShowWifiToggle = config.showWifiToggle !== false;
+
+  // Create array of visible components for smart divider logic
+  const visibleComponents = [
+    shouldShowEnvironment && "environment",
+    shouldShowUserStatus && "userStatus",
+    shouldShowQueryButton && "queryButton",
+    shouldShowWifiToggle && "wifiToggle",
+  ].filter(Boolean);
+
   const contentLayout = useAnimatedStyle(() => {
     return {
       flexDirection: "row", // Always keep content in the same order
-      flex: 1,
       alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: 6,
       gap: 6,
+      // Removed flex: 1 and justifyContent: "space-between" to allow natural sizing
     };
   });
+
+  // Helper function to render divider only between components
+  const renderDividerAfter = (componentName: string) => {
+    const currentIndex = visibleComponents.indexOf(componentName);
+    const isLastComponent = currentIndex === visibleComponents.length - 1;
+    return !isLastComponent ? (
+      <Divider key={`divider-after-${componentName}`} />
+    ) : null;
+  };
 
   return (
     <Animated.View style={contentLayout}>
       {/* Environment Indicator */}
-      <EnvironmentIndicator environment={environment} />
-
-      <Divider />
+      {shouldShowEnvironment && (
+        <>
+          <EnvironmentIndicator environment={environment!} />
+          {renderDividerAfter("environment")}
+        </>
+      )}
 
       {/* User Status */}
-      <UserStatus
-        userRole={userRole}
-        onPress={onStatusPress}
-        isDragging={isDragging}
-      />
-
-      <Divider />
+      {shouldShowUserStatus && (
+        <>
+          <UserStatus
+            userRole={userRole!}
+            onPress={onStatusPress!}
+            isDragging={isDragging}
+          />
+          {renderDividerAfter("userStatus")}
+        </>
+      )}
 
       {/* RN Better Dev Tools Status Button */}
-      <Pressable onPress={onQueryPress} style={styles.queryButton} hitSlop={8}>
-        <TanstackLogo />
-      </Pressable>
-
-      <Divider />
+      {shouldShowQueryButton && (
+        <>
+          <Pressable
+            onPress={onQueryPress}
+            style={styles.queryButton}
+            hitSlop={8}
+          >
+            <TanstackLogo />
+          </Pressable>
+          {renderDividerAfter("queryButton")}
+        </>
+      )}
 
       {/* WiFi Toggle */}
-      <WifiToggle isDragging={isDragging} />
+      {shouldShowWifiToggle && (
+        <>
+          <WifiToggle isDragging={isDragging} />
+          {renderDividerAfter("wifiToggle")}
+        </>
+      )}
     </Animated.View>
   );
 }

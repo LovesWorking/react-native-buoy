@@ -23,11 +23,15 @@ export function useDynamicBubbleWidth() {
       contentRef.current.measure(
         (x: number, y: number, width: number, height: number) => {
           if (width > 0) {
+            // Add padding to the measured content width
+            const paddingHorizontal = 12; // 6px on each side for content padding
+            const contentWidth = width + paddingHorizontal;
+
             // Apply screen constraints
-            const minWidth = 200;
+            const minWidth = 120; // Lower minimum since content can be very small now
             const maxWidth = screenWidth - 32; // Leave 16px margin on each side
             const constrainedWidth = Math.min(
-              Math.max(width, minWidth),
+              Math.max(contentWidth, minWidth),
               maxWidth
             );
 
