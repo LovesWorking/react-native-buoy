@@ -1,7 +1,7 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Query } from "@tanstack/react-query";
-import { ChevronLeft } from "lucide-react-native";
 import QueryStatusCount from "../../devtools/QueryStatusCount";
+import { BackButton } from "../admin/components/BackButton";
 
 interface ReactQueryModalHeaderProps {
   selectedQuery: Query | undefined;
@@ -35,13 +35,13 @@ export function ReactQueryModalHeader({
       {selectedQuery ? (
         // Query Details View - Show back button and query name
         <View style={styles.detailsView}>
-          <Pressable
+          <BackButton
             onPress={() => onQuerySelect(undefined)}
-            style={styles.backButton}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <ChevronLeft color="#FFFFFF" size={18} />
-          </Pressable>
+            color="#FFFFFF"
+            size={16}
+            accessibilityLabel="Back to query list"
+            accessibilityHint="Return to query list view"
+          />
           <Text style={styles.queryText} numberOfLines={1}>
             {getQueryText(selectedQuery)}
           </Text>
@@ -84,17 +84,6 @@ const styles = StyleSheet.create({
     minHeight: 32, // Match FloatingModalHeader minHeight
     paddingLeft: 4, // Consistent left spacing
     paddingRight: 4, // Minimal right padding to match left
-  },
-
-  backButton: {
-    width: 36, // Larger for better touch target
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: "rgba(156, 163, 175, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(156, 163, 175, 0.3)",
   },
 
   queryText: {

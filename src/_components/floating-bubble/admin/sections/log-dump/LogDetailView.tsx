@@ -1,6 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
+import { BackButton } from "../../components/BackButton";
 import { FlashList } from "@shopify/flash-list";
 import { useState } from "react";
 
@@ -27,14 +28,12 @@ const DataExplorerModal = ({
     <View style={styles.modalContainer}>
       {/* Header */}
       <View style={styles.modalHeader}>
-        <TouchableOpacity
+        <BackButton
           onPress={onBack}
-          style={styles.backButton}
+          color="#8B5CF6"
+          size={16}
           accessibilityLabel="Back to log details"
-        >
-          <ChevronLeft size={16} color="#8B5CF6" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
+        />
         <View style={styles.modalHeaderContent}>
           <Text style={styles.modalTitle}>{title}</Text>
           <Text style={styles.modalDescription}>{description}</Text>
@@ -204,16 +203,13 @@ export const LogDetailView = ({
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          sentry-label="ignore back to log list"
+        <BackButton
+          onPress={onBack}
+          color="#8B5CF6"
+          size={16}
           accessibilityLabel="Back to log list"
           accessibilityHint="Return to log entries list"
-          onPress={onBack}
-          style={styles.backButton}
-        >
-          <ChevronLeft size={16} color="#8B5CF6" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
+        />
         <Text style={styles.headerTitle}>Log Details</Text>
       </View>
 
@@ -282,15 +278,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255, 255, 255, 0.06)",
     backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  backText: {
-    color: "#A78BFA",
-    fontWeight: "500",
-  },
+
   headerTitle: {
     color: "white",
     fontWeight: "600",
