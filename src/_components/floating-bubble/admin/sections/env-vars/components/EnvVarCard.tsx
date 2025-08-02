@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AlertCircle, CheckCircle2, Eye, XCircle } from "lucide-react-native";
 import { EnvVarInfo } from "../types";

@@ -1,5 +1,4 @@
 import { Query } from "@tanstack/react-query";
-import React from "react";
 import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
 import { Text, View, StyleSheet } from "react-native";
 interface Props {

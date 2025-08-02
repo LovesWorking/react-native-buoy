@@ -1,4 +1,3 @@
-import React from "react";
 import { Mutation } from "@tanstack/react-query";
 import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 import { CheckCircle, LoadingCircle, PauseCircle, XCircle } from "./svgs";

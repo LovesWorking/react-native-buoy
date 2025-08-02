@@ -13,7 +13,10 @@
     "build:yalc": "npm run build && yalc push",
     "dev": "nodemon --watch src --ext ts,tsx,js,jsx --exec \"npm run build:yalc\"",
     "yalc:publish": "yalc publish",
-    "yalc:push": "yalc push"
+    "yalc:push": "yalc push",
+    "check:jsx": "node check-jsx-transform.js --check",
+    "fix:jsx": "node check-jsx-transform.js --fix",
+    "check:jsx-simple": "./check-jsx-transform.sh"
   },
   "repository": {
     "type": "git",

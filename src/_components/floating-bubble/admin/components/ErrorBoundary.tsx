@@ -1,4 +1,4 @@
-import React, { Component, ReactNode } from "react";
+import { Component, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AlertTriangle, RefreshCw } from "lucide-react-native";
 

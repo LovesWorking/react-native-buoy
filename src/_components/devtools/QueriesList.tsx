@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from 'react';
 import { Query } from "@tanstack/react-query";
 import {
   View,

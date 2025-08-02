@@ -1,4 +1,3 @@
-import React from "react";
 import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 
 // Define the color mappings following the app's design system

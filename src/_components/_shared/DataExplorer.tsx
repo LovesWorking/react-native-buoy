@@ -1,4 +1,3 @@
-import React from "react";
 import { VirtualizedDataExplorer } from "./VirtualizedDataExplorer";
 
 interface DataExplorerProps {

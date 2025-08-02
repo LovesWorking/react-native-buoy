@@ -1,4 +1,3 @@
-import React from "react";
 import { Mutation } from "@tanstack/react-query";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { displayValue } from "./displayValue";

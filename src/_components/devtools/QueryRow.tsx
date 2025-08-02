@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Query } from "@tanstack/react-query";
 import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";

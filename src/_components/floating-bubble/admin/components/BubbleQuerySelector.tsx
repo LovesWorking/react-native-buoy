@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import { Query } from "@tanstack/react-query";
 import { Search, AlertTriangle } from "lucide-react-native";

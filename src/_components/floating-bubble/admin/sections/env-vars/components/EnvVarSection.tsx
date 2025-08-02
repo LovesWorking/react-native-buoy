@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet } from "react-native";
 import { EnvVarInfo } from "../types";
 import { EnvVarCard } from "./EnvVarCard";

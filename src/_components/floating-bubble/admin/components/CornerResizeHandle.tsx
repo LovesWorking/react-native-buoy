@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from 'react';
 import { View, StyleSheet } from "react-native";
 
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };

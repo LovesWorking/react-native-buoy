@@ -1,5 +1,4 @@
 import { Mutation } from "@tanstack/react-query";
-import React from "react";
 import { Text, View, StyleSheet } from "react-native";
 
 const backgroundColors = {

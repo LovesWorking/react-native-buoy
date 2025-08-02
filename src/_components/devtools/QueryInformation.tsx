@@ -1,4 +1,3 @@
-import React from "react";
 import { Query } from "@tanstack/react-query";
 import QueryDetails from "./QueryDetails";
 import QueryActions from "./QueryActions";

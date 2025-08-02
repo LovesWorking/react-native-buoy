@@ -1,4 +1,3 @@
-import React from 'react';
 import { Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Terminal, X } from 'lucide-react-native';

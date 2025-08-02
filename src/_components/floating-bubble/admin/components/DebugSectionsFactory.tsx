@@ -1,4 +1,3 @@
-import React from "react";
 import { ScrollView } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FileText, Settings, FlaskConical } from "lucide-react-native";

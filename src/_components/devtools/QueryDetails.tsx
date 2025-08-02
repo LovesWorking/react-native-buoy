@@ -1,5 +1,4 @@
 import { Query, QueryKey } from "@tanstack/react-query";
-import React from "react";
 import QueryDetailsChip from "./QueryDetailsChip";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { displayValue } from "./displayValue";

@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable, LayoutChangeEvent, Text, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Query } from "@tanstack/react-query";

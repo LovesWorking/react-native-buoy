@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from 'react';
 import { View, StyleSheet, ViewStyle } from "react-native";
 import Animated, { AnimatedStyleProp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
