@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { Query, QueryClient, QueryKey } from "@tanstack/react-query";
+import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
 
 /**
  * Custom hook to track a single query by its queryKey with live updates
  * Similar to useAllQueries but for a specific query
  */
-function useSelectedQuery(queryClient: QueryClient, queryKey?: QueryKey) {
-  const [selectedQuery, setSelectedQuery] = useState<
-    Query<any, any, any, any> | undefined
-  >(undefined);
+export function useGetQueryByQueryKey(queryKey?: QueryKey) {
+  const queryClient = useQueryClient();
+  const [selectedQuery, setSelectedQuery] = useState<Query | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     const updateSelectedQuery = () => {
@@ -35,5 +36,3 @@ function useSelectedQuery(queryClient: QueryClient, queryKey?: QueryKey) {
 
   return selectedQuery;
 }
-
-export default useSelectedQuery;

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Query } from "@tanstack/react-query";
+import { Query, QueryKey } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react-native";
 import { BaseFloatingModal } from "./BaseFloatingModal";
 import Explorer from "../../../devtools/Explorer";
@@ -14,6 +14,7 @@ import triggerLoading from "../../../_util/actions/triggerLoading";
 import refetch from "../../../_util/actions/refetch";
 import triggerError from "../../../_util/actions/triggerError";
 import { getQueryStatusLabel } from "../../../_util/getQueryStatusLabel";
+import { useGetQueryByQueryKey } from "../../../_hooks/useSelectedQuery";
 
 // Stable constants moved to module scope to prevent re-renders
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
@@ -28,17 +29,18 @@ const getQueryBreadcrumb = (query: Query<any, any, any, any>) => {
 
 interface FloatingDataEditorProps {
   visible: boolean;
-  selectedQuery?: Query<any, any, any, any>;
+  selectedQueryKey?: QueryKey;
   onQuerySelect: (query: Query<any, any, any, any> | undefined) => void;
   onClose: () => void;
 }
 
 export function FloatingDataEditor({
   visible,
-  selectedQuery,
+  selectedQueryKey,
   onQuerySelect,
   onClose,
 }: FloatingDataEditorProps) {
+  const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
 

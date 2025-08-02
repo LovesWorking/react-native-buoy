@@ -1,32 +1,35 @@
 import { useEffect, useState } from "react";
 import { Dimensions, StyleSheet, ScrollView } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  Query,
+  QueryClient,
+  QueryClientProvider,
+  QueryKey,
+} from "@tanstack/react-query";
 import { FileText, Settings, FlaskConical } from "lucide-react-native";
 import { getSentryEvents } from "../sentry/sentryEventListeners";
 import { formatRelativeTime } from "./sections/log-dump/utils";
-import { useDynamicEnv } from "./hooks/useDynamicEnv";
 
-import {
-  ReactQueryBubbleContent,
-  DragHandle,
-  ErrorBoundary,
-  FloatingDataEditor,
-  ReusableDebugModal,
-  type Environment,
-  type UserRole,
-  type DebugSection,
-} from "./components";
 import { useBubbleWidth, useDragGesture, useWifiState } from "./hooks";
-import useSelectedQuery from "../../_hooks/useSelectedQuery";
 import { SentryEventLogDumpModalContent } from "./sections/log-dump/SentryEventLogDumpModalContent";
-import { EnvVarsContent, useEnvVarsSubtitle } from "./sections/env-vars";
+import {
+  EnvVarsContent,
+  RequiredEnvVar,
+  useEnvVarsSubtitle,
+} from "./sections/env-vars";
 import DevTools from "../../../DevTools";
 import {
   CopyContext,
   type ClipboardFunction,
 } from "../../../context/CopyContext";
 import { safeStringify } from "../../_util/safeStringify";
+import { Environment, UserRole } from "./components";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { DragHandle } from "./components/DragHandle";
+import { ReactQueryBubbleContent } from "./components/ReactQueryBubbleContent";
+import { FloatingDataEditor } from "./components/FloatingDataEditor";
+import { ReusableDebugModal } from "./components/ReusableDebugModal";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -34,7 +37,7 @@ interface ReactQueryDevToolsBubbleProps {
   queryClient: QueryClient;
   userRole: UserRole;
   environment: Environment;
-  requiredEnvVars?: string[];
+  requiredEnvVars?: RequiredEnvVar[];
   onCopy?: ClipboardFunction;
 }
 
@@ -47,13 +50,10 @@ export function ReactQueryDevToolsBubble({
 }: ReactQueryDevToolsBubbleProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedQueryKey, setSelectedQueryKey] = useState<any[] | undefined>(
-    undefined
-  );
+  const [selectedQueryKey, setSelectedQueryKey] = useState<
+    QueryKey | undefined
+  >(undefined);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
-
-  // Use our custom hook to get live, fresh query data
-  const selectedQuery = useSelectedQuery(queryClient, selectedQueryKey);
 
   // State for dynamic subtitles
   const [sentryEntries, setSentryEntries] = useState(() => getSentryEvents());
@@ -104,6 +104,7 @@ export function ReactQueryDevToolsBubble({
   // Custom hooks for managing state and logic - with query button support
   const { bubbleWidth, handleEnvLabelLayout, handleStatusLayout } =
     useBubbleWidth({ hasQueryButton: true });
+
   const { isOnline, handleWifiToggle } = useWifiState();
   const { panGesture, translateX, translateY } = useDragGesture({
     bubbleWidth,
@@ -136,7 +137,7 @@ export function ReactQueryDevToolsBubble({
     setIsDebugModalOpen(false);
   };
 
-  const handleQuerySelect = (query: Query<any, any, any, any> | undefined) => {
+  const handleQuerySelect = (query: Query | undefined) => {
     setSelectedQueryKey(query?.queryKey);
   };
 
@@ -208,7 +209,6 @@ export function ReactQueryDevToolsBubble({
                     userRole={userRole}
                     isOnline={isOnline}
                     isDragging={isDragging}
-                    selectedQuery={selectedQuery}
                     onEnvironmentLayout={handleEnvLabelLayout}
                     onStatusLayout={handleStatusLayout}
                     onQueryLayout={handleQueryLayout}
@@ -225,7 +225,7 @@ export function ReactQueryDevToolsBubble({
         <ErrorBoundary>
           <FloatingDataEditor
             visible={isModalOpen}
-            selectedQuery={selectedQuery}
+            selectedQueryKey={selectedQueryKey}
             onQuerySelect={handleQuerySelect}
             onClose={handleModalDismiss}
           />
