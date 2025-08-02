@@ -4,6 +4,8 @@ export { DevToolsModal } from "./DevToolsModal";
 export { ErrorBoundary } from "./ErrorBoundary";
 export { QueryDebugInfo } from "./QueryDebugInfo";
 export { FloatingDataEditor } from "./FloatingDataEditor";
+export { ReusableDebugModal, type DebugSection } from "./ReusableDebugModal";
+export { BaseFloatingModal } from "./BaseFloatingModal";
 export { Divider } from "./Divider";
 export { DragHandle } from "./DragHandle";
 export { type Environment, EnvironmentIndicator } from "./EnvironmentIndicator";
