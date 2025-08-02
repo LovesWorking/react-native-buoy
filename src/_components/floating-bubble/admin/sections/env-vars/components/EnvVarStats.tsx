@@ -84,16 +84,11 @@ export function EnvVarStatsSection({ stats }: EnvVarStatsProps) {
   if (totalCount === 0) {
     return (
       <View style={styles.statsContainer}>
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Settings size={16} color="#0EA5E9" />
-          </View>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Environment Overview</Text>
-            <Text style={styles.headerSubtitle}>
-              No environment variables detected
-            </Text>
-          </View>
+        <Text style={styles.sectionTitle}>VARIABLE BREAKDOWN</Text>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>
+            No environment variables detected
+          </Text>
         </View>
       </View>
     );
@@ -101,175 +96,6 @@ export function EnvVarStatsSection({ stats }: EnvVarStatsProps) {
 
   return (
     <View style={styles.statsContainer}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
-          <Settings size={16} color="#0EA5E9" />
-        </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Environment Overview</Text>
-          <Text style={styles.headerSubtitle}>
-            Configuration status and health
-          </Text>
-        </View>
-      </View>
-
-      {/* Overview Metrics */}
-      <View style={styles.overviewSection}>
-        {/* Health Score */}
-        <View style={styles.metricItem}>
-          <View style={styles.metricItemRow}>
-            <View style={styles.metricItemLeft}>
-              <View
-                style={[
-                  styles.metricIcon,
-                  {
-                    backgroundColor:
-                      healthScore >= 80
-                        ? "rgba(16, 185, 129, 0.1)"
-                        : healthScore >= 60
-                        ? "rgba(249, 115, 22, 0.1)"
-                        : "rgba(239, 68, 68, 0.1)",
-                  },
-                ]}
-              >
-                <Shield
-                  size={14}
-                  color={
-                    healthScore >= 80
-                      ? "#10B981"
-                      : healthScore >= 60
-                      ? "#F97316"
-                      : "#EF4444"
-                  }
-                />
-              </View>
-              <View style={styles.metricItemInfo}>
-                <Text style={styles.metricItemLabel}>Health Score</Text>
-                <Text style={styles.metricItemDesc}>
-                  Configuration compliance rating
-                </Text>
-              </View>
-            </View>
-            <View style={styles.metricItemRight}>
-              <Text
-                style={[
-                  styles.metricCount,
-                  {
-                    color:
-                      healthScore >= 80
-                        ? "#10B981"
-                        : healthScore >= 60
-                        ? "#F97316"
-                        : "#EF4444",
-                  },
-                ]}
-              >
-                {healthScore}%
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Total Variables */}
-        <View style={styles.metricItem}>
-          <View style={styles.metricItemRow}>
-            <View style={styles.metricItemLeft}>
-              <View
-                style={[
-                  styles.metricIcon,
-                  { backgroundColor: "rgba(139, 92, 246, 0.1)" },
-                ]}
-              >
-                <Settings size={14} color="#8B5CF6" />
-              </View>
-              <View style={styles.metricItemInfo}>
-                <Text style={styles.metricItemLabel}>Total Variables</Text>
-                <Text style={styles.metricItemDesc}>
-                  All environment variables detected
-                </Text>
-              </View>
-            </View>
-            <View style={styles.metricItemRight}>
-              <Text style={[styles.metricCount, { color: "#8B5CF6" }]}>
-                {totalCount}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Required Variables */}
-        {requiredCount > 0 && (
-          <View style={styles.metricItem}>
-            <View style={styles.metricItemRow}>
-              <View style={styles.metricItemLeft}>
-                <View
-                  style={[
-                    styles.metricIcon,
-                    { backgroundColor: "rgba(8, 145, 178, 0.1)" },
-                  ]}
-                >
-                  <AlertCircle size={14} color="#0891B2" />
-                </View>
-                <View style={styles.metricItemInfo}>
-                  <Text style={styles.metricItemLabel}>Required Variables</Text>
-                  <Text style={styles.metricItemDesc}>
-                    Variables that must be configured
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.metricItemRight}>
-                <Text style={[styles.metricCount, { color: "#0891B2" }]}>
-                  {requiredCount}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Critical Issues */}
-        {requiredCount > 0 && (
-          <View style={styles.metricItem}>
-            <View style={styles.metricItemRow}>
-              <View style={styles.metricItemLeft}>
-                <View
-                  style={[
-                    styles.metricIcon,
-                    {
-                      backgroundColor:
-                        totalIssues === 0
-                          ? "rgba(16, 185, 129, 0.1)"
-                          : "rgba(239, 68, 68, 0.1)",
-                    },
-                  ]}
-                >
-                  <XCircle
-                    size={14}
-                    color={totalIssues === 0 ? "#10B981" : "#EF4444"}
-                  />
-                </View>
-                <View style={styles.metricItemInfo}>
-                  <Text style={styles.metricItemLabel}>Critical Issues</Text>
-                  <Text style={styles.metricItemDesc}>
-                    Variables with configuration problems
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.metricItemRight}>
-                <Text
-                  style={[
-                    styles.metricCount,
-                    { color: totalIssues === 0 ? "#10B981" : "#EF4444" },
-                  ]}
-                >
-                  {totalIssues}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-      </View>
-
       {/* Variable Breakdown */}
       <View style={styles.breakdownSection}>
         <Text style={styles.sectionTitle}>VARIABLE BREAKDOWN</Text>
@@ -358,80 +184,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.08)",
   },
 
-  // Header section
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 24,
-  },
-  headerIcon: {
-    backgroundColor: "rgba(14, 165, 233, 0.1)",
-    padding: 8,
-    borderRadius: 8,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  headerSubtitle: {
-    color: "#9CA3AF",
-    fontSize: 12,
-  },
-
-  // Overview metrics section
-  overviewSection: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  metricItem: {
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
-  },
-  metricItemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  metricItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
-    minWidth: 0,
-  },
-  metricIcon: {
-    padding: 8,
-    borderRadius: 8,
-  },
-  metricItemInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-  metricItemLabel: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  metricItemDesc: {
-    color: "#9CA3AF",
-    fontSize: 12,
-  },
-  metricItemRight: {
-    alignItems: "flex-end",
-  },
-  metricCount: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
   // Section titles
   sectionTitle: {
     color: "#9CA3AF",
@@ -495,5 +247,18 @@ const styles = StyleSheet.create({
   breakdownPercentage: {
     color: "#6B7280",
     fontSize: 10,
+  },
+
+  // Empty state
+  emptyState: {
+    padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  emptyStateText: {
+    color: "#6B7280",
+    fontSize: 11,
+    textAlign: "center",
   },
 });

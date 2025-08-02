@@ -287,6 +287,9 @@ export function ReactQueryDevToolsBubble({
                     <EnvVarsContent requiredEnvVars={requiredEnvVars} />
                   </ScrollView>
                 ),
+                onClose: () => {
+                  // Clean up any state when leaving the env vars section
+                },
               },
               {
                 id: "react-query",
