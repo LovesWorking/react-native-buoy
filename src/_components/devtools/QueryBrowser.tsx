@@ -12,6 +12,7 @@ interface Props {
   activeFilter?: string | null;
   emptyStateMessage?: string;
   contentContainerStyle?: ContentStyle;
+  queries?: Query<any, any, any, any>[]; // Optional external queries to override useAllQueries
 }
 
 // Stable module-scope functions to prevent FlashList view recreation [[memory:4875251]]
@@ -35,9 +36,11 @@ export default function QueryBrowser({
   activeFilter,
   emptyStateMessage,
   contentContainerStyle,
+  queries: externalQueries,
 }: Props) {
-  // Holds all queries using the working hook
-  const allQueries = useAllQueries();
+  // Holds all queries using the working hook, or use external queries if provided
+  const internalQueries = useAllQueries();
+  const allQueries = externalQueries ?? internalQueries;
 
   // Filter queries based on active filter - same logic as working implementation
   const filteredQueries = React.useMemo(() => {

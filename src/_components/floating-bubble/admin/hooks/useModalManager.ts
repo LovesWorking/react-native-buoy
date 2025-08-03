@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Mutation, Query, QueryKey } from "@tanstack/react-query";
 import { useModalPersistence } from "./useModalPersistence";
+import { StorageType } from "../../../_util/storageQueryUtils";
 
 /**
  * Custom hook for managing modal states and related query selection
@@ -16,12 +17,15 @@ export function useModalManager() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [isStateRestored, setIsStateRestored] = useState(false);
-  const [activeTab, setActiveTab] = useState<"queries" | "mutations">(
-    "queries"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "queries" | "mutations" | "storage"
+  >("queries");
   const [selectedMutationId, setSelectedMutationId] = useState<
     number | undefined
   >(undefined);
+  const [activeStorageTypes, setActiveStorageTypes] = useState<
+    Set<StorageType>
+  >(new Set(["mmkv", "async", "secure"]));
 
   // Persistence hook for saving/loading modal state
   const { loadSavedState } = useModalPersistence({
@@ -33,6 +37,7 @@ export function useModalManager() {
     activeFilter,
     activeTab,
     selectedMutationId,
+    activeStorageTypes,
     isStateRestored,
   });
 
@@ -68,6 +73,16 @@ export function useModalManager() {
           }
           if (savedState.selectedMutationId) {
             setSelectedMutationId(Number(savedState.selectedMutationId));
+          }
+          if (savedState.activeStorageTypes) {
+            try {
+              const storageTypesArray = JSON.parse(
+                savedState.activeStorageTypes
+              ) as StorageType[];
+              setActiveStorageTypes(new Set(storageTypesArray));
+            } catch (error) {
+              // Silently fail if storage types can't be parsed, use default
+            }
           }
         }
       } catch (error) {
@@ -107,10 +122,11 @@ export function useModalManager() {
     setSelectedMutationId(mutation?.mutationId);
   };
 
-  const handleTabChange = (newTab: "queries" | "mutations") => {
+  const handleTabChange = (newTab: "queries" | "mutations" | "storage") => {
     if (newTab !== activeTab) {
       setSelectedQueryKey(undefined);
       setSelectedMutationId(undefined);
+      // Reset query status filters when switching tabs (they don't apply to storage)
       setActiveFilter(null);
     }
     setActiveTab(newTab);
@@ -123,16 +139,18 @@ export function useModalManager() {
     selectedSection,
     activeFilter,
     isStateRestored,
+    activeTab,
+    selectedMutationId,
+    activeStorageTypes,
     setSelectedSection,
     setActiveFilter,
+    setActiveTab,
+    setActiveStorageTypes,
     handleModalDismiss,
     handleDebugModalDismiss,
     handleQuerySelect,
     handleQueryPress,
     handleStatusPress,
-    activeTab,
-    selectedMutationId,
-    setActiveTab,
     handleTabChange,
     handleMutationSelect,
   };

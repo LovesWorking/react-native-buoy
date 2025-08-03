@@ -13,7 +13,7 @@ interface DataEditorModalProps {
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
   enableSharedModalDimensions?: boolean;
-  onTabChange: (tab: "queries" | "mutations") => void;
+  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
 }
 
 /**
@@ -44,14 +44,12 @@ export function DataEditorModal({
       activeTab="queries"
       onTabChange={onTabChange}
       onBack={() => onQuerySelect(undefined)}
-      activeFilter={activeFilter}
-      onFilterChange={setActiveFilter}
     />
   );
 
   const storagePrefix = enableSharedModalDimensions
     ? "@react_query_modal"
-    : "@data_editor_modal";
+    : "@react_query_editor_modal";
 
   if (!visible || !selectedQuery) return null;
 

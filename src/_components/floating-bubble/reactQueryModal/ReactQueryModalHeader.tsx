@@ -1,20 +1,15 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Query } from "@tanstack/react-query";
-import QueryStatusCount from "../../devtools/QueryStatusCount";
 import { BackButton } from "../admin/components/BackButton";
 import { Mutation } from "@tanstack/react-query";
-import MutationStatusCount from "../../devtools/MutationStatusCount";
-import { TouchableOpacity } from "react-native";
 import { displayValue } from "../../devtools/displayValue";
 
 interface ReactQueryModalHeaderProps {
   selectedQuery?: Query;
   selectedMutation?: Mutation;
-  activeTab: "queries" | "mutations";
-  onTabChange: (tab: "queries" | "mutations") => void;
+  activeTab: "queries" | "mutations" | "storage";
+  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
   onBack: () => void;
-  activeFilter: string | null;
-  onFilterChange: (filter: string | null) => void;
 }
 
 export function ReactQueryModalHeader({
@@ -23,8 +18,6 @@ export function ReactQueryModalHeader({
   activeTab,
   onTabChange,
   onBack,
-  activeFilter,
-  onFilterChange,
 }: ReactQueryModalHeaderProps) {
   // Simple function to get query display text
   const getQueryText = (query: Query) => {
@@ -73,17 +66,68 @@ export function ReactQueryModalHeader({
         </View>
       ) : (
         <View style={styles.browserView}>
-          {activeTab === "queries" ? (
-            <QueryStatusCount
-              activeFilter={activeFilter}
-              onFilterChange={onFilterChange}
-            />
-          ) : (
-            <MutationStatusCount
-              activeFilter={activeFilter}
-              onFilterChange={onFilterChange}
-            />
-          )}
+          <View style={styles.tabNavigationContainer}>
+            <TouchableOpacity
+              onPress={() => onTabChange("queries")}
+              style={[
+                styles.tabButton,
+                activeTab === "queries"
+                  ? styles.tabButtonActive
+                  : styles.tabButtonInactive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === "queries"
+                    ? styles.tabButtonTextActive
+                    : styles.tabButtonTextInactive,
+                ]}
+              >
+                Queries
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => onTabChange("mutations")}
+              style={[
+                styles.tabButton,
+                activeTab === "mutations"
+                  ? styles.tabButtonActive
+                  : styles.tabButtonInactive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === "mutations"
+                    ? styles.tabButtonTextActive
+                    : styles.tabButtonTextInactive,
+                ]}
+              >
+                Mutations
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => onTabChange("storage")}
+              style={[
+                styles.tabButton,
+                activeTab === "storage"
+                  ? styles.tabButtonActive
+                  : styles.tabButtonInactive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === "storage"
+                    ? styles.tabButtonTextActive
+                    : styles.tabButtonTextInactive,
+                ]}
+              >
+                Storage
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
@@ -111,10 +155,54 @@ const styles = StyleSheet.create({
   browserView: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "stretch", // Let QueryStatusCount use full width
+    alignItems: "stretch", // Let navigation use full width
     minHeight: 32, // Match FloatingModalHeader minHeight
     paddingLeft: 4, // Consistent left spacing
     paddingRight: 4, // Minimal right padding to match left
+  },
+
+  tabNavigationContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 6,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    justifyContent: "space-evenly", // Evenly distribute tabs
+  },
+
+  tabButton: {
+    paddingHorizontal: 8, // Reduced padding for better fit
+    paddingVertical: 5,
+    borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1, // Use flex to evenly distribute space
+    marginHorizontal: 1, // Small margin between buttons
+  },
+
+  tabButtonActive: {
+    backgroundColor: "rgba(14, 165, 233, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(14, 165, 233, 0.2)",
+  },
+
+  tabButtonInactive: {
+    backgroundColor: "transparent",
+  },
+
+  tabButtonText: {
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.2,
+  },
+
+  tabButtonTextActive: {
+    color: "#0EA5E9",
+  },
+
+  tabButtonTextInactive: {
+    color: "#9CA3AF",
   },
 
   queryText: {

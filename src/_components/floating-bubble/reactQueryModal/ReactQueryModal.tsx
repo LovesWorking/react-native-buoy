@@ -6,12 +6,14 @@ import { DataEditorMode } from "../admin/components/DataEditorMode";
 import { useGetQueryByQueryKey } from "../../_hooks/useSelectedQuery";
 import { QueryBrowserModal } from "./modals/QueryBrowserModal";
 import { DataEditorModal } from "./modals/DataEditorModal";
+import { StorageBrowserModal } from "./modals/StorageBrowserModal";
 import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { View } from "react-native";
 import { QueryBrowserMode } from "../admin/components/QueryBrowserMode";
 import { MutationBrowserModal } from "./modals/MutationBrowserModal";
 import { MutationEditorModal } from "./modals/MutationEditorModal";
+import { StorageType } from "../../_util/storageQueryUtils";
 
 interface ReactQueryModalProps {
   visible: boolean;
@@ -22,8 +24,10 @@ interface ReactQueryModalProps {
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
-  activeTab: "queries" | "mutations";
-  onTabChange: (tab: "queries" | "mutations") => void;
+  activeTab: "queries" | "mutations" | "storage";
+  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
+  activeStorageTypes?: Set<StorageType>;
+  onStorageTypesChange?: (storageTypes: Set<StorageType>) => void;
   enableSharedModalDimensions?: boolean;
 }
 
@@ -47,6 +51,8 @@ export function ReactQueryModal({
   onFilterChange,
   activeTab,
   onTabChange,
+  activeStorageTypes,
+  onStorageTypesChange,
   enableSharedModalDimensions = false,
 }: ReactQueryModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
@@ -54,6 +60,8 @@ export function ReactQueryModal({
 
   const inDetail = !!selectedQuery || !!selectedMutation;
   const isQueryMode = activeTab === "queries";
+  const isMutationMode = activeTab === "mutations";
+  const isStorageMode = activeTab === "storage";
 
   const commonProps = {
     onClose,
@@ -72,11 +80,21 @@ export function ReactQueryModal({
         {...commonProps}
       />
       <MutationBrowserModal
-        visible={visible && !inDetail && !isQueryMode}
+        visible={visible && !inDetail && isMutationMode}
         selectedMutationId={selectedMutationId}
         onMutationSelect={onMutationSelect}
         onTabChange={onTabChange}
         {...commonProps}
+      />
+      <StorageBrowserModal
+        visible={visible && !inDetail && isStorageMode}
+        selectedQueryKey={selectedQueryKey}
+        onQuerySelect={onQuerySelect}
+        onTabChange={onTabChange}
+        activeStorageTypes={activeStorageTypes}
+        onStorageTypesChange={onStorageTypesChange}
+        enableSharedModalDimensions={enableSharedModalDimensions}
+        onClose={onClose}
       />
       <DataEditorModal
         visible={visible && inDetail && !!selectedQuery}

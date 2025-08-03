@@ -1,6 +1,5 @@
 import { View, StyleSheet } from "react-native";
 import { Mutation } from "@tanstack/react-query";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MutationsList from "../../../devtools/MutationsList";
 
 interface MutationBrowserModeProps {
@@ -14,34 +13,26 @@ export function MutationBrowserMode({
   onMutationSelect,
   activeFilter,
 }: MutationBrowserModeProps) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <>
-      <View style={styles.mutationListContainer}>
-        <MutationsList
-          selectedMutation={selectedMutation}
-          setSelectedMutation={onMutationSelect as any}
-          activeFilter={activeFilter}
-          hideInfoPanel={true}
-          contentContainerStyle={styles.mutationListContent}
-        />
-      </View>
-      {/* Safe area */}
-      <View style={[styles.safeArea, { height: insets.bottom }]} />
-    </>
+    <View style={styles.mutationListContainer}>
+      <MutationsList
+        selectedMutation={selectedMutation}
+        setSelectedMutation={onMutationSelect as any}
+        activeFilter={activeFilter}
+        hideInfoPanel={true}
+        contentContainerStyle={styles.mutationListContent}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   mutationListContainer: {
     flex: 1,
+    backgroundColor: "#171717", // Match container background to content background
   },
   mutationListContent: {
     padding: 8,
     backgroundColor: "#171717",
-  },
-  safeArea: {
-    backgroundColor: "#2A2A2A",
   },
 });

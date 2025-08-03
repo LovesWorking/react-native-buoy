@@ -3,6 +3,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useCallback, useState } from "react";
 import { useGetMutationById } from "../../../_hooks/useSelectedMutation";
 import { MutationBrowserMode } from "../../admin/components/MutationBrowserMode";
+import { MutationBrowserFooter } from "../components/MutationBrowserFooter";
 import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
 import { View, Dimensions } from "react-native";
@@ -12,6 +13,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SwipeIndicator } from "../components/SwipeIndicator";
+import { useModalState } from "../../admin/hooks";
 
 interface MutationBrowserModalProps {
   visible: boolean;
@@ -20,7 +22,7 @@ interface MutationBrowserModalProps {
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
-  onTabChange: (tab: "queries" | "mutations") => void;
+  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
   enableSharedModalDimensions?: boolean;
 }
 
@@ -40,6 +42,12 @@ export function MutationBrowserModal({
   >(null);
   const activeFilter = externalActiveFilter ?? internalActiveFilter;
   const setActiveFilter = externalOnFilterChange ?? setInternalActiveFilter;
+
+  // Get floating mode state for conditional styling
+  const storagePrefix = enableSharedModalDimensions
+    ? "@react_query_modal"
+    : "@react_query_browser_modal";
+  const modalState = useModalState({ storagePrefix });
 
   // Shared values for gesture tracking [[memory:4875251]]
   const translationX = useSharedValue(0);
@@ -88,14 +96,8 @@ export function MutationBrowserModal({
       activeTab="mutations"
       onTabChange={onTabChange}
       onBack={() => onMutationSelect(undefined)}
-      activeFilter={activeFilter}
-      onFilterChange={setActiveFilter}
     />
   );
-
-  const storagePrefix = enableSharedModalDimensions
-    ? "@react_query_modal"
-    : "@mutation_browser_modal";
 
   return (
     <BaseFloatingModal
@@ -105,23 +107,27 @@ export function MutationBrowserModal({
       showToggleButton={true}
       customHeaderContent={renderHeaderContent()}
     >
-      <GestureDetector gesture={panGesture}>
-        <View style={{ flex: 1 }}>
-          <SwipeIndicator
-            translationX={translationX}
-            screenWidth={screenWidth}
-            leftAction="left"
-            rightAction="queries"
-            canSwipeLeft={false}
-            canSwipeRight={true}
-          />
-          <MutationBrowserMode
-            selectedMutation={selectedMutation}
-            onMutationSelect={onMutationSelect}
-            activeFilter={activeFilter}
-          />
-        </View>
-      </GestureDetector>
+      <View style={{ flex: 1 }}>
+        <GestureDetector gesture={panGesture}>
+          <View style={{ flex: 1 }}>
+            <SwipeIndicator
+              translationX={translationX}
+              canSwipeLeft={false}
+              canSwipeRight={true}
+            />
+            <MutationBrowserMode
+              selectedMutation={selectedMutation}
+              onMutationSelect={onMutationSelect}
+              activeFilter={activeFilter}
+            />
+          </View>
+        </GestureDetector>
+        <MutationBrowserFooter
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          isFloatingMode={modalState.isFloatingMode}
+        />
+      </View>
     </BaseFloatingModal>
   );
 }

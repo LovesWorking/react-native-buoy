@@ -1,9 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { Query, useQueryClient } from "@tanstack/react-query";
 import { isEqual } from "lodash";
-import { isStorageQuery } from "../_util/storageQueryUtils";
+import {
+  isStorageQuery,
+  StorageType,
+  shouldFilterStorageQuery,
+} from "../_util/storageQueryUtils";
 
-// React Query DevTools sorting logic
+// React Query DevTools sorting logic - same as useAllQueries [[memory:4875251]]
 type SortFn = (a: Query, b: Query) => number;
 
 const getStatusRank = (q: Query) =>
@@ -26,7 +30,15 @@ const statusAndDateSort: SortFn = (a, b) => {
   return getStatusRank(a) > getStatusRank(b) ? 1 : -1;
 };
 
-function useAllQueries() {
+/**
+ * Hook to get storage queries with optional storage type filtering
+ *
+ * Applied performance principles:
+ * - No unnecessary memoization [[memory:4875074]]
+ * - Composition over memo - filtering at component level
+ * - Stable references with useRef for comparison
+ */
+function useStorageQueries(enabledStorageTypes?: Set<StorageType>) {
   const queryClient = useQueryClient();
   const [queries, setQueries] = useState<Query<any, any, any, any>[]>([]);
   const queriesRef = useRef<any[]>([]);
@@ -35,13 +47,22 @@ function useAllQueries() {
     const updateQueries = () => {
       const allQueries = queryClient.getQueryCache().getAll();
 
-      // Filter out storage queries - they have their own dedicated tab
-      const nonStorageQueries = allQueries.filter(
-        (query) => !isStorageQuery(query.queryKey)
+      // Filter to only storage queries first
+      const storageQueries = allQueries.filter((query) =>
+        isStorageQuery(query.queryKey)
       );
 
-      const sortedQueries = nonStorageQueries.sort(statusAndDateSort);
+      // Apply storage type filtering if enabled types are specified
+      const filteredQueries = enabledStorageTypes
+        ? storageQueries.filter(
+            (query) =>
+              !shouldFilterStorageQuery(query.queryKey, enabledStorageTypes)
+          )
+        : storageQueries;
+
+      const sortedQueries = filteredQueries.sort(statusAndDateSort);
       const newStates = sortedQueries.map((q) => q.state);
+
       if (!isEqual(queriesRef.current, newStates)) {
         queriesRef.current = newStates;
         setTimeout(() => setQueries(sortedQueries), 0);
@@ -53,9 +74,9 @@ function useAllQueries() {
     const unsubscribe = queryClient.getQueryCache().subscribe(updateQueries);
 
     return () => unsubscribe();
-  }, [queryClient]);
+  }, [queryClient, enabledStorageTypes]);
 
   return queries;
 }
 
-export default useAllQueries;
+export default useStorageQueries;

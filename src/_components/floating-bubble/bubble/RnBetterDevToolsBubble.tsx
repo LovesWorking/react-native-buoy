@@ -15,6 +15,7 @@ import {
 import { type BubbleConfig } from "../admin/components/RnBetterDevToolsBubbleContent";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
 import { ReactQueryModal } from "../reactQueryModal/ReactQueryModal";
+import { StorageType } from "../../_util/storageQueryUtils";
 import { DevToolsConsole } from "../DevToolsConsole";
 
 interface RnBetterDevToolsBubbleProps {
@@ -51,8 +52,10 @@ export function RnBetterDevToolsBubble({
     isStateRestored,
     activeTab,
     selectedMutationId,
+    activeStorageTypes,
     setSelectedSection,
     setActiveFilter,
+    setActiveStorageTypes,
     handleModalDismiss,
     handleDebugModalDismiss,
     handleQuerySelect,
@@ -101,6 +104,8 @@ export function RnBetterDevToolsBubble({
             onTabChange={handleTabChange}
             selectedMutationId={selectedMutationId}
             onMutationSelect={handleMutationSelect}
+            activeStorageTypes={activeStorageTypes}
+            onStorageTypesChange={setActiveStorageTypes}
           />
 
           {/* DevTools Console - Auto-opens if restored state indicates it was open */}

@@ -6,6 +6,7 @@ import {
   clearModalVisibilityState,
   ModalVisibilityState,
 } from "../components/storage/modalStorageOperations";
+import { StorageType } from "../../../_util/storageQueryUtils";
 
 interface UseModalPersistenceProps {
   storagePrefix: string;
@@ -14,8 +15,9 @@ interface UseModalPersistenceProps {
   selectedQueryKey?: QueryKey;
   selectedSection?: string | null;
   activeFilter?: string | null; // React Query filter state
-  activeTab?: "queries" | "mutations";
+  activeTab?: "queries" | "mutations" | "storage";
   selectedMutationId?: number | undefined;
+  activeStorageTypes?: Set<StorageType>; // Storage type filter state
   isStateRestored: boolean; // Prevent clearing storage before restoration completes
 }
 
@@ -36,6 +38,9 @@ export function useModalPersistence({
   selectedQueryKey,
   selectedSection,
   activeFilter,
+  activeTab,
+  selectedMutationId,
+  activeStorageTypes,
   isStateRestored,
 }: UseModalPersistenceProps): UseModalPersistenceReturn {
   const saveCurrentState = async () => {
@@ -47,6 +52,11 @@ export function useModalPersistence({
         : undefined,
       selectedSection: selectedSection || undefined,
       activeFilter: activeFilter || undefined,
+      activeTab: activeTab || undefined,
+      selectedMutationId: selectedMutationId?.toString() || undefined,
+      activeStorageTypes: activeStorageTypes
+        ? JSON.stringify(Array.from(activeStorageTypes))
+        : undefined,
     };
 
     await saveModalVisibilityState(storagePrefix, state);
@@ -80,6 +90,9 @@ export function useModalPersistence({
     selectedQueryKey,
     selectedSection,
     activeFilter,
+    activeTab,
+    selectedMutationId,
+    activeStorageTypes,
     isStateRestored,
   ]);
 

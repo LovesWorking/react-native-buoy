@@ -12,7 +12,7 @@ interface MutationEditorModalProps {
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
-  onTabChange: (tab: "queries" | "mutations") => void;
+  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
   enableSharedModalDimensions?: boolean;
 }
 
@@ -39,14 +39,12 @@ export function MutationEditorModal({
       activeTab="mutations"
       onTabChange={onTabChange}
       onBack={() => onMutationSelect(undefined)}
-      activeFilter={activeFilter}
-      onFilterChange={setActiveFilter}
     />
   );
 
   const storagePrefix = enableSharedModalDimensions
     ? "@react_query_modal"
-    : "@mutation_editor_modal";
+    : "@react_query_editor_modal";
 
   if (!visible || !selectedMutation) return null;
 

@@ -2,11 +2,10 @@ import { Query, QueryKey } from "@tanstack/react-query";
 import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 import { useGetQueryByQueryKey } from "../../../_hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
-import { QueryBrowserMode } from "../../admin/components/QueryBrowserMode";
-import { QueryBrowserFooter } from "../components/QueryBrowserFooter";
-import { useState } from "react";
+import { StorageBrowserMode } from "../../admin/components/StorageBrowserMode";
+import { StorageBrowserFooter } from "../components/StorageBrowserFooter";
+import { useState, useCallback } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useCallback } from "react";
 import { View, Dimensions } from "react-native";
 import Animated, {
   useSharedValue,
@@ -14,40 +13,47 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SwipeIndicator } from "../components/SwipeIndicator";
+import { StorageType } from "../../../_util/storageQueryUtils";
 import { useModalState } from "../../admin/hooks";
+import { StorageTypeCounts } from "../../../_util/getStorageQueryCounts";
 
-interface QueryBrowserModalProps {
+interface StorageBrowserModalProps {
   visible: boolean;
   selectedQueryKey?: QueryKey;
   onQuerySelect: (query: Query | undefined) => void;
   onClose: () => void;
-  activeFilter?: string | null;
-  onFilterChange?: (filter: string | null) => void;
+  activeStorageTypes?: Set<StorageType>;
+  onStorageTypesChange?: (storageTypes: Set<StorageType>) => void;
   enableSharedModalDimensions?: boolean;
   onTabChange: (tab: "queries" | "mutations" | "storage") => void;
 }
 
 /**
- * Specialized modal for query browsing following "Decompose by Responsibility"
- * Single purpose: Display query browser when no query is selected
+ * Specialized modal for storage browsing following "Decompose by Responsibility"
+ * Single purpose: Display storage queries when storage tab is selected
  */
-export function QueryBrowserModal({
+export function StorageBrowserModal({
   visible,
   selectedQueryKey,
   onQuerySelect,
   onClose,
-  activeFilter: externalActiveFilter,
-  onFilterChange: externalOnFilterChange,
+  activeStorageTypes = new Set(["mmkv", "async", "secure"]),
+  onStorageTypesChange,
   enableSharedModalDimensions = false,
   onTabChange,
-}: QueryBrowserModalProps) {
+}: StorageBrowserModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
-  // Use external filter state if provided (for persistence), otherwise use internal state
-  const [internalActiveFilter, setInternalActiveFilter] = useState<
-    string | null
-  >(null);
-  const activeFilter = externalActiveFilter ?? internalActiveFilter;
-  const setActiveFilter = externalOnFilterChange ?? setInternalActiveFilter;
+  const [storageCounts, setStorageCounts] = useState<StorageTypeCounts>({
+    mmkv: 0,
+    async: 0,
+    secure: 0,
+    total: 0,
+  });
+
+  // Stable callback to prevent infinite re-renders [[rule3]]
+  const handleCountsChange = useCallback((newCounts: StorageTypeCounts) => {
+    setStorageCounts(newCounts);
+  }, []);
 
   // Get floating mode state for conditional styling
   const storagePrefix = enableSharedModalDimensions
@@ -62,7 +68,9 @@ export function QueryBrowserModal({
   const handleSwipeNavigation = useCallback(
     (direction: "left" | "right") => {
       if (direction === "left") {
-        onTabChange("mutations");
+        onTabChange("queries"); // Swipe left goes to queries (first tab)
+      } else if (direction === "right") {
+        onTabChange("mutations"); // Swipe right goes to mutations (middle tab)
       }
     },
     [onTabChange]
@@ -98,8 +106,7 @@ export function QueryBrowserModal({
 
   const renderHeaderContent = () => (
     <ReactQueryModalHeader
-      selectedQuery={selectedQuery}
-      activeTab="queries"
+      activeTab="storage"
       onTabChange={onTabChange}
       onBack={() => onQuerySelect(undefined)}
     />
@@ -119,19 +126,21 @@ export function QueryBrowserModal({
             <SwipeIndicator
               translationX={translationX}
               canSwipeLeft={true}
-              canSwipeRight={false}
+              canSwipeRight={true}
             />
-            <QueryBrowserMode
+            <StorageBrowserMode
               selectedQuery={selectedQuery}
               onQuerySelect={onQuerySelect}
-              activeFilter={activeFilter}
+              activeStorageTypes={activeStorageTypes}
+              onCountsChange={handleCountsChange}
             />
           </View>
         </GestureDetector>
-        <QueryBrowserFooter
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
+        <StorageBrowserFooter
+          activeStorageTypes={activeStorageTypes}
+          onStorageTypesChange={onStorageTypesChange}
           isFloatingMode={modalState.isFloatingMode}
+          counts={storageCounts}
         />
       </View>
     </BaseFloatingModal>
