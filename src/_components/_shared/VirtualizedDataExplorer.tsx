@@ -22,8 +22,8 @@ import { displayValue } from "../devtools/displayValue";
 // Stable constants to prevent re-renders [[memory:4875251]]
 const STABLE_EMPTY_ARRAY: any[] = [];
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
-const ITEM_HEIGHT = 32; // Fixed height for better performance
-const LONG_ITEM_HEIGHT = 48; // Height for items with long keys
+const ITEM_HEIGHT = 24; // Fixed height for better performance - reduced for tighter spacing
+const LONG_ITEM_HEIGHT = 36; // Height for items with long keys - reduced for tighter spacing
 const CHUNK_SIZE = 50; // Process data in chunks to avoid blocking UI
 const MAX_DEPTH_LIMIT = 15; // Prevent excessive nesting
 const MAX_ITEMS_PER_LEVEL = 500; // Limit items to prevent memory issues
@@ -34,7 +34,9 @@ const INDENT_STYLES = Array.from(
   { length: MAX_DEPTH_LIMIT + 1 },
   (_, depth) =>
     StyleSheet.create({
-      container: { paddingLeft: depth === 0 ? 0 : 8 + depth * 12 }, // Start at 0 for root, then 8 + 12*depth
+      container: {
+        marginLeft: depth * 10, // Reduced space for tighter tree lines
+      },
     }).container
 );
 
@@ -91,6 +93,20 @@ const STABLE_STYLES = StyleSheet.create({
     alignItems: "center",
     marginBottom: 6,
   },
+  headerCopyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "rgba(139, 92, 246, 0.1)",
+    borderRadius: 6,
+  },
+  headerCopyButtonText: {
+    color: "#8B5CF6",
+    fontSize: 12,
+    fontWeight: "500",
+  },
   title: {
     color: "#FFFFFF", // text-white
     fontSize: 14,
@@ -132,23 +148,29 @@ const STABLE_STYLES = StyleSheet.create({
   itemContainer: {
     minHeight: ITEM_HEIGHT,
     backgroundColor: "transparent",
+    position: "relative",
+    flexDirection: "row",
+    alignItems: "flex-start", // Align items to top for better alignment with expand arrows
   },
   itemTouchable: {
+    flex: 1,
     flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 12,
+    alignItems: "flex-start", // Changed from center to align expand arrow with first line of text
+    paddingLeft: 0, // Remove padding to align with tree lines
     paddingRight: 50, // Reduced from 60 since copy button is closer
-    paddingVertical: 8,
+    paddingVertical: 2, // Further reduced for even tighter spacing
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.05)", // border-white/[0.05]
+    minHeight: 24, // Match ITEM_HEIGHT for consistency
   },
   itemTouchablePressed: {
     backgroundColor: "rgba(255, 255, 255, 0.02)", // bg-white/[0.02]
   },
   expanderContainer: {
-    width: 20,
+    width: 16, // Reduced to minimize space
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 4, // Align with text baseline
   },
   expanderIcon: {
     width: 12,
@@ -157,13 +179,14 @@ const STABLE_STYLES = StyleSheet.create({
   labelContainer: {
     flex: 1,
     flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 4,
+    alignItems: "flex-start",
+    paddingLeft: 2, // Reduced padding for tighter alignment
+    flexWrap: "wrap",
   },
   labelContainerVertical: {
     flex: 1,
     flexDirection: "column",
-    paddingLeft: 4,
+    paddingLeft: 2, // Reduced padding for tighter alignment
     paddingVertical: 2,
   },
   labelContainerVerticalRow: {
@@ -177,13 +200,16 @@ const STABLE_STYLES = StyleSheet.create({
     fontWeight: "500", // font-medium
     fontFamily: "monospace",
     marginRight: 8,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   labelTextTruncated: {
     color: "#FFFFFF", // text-white
     fontSize: 12,
     fontWeight: "500", // font-medium
     fontFamily: "monospace",
-    flex: 1,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   valueTextVertical: {
     fontSize: 12,
@@ -198,12 +224,12 @@ const STABLE_STYLES = StyleSheet.create({
     color: "#D1D5DB", // text-gray-300
   },
   copyButton: {
-    padding: 6,
+    padding: 4, // Reduced from 6
     borderRadius: 4,
-    position: "absolute",
-    right: 12,
-    top: "50%",
-    transform: [{ translateY: -12 }],
+    marginLeft: "auto",
+    marginRight: 8,
+    alignSelf: "flex-start",
+    marginTop: 2,
     backgroundColor: "rgba(107, 114, 128, 0.1)", // bg-gray-500/10
   },
   loadingContainer: {
@@ -636,19 +662,41 @@ const VirtualizedItem = React.memo(
       }
     };
 
-    // Truncate long keys for display
-    const displayKey =
-      isLongKey && !showFullKey
-        ? `${item.key.substring(0, LONG_KEY_THRESHOLD)}...`
-        : item.key;
+    // Always show full key for better identification
+    const displayKey = item.key;
 
     return (
       <View style={[STABLE_STYLES.itemContainer, indentStyle]}>
+        {/* Tree lines */}
+        {item.depth > 0 && (
+          <View
+            style={{
+              position: "absolute",
+              left: -10,
+              top: 0,
+              bottom: 0,
+              width: 1,
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+            }}
+          />
+        )}
+        {item.depth > 0 && (
+          <View
+            style={{
+              position: "absolute",
+              left: -10,
+              top: 10, // Center of the 20px height (marginTop: 4 + height: 12 / 2)
+              width: 10, // Connect to the arrow
+              height: 1,
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+            }}
+          />
+        )}
         <TouchableOpacity
           style={[
             STABLE_STYLES.itemTouchable,
             isPressed && STABLE_STYLES.itemTouchablePressed,
-            isLongKey && { minHeight: LONG_ITEM_HEIGHT, paddingVertical: 6 },
+            isLongKey && { minHeight: LONG_ITEM_HEIGHT, paddingVertical: 2 },
           ]}
           onPress={handlePress}
           onPressIn={() => setIsPressed(true)}
@@ -669,7 +717,7 @@ const VirtualizedItem = React.memo(
                 <TouchableOpacity onPress={handleKeyPress} style={{ flex: 1 }}>
                   <Text
                     style={STABLE_STYLES.labelTextTruncated}
-                    numberOfLines={showFullKey ? undefined : 1}
+                    numberOfLines={undefined}
                   >
                     {displayKey}:
                   </Text>
@@ -695,7 +743,9 @@ const VirtualizedItem = React.memo(
           ) : (
             // Horizontal layout for normal keys
             <View style={STABLE_STYLES.labelContainer}>
-              <Text style={STABLE_STYLES.labelText}>{item.key}:</Text>
+              <Text style={STABLE_STYLES.labelText} numberOfLines={undefined}>
+                {item.key}:
+              </Text>
 
               {item.isExpandable ? (
                 <Text style={[STABLE_STYLES.valueText, { color: "#9CA3AF" }]}>

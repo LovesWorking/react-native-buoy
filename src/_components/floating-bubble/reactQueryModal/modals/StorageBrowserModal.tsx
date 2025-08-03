@@ -26,6 +26,7 @@ interface StorageBrowserModalProps {
   onStorageTypesChange?: (storageTypes: Set<StorageType>) => void;
   enableSharedModalDimensions?: boolean;
   onTabChange: (tab: "queries" | "mutations" | "storage") => void;
+  requiredStorageKeys?: any[]; // Configuration for required storage keys
 }
 
 /**
@@ -41,6 +42,7 @@ export function StorageBrowserModal({
   onStorageTypesChange,
   enableSharedModalDimensions = false,
   onTabChange,
+  requiredStorageKeys,
 }: StorageBrowserModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
   const [storageCounts, setStorageCounts] = useState<StorageTypeCounts>({
@@ -133,6 +135,7 @@ export function StorageBrowserModal({
               onQuerySelect={onQuerySelect}
               activeStorageTypes={activeStorageTypes}
               onCountsChange={handleCountsChange}
+              requiredStorageKeys={requiredStorageKeys}
             />
           </View>
         </GestureDetector>
