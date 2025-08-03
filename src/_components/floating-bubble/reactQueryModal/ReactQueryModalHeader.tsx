@@ -45,7 +45,13 @@ export function ReactQueryModalHeader({
       return getQueryText(item);
     } else {
       return item.options.mutationKey
-        ? displayValue(item.options.mutationKey, true)
+        ? (Array.isArray(item.options.mutationKey)
+            ? item.options.mutationKey
+            : [item.options.mutationKey]
+          )
+            .filter((k) => k != null)
+            .map((k) => String(k))
+            .join(" › ") || `Mutation #${item.mutationId}`
         : `Mutation #${item.mutationId}`;
     }
   };

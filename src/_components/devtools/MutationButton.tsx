@@ -3,6 +3,20 @@ import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 import { CheckCircle, LoadingCircle, PauseCircle, XCircle } from "./svgs";
 import { getMutationStatusColors } from "../_util/mutationStatusToColorClass";
 import { displayValue } from "./displayValue";
+
+const getMutationText = (mutation: Mutation) => {
+  if (!mutation.options.mutationKey) return "Anonymous Mutation";
+  const keys = Array.isArray(mutation.options.mutationKey)
+    ? mutation.options.mutationKey
+    : [mutation.options.mutationKey];
+  return (
+    keys
+      .filter((k) => k != null)
+      .map((k) => String(k))
+      .join(" › ") || "Anonymous Mutation"
+  );
+};
+
 interface Props {
   mutation: Mutation<any, any, any, any>;
   setSelectedMutation: React.Dispatch<
@@ -15,11 +29,7 @@ export default function MutationButton({
   setSelectedMutation,
   selected,
 }: Props) {
-  const mutationKey = mutation.options.mutationKey
-    ? JSON.stringify(displayValue(mutation.options.mutationKey, false)) + " - "
-    : "";
   const submittedAt = new Date(mutation.state.submittedAt).toLocaleTimeString();
-  const value = `${mutationKey}${submittedAt}`;
 
   const { backgroundColor, textColor } = getMutationStatusColors({
     isPaused: mutation.state.isPaused,
@@ -67,13 +77,7 @@ export default function MutationButton({
         </View>
 
         <View style={styles.mutationSection}>
-          <Text
-            style={styles.mutationKey}
-            numberOfLines={1}
-            ellipsizeMode="middle"
-          >
-            {mutationKey || "Anonymous Mutation"}
-          </Text>
+          <Text style={styles.mutationKey}>{getMutationText(mutation)}</Text>
         </View>
       </View>
     </TouchableOpacity>

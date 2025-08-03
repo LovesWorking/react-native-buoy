@@ -3,6 +3,19 @@ import { Query } from "@tanstack/react-query";
 import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
 import { displayValue } from "./displayValue";
 
+const getQueryText = (query: Query) => {
+  if (!query?.queryKey) return "Unknown Query";
+  const keys = Array.isArray(query.queryKey)
+    ? query.queryKey
+    : [query.queryKey];
+  return (
+    keys
+      .filter((k) => k != null)
+      .map((k) => String(k))
+      .join(" › ") || "Unknown Query"
+  );
+};
+
 interface QueryRowProps {
   query: Query<any, any, any, any>;
   isSelected: boolean;
@@ -30,7 +43,7 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
   const status = getQueryStatusLabel(query);
   const observerCount = query.getObserversCount();
   const isDisabled = query.isDisabled();
-  const queryHash = displayValue(query.queryKey, false);
+  const queryHash = getQueryText(query);
 
   return (
     <TouchableOpacity
@@ -62,13 +75,7 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
         </View>
 
         <View style={styles.querySection}>
-          <Text
-            style={styles.queryHash}
-            numberOfLines={1}
-            ellipsizeMode="middle"
-          >
-            {queryHash}
-          </Text>
+          <Text style={styles.queryHash}>{queryHash}</Text>
           {isDisabled && <Text style={styles.disabledText}>Disabled</Text>}
         </View>
 

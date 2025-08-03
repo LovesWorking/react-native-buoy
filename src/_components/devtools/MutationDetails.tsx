@@ -42,29 +42,29 @@ export default function MutationDetails({ selectedMutation }: Props) {
 const styles = StyleSheet.create({
   container: {
     minWidth: 200,
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    backgroundColor: "#171717",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.06)",
+    borderColor: "rgba(255, 255, 255, 0.05)",
     overflow: "hidden",
   },
   mutationDetailsText: {
-    textAlign: "left",
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
     padding: 12,
     fontWeight: "600",
-    fontSize: 13,
+    fontSize: 14,
     color: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.06)",
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
   },
   flexRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.03)",
+    borderBottomColor: "rgba(255, 255, 255, 0.02)",
   },
   justifyBetween: {
     justifyContent: "space-between",
@@ -74,16 +74,17 @@ const styles = StyleSheet.create({
   },
   flex1: {
     flex: 1,
+    marginRight: 8,
   },
   flexWrap: {
     fontSize: 12,
-    color: "#E5E7EB",
+    color: "#F9FAFB",
     fontFamily: "monospace",
-    marginRight: 8,
     lineHeight: 16,
+    flexShrink: 1,
   },
   bgEAECF0: {
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
   },
   labelText: {
     fontSize: 12,
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
   valueText: {
     fontSize: 12,
     color: "#FFFFFF",
-    fontWeight: "500",
+    fontWeight: "600",
     fontVariant: ["tabular-nums"],
   },
 });
