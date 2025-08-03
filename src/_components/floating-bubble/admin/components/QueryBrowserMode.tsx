@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
   },
   queryListContent: {
     padding: 8, // Reduced to match main dev tools
+    backgroundColor: "#171717",
     flexGrow: 1,
   },
 

@@ -1,27 +1,20 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Query } from "@tanstack/react-query";
+import { Mutation } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Explorer from "../../../devtools/Explorer";
-import QueryDetails from "../../../devtools/QueryDetails";
+import MutationDetails from "../../../devtools/MutationDetails";
 import ActionButton from "../../../devtools/ActionButton";
-import { getQueryStatusLabel } from "../../../_util/getQueryStatusLabel";
-import { useActionButtons } from "../hooks/useActionButtons";
+import { useMutationActionButtons } from "../hooks/useMutationActionButtons";
 
-interface ActionButtonConfig {
-  label: string;
-  bgColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
-  textColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
-  disabled: boolean;
-  onPress: () => void;
+interface MutationEditorModeProps {
+  selectedMutation: Mutation;
 }
 
-interface DataEditorModeProps {
-  selectedQuery: Query;
-}
-
-export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
+export function MutationEditorMode({
+  selectedMutation,
+}: MutationEditorModeProps) {
   const insets = useSafeAreaInsets();
-  const actionButtons = useActionButtons(selectedQuery);
+  const actionButtons = useMutationActionButtons(selectedMutation);
 
   return (
     <>
@@ -29,30 +22,29 @@ export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
         style={styles.explorerScrollContainer}
         contentContainerStyle={styles.explorerScrollContent}
       >
-        {/* Data Explorer Section - Moved to top for immediate data editing */}
+        {/* Data Explorer Section */}
         <View style={styles.section}>
           <DataExplorer
-            visible={!!selectedQuery.state.data}
-            selectedQuery={selectedQuery}
+            visible={!!selectedMutation.state.data}
+            selectedMutation={selectedMutation}
           />
           <DataEmptyState
-            visible={!selectedQuery.state.data}
-            selectedQuery={selectedQuery}
+            visible={!selectedMutation.state.data}
+            selectedMutation={selectedMutation}
           />
         </View>
 
-        {/* Query Details Section */}
+        {/* Mutation Details Section */}
         <View style={styles.section}>
-          <QueryDetails query={selectedQuery} />
+          <MutationDetails selectedMutation={selectedMutation} />
         </View>
 
-        {/* Query Explorer Section */}
+        {/* Mutation Explorer Section */}
         <View style={styles.section}>
           <Explorer
-            label="Query"
-            value={selectedQuery}
-            defaultExpanded={["Query", "queryKey"]}
-            activeQuery={selectedQuery}
+            label="Mutation"
+            value={selectedMutation}
+            defaultExpanded={["Mutation"]}
           />
         </View>
       </ScrollView>
@@ -60,7 +52,7 @@ export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
       {/* Action Footer with Safe Area */}
       <View style={[styles.actionFooter, { paddingBottom: insets.bottom + 8 }]}>
         <View style={styles.actionsGrid}>
-          {actionButtons.map((action: ActionButtonConfig, index: number) => (
+          {actionButtons.map((action, index) => (
             <ActionButton
               key={index}
               onClick={action.onPress}
@@ -76,65 +68,56 @@ export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
   );
 }
 
-interface DataEmptyStateProps {
-  selectedQuery: Query;
-}
-
 function DataExplorer({
   visible,
-  selectedQuery,
+  selectedMutation,
 }: {
   visible: boolean;
-  selectedQuery: Query;
+  selectedMutation: Mutation;
 }) {
   if (!visible) return null;
   return (
     <Explorer
-      key={selectedQuery.queryHash}
+      key={selectedMutation.mutationId}
       editable={true}
       label="Data"
-      value={selectedQuery.state.data}
+      value={selectedMutation.state.data}
       defaultExpanded={["Data"]}
-      activeQuery={selectedQuery}
     />
   );
 }
 
+interface DataEmptyStateProps {
+  selectedMutation: Mutation;
+}
+
 function DataEmptyState({
   visible,
-  selectedQuery,
+  selectedMutation,
 }: {
   visible: boolean;
-  selectedQuery: Query;
+  selectedMutation: Mutation;
 }) {
   if (!visible) return null;
   const getEmptyStateContent = () => {
-    if (
-      selectedQuery.state.status === "pending" ||
-      getQueryStatusLabel(selectedQuery) === "fetching"
-    ) {
+    if (selectedMutation.state.status === "pending") {
       return {
-        title:
-          selectedQuery.state.status === "pending"
-            ? "Loading..."
-            : "Refetching...",
-        description: "Please wait while the query is being executed.",
+        title: "Pending...",
+        description: "The mutation is in progress.",
       };
     }
 
-    if (selectedQuery.state.status === "error") {
+    if (selectedMutation.state.status === "error") {
       return {
-        title: "Query Error",
+        title: "Mutation Error",
         description:
-          selectedQuery.state.error?.message ||
-          "An error occurred while fetching data.",
+          selectedMutation.state.error?.message || "An error occurred.",
       };
     }
 
     return {
       title: "No Data Available",
-      description:
-        "This query has no data to edit. Try refetching the query first.",
+      description: "This mutation has no data.",
     };
   };
 
@@ -149,7 +132,6 @@ function DataEmptyState({
 }
 
 const styles = StyleSheet.create({
-  // Explorer section
   explorerScrollContainer: {
     flex: 1,
   },
@@ -158,12 +140,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     flexGrow: 1,
   },
-  // Section layout matching QueryInformation
   section: {
     marginBottom: 16,
   },
-
-  // Empty states matching main dev tools
   emptyState: {
     flex: 1,
     justifyContent: "center",
@@ -171,34 +150,32 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   emptyTitle: {
-    color: "#FFFFFF", // Match main dev tools primary text
+    color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 8,
     textAlign: "center",
   },
   emptyDescription: {
-    color: "#9CA3AF", // Match main dev tools tertiary text
+    color: "#9CA3AF",
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
     maxWidth: 280,
   },
-
-  // Action footer matching main dev tools exactly
   actionFooter: {
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.06)", // Match DevToolsHeader border
+    borderTopColor: "rgba(255, 255, 255, 0.06)",
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: "#171717", // Match main dev tools primary background
+    backgroundColor: "#171717",
     borderBottomLeftRadius: 14,
     borderBottomRightRadius: 14,
   },
   actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6, // Reduced from 8
+    gap: 6,
     justifyContent: "space-between",
   },
 });

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Text, ScrollView } from "react-native";
 import { Query } from "@tanstack/react-query";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, ContentStyle } from "@shopify/flash-list";
 import QueryRow from "./QueryRow";
 import useAllQueries from "../_hooks/useAllQueries";
 import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
@@ -11,7 +11,7 @@ interface Props {
   onQuerySelect: (query: Query<any, any, any, any> | undefined) => void;
   activeFilter?: string | null;
   emptyStateMessage?: string;
-  contentContainerStyle?: any;
+  contentContainerStyle?: ContentStyle;
 }
 
 // Stable module-scope functions to prevent FlashList view recreation [[memory:4875251]]
@@ -80,35 +80,37 @@ export default function QueryBrowser({
   }
 
   return (
-    <FlashList
-      data={filteredQueries}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      estimatedItemSize={ESTIMATED_ITEM_SIZE}
-      style={styles.listStyle}
-      contentContainerStyle={contentContainerStyle || styles.listContent}
-      showsVerticalScrollIndicator
-      removeClippedSubviews
-      overrideItemLayout={(layout, item) => {
-        layout.size = ESTIMATED_ITEM_SIZE; // Fixed size for better recycling
-      }}
-      drawDistance={200}
-      renderScrollComponent={ScrollView}
-      extraData={{
-        selectedQuery,
-        handleQuerySelect,
-        filteredQueries,
-      }} // Pass selection state, handler, and filtered data for re-renders
-    />
+    <View style={styles.listWrapper}>
+      <FlashList
+        data={filteredQueries}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        estimatedItemSize={ESTIMATED_ITEM_SIZE}
+        contentContainerStyle={contentContainerStyle || styles.listContent}
+        showsVerticalScrollIndicator
+        removeClippedSubviews
+        overrideItemLayout={(layout, item) => {
+          layout.size = ESTIMATED_ITEM_SIZE;
+        }}
+        drawDistance={200}
+        renderScrollComponent={ScrollView}
+        extraData={{
+          selectedQuery,
+          handleQuerySelect,
+          filteredQueries,
+        }}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  listWrapper: {
+    flexGrow: 1,
+  },
   listContent: {
     paddingBottom: 16,
-  },
-  listStyle: {
-    flexGrow: 1,
+    backgroundColor: "#171717", // If needed
   },
   emptyContainer: {
     flex: 1,

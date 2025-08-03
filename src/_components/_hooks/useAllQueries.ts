@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Query, useQueryClient } from "@tanstack/react-query";
+import { isEqual } from "lodash";
 
 // React Query DevTools sorting logic
 type SortFn = (a: Query, b: Query) => number;
@@ -27,23 +28,23 @@ const statusAndDateSort: SortFn = (a, b) => {
 function useAllQueries() {
   const queryClient = useQueryClient();
   const [queries, setQueries] = useState<Query<any, any, any, any>[]>([]);
+  const queriesRef = useRef<any[]>([]);
 
   useEffect(() => {
     const updateQueries = () => {
       const allQueries = queryClient.getQueryCache().getAll();
-
-      // Sort queries using React Query DevTools logic
       const sortedQueries = allQueries.sort(statusAndDateSort);
-
-      setTimeout(() => {
-        setQueries(sortedQueries);
-      }, 1);
+      const newStates = sortedQueries.map((q) => q.state);
+      if (!isEqual(queriesRef.current, newStates)) {
+        queriesRef.current = newStates;
+        setTimeout(() => setQueries(sortedQueries), 0);
+      }
     };
-    // Perform an initial update
-    updateQueries();
-    // Subscribe to the query cache to run updates on changes
+
+    setTimeout(updateQueries, 0);
+
     const unsubscribe = queryClient.getQueryCache().subscribe(updateQueries);
-    // Cleanup the subscription when the component unmounts
+
     return () => unsubscribe();
   }, [queryClient]);
 

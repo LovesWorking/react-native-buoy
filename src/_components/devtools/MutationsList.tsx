@@ -7,12 +7,15 @@ import {
   PanResponder,
   Animated,
   Dimensions,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { Mutation } from "@tanstack/react-query";
 import MutationButton from "./MutationButton";
 import MutationInformation from "./MutationInformation";
 import useAllMutations from "../_hooks/useAllMutations";
+import { ContentStyle } from "@shopify/flash-list";
 
 interface Props {
   selectedMutation: Mutation<any, any, any, any> | undefined;
@@ -20,12 +23,16 @@ interface Props {
     React.SetStateAction<Mutation<any, any, any, any> | undefined>
   >;
   activeFilter?: string | null;
+  hideInfoPanel?: boolean;
+  contentContainerStyle?: ContentStyle;
 }
 
 export default function MutationsList({
   selectedMutation,
   setSelectedMutation,
   activeFilter,
+  hideInfoPanel = false,
+  contentContainerStyle,
 }: Props) {
   const { mutations: allmutations } = useAllMutations();
 
@@ -119,16 +126,18 @@ export default function MutationsList({
   return (
     <View style={styles.container}>
       {filteredMutations.length > 0 ? (
-        <FlashList
-          data={filteredMutations}
-          renderItem={renderMutation}
-          keyExtractor={(item, index) => `${item.mutationId}-${index}`}
-          estimatedItemSize={60}
-          showsVerticalScrollIndicator
-          removeClippedSubviews
-          renderScrollComponent={ScrollView}
-          style={styles.scrollView}
-        />
+        <View style={styles.listWrapper}>
+          <FlashList
+            data={filteredMutations}
+            renderItem={renderMutation}
+            keyExtractor={(item, index) => `${item.mutationId}-${index}`}
+            estimatedItemSize={60}
+            showsVerticalScrollIndicator
+            removeClippedSubviews
+            renderScrollComponent={ScrollView}
+            contentContainerStyle={contentContainerStyle || styles.listContent}
+          />
+        </View>
       ) : (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
@@ -138,7 +147,7 @@ export default function MutationsList({
           </Text>
         </View>
       )}
-      {selectedMutation && (
+      {selectedMutation && !hideInfoPanel && (
         <Animated.View
           style={[styles.mutationInfo, { height: infoHeightAnim }]}
         >
@@ -160,8 +169,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#171717",
   },
-  scrollView: {
+  listWrapper: {
     flex: 1,
+  },
+  listContent: {
     backgroundColor: "#171717",
     paddingHorizontal: 8,
     paddingTop: 8,

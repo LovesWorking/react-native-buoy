@@ -1,40 +1,34 @@
-import { Query, QueryKey } from "@tanstack/react-query";
-import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
-import { useGetQueryByQueryKey } from "../../../_hooks/useSelectedQuery";
-import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
-import { QueryBrowserMode } from "../../admin/components/QueryBrowserMode";
-import { useState } from "react";
+import { Mutation } from "@tanstack/react-query";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { useGetMutationById } from "../../../_hooks/useSelectedMutation";
+import { MutationBrowserMode } from "../../admin/components/MutationBrowserMode";
+import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
+import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
 import { View } from "react-native";
 
-interface QueryBrowserModalProps {
+interface MutationBrowserModalProps {
   visible: boolean;
-  selectedQueryKey?: QueryKey;
-  onQuerySelect: (query: Query | undefined) => void;
+  selectedMutationId?: number;
+  onMutationSelect: (mutation: Mutation | undefined) => void;
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
-  enableSharedModalDimensions?: boolean;
   onTabChange: (tab: "queries" | "mutations") => void;
+  enableSharedModalDimensions?: boolean;
 }
 
-/**
- * Specialized modal for query browsing following "Decompose by Responsibility"
- * Single purpose: Display query browser when no query is selected
- */
-export function QueryBrowserModal({
+export function MutationBrowserModal({
   visible,
-  selectedQueryKey,
-  onQuerySelect,
+  selectedMutationId,
+  onMutationSelect,
   onClose,
   activeFilter: externalActiveFilter,
   onFilterChange: externalOnFilterChange,
-  enableSharedModalDimensions = false,
   onTabChange,
-}: QueryBrowserModalProps) {
-  const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
-  // Use external filter state if provided (for persistence), otherwise use internal state
+  enableSharedModalDimensions = false,
+}: MutationBrowserModalProps) {
+  const selectedMutation = useGetMutationById(selectedMutationId);
   const [internalActiveFilter, setInternalActiveFilter] = useState<
     string | null
   >(null);
@@ -43,8 +37,8 @@ export function QueryBrowserModal({
 
   const handleSwipeNavigation = useCallback(
     (direction: "left" | "right") => {
-      if (direction === "left") {
-        onTabChange("mutations");
+      if (direction === "right") {
+        onTabChange("queries");
       }
     },
     [onTabChange]
@@ -73,10 +67,10 @@ export function QueryBrowserModal({
 
   const renderHeaderContent = () => (
     <ReactQueryModalHeader
-      selectedQuery={selectedQuery}
-      activeTab="queries"
+      selectedMutation={selectedMutation}
+      activeTab="mutations"
       onTabChange={onTabChange}
-      onBack={() => onQuerySelect(undefined)}
+      onBack={() => onMutationSelect(undefined)}
       activeFilter={activeFilter}
       onFilterChange={setActiveFilter}
     />
@@ -84,7 +78,7 @@ export function QueryBrowserModal({
 
   const storagePrefix = enableSharedModalDimensions
     ? "@react_query_modal"
-    : "@query_browser_modal";
+    : "@mutation_browser_modal";
 
   return (
     <BaseFloatingModal
@@ -96,9 +90,9 @@ export function QueryBrowserModal({
     >
       <GestureDetector gesture={panGesture}>
         <View style={{ flex: 1 }}>
-          <QueryBrowserMode
-            selectedQuery={selectedQuery}
-            onQuerySelect={onQuerySelect}
+          <MutationBrowserMode
+            selectedMutation={selectedMutation}
+            onMutationSelect={onMutationSelect}
             activeFilter={activeFilter}
           />
         </View>

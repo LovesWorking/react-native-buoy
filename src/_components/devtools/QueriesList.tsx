@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 import { Query } from "@tanstack/react-query";
 import {
   View,
@@ -9,9 +9,12 @@ import {
   Animated,
   Dimensions,
   ScrollView,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 import { QueryBrowser } from "./index";
 import QueryInformation from "./QueryInformation";
+import { ContentStyle } from "@shopify/flash-list";
 
 interface Props {
   selectedQuery: Query<any, any, any, any> | undefined;
@@ -20,6 +23,8 @@ interface Props {
   >;
   activeFilter?: string | null;
   containerHeight?: number; // Optional prop for modal environments
+  hideInfoPanel?: boolean;
+  contentContainerStyle?: ContentStyle;
 }
 
 export default function QueriesList({
@@ -27,6 +32,8 @@ export default function QueriesList({
   setSelectedQuery,
   activeFilter,
   containerHeight,
+  hideInfoPanel = false,
+  contentContainerStyle,
 }: Props) {
   // Height management for resizable query information panel
   const screenHeight = containerHeight || Dimensions.get("window").height;
@@ -97,15 +104,15 @@ export default function QueriesList({
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.listContainer}>
+      <View style={[styles.listContainer, { flexGrow: 1 }]}>
         <QueryBrowser
           selectedQuery={selectedQuery}
           onQuerySelect={handleQuerySelect}
           activeFilter={activeFilter}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={contentContainerStyle || styles.listContent}
         />
       </View>
-      {selectedQuery && (
+      {selectedQuery && !hideInfoPanel && (
         <Animated.View
           style={[styles.queryInformation, { height: infoHeightAnim }]}
         >
@@ -137,7 +144,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   listContent: {
-    flexGrow: 1,
     paddingBottom: 16,
   },
   queryInformation: {

@@ -8,23 +8,20 @@ function useAllMutations() {
   const mutationsRef = useRef<any[]>([]);
   useEffect(() => {
     const updateMutations = () => {
-      // Only update state if the new mutations array is different
-      setTimeout(() => {
-        const newMutations = [...queryClient.getMutationCache().getAll()];
-        const newStates = newMutations.map((mutation) => mutation.state);
-        if (!isEqual(mutationsRef.current, newStates)) {
-          mutationsRef.current = newStates; // Update the ref
-          setMutations(newMutations); // Update state
-        }
-      }, 1);
+      const newMutations = queryClient.getMutationCache().getAll();
+      const newStates = newMutations.map((m) => m.state);
+      if (!isEqual(mutationsRef.current, newStates)) {
+        mutationsRef.current = newStates;
+        setTimeout(() => setMutations(newMutations), 0);
+      }
     };
-    // Perform an initial update
-    updateMutations();
-    // Subscribe to the query cache to run updates on changes
+
+    setTimeout(updateMutations, 0);
+
     const unsubscribe = queryClient
       .getMutationCache()
       .subscribe(updateMutations);
-    // Cleanup the subscription when the component unmounts
+
     return () => unsubscribe();
   }, [queryClient]);
 

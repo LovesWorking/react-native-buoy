@@ -2,18 +2,28 @@ import { View, Text, StyleSheet } from "react-native";
 import { Query } from "@tanstack/react-query";
 import QueryStatusCount from "../../devtools/QueryStatusCount";
 import { BackButton } from "../admin/components/BackButton";
+import { Mutation } from "@tanstack/react-query";
+import MutationStatusCount from "../../devtools/MutationStatusCount";
+import { TouchableOpacity } from "react-native";
+import { displayValue } from "../../devtools/displayValue";
 
 interface ReactQueryModalHeaderProps {
-  selectedQuery: Query | undefined;
+  selectedQuery?: Query;
+  selectedMutation?: Mutation;
+  activeTab: "queries" | "mutations";
+  onTabChange: (tab: "queries" | "mutations") => void;
+  onBack: () => void;
   activeFilter: string | null;
-  onQuerySelect: (query: Query | undefined) => void;
   onFilterChange: (filter: string | null) => void;
 }
 
 export function ReactQueryModalHeader({
   selectedQuery,
+  selectedMutation,
+  activeTab,
+  onTabChange,
+  onBack,
   activeFilter,
-  onQuerySelect,
   onFilterChange,
 }: ReactQueryModalHeaderProps) {
   // Simple function to get query display text
@@ -30,29 +40,44 @@ export function ReactQueryModalHeader({
     );
   };
 
+  const getItemText = (item: Query | Mutation) => {
+    if ("queryKey" in item) {
+      return getQueryText(item);
+    } else {
+      return item.options.mutationKey
+        ? displayValue(item.options.mutationKey, true)
+        : `Mutation #${item.mutationId}`;
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {selectedQuery ? (
-        // Query Details View - Show back button and query name
+      {selectedQuery || selectedMutation ? (
         <View style={styles.detailsView}>
           <BackButton
-            onPress={() => onQuerySelect(undefined)}
+            onPress={onBack}
             color="#FFFFFF"
             size={16}
-            accessibilityLabel="Back to query list"
-            accessibilityHint="Return to query list view"
+            accessibilityLabel="Back to list"
+            accessibilityHint="Return to list view"
           />
           <Text style={styles.queryText} numberOfLines={1}>
-            {getQueryText(selectedQuery)}
+            {getItemText(selectedQuery ?? selectedMutation!)}
           </Text>
         </View>
       ) : (
-        // Query Browser View - Show filter/status counts
         <View style={styles.browserView}>
-          <QueryStatusCount
-            activeFilter={activeFilter}
-            onFilterChange={onFilterChange}
-          />
+          {activeTab === "queries" ? (
+            <QueryStatusCount
+              activeFilter={activeFilter}
+              onFilterChange={onFilterChange}
+            />
+          ) : (
+            <MutationStatusCount
+              activeFilter={activeFilter}
+              onFilterChange={onFilterChange}
+            />
+          )}
         </View>
       )}
     </View>

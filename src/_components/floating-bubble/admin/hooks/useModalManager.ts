@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Query, QueryKey } from "@tanstack/react-query";
+import { Mutation, Query, QueryKey } from "@tanstack/react-query";
 import { useModalPersistence } from "./useModalPersistence";
 
 /**
@@ -16,6 +16,12 @@ export function useModalManager() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [isStateRestored, setIsStateRestored] = useState(false);
+  const [activeTab, setActiveTab] = useState<"queries" | "mutations">(
+    "queries"
+  );
+  const [selectedMutationId, setSelectedMutationId] = useState<
+    number | undefined
+  >(undefined);
 
   // Persistence hook for saving/loading modal state
   const { loadSavedState } = useModalPersistence({
@@ -25,6 +31,8 @@ export function useModalManager() {
     selectedQueryKey,
     selectedSection,
     activeFilter,
+    activeTab,
+    selectedMutationId,
     isStateRestored,
   });
 
@@ -53,6 +61,13 @@ export function useModalManager() {
 
           if (savedState.activeFilter) {
             setActiveFilter(savedState.activeFilter);
+          }
+
+          if (savedState.activeTab) {
+            setActiveTab(savedState.activeTab);
+          }
+          if (savedState.selectedMutationId) {
+            setSelectedMutationId(Number(savedState.selectedMutationId));
           }
         }
       } catch (error) {
@@ -88,6 +103,19 @@ export function useModalManager() {
     setIsDebugModalOpen(true);
   };
 
+  const handleMutationSelect = (mutation: Mutation | undefined) => {
+    setSelectedMutationId(mutation?.mutationId);
+  };
+
+  const handleTabChange = (newTab: "queries" | "mutations") => {
+    if (newTab !== activeTab) {
+      setSelectedQueryKey(undefined);
+      setSelectedMutationId(undefined);
+      setActiveFilter(null);
+    }
+    setActiveTab(newTab);
+  };
+
   return {
     isModalOpen,
     isDebugModalOpen,
@@ -102,5 +130,10 @@ export function useModalManager() {
     handleQuerySelect,
     handleQueryPress,
     handleStatusPress,
+    activeTab,
+    selectedMutationId,
+    setActiveTab,
+    handleTabChange,
+    handleMutationSelect,
   };
 }

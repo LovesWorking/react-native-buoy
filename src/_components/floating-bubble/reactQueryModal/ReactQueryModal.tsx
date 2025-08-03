@@ -1,15 +1,29 @@
-import { Query, QueryKey } from "@tanstack/react-query";
+import { Mutation, QueryKey, Query } from "@tanstack/react-query";
+import { useGetMutationById } from "../../_hooks/useSelectedMutation";
+import { MutationBrowserMode } from "../admin/components/MutationBrowserMode";
+import { MutationEditorMode } from "../admin/components/MutationEditorMode";
+import { DataEditorMode } from "../admin/components/DataEditorMode";
 import { useGetQueryByQueryKey } from "../../_hooks/useSelectedQuery";
 import { QueryBrowserModal } from "./modals/QueryBrowserModal";
 import { DataEditorModal } from "./modals/DataEditorModal";
+import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
+import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
+import { View } from "react-native";
+import { QueryBrowserMode } from "../admin/components/QueryBrowserMode";
+import { MutationBrowserModal } from "./modals/MutationBrowserModal";
+import { MutationEditorModal } from "./modals/MutationEditorModal";
 
 interface ReactQueryModalProps {
   visible: boolean;
   selectedQueryKey?: QueryKey;
+  selectedMutationId?: number;
   onQuerySelect: (query: Query | undefined) => void;
+  onMutationSelect: (mutation: Mutation | undefined) => void;
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
+  activeTab: "queries" | "mutations";
+  onTabChange: (tab: "queries" | "mutations") => void;
   enableSharedModalDimensions?: boolean;
 }
 
@@ -25,42 +39,58 @@ interface ReactQueryModalProps {
 export function ReactQueryModal({
   visible,
   selectedQueryKey,
+  selectedMutationId,
   onQuerySelect,
+  onMutationSelect,
   onClose,
   activeFilter,
   onFilterChange,
+  activeTab,
+  onTabChange,
   enableSharedModalDimensions = false,
 }: ReactQueryModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
+  const selectedMutation = useGetMutationById(selectedMutationId);
 
-  // Show query browser when modal is visible but no query selected
-  const showQueryBrowser = visible && !selectedQuery;
+  const inDetail = !!selectedQuery || !!selectedMutation;
+  const isQueryMode = activeTab === "queries";
 
-  // Show data editor when a query is selected
-  const showDataEditor = visible && !!selectedQuery;
+  const commonProps = {
+    onClose,
+    activeFilter,
+    onFilterChange,
+    enableSharedModalDimensions,
+  };
 
   return (
     <>
-      {/* Query Browser Modal - shown when no query is selected */}
       <QueryBrowserModal
-        visible={showQueryBrowser}
+        visible={visible && !inDetail && isQueryMode}
         selectedQueryKey={selectedQueryKey}
         onQuerySelect={onQuerySelect}
-        onClose={onClose}
-        activeFilter={activeFilter}
-        onFilterChange={onFilterChange}
-        enableSharedModalDimensions={enableSharedModalDimensions}
+        onTabChange={onTabChange}
+        {...commonProps}
       />
-
-      {/* Data Editor Modal - shown when a query is selected */}
+      <MutationBrowserModal
+        visible={visible && !inDetail && !isQueryMode}
+        selectedMutationId={selectedMutationId}
+        onMutationSelect={onMutationSelect}
+        onTabChange={onTabChange}
+        {...commonProps}
+      />
       <DataEditorModal
-        visible={showDataEditor}
+        visible={visible && inDetail && !!selectedQuery}
         selectedQueryKey={selectedQueryKey}
         onQuerySelect={onQuerySelect}
-        onClose={onClose}
-        activeFilter={activeFilter}
-        onFilterChange={onFilterChange}
-        enableSharedModalDimensions={enableSharedModalDimensions}
+        onTabChange={onTabChange}
+        {...commonProps}
+      />
+      <MutationEditorModal
+        visible={visible && inDetail && !!selectedMutation}
+        selectedMutationId={selectedMutationId}
+        onMutationSelect={onMutationSelect}
+        onTabChange={onTabChange}
+        {...commonProps}
       />
     </>
   );

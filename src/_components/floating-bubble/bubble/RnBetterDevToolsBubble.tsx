@@ -49,6 +49,8 @@ export function RnBetterDevToolsBubble({
     selectedSection,
     activeFilter,
     isStateRestored,
+    activeTab,
+    selectedMutationId,
     setSelectedSection,
     setActiveFilter,
     handleModalDismiss,
@@ -56,6 +58,8 @@ export function RnBetterDevToolsBubble({
     handleQuerySelect,
     handleQueryPress,
     handleStatusPress,
+    handleTabChange,
+    handleMutationSelect,
   } = useModalManager();
 
   // Hide bubble when any modal is open to prevent visual overlap
@@ -93,6 +97,10 @@ export function RnBetterDevToolsBubble({
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             enableSharedModalDimensions={enableSharedModalDimensions}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            selectedMutationId={selectedMutationId}
+            onMutationSelect={handleMutationSelect}
           />
 
           {/* DevTools Console - Auto-opens if restored state indicates it was open */}

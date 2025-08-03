@@ -1,37 +1,32 @@
-import { Query, QueryKey } from "@tanstack/react-query";
+import { Mutation } from "@tanstack/react-query";
 import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
-import { useGetQueryByQueryKey } from "../../../_hooks/useSelectedQuery";
+import { useGetMutationById } from "../../../_hooks/useSelectedMutation";
 import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
-import { DataEditorMode } from "../../admin/components/DataEditorMode";
+import { MutationEditorMode } from "../../admin/components/MutationEditorMode";
 import { useState } from "react";
 
-interface DataEditorModalProps {
+interface MutationEditorModalProps {
   visible: boolean;
-  selectedQueryKey?: QueryKey;
-  onQuerySelect: (query: Query | undefined) => void;
+  selectedMutationId?: number;
+  onMutationSelect: (mutation: Mutation | undefined) => void;
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
-  enableSharedModalDimensions?: boolean;
   onTabChange: (tab: "queries" | "mutations") => void;
+  enableSharedModalDimensions?: boolean;
 }
 
-/**
- * Specialized modal for data editing following "Decompose by Responsibility"
- * Single purpose: Display data editor when a query is selected
- */
-export function DataEditorModal({
+export function MutationEditorModal({
   visible,
-  selectedQueryKey,
-  onQuerySelect,
+  selectedMutationId,
+  onMutationSelect,
   onClose,
   activeFilter: externalActiveFilter,
   onFilterChange: externalOnFilterChange,
-  enableSharedModalDimensions = false,
   onTabChange,
-}: DataEditorModalProps) {
-  const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
-  // Use external filter state if provided (for persistence), otherwise use internal state
+  enableSharedModalDimensions = false,
+}: MutationEditorModalProps) {
+  const selectedMutation = useGetMutationById(selectedMutationId);
   const [internalActiveFilter, setInternalActiveFilter] = useState<
     string | null
   >(null);
@@ -40,10 +35,10 @@ export function DataEditorModal({
 
   const renderHeaderContent = () => (
     <ReactQueryModalHeader
-      selectedQuery={selectedQuery}
-      activeTab="queries"
+      selectedMutation={selectedMutation}
+      activeTab="mutations"
       onTabChange={onTabChange}
-      onBack={() => onQuerySelect(undefined)}
+      onBack={() => onMutationSelect(undefined)}
       activeFilter={activeFilter}
       onFilterChange={setActiveFilter}
     />
@@ -51,9 +46,9 @@ export function DataEditorModal({
 
   const storagePrefix = enableSharedModalDimensions
     ? "@react_query_modal"
-    : "@data_editor_modal";
+    : "@mutation_editor_modal";
 
-  if (!visible || !selectedQuery) return null;
+  if (!visible || !selectedMutation) return null;
 
   return (
     <BaseFloatingModal
@@ -63,7 +58,7 @@ export function DataEditorModal({
       showToggleButton={true}
       customHeaderContent={renderHeaderContent()}
     >
-      <DataEditorMode selectedQuery={selectedQuery} />
+      <MutationEditorMode selectedMutation={selectedMutation} />
     </BaseFloatingModal>
   );
 }

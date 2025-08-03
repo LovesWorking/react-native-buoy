@@ -22,8 +22,7 @@ export function useGetQueryByQueryKey(queryKey?: QueryKey) {
       }
     };
 
-    // Perform initial update
-    updateSelectedQuery();
+    setTimeout(updateSelectedQuery, 0);
 
     // Subscribe to query cache changes to get live updates
     const unsubscribe = queryClient

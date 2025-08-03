@@ -34,7 +34,7 @@ function useQueryStatusCounts(): QueryStatusCounts {
         { fresh: 0, stale: 0, fetching: 0, paused: 0, inactive: 0 }
       );
 
-      setCounts(newCounts);
+      setTimeout(() => setCounts(newCounts), 0);
     };
 
     // Perform an initial update
@@ -58,6 +58,7 @@ interface MutationStatusCounts {
   success: number;
   error: number;
   paused: number;
+  idle: number;
 }
 
 export function useMutationStatusCounts(): MutationStatusCounts {
@@ -67,6 +68,7 @@ export function useMutationStatusCounts(): MutationStatusCounts {
     success: 0,
     error: 0,
     paused: 0,
+    idle: 0,
   });
 
   useEffect(() => {
@@ -79,21 +81,29 @@ export function useMutationStatusCounts(): MutationStatusCounts {
           const isPaused = mutation.state.isPaused;
 
           if (isPaused) {
-            acc.paused = (acc.paused || 0) + 1;
-          } else if (status === "pending") {
-            // 'pending' is the current state (v5), 'loading' was older
-            acc.pending = (acc.pending || 0) + 1;
-          } else if (status === "success") {
-            acc.success = (acc.success || 0) + 1;
-          } else if (status === "error") {
-            acc.error = (acc.error || 0) + 1;
+            acc.paused++;
+          } else {
+            switch (status) {
+              case "idle":
+                acc.idle++;
+                break;
+              case "pending":
+                acc.pending++;
+                break;
+              case "success":
+                acc.success++;
+                break;
+              case "error":
+                acc.error++;
+                break;
+            }
           }
           return acc;
         },
-        { pending: 0, success: 0, error: 0, paused: 0 }
+        { pending: 0, success: 0, error: 0, paused: 0, idle: 0 }
       );
 
-      setCounts(newCounts);
+      setTimeout(() => setCounts(newCounts), 0);
     };
 
     // Perform an initial update
