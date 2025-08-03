@@ -5,7 +5,13 @@ import { useGetMutationById } from "../../../_hooks/useSelectedMutation";
 import { MutationBrowserMode } from "../../admin/components/MutationBrowserMode";
 import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
-import { View } from "react-native";
+import { View, Dimensions } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+import { SwipeIndicator } from "../components/SwipeIndicator";
 
 interface MutationBrowserModalProps {
   visible: boolean;
@@ -35,6 +41,10 @@ export function MutationBrowserModal({
   const activeFilter = externalActiveFilter ?? internalActiveFilter;
   const setActiveFilter = externalOnFilterChange ?? setInternalActiveFilter;
 
+  // Shared values for gesture tracking [[memory:4875251]]
+  const translationX = useSharedValue(0);
+  const screenWidth = Dimensions.get("window").width;
+
   const handleSwipeNavigation = useCallback(
     (direction: "left" | "right") => {
       if (direction === "right") {
@@ -45,16 +55,23 @@ export function MutationBrowserModal({
   );
 
   const panGesture = Gesture.Pan()
+    .onChange((event) => {
+      // Update translation for visual feedback
+      translationX.value = event.translationX;
+    })
     .onEnd((event) => {
-      const { translationX, velocityX } = event;
-      const swipeThreshold = 50;
+      const { translationX: eventTranslationX, velocityX } = event;
+      const swipeThreshold = 80; // Match EDGE_THRESHOLD from SwipeIndicator
       const velocityThreshold = 500;
 
+      // Reset visual feedback with spring animation
+      translationX.value = withSpring(0);
+
       if (
-        Math.abs(translationX) > swipeThreshold ||
+        Math.abs(eventTranslationX) > swipeThreshold ||
         Math.abs(velocityX) > velocityThreshold
       ) {
-        if (translationX > 0 || velocityX > 0) {
+        if (eventTranslationX > 0 || velocityX > 0) {
           handleSwipeNavigation("right");
         } else {
           handleSwipeNavigation("left");
@@ -90,6 +107,14 @@ export function MutationBrowserModal({
     >
       <GestureDetector gesture={panGesture}>
         <View style={{ flex: 1 }}>
+          <SwipeIndicator
+            translationX={translationX}
+            screenWidth={screenWidth}
+            leftAction="left"
+            rightAction="queries"
+            canSwipeLeft={false}
+            canSwipeRight={true}
+          />
           <MutationBrowserMode
             selectedMutation={selectedMutation}
             onMutationSelect={onMutationSelect}
