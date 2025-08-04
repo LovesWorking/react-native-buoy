@@ -1,4 +1,3 @@
-import React from "react";
 import { ScrollView } from "react-native";
 import { Settings } from "lucide-react-native";
 import { ConsoleSection } from "../ConsoleSection";

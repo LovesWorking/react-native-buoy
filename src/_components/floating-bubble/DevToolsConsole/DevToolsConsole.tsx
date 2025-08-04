@@ -13,6 +13,7 @@ interface DevToolsConsoleProps {
   selectedSection?: string | null;
   setSelectedSection?: (section: string | null) => void;
   enableSharedModalDimensions?: boolean;
+  onReactQueryPress?: () => void;
 }
 
 /**
@@ -34,6 +35,7 @@ export function DevToolsConsole({
   selectedSection: externalSelectedSection,
   setSelectedSection: externalSetSelectedSection,
   enableSharedModalDimensions = false,
+  onReactQueryPress,
 }: DevToolsConsoleProps) {
   // Use external state if provided (for persistence), otherwise use internal state
   const [internalSelectedSection, setInternalSelectedSection] =
@@ -44,7 +46,13 @@ export function DevToolsConsole({
     externalSetSelectedSection || setInternalSelectedSection;
 
   const handleSectionSelect = (sectionType: SectionType) => {
-    setSelectedSection(sectionType);
+    if (sectionType === "rn-better-dev-tools" && onReactQueryPress) {
+      // Close the DevTools console and open the React Query modal
+      onClose();
+      onReactQueryPress();
+    } else {
+      setSelectedSection(sectionType);
+    }
   };
 
   const handleModalClose = () => {
@@ -86,7 +94,6 @@ export function DevToolsConsole({
         onClose={handleModalClose}
         requiredEnvVars={requiredEnvVars}
         getSentrySubtitle={getSentrySubtitle}
-        getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
         envVarsSubtitle={envVarsSubtitle}
         onBack={handleBack}
         enableSharedModalDimensions={enableSharedModalDimensions}

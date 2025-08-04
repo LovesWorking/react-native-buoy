@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Query, useQueryClient } from "@tanstack/react-query";
 import {

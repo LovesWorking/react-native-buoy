@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { VirtualizedDataExplorer } from "../VirtualizedDataExplorer";
 import { TypeLegend } from "./TypeLegend";

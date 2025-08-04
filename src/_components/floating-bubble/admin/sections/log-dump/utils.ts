@@ -106,7 +106,7 @@ export const getTypeColor = (type: string) => {
   }
 };
 
-// Add these helper functions before the LogDumpSection component
+// Helper functions for log dump components
 export const formatCount = (count: number) => {
   if (count === 0) return "";
   if (count > 99) return " (99+)";

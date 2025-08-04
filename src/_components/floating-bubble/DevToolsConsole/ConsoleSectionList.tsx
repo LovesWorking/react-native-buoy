@@ -1,4 +1,3 @@
-import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -33,7 +32,7 @@ const styles = StyleSheet.create({
   },
 
   sectionListContent: {
-    paddingHorizontal: 12, // Match AdminModal contentContainer
+    paddingHorizontal: 12, // Match modal contentContainer padding
     paddingVertical: 8,
     flexGrow: 1,
   },

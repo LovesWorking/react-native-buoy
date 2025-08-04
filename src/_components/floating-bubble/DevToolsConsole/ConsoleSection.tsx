@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { ExpandableSectionHeader } from "../admin/sections/ExpandableSectionHeader";

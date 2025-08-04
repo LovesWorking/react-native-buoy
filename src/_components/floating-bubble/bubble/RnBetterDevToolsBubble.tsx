@@ -120,6 +120,7 @@ export function RnBetterDevToolsBubble({
             selectedSection={selectedSection}
             setSelectedSection={setSelectedSection}
             enableSharedModalDimensions={enableSharedModalDimensions}
+            onReactQueryPress={handleQueryPress}
           />
         </CopyContextProvider>
       </QueryClientProvider>

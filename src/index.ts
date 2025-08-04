@@ -1,10 +1,7 @@
-// Main FloatingStatusBubble with integrated RN Better dev tools
-export { FloatingStatusBubble } from "./_components/floating-bubble/admin/FloatingStatusBubble";
-
-// Standalone RN Better DevTools bubble
+// RN Better DevTools bubble (main component)
 export { RnBetterDevToolsBubble } from "./_components/floating-bubble/bubble/RnBetterDevToolsBubble";
 
-// Legacy DevToolsBubble (deprecated - use FloatingStatusBubble with queryClient prop instead)
+// Legacy DevToolsBubble (deprecated - use RnBetterDevToolsBubble instead)
 export { DevToolsBubble } from "./DevToolsBubble";
 
 // Sentry event logging functionality
