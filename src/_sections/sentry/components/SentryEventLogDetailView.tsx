@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
 
 import { DetailHeader } from "../../../_components/floating-bubble/admin/sections/log-dump/components/DetailHeader";
-import { DataViewer } from "../../../_components/_shared/components/DataViewer";
+import { DataViewer } from "../../react-query/components/shared/DataViewer";
 
 // Stable constants to prevent re-creation [[memory:4875251]] [[memory:4875251]]
 const MAX_EXPLORER_DEPTH = 15; // Reduced for better performance with large datasets

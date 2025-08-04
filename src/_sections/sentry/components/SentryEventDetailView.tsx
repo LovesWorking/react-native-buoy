@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
-import { DataViewer } from "../../../_components/_shared/components/DataViewer";
+import { DataViewer } from "../../react-query/components/shared/DataViewer";
 import {
   formatTimestamp,
   getLevelDotStyle,

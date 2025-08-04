@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { useAnimatedStyle } from "react-native-reanimated";
 import { useModalState, useModalResize } from "../admin/hooks";
 import { FloatingModalContent } from "./FloatingModalContent";
-import { PanelDimensions } from "../admin/components/storage/modalStorageOperations";
+import { PanelDimensions } from "../../../_sections/react-query/utils/modalStorageOperations";
 
 interface BaseFloatingModalProps {
   visible: boolean;

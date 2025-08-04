@@ -2,10 +2,8 @@ export { type Environment } from "../../../../_sections/env";
 export { type UserRole } from "./UserStatus";
 export { BubblePresentation } from "./BubblePresentation";
 export { type BubbleConfig } from "./RnBetterDevToolsBubbleContent";
-export { ReactQueryModal as FloatingDataEditor } from "../../reactQueryModal/ReactQueryModal";
-export { ReactQueryModalHeader as FloatingDataEditorHeader } from "../../reactQueryModal/ReactQueryModalHeader";
-export { QueryBrowserMode } from "./QueryBrowserMode";
-export { DataEditorMode } from "./DataEditorMode";
+export { ReactQueryModal as FloatingDataEditor } from "../../../../_sections/react-query";
+export { ReactQueryModalHeader as FloatingDataEditorHeader } from "../../../../_sections/react-query";
 
 // Composed Modal Components
 export { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
@@ -17,4 +15,4 @@ export { CornerResizeHandle } from "./CornerResizeHandle";
 export { useModalState, useModalResize } from "../hooks";
 
 // Storage Operations
-export type { PanelDimensions } from "./storage/modalStorageOperations";
+export type { PanelDimensions } from "../../../../_sections/react-query/utils/modalStorageOperations";

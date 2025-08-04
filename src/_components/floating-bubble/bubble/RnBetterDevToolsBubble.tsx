@@ -1,17 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  useReactQueryState,
-  useModalManager,
-} from "../admin/hooks";
 import { useSentrySubtitle } from "../../../_sections/sentry";
 import { RequiredEnvVar, useEnvVarsSubtitle } from "../../../_sections/env";
-import {
-  UserRole,
-  BubblePresentation,
-} from "../admin/components";
+import { UserRole, BubblePresentation } from "../admin/components";
 import type { Environment } from "../../../_sections/env";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
-import { ReactQueryModal } from "../reactQueryModal/ReactQueryModal";
+import {
+  ReactQueryModal,
+  useReactQueryState,
+  useModalManager,
+} from "../../../_sections/react-query";
 import { DevToolsConsole } from "../DevToolsConsole";
 
 // Re-export types that developers will need
@@ -27,56 +24,56 @@ interface RnBetterDevToolsBubbleProps {
    * This is required for the dev tools to interact with your React Query data
    */
   queryClient: QueryClient;
-  
+
   /**
    * The current user's role in the application
    * Used to display user status indicator in the bubble
    * @example "admin" | "internal" | "user"
    */
   userRole?: UserRole;
-  
+
   /**
    * The current application environment
    * Used to display environment indicator in the bubble
    * @example "local" | "dev" | "qa" | "staging" | "prod"
    */
   environment?: Environment;
-  
+
   /**
    * Array of required environment variables to check
    * These will be displayed in the DevTools console with their status
    * @example [{ name: "API_URL", description: "Backend API endpoint" }]
    */
   requiredEnvVars?: RequiredEnvVar[];
-  
+
   /**
    * Enable shared modal dimensions across all modals
    * When true, all modals will maintain consistent size
    * @default false
    */
   enableSharedModalDimensions?: boolean;
-  
+
   /**
    * Hide the environment indicator in the bubble
    * Only applies when environment prop is provided
    * @default false
    */
   hideEnvironment?: boolean;
-  
+
   /**
    * Hide the user status indicator in the bubble
    * Only applies when userRole prop is provided
    * @default false
    */
   hideUserStatus?: boolean;
-  
+
   /**
    * Hide the React Query button in the bubble
    * This button opens the React Query dev tools modal
    * @default false
    */
   hideQueryButton?: boolean;
-  
+
   /**
    * Hide the WiFi toggle button in the bubble
    * This button allows toggling WiFi on/off for testing
@@ -87,14 +84,14 @@ interface RnBetterDevToolsBubbleProps {
 
 /**
  * RnBetterDevToolsBubble - A floating developer tools bubble for React Native apps
- * 
+ *
  * This component provides a draggable floating bubble that gives developers quick access to:
  * - React Query dev tools for inspecting and modifying query/mutation data
  * - Environment indicator showing the current app environment
  * - User role status display
  * - WiFi toggle for testing offline scenarios
  * - Dev console with environment variable checking and other debugging tools
- * 
+ *
  * @example
  * ```tsx
  * <RnBetterDevToolsBubble

@@ -6,7 +6,7 @@ import { FlashList } from "@shopify/flash-list";
 import { useState } from "react";
 
 import { ConsoleTransportEntry } from "../../logger/types";
-import { VirtualizedDataExplorer } from "../../../../_shared/VirtualizedDataExplorer";
+import { VirtualizedDataExplorer } from "../../../../../_sections/react-query/components/shared/VirtualizedDataExplorer";
 
 import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 

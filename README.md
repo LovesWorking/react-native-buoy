@@ -2,6 +2,33 @@
 
 **Multi-Tool Development Suite** A comprehensive debugging solution for React Native apps featuring React Query dev tools, environment variable inspection, Sentry monitoring, and more in a unified floating interface.
 
+## ⚠️ Important Setup Requirements
+
+This library requires `react-native-reanimated` to be properly configured in your app:
+
+1. **Install react-native-reanimated** (if not already installed):
+   ```bash
+   npm install react-native-reanimated
+   ```
+
+2. **Add the Babel plugin** to your `babel.config.js`:
+   ```js
+   module.exports = {
+     presets: ['module:metro-react-native-babel-preset'],
+     plugins: [
+       // ... other plugins
+       'react-native-reanimated/plugin', // <- Must be listed last
+     ],
+   };
+   ```
+
+3. **Clear Metro cache** and rebuild:
+   ```bash
+   npx react-native start --reset-cache
+   ```
+
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for more detailed setup instructions.
+
 ## 🚀 New Integrated FloatingStatusBubble
 
 The package now features a unified `FloatingStatusBubble` that combines React Query dev tools with other essential debugging tools:

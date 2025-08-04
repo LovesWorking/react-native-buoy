@@ -7,7 +7,7 @@ import {
   savePanelDimensions,
   savePanelHeight,
   saveFloatingMode,
-} from "../components/storage/modalStorageOperations";
+} from "../../../../_sections/react-query/utils/modalStorageOperations";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const MIN_HEIGHT = 150;
