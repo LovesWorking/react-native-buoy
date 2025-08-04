@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Mutation, Query, QueryKey } from "@tanstack/react-query";
 import { useModalPersistence } from "./useModalPersistence";
-import { StorageType } from "../../../_util/storageQueryUtils";
 
 /**
  * Custom hook for managing modal states and related query selection
@@ -23,9 +22,6 @@ export function useModalManager() {
   const [selectedMutationId, setSelectedMutationId] = useState<
     number | undefined
   >(undefined);
-  const [activeStorageTypes, setActiveStorageTypes] = useState<
-    Set<StorageType>
-  >(new Set(["mmkv", "async", "secure"]));
 
   // Persistence hook for saving/loading modal state
   const { loadSavedState } = useModalPersistence({
@@ -37,7 +33,6 @@ export function useModalManager() {
     activeFilter,
     activeTab,
     selectedMutationId,
-    activeStorageTypes,
     isStateRestored,
   });
 
@@ -74,16 +69,7 @@ export function useModalManager() {
           if (savedState.selectedMutationId) {
             setSelectedMutationId(Number(savedState.selectedMutationId));
           }
-          if (savedState.activeStorageTypes) {
-            try {
-              const storageTypesArray = JSON.parse(
-                savedState.activeStorageTypes
-              ) as StorageType[];
-              setActiveStorageTypes(new Set(storageTypesArray));
-            } catch {
-              // Silently fail if storage types can't be parsed, use default
-            }
-          }
+          // Note: activeStorageTypes removed - no longer filtering storage types
         }
       } catch {
         // Silently fail if state can't be restored
@@ -141,11 +127,9 @@ export function useModalManager() {
     isStateRestored,
     activeTab,
     selectedMutationId,
-    activeStorageTypes,
     setSelectedSection,
     setActiveFilter,
     setActiveTab,
-    setActiveStorageTypes,
     handleModalDismiss,
     handleDebugModalDismiss,
     handleQuerySelect,

@@ -6,7 +6,6 @@ import { DataEditorModal } from "./modals/DataEditorModal";
 import { StorageBrowserModal } from "./modals/StorageBrowserModal";
 import { MutationBrowserModal } from "./modals/MutationBrowserModal";
 import { MutationEditorModal } from "./modals/MutationEditorModal";
-import { StorageType } from "../../_util/storageQueryUtils";
 
 interface ReactQueryModalProps {
   visible: boolean;
@@ -19,8 +18,6 @@ interface ReactQueryModalProps {
   onFilterChange?: (filter: string | null) => void;
   activeTab: "queries" | "mutations" | "storage";
   onTabChange: (tab: "queries" | "mutations" | "storage") => void;
-  activeStorageTypes?: Set<StorageType>;
-  onStorageTypesChange?: (storageTypes: Set<StorageType>) => void;
   enableSharedModalDimensions?: boolean;
 }
 
@@ -44,8 +41,6 @@ export function ReactQueryModal({
   onFilterChange,
   activeTab,
   onTabChange,
-  activeStorageTypes,
-  onStorageTypesChange,
   enableSharedModalDimensions = false,
 }: ReactQueryModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
@@ -84,8 +79,6 @@ export function ReactQueryModal({
         selectedQueryKey={selectedQueryKey}
         onQuerySelect={onQuerySelect}
         onTabChange={onTabChange}
-        activeStorageTypes={activeStorageTypes}
-        onStorageTypesChange={onStorageTypesChange}
         enableSharedModalDimensions={enableSharedModalDimensions}
         onClose={onClose}
       />

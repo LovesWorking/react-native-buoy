@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { StyleSheet, ScrollView } from "react-native";
 import { Query, useQueryClient } from "@tanstack/react-query";
 import {
@@ -7,8 +7,6 @@ import {
   getStorageType,
   isStorageQuery,
 } from "../../../_util/storageQueryUtils";
-import { StorageTypeCounts } from "../../../_util/getStorageQueryCounts";
-import { useStorageQueryCounts } from "../../../_hooks/useStorageQueryCounts";
 import { StorageKeyStatsSection } from "../sections/storage/components/StorageKeyStats";
 import { StorageKeySection } from "../sections/storage/components/StorageKeySection";
 import {
@@ -21,8 +19,6 @@ import { getEnvVarType } from "../sections/env-vars/envTypeDetector";
 interface StorageBrowserModeProps {
   selectedQuery: Query | undefined;
   onQuerySelect: (query: Query | undefined) => void;
-  activeStorageTypes: Set<StorageType>;
-  onCountsChange?: (counts: StorageTypeCounts) => void; // To pass counts up to parent
   requiredStorageKeys?: RequiredStorageKey[]; // Configuration for required keys
 }
 
@@ -35,8 +31,6 @@ interface StorageBrowserModeProps {
  * - Extract Reusable Logic: Uses existing QueryBrowser component for consistency
  */
 export function StorageBrowserMode({
-  activeStorageTypes,
-  onCountsChange,
   requiredStorageKeys = [],
 }: StorageBrowserModeProps) {
   const queryClient = useQueryClient();
@@ -51,10 +45,10 @@ export function StorageBrowserMode({
   const { storageKeys, stats } = useMemo(() => {
     const keyInfoMap = new Map<string, StorageKeyInfo>();
 
-    // First, process all active storage queries
+    // Process all storage queries (no filtering by storage type)
     storageQueriesData.forEach((query) => {
       const storageType = getStorageType(query.queryKey);
-      if (!storageType || !activeStorageTypes.has(storageType)) return;
+      if (!storageType) return;
 
       const cleanKey = getCleanStorageKey(query.queryKey);
       const value = query.state.data;
@@ -160,17 +154,9 @@ export function StorageBrowserMode({
     };
 
     return { storageKeys: keys, stats: storageStats };
-  }, [storageQueriesData, activeStorageTypes, requiredStorageKeys]);
+  }, [storageQueriesData, requiredStorageKeys]);
 
-  // Get stable storage counts using dedicated hook [[rule3]]
-  const storageCounts = useStorageQueryCounts();
-
-  // Pass counts to parent with stable reference - only when counts actually change
-  useEffect(() => {
-    if (onCountsChange) {
-      onCountsChange(storageCounts);
-    }
-  }, [storageCounts, onCountsChange]);
+  // Note: Storage counts removed as filtering is no longer needed
 
   // Group storage keys by status
   const requiredKeys = storageKeys.filter((k) => k.category === "required");
@@ -208,5 +194,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 12,
     paddingBottom: 24,
+    gap: 12,
   },
 });
