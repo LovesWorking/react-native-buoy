@@ -1,8 +1,6 @@
 export { useDynamicBubbleWidth } from "./useDynamicBubbleWidth";
 export { useDragGesture } from "./useDragGesture";
 export { useWifiState } from "./useWifiState";
-export { useSentryEvents, useSentryEventCounts } from "./useSentryEvents";
-export { useSentrySubtitle } from "./useSentrySubtitle";
 export { useReactQueryState } from "./useReactQueryState";
 export { useModalManager } from "./useModalManager";
 export { useModalPersistence } from "./useModalPersistence";

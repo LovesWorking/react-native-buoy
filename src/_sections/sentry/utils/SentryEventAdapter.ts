@@ -2,8 +2,8 @@ import {
   SentryEventEntry,
   SentryEventLevel,
   SentryEventType,
-} from "../../../sentry/sentryEventListeners";
-import { ConsoleTransportEntry, LogLevel, LogType } from "../../logger/types";
+} from "./sentryEventListeners";
+import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_components/floating-bubble/admin/logger/types";
 
 /**
  * Maps SentryEventType to LogType for UI consistency

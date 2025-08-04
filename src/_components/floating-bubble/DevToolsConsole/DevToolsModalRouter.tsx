@@ -1,5 +1,5 @@
 import { RequiredEnvVar } from "../../../_sections/env/types";
-import { SentryLogsModal } from "./modals/SentryLogsModal";
+import { SentryLogsModal } from "../../../_sections/sentry";
 import { EnvVarsModal } from "../../../_sections/env/components/EnvVarsModal";
 
 // Available section types for navigation

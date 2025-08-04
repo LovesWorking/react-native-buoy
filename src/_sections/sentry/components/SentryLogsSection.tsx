@@ -1,7 +1,7 @@
 import { FileText } from "lucide-react-native";
-import { ConsoleSection } from "../ConsoleSection";
+import { ConsoleSection } from "../../../_components/floating-bubble/DevToolsConsole/ConsoleSection";
 import { SentryLogsDetailContent } from "./SentryLogsDetailContent";
-import { ConsoleTransportEntry } from "../../admin/logger/types";
+import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
 
 interface SentryLogsSectionProps {
   onPress: () => void;

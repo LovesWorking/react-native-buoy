@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
-import { SentryLogsContent } from "../sections";
+import { BaseFloatingModal } from "../../../_components/floating-bubble/floatingModal/BaseFloatingModal";
+import { SentryLogsContent } from "./SentryLogsSection";
 import { View, Text } from "react-native";
-import { BackButton } from "../../admin/components/BackButton";
-import { ConsoleTransportEntry } from "../../admin/logger/types";
+import { BackButton } from "../../../_components/floating-bubble/admin/components/BackButton";
+import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
 
 interface SentryLogsModalProps {
   visible: boolean;

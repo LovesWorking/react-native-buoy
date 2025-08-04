@@ -21,10 +21,10 @@ import {
   X,
 } from "lucide-react-native";
 
-import { ConsoleTransportEntry, LogLevel, LogType } from "../../logger/types";
+import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_components/floating-bubble/admin/logger/types";
 
-import { EmptyFilterState, EmptyState } from "./EmptyStates";
-import { adaptSentryEventsToConsoleEntries } from "./SentryEventAdapter";
+import { EmptyFilterState, EmptyState } from "../../../_components/floating-bubble/admin/sections/log-dump/EmptyStates";
+import { adaptSentryEventsToConsoleEntries } from "../utils/SentryEventAdapter";
 import { SentryEventLogDetailView } from "./SentryEventLogDetailView";
 import { SentryEventLogEntryItem } from "./SentryEventLogEntryItem";
 import { SentryEventLogFilters } from "./SentryEventLogFilters";
@@ -32,7 +32,7 @@ import {
   clearSentryEvents,
   generateTestSentryEvents,
   getSentryEvents,
-} from "../../../sentry/sentryEventListeners";
+} from "../utils/sentryEventListeners";
 
 // Stable constants to prevent re-creation on every render [[memory:4875251]]
 const ESTIMATED_ITEM_SIZE = 120;

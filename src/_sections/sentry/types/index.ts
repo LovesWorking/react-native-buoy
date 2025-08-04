@@ -1,0 +1,1 @@
+// Type declarations are in sentry.d.ts

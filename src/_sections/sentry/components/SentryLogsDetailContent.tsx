@@ -13,18 +13,18 @@ import {
   ConsoleTransportEntry,
   LogLevel,
   LogType,
-} from "../../admin/logger/types";
+} from "../../../_components/floating-bubble/admin/logger/types";
 import {
   EmptyFilterState,
   EmptyState,
-} from "../../admin/sections/log-dump/EmptyStates";
-import { SentryEventLogEntryItem } from "../../admin/sections/log-dump/SentryEventLogEntryItemCompact";
+} from "../../../_components/floating-bubble/admin/sections/log-dump/EmptyStates";
+import { SentryEventLogEntryItem } from "./SentryEventLogEntryItemCompact";
 import { SentryFilterView } from "./SentryFilterView";
 import {
   clearSentryEvents,
   generateTestSentryEvents,
-} from "../../sentry/sentryEventListeners";
-import { useSentryEvents } from "../../admin/hooks/useSentryEvents";
+} from "../utils/sentryEventListeners";
+import { useSentryEvents } from "../hooks/useSentryEvents";
 import { SentryEventDetailView } from "./SentryEventDetailView";
 
 // Stable constants to prevent re-creation on every render [[memory:4875251]]

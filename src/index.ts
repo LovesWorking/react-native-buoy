@@ -7,10 +7,10 @@ export {
   setupSentryEventListeners,
   setMaxSentryEvents,
   getSentryEvents,
-} from "./_components/floating-bubble/sentry/sentryEventListeners";
+} from "./_sections/sentry/utils/sentryEventListeners";
 
 // Types
-export type { SentryEventEntry } from "./_components/floating-bubble/sentry/sentryEventListeners";
+export type { SentryEventEntry } from "./_sections/sentry/utils/sentryEventListeners";
 export type { 
   RequiredEnvVar,
   EnvVarType 

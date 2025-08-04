@@ -1,5 +1,5 @@
-import { add } from './logDump';
-import { ConsoleTransportEntry, LogLevel, LogType, SentryBreadcrumb, SentryEvent } from './types';
+import { add } from '../../../_components/floating-bubble/admin/logger/logDump';
+import { ConsoleTransportEntry, LogLevel, LogType, SentryBreadcrumb, SentryEvent } from '../../../_components/floating-bubble/admin/logger/types';
 
 export { LogLevel, LogType };
 

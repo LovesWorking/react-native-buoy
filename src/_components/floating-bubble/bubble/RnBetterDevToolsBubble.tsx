@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  useSentrySubtitle,
   useReactQueryState,
   useModalManager,
 } from "../admin/hooks";
+import { useSentrySubtitle } from "../../../_sections/sentry";
 import { RequiredEnvVar, useEnvVarsSubtitle } from "../../../_sections/env";
 import {
   UserRole,

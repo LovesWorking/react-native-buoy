@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import isEqual from "fast-deep-equal";
-import { ConsoleTransportEntry, LogLevel, LogType } from "../logger/types";
+import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_components/floating-bubble/admin/logger/types";
 
-import { reactiveSentryEventStore } from "../../sentry/sentryEventStore";
-import { adaptSentryEventsToConsoleEntries } from "../sections/log-dump/SentryEventAdapter";
+import { reactiveSentryEventStore } from "../utils/sentryEventStore";
+import { adaptSentryEventsToConsoleEntries } from "../utils/SentryEventAdapter";
 
 interface UseSentryEventsOptions {
   selectedTypes?: Set<LogType>;

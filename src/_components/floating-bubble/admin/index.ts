@@ -10,7 +10,7 @@ export type {
   SentryEventEntry,
   SentryEventLevel,
   SentryEventType,
-} from "../sentry/sentryEventListeners";
+} from "../../../_sections/sentry/utils/sentryEventListeners";
 export {
   clearSentryEvents,
   configureSentryClient,
@@ -21,7 +21,7 @@ export {
   sentryEventLogger,
   setMaxSentryEvents,
   setupSentryEventListeners,
-} from "../sentry/sentryEventListeners";
+} from "../../../_sections/sentry/utils/sentryEventListeners";
 
 // Default sections
 export { AdminEnvVarsSection as EnvVarsSection } from "../../../_sections/env";
