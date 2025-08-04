@@ -5,12 +5,10 @@ import {
   useModalManager,
 } from "../admin/hooks";
 import { RequiredEnvVar, useEnvVarsSubtitle } from "../admin/sections/env-vars";
-import { type ClipboardFunction } from "../../../context/CopyContext";
 import {
   Environment,
   UserRole,
   BubblePresentation,
-  CopyContextProvider,
 } from "../admin/components";
 import { type BubbleConfig } from "../admin/components/RnBetterDevToolsBubbleContent";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
@@ -22,7 +20,6 @@ interface RnBetterDevToolsBubbleProps {
   userRole?: UserRole;
   environment?: Environment;
   requiredEnvVars?: RequiredEnvVar[];
-  onCopy?: ClipboardFunction;
   config?: BubbleConfig;
   enableSharedModalDimensions?: boolean;
 }
@@ -32,7 +29,6 @@ export function RnBetterDevToolsBubble({
   userRole,
   environment,
   requiredEnvVars = [],
-  onCopy,
   config = {},
   enableSharedModalDimensions = false,
 }: RnBetterDevToolsBubbleProps) {
@@ -73,51 +69,49 @@ export function RnBetterDevToolsBubble({
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <CopyContextProvider onCopy={onCopy}>
-          {/* Bubble Presentation - Encapsulates all UI logic internally */}
-          {/* Hidden when modals are open to prevent visual conflicts */}
-          {!isAnyModalOpen && (
-            <BubblePresentation
-              key="bubble-presentation"
-              environment={environment}
-              userRole={userRole}
-              onStatusPress={handleStatusPress}
-              onQueryPress={handleQueryPress}
-              config={config}
-            />
-          )}
-
-          {/* Floating Data Editor Modal - Auto-opens if restored state indicates it was open */}
-          <ReactQueryModal
-            key="react-query-modal"
-            visible={isModalOpen}
-            selectedQueryKey={selectedQueryKey}
-            onQuerySelect={handleQuerySelect}
-            onClose={handleModalDismiss}
-            activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
-            enableSharedModalDimensions={enableSharedModalDimensions}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            selectedMutationId={selectedMutationId}
-            onMutationSelect={handleMutationSelect}
+        {/* Bubble Presentation - Encapsulates all UI logic internally */}
+        {/* Hidden when modals are open to prevent visual conflicts */}
+        {!isAnyModalOpen && (
+          <BubblePresentation
+            key="bubble-presentation"
+            environment={environment}
+            userRole={userRole}
+            onStatusPress={handleStatusPress}
+            onQueryPress={handleQueryPress}
+            config={config}
           />
+        )}
 
-          {/* DevTools Console - Auto-opens if restored state indicates it was open */}
-          <DevToolsConsole
-            key="devtools-console-modal"
-            visible={isDebugModalOpen}
-            onClose={handleDebugModalDismiss}
-            requiredEnvVars={requiredEnvVars}
-            getSentrySubtitle={getSentrySubtitle}
-            getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
-            envVarsSubtitle={envVarsSubtitle}
-            selectedSection={selectedSection}
-            setSelectedSection={setSelectedSection}
-            enableSharedModalDimensions={enableSharedModalDimensions}
-            onReactQueryPress={handleQueryPress}
-          />
-        </CopyContextProvider>
+        {/* Floating Data Editor Modal - Auto-opens if restored state indicates it was open */}
+        <ReactQueryModal
+          key="react-query-modal"
+          visible={isModalOpen}
+          selectedQueryKey={selectedQueryKey}
+          onQuerySelect={handleQuerySelect}
+          onClose={handleModalDismiss}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          enableSharedModalDimensions={enableSharedModalDimensions}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          selectedMutationId={selectedMutationId}
+          onMutationSelect={handleMutationSelect}
+        />
+
+        {/* DevTools Console - Auto-opens if restored state indicates it was open */}
+        <DevToolsConsole
+          key="devtools-console-modal"
+          visible={isDebugModalOpen}
+          onClose={handleDebugModalDismiss}
+          requiredEnvVars={requiredEnvVars}
+          getSentrySubtitle={getSentrySubtitle}
+          getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
+          envVarsSubtitle={envVarsSubtitle}
+          selectedSection={selectedSection}
+          setSelectedSection={setSelectedSection}
+          enableSharedModalDimensions={enableSharedModalDimensions}
+          onReactQueryPress={handleQueryPress}
+        />
       </QueryClientProvider>
     </ErrorBoundary>
   );

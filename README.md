@@ -97,31 +97,18 @@ This command adds the react-native-react-query-devtools package to your project 
 
 ## Usage
 
-Incorporating React Query Dev Tools into your application is straightforward. Begin by importing the DevToolsBubble component.
+Incorporating React Query Dev Tools into your application is straightforward. Begin by importing the RnBetterDevToolsBubble component.
 
 ```javascript
-import { DevToolsBubble } from "react-native-react-query-devtools";
+import { RnBetterDevToolsBubble } from "react-native-react-query-devtools";
 ```
 
-Next, integrate the DevToolsBubble component into your app. To enable object copying functionality, you must provide a custom copy function that works with your platform (Expo or React Native CLI).
+Next, integrate the RnBetterDevToolsBubble component into your app. The tool will automatically detect your clipboard library!
 
 ```javascript
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const queryClient = new QueryClient();
-
-  // Define your copy function based on your platform
-  const onCopy = async (text: string) => {
-    try {
-      // For Expo:
-      await Clipboard.setStringAsync(text);
-      // OR for React Native CLI:
-      // await Clipboard.setString(text);
-      return true;
-    } catch {
-      return false;
-    }
-  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -131,7 +118,8 @@ function RootLayoutNav() {
           <Stack.Screen name="modal" options={{ presentation: "modal" }} />
         </Stack>
       </ThemeProvider>
-      <DevToolsBubble onCopy={onCopy} queryClient={queryClient} />
+      {/* No onCopy needed - automatically detects clipboard! */}
+      <RnBetterDevToolsBubble queryClient={queryClient} />
     </QueryClientProvider>
   );
 }
@@ -166,52 +154,40 @@ function RootLayoutNav() {
 
 ### Copy Function
 
-The `onCopy` prop is required to enable copying functionality in the dev tools. This function should:
+The dev tools now **automatically detect** and use your clipboard library! No configuration needed.
 
-- Accept a string parameter
-- Return a Promise<boolean>
-- Return true if the copy was successful, false otherwise
+#### Automatic Clipboard Detection
 
-Example implementations:
+The tool will automatically detect and use:
+- **Expo**: `expo-clipboard` (if installed)
+- **React Native CLI**: `@react-native-clipboard/clipboard` (if installed)
+
+If neither is detected, you'll see a helpful warning in the console with installation instructions.
+
+
+#### Manual Installation
+
+If clipboard functionality isn't working, install the appropriate package:
 
 For Expo:
-
-```typescript
-import * as Clipboard from "expo-clipboard";
-
-const onCopy = async (text: string) => {
-  try {
-    await Clipboard.setStringAsync(text);
-    return true;
-  } catch {
-    return false;
-  }
-};
+```bash
+expo install expo-clipboard
 ```
 
 For React Native CLI:
-
-```typescript
-import Clipboard from "@react-native-clipboard/clipboard";
-
-const onCopy = async (text: string) => {
-  try {
-    await Clipboard.setString(text);
-    return true;
-  } catch {
-    return false;
-  }
-};
+```bash
+npm install @react-native-clipboard/clipboard
+# or
+yarn add @react-native-clipboard/clipboard
 ```
 
 ## 🔧 Advanced Configuration
 
-The DevToolsBubble component accepts additional props for customization:
+The RnBetterDevToolsBubble component accepts additional props for customization:
 
 ```typescript
-interface DevToolsBubbleProps {
+interface RnBetterDevToolsBubbleProps {
   queryClient: QueryClient; // Required: The QueryClient instance to use
-  onCopy: (text: string) => Promise<boolean>;
   // Optional: Callback when selection state changes
   onSelectionChange?: (hasSelection: boolean) => void;
   // Optional: Custom pan responder for advanced gesture handling

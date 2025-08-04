@@ -12,13 +12,12 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
-  Alert,
   InteractionManager,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Copy } from "lucide-react-native";
 import { FlashList } from "@shopify/flash-list";
-import { useCopy } from "../../context/CopyContext";
+import { copyToClipboard } from "../floating-bubble/utils/copyToClipboard";
 import { displayValue } from "../devtools/displayValue";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
@@ -406,17 +405,11 @@ const TypeLegend = React.memo(
 
 const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
   const [copyState, setCopyState] = useState<CopyState>("NoCopy");
-  const { onCopy } = useCopy();
 
   const handleCopy = useCallback(async () => {
-    if (!onCopy) {
-      Alert.alert("Warning", "Copy functionality is not configured.");
-      return;
-    }
-
     try {
-      // Pass the raw value to onCopy - let the context handle safe stringification
-      const copied = await onCopy(displayValue(value));
+      // Pass the raw value to copyToClipboard - it handles safe stringification
+      const copied = await copyToClipboard(value);
       if (copied) {
         setCopyState("SuccessCopy");
         setTimeout(() => setCopyState("NoCopy"), 1500);
@@ -429,7 +422,7 @@ const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
       setCopyState("ErrorCopy");
       setTimeout(() => setCopyState("NoCopy"), 1500);
     }
-  }, [onCopy, value]);
+  }, [value]);
 
   return (
     <TouchableOpacity

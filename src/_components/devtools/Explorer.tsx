@@ -12,9 +12,8 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
-  Alert,
 } from "react-native";
-import { useCopy } from "../../context/CopyContext";
+import { copyToClipboard } from "../floating-bubble/utils/copyToClipboard";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
 const CHUNK_SIZE = 100;
@@ -59,22 +58,13 @@ type CopyState = "NoCopy" | "SuccessCopy" | "ErrorCopy";
 // Memoized CopyButton component optimized with ref pattern [[memory:4875251]]
 const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
   const [copyState, setCopyState] = useState<CopyState>("NoCopy");
-  const { onCopy } = useCopy();
   const valueRef = useRef(value);
   valueRef.current = value;
 
   const handleCopy = useCallback(async () => {
-    if (!onCopy) {
-      Alert.alert(
-        "Warning",
-        "Copy functionality is not configured. Please add a copy function to DevToolsBubble. See documentation for setup instructions."
-      );
-      return;
-    }
-
     try {
       // Use ref to avoid stale closures [[memory:4875251]]
-      const copied = await onCopy(displayValue(valueRef.current));
+      const copied = await copyToClipboard(valueRef.current);
       if (copied) {
         setCopyState("SuccessCopy");
         setTimeout(() => setCopyState("NoCopy"), 1500);
@@ -87,7 +77,7 @@ const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
       setCopyState("ErrorCopy");
       setTimeout(() => setCopyState("NoCopy"), 1500);
     }
-  }, [onCopy]); // Only depend on onCopy, use ref for value
+  }, []); // No dependencies needed anymore
 
   return (
     <TouchableOpacity
