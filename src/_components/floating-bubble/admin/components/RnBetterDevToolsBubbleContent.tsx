@@ -95,6 +95,9 @@ export function RnBetterDevToolsBubbleContent({
       {shouldShowQueryButton && (
         <>
           <Pressable
+            accessibilityLabel="RN Better Dev Tools"
+            accessibilityHint="View RN Better Dev Tools"
+            sentry-label="ignore user interaction"
             onPress={onQueryPress}
             style={styles.queryButton}
             hitSlop={8}

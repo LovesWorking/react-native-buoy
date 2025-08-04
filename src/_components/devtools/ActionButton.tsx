@@ -60,6 +60,7 @@ export default function ActionButton({
 
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools action button"
       disabled={disabled}
       onPress={onClick}
       style={[

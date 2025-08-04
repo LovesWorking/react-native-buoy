@@ -49,6 +49,7 @@ export default function MutationButton({
 
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools mutation button"
       onPress={() =>
         setSelectedMutation(mutation === selected ? undefined : mutation)
       }

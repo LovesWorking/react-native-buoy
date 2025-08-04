@@ -46,6 +46,7 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
 
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools query row"
       style={[styles.queryRow, isSelected && styles.selectedQueryRow]}
       onPress={() => onSelect(query)}
       activeOpacity={0.8}

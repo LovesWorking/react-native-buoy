@@ -50,6 +50,7 @@ const QueryStatusCount: React.FC<QueryStatusCountProps> = ({
   return (
     <View style={styles.queryStatusContainer}>
       <ScrollView
+        sentry-label="ignore devtools query status count scroll"
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.scrollView}

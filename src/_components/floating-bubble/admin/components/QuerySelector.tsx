@@ -36,13 +36,27 @@ export function QuerySelector({
 
   return (
     <Modal
+      accessibilityLabel="Query selector"
+      accessibilityHint="View query selector"
+      sentry-label="ignore query selector"
       visible={isOpen}
       transparent
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <View style={styles.modalContent}>
+      <Pressable
+        accessibilityLabel="Query selector overlay"
+        accessibilityHint="View query selector overlay"
+        sentry-label="ignore query selector overlay"
+        style={styles.modalOverlay}
+        onPress={onClose}
+      >
+        <View
+          accessibilityLabel="Query selector content"
+          accessibilityHint="View query selector content"
+          sentry-label="ignore query selector content"
+          style={styles.modalContent}
+        >
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Select Query</Text>
             <Text style={styles.modalSubtitle}>
@@ -52,6 +66,9 @@ export function QuerySelector({
           </View>
 
           <ScrollView
+            accessibilityLabel="Query selector scroll view"
+            accessibilityHint="View query selector scroll view"
+            sentry-label="ignore query selector scroll view"
             style={styles.scrollView}
             contentContainerStyle={styles.scrollViewContent}
             showsVerticalScrollIndicator={true}
@@ -91,6 +108,9 @@ export function QuerySelector({
 
                 return (
                   <TouchableOpacity
+                    accessibilityLabel={`Query ${displayName}`}
+                    accessibilityHint={`View query ${displayName}`}
+                    sentry-label={`ignore query ${displayName}`}
                     key={`${query.queryHash}-${index}`}
                     style={[
                       styles.queryItem,

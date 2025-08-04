@@ -27,6 +27,9 @@ export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
   return (
     <>
       <ScrollView
+        accessibilityLabel="Data editor mode"
+        accessibilityHint="View data editor mode"
+        sentry-label="ignore data editor mode"
         style={styles.explorerScrollContainer}
         contentContainerStyle={styles.explorerScrollContent}
       >
@@ -63,6 +66,7 @@ export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
         <View style={styles.actionsGrid}>
           {actionButtons.map((action: ActionButtonConfig, index: number) => (
             <ActionButton
+              sentry-label={`ignore action button ${action.label}`}
               key={index}
               onClick={action.onPress}
               text={action.label}

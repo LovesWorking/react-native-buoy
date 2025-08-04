@@ -30,6 +30,7 @@ export function ConsoleSection({
 }: ConsoleSectionProps) {
   return (
     <Pressable
+      sentry-label="ignore devtools console section"
       onPress={onPress}
       style={styles.sectionCard}
       android_ripple={{ color: "rgba(255, 255, 255, 0.1)" }}

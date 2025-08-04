@@ -15,6 +15,7 @@ export function ConsoleSectionList({ children }: ConsoleSectionListProps) {
   return (
     <>
       <ScrollView
+        sentry-label="ignore devtools console section list scroll"
         style={styles.sectionListContainer}
         contentContainerStyle={styles.sectionListContent}
       >

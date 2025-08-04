@@ -113,7 +113,9 @@ export function StorageKeyCard({
   return (
     <View style={[styles.storageKeyCard, { borderColor: config.borderColor }]}>
       <TouchableOpacity
-        sentry-label={`storage key card ${storageKey.key}`}
+        accessibilityLabel="Storage key card"
+        accessibilityHint="View storage key card"
+        sentry-label={`ignore storage key card ${storageKey.key}`}
         accessibilityRole="button"
         style={styles.cardHeader}
         onPress={onToggle}
@@ -160,7 +162,9 @@ export function StorageKeyCard({
         </View>
         <View style={styles.cardHeaderRight}>
           <TouchableOpacity
-            sentry-label={`storage key card ${storageKey.key} expand`}
+            accessibilityLabel="Expand"
+            accessibilityHint="Expand storage key card"
+            sentry-label={`ignore storage key card ${storageKey.key} expand`}
             accessibilityRole="button"
             style={styles.actionButton}
             onPress={onToggle}

@@ -19,6 +19,9 @@ export function MutationEditorMode({
   return (
     <>
       <ScrollView
+        accessibilityLabel="Mutation editor mode"
+        accessibilityHint="View mutation editor mode"
+        sentry-label="ignore mutation editor mode"
         style={styles.explorerScrollContainer}
         contentContainerStyle={styles.explorerScrollContent}
       >
@@ -54,6 +57,7 @@ export function MutationEditorMode({
         <View style={styles.actionsGrid}>
           {actionButtons.map((action, index) => (
             <ActionButton
+              sentry-label={`ignore action button ${action.label}`}
               key={index}
               onClick={action.onPress}
               text={action.label}

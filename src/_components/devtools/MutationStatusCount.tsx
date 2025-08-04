@@ -42,6 +42,7 @@ const MutationStatusCount: React.FC<MutationStatusCountProps> = ({
   return (
     <View style={styles.mutationStatusContainer}>
       <ScrollView
+        sentry-label="ignore devtools mutation status count scroll"
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.scrollView}

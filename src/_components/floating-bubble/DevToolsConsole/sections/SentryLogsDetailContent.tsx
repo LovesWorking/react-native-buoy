@@ -183,6 +183,7 @@ export function SentryLogsDetailContent({
         </View>
         <View style={styles.statsRight}>
           <TouchableOpacity
+            sentry-label="ignore devtools sentry filter open"
             onPress={() => onShowFilterView(true)}
             style={[
               styles.iconButton,
@@ -201,6 +202,8 @@ export function SentryLogsDetailContent({
             />
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityHint="View pause logging"
+            sentry-label="ignore devtools sentry pause logging"
             onPress={() => setIsLoggingEnabled(!isLoggingEnabled)}
             style={[styles.iconButton, isLoggingEnabled && styles.activeButton]}
             accessibilityLabel={
@@ -214,16 +217,20 @@ export function SentryLogsDetailContent({
             )}
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityLabel="Generate test Sentry events"
+            accessibilityHint="View generate test Sentry events"
+            sentry-label="ignore devtools sentry generate test events"
             onPress={generateTestLogs}
             style={styles.iconButton}
-            accessibilityLabel="Generate test Sentry events"
           >
             <FlaskConical size={16} color="#818CF8" />
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityLabel="Clear Sentry events"
+            accessibilityHint="View clear Sentry events"
+            sentry-label="ignore devtools sentry clear events"
             onPress={clearLogs}
             style={styles.iconButton}
-            accessibilityLabel="Clear Sentry events"
           >
             <Trash size={16} color="#F87171" />
           </TouchableOpacity>
@@ -239,6 +246,9 @@ export function SentryLogsDetailContent({
         <View style={styles.listContainer}>
           <GestureDetector gesture={panGesture}>
             <FlashList
+              accessibilityLabel="Sentry logs detail content"
+              accessibilityHint="View sentry logs detail content"
+              sentry-label="ignore devtools sentry logs detail list"
               ref={flatListRef}
               data={filteredEntries}
               renderItem={renderSentryEventItem}

@@ -18,6 +18,7 @@ export function BackButton({
 }: BackButtonProps) {
   return (
     <Pressable
+      sentry-label="ignore back button"
       onPress={onPress}
       style={styles.button}
       hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}

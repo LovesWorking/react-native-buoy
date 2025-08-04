@@ -17,7 +17,7 @@ export default function QueryDetails({ query }: Props) {
     <View style={styles.minWidth}>
       <Text style={styles.headerText}>Query Details</Text>
       <View style={styles.row}>
-        <ScrollView horizontal style={styles.flexOne}>
+        <ScrollView sentry-label="ignore devtools query details scroll" horizontal style={styles.flexOne}>
           <Text style={styles.queryKeyText}>
             {displayValue(query.queryKey, true)}
           </Text>

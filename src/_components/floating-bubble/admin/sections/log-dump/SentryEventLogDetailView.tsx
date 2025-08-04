@@ -90,6 +90,9 @@ export const SentryEventLogDetailView = ({
       {/* Tab navigation */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
+          accessibilityLabel="Message"
+          accessibilityHint="View message"
+          sentry-label="ignore user interaction"
           onPress={() => setActiveTab("message")}
           style={[
             styles.tab,
@@ -109,6 +112,9 @@ export const SentryEventLogDetailView = ({
         </TouchableOpacity>
 
         <TouchableOpacity
+          accessibilityLabel="Event Data"
+          accessibilityHint="View event data"
+          sentry-label="ignore user interaction"
           onPress={() => setActiveTab("eventData")}
           style={[
             styles.tab,
@@ -128,6 +134,9 @@ export const SentryEventLogDetailView = ({
         </TouchableOpacity>
 
         <TouchableOpacity
+          accessibilityLabel="Raw Data"
+          accessibilityHint="View raw data"
+          sentry-label="ignore user interaction"
           onPress={() => setActiveTab("rawData")}
           style={[
             styles.tab,
@@ -147,6 +156,9 @@ export const SentryEventLogDetailView = ({
         </TouchableOpacity>
 
         <TouchableOpacity
+          accessibilityLabel="Debug"
+          accessibilityHint="View debug info"
+          sentry-label="ignore user interaction"
           onPress={() => setActiveTab("debugInfo")}
           style={[
             styles.tab,

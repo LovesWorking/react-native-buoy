@@ -67,6 +67,9 @@ export function ReactQueryModalHeader({
         <View style={styles.browserView}>
           <View style={styles.tabNavigationContainer}>
             <TouchableOpacity
+              sentry-label="ignore user interaction"
+              accessibilityLabel="Queries"
+              accessibilityHint="View queries"
               onPress={() => onTabChange("queries")}
               style={[
                 styles.tabButton,
@@ -87,6 +90,7 @@ export function ReactQueryModalHeader({
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              sentry-label="ignore user interaction"
               onPress={() => onTabChange("mutations")}
               style={[
                 styles.tabButton,
@@ -107,6 +111,9 @@ export function ReactQueryModalHeader({
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              sentry-label="ignore user interaction"
+              accessibilityLabel="Storage"
+              accessibilityHint="View storage keys"
               onPress={() => onTabChange("storage")}
               style={[
                 styles.tabButton,

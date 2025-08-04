@@ -53,6 +53,7 @@ export const TypeLegend: React.FC<TypeLegendProps> = ({
 
         return (
           <TouchableOpacity
+            sentry-label="ignore devtools type legend filter"
             key={type}
             style={[
               styles.typeBadge,

@@ -164,6 +164,9 @@ export function StorageBrowserMode({
 
   return (
     <ScrollView
+      accessibilityLabel="Storage browser mode"
+      accessibilityHint="View storage browser mode"
+      sentry-label="ignore storage browser mode"
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
     >

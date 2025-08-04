@@ -67,6 +67,7 @@ const QueryStatus: React.FC<QueryStatusProps> = ({
 
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools query status"
       style={[
         styles.queryStatusTag,
         !showLabel && styles.clickable,

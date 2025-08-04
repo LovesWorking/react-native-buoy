@@ -106,6 +106,9 @@ export function RnBetterDevToolsBubbleContent({
       {/* React Query Status Button */}
       <Animated.View onLayout={onQueryLayout}>
         <Pressable
+          accessibilityLabel="React Query"
+          accessibilityHint="View React Query"
+          sentry-label="ignore user interaction"
           onPress={onQueryPress}
           style={styles.queryButton}
           hitSlop={8}

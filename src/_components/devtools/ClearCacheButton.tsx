@@ -14,6 +14,7 @@ const ClearCacheButton: React.FC<ClearCacheButtonProps> = ({
 }) => {
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools clear cache button"
       style={[styles.button, disabled && styles.disabledButton]}
       onPress={onClear}
       disabled={disabled}

@@ -97,6 +97,7 @@ export default function QueryBrowser({
   return (
     <View style={styles.listWrapper}>
       <FlashList
+        sentry-label="ignore devtools query browser list"
         data={filteredQueries}
         renderItem={renderItem}
         keyExtractor={keyExtractor}

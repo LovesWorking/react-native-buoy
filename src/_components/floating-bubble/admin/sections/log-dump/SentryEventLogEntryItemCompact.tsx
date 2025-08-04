@@ -24,6 +24,7 @@ export const SentryEventLogEntryItem = React.memo<SentryEventLogEntryItemProps>(
 
     return (
       <TouchableOpacity
+        sentry-label={`ignore sentry log entry ${entry.message}`}
         accessibilityLabel={`Sentry log entry: ${entry.message}`}
         accessibilityHint="View full sentry log entry details"
         accessibilityRole="button"

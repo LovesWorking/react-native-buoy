@@ -126,6 +126,7 @@ export default function MutationsList({
       {filteredMutations.length > 0 ? (
         <View style={styles.listWrapper}>
           <FlashList
+            sentry-label="ignore devtools mutations list"
             data={filteredMutations}
             renderItem={renderMutation}
             keyExtractor={(item, index) => `${item.mutationId}-${index}`}

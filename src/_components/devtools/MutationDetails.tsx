@@ -22,7 +22,11 @@ export default function MutationDetails({ selectedMutation }: Props) {
         Mutation Details
       </Text>
       <View style={[styles.flexRow, styles.justifyBetween, styles.p1]}>
-        <ScrollView horizontal style={styles.flex1}>
+        <ScrollView
+          sentry-label="ignore devtools mutation details scroll"
+          horizontal
+          style={styles.flex1}
+        >
           <Text style={styles.flexWrap}>{`${
             selectedMutation.options.mutationKey
               ? displayValue(selectedMutation.options.mutationKey, true)

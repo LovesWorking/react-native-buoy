@@ -1,0 +1,5 @@
+{
+  "name": "eslint-plugin-sentry-tracking",
+  "version": "1.0.0",
+  "main": "eslint-plugin-sentry-tracking.js"
+}

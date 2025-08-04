@@ -10,6 +10,7 @@ interface Props {
 export default function MutationInformation({ selectedMutation }: Props) {
   return (
     <ScrollView
+      sentry-label="ignore devtools mutation information scroll"
       style={styles.flex1}
       contentContainerStyle={styles.scrollContent}
     >

@@ -72,6 +72,7 @@ const StorageStatusCount: React.FC<StorageStatusCountProps> = ({
   return (
     <View style={styles.storageStatusContainer}>
       <ScrollView
+        sentry-label="ignore devtools storage status count scroll"
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.scrollView}

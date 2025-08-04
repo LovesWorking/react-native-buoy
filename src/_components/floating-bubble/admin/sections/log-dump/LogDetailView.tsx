@@ -185,9 +185,11 @@ export const LogDetailView = ({
       case "dataCard":
         return (
           <TouchableOpacity
+            accessibilityLabel={`Open ${item.title} in full screen`}
+            accessibilityHint="Open data card in full screen"
+            sentry-label={`ignore data card ${item.id}`}
             style={styles.dataCard}
             onPress={() => setActiveModal(item.id)}
-            accessibilityLabel={`Open ${item.title} in full screen`}
           >
             <View style={styles.dataCardContent}>
               <Text style={styles.dataCardTitle}>{item.title}</Text>

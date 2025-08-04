@@ -18,6 +18,7 @@ export function DevToolsBubbleButton({
 }: DevToolsBubbleButtonProps) {
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools bubble button"
       onPress={onPress}
       style={[
         styles.touchableOpacityBase,

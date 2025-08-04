@@ -95,13 +95,15 @@ export function SentryFilterView({
     color?: string
   ) => (
     <TouchableOpacity
+      accessibilityLabel={`${label} filter ${count} items`}
+      accessibilityHint={`View ${label} filter ${count} items`}
+      sentry-label="ignore devtools sentry filter item"
       key={key}
       onPress={onPress}
       style={[
         styles.filterItem,
         isSelected && { backgroundColor: `${color}20`, borderColor: color },
       ]}
-      accessibilityLabel={`${label} filter ${count} items`}
     >
       <View style={styles.filterItemLeft}>
         {Icon && <Icon size={16} color={isSelected ? color : "#9CA3AF"} />}
@@ -123,6 +125,9 @@ export function SentryFilterView({
   return (
     <View style={styles.container}>
       <ScrollView
+        accessibilityLabel="Sentry filter view"
+        accessibilityHint="View sentry filter view"
+        sentry-label="ignore devtools sentry filter scroll"
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

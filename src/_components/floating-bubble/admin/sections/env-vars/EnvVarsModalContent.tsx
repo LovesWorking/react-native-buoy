@@ -1,9 +1,22 @@
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AlertTriangle, CheckCircle, RefreshCw, X, XCircle } from 'lucide-react-native';
+import { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  AlertTriangle,
+  CheckCircle,
+  RefreshCw,
+  X,
+  XCircle,
+} from "lucide-react-native";
 
-import { useDynamicEnv } from '../../hooks';
+import { useDynamicEnv } from "../../hooks";
 
 interface EnvVarsModalContentProps {
   onClose: () => void;
@@ -13,10 +26,13 @@ interface EnvVarsModalContentProps {
 interface EnvVarInfo {
   key: string;
   value: unknown;
-  status: 'present' | 'missing' | 'unchecked';
+  status: "present" | "missing" | "unchecked";
 }
 
-export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsModalContentProps) {
+export function EnvVarsModalContent({
+  onClose,
+  requiredEnvVars = [],
+}: EnvVarsModalContentProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -33,7 +49,7 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
       // Include all available env vars
       if (data !== undefined && data !== null) {
         // Convert data to string for transmission
-        envVars[key] = typeof data === 'string' ? data : JSON.stringify(data);
+        envVars[key] = typeof data === "string" ? data : JSON.stringify(data);
       }
     });
 
@@ -51,7 +67,7 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
       envVarInfos.push({
         key,
         value: autoCollectedEnvVars[key],
-        status: autoCollectedEnvVars[key] !== undefined ? 'present' : 'missing',
+        status: autoCollectedEnvVars[key] !== undefined ? "present" : "missing",
       });
     });
 
@@ -61,7 +77,7 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
         envVarInfos.push({
           key,
           value,
-          status: 'unchecked',
+          status: "unchecked",
         });
       }
     });
@@ -86,52 +102,58 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
     }
   };
 
-  const getStatusIcon = (status: EnvVarInfo['status']) => {
+  const getStatusIcon = (status: EnvVarInfo["status"]) => {
     switch (status) {
-      case 'present':
+      case "present":
         return <CheckCircle size={16} color="#10B981" />;
-      case 'missing':
+      case "missing":
         return <XCircle size={16} color="#F87171" />;
-      case 'unchecked':
+      case "unchecked":
         return <AlertTriangle size={16} color="#F59E0B" />;
     }
   };
 
-  const getStatusColor = (status: EnvVarInfo['status']) => {
+  const getStatusColor = (status: EnvVarInfo["status"]) => {
     switch (status) {
-      case 'present':
-        return '#10B981';
-      case 'missing':
-        return '#F87171';
-      case 'unchecked':
-        return '#F59E0B';
+      case "present":
+        return "#10B981";
+      case "missing":
+        return "#F87171";
+      case "unchecked":
+        return "#F59E0B";
     }
   };
 
-  const getStatusText = (status: EnvVarInfo['status']) => {
+  const getStatusText = (status: EnvVarInfo["status"]) => {
     switch (status) {
-      case 'present':
-        return 'Present';
-      case 'missing':
-        return 'Missing';
-      case 'unchecked':
-        return 'Unchecked';
+      case "present":
+        return "Present";
+      case "missing":
+        return "Missing";
+      case "unchecked":
+        return "Unchecked";
     }
   };
 
   const formatValue = (value: unknown): string => {
     if (value === undefined || value === null) {
-      return 'undefined';
+      return "undefined";
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return value;
     }
     return JSON.stringify(value, null, 2);
   };
 
-  const missingCount = processedEnvVars.filter((env) => env.status === 'missing').length;
-  const presentCount = processedEnvVars.filter((env) => env.status === 'present').length;
-  const uncheckedCount = processedEnvVars.filter((env) => env.status === 'unchecked').length;
+  const missingCount = processedEnvVars.filter(
+    (env) => env.status === "missing"
+  ).length;
+  const presentCount = processedEnvVars.filter(
+    (env) => env.status === "present"
+  ).length;
+  const uncheckedCount = processedEnvVars.filter(
+    (env) => env.status === "unchecked"
+  ).length;
 
   return (
     <>
@@ -142,8 +164,8 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
             <View style={styles.titleContainer}>
               <Text style={styles.title}>Environment Variables</Text>
               <Text style={styles.subtitle}>
-                {processedEnvVars.length} total • {presentCount} present • {missingCount} missing • {uncheckedCount}{' '}
-                unchecked
+                {processedEnvVars.length} total • {presentCount} present •{" "}
+                {missingCount} missing • {uncheckedCount} unchecked
               </Text>
             </View>
           </View>
@@ -152,6 +174,7 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
               accessibilityRole="button"
               accessibilityLabel="Refresh environment variables"
               accessibilityHint="Refreshes the environment variables to show latest data"
+              sentry-label="ignore user interaction"
               onPress={refreshEnvVars}
               disabled={isRefreshing}
               style={styles.refreshButton}
@@ -166,6 +189,7 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
               accessibilityRole="button"
               accessibilityLabel="Close environment variables viewer"
               accessibilityHint="Closes the environment variables viewer and returns to the admin panel"
+              sentry-label="ignore user interaction"
               onPress={onClose}
               style={styles.closeButton}
             >
@@ -177,7 +201,9 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
 
       {/* Environment Variables List */}
       <ScrollView
-        sentry-label="env vars modal content scroll"
+        accessibilityLabel="Environment variables"
+        accessibilityHint="View environment variables"
+        sentry-label="ignore env vars modal content scroll"
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator
@@ -189,14 +215,26 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
                 {getStatusIcon(envVar.status)}
                 <Text style={styles.envVarKey}>{envVar.key}</Text>
               </View>
-              <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(envVar.status)}20` }]}>
-                <Text style={[styles.statusText, { color: getStatusColor(envVar.status) }]}>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: `${getStatusColor(envVar.status)}20` },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: getStatusColor(envVar.status) },
+                  ]}
+                >
                   {getStatusText(envVar.status)}
                 </Text>
               </View>
             </View>
             <View style={styles.envVarValueContainer}>
-              <Text style={styles.envVarValue}>{formatValue(envVar.value)}</Text>
+              <Text style={styles.envVarValue}>
+                {formatValue(envVar.value)}
+              </Text>
             </View>
           </View>
         ))}
@@ -205,7 +243,8 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No environment variables found</Text>
             <Text style={styles.emptySubtext}>
-              Only EXPO_PUBLIC_ prefixed variables are available in React Native/Expo apps
+              Only EXPO_PUBLIC_ prefixed variables are available in React
+              Native/Expo apps
             </Text>
           </View>
         )}
@@ -219,13 +258,13 @@ export function EnvVarsModalContent({ onClose, requiredEnvVars = [] }: EnvVarsMo
 const styles = StyleSheet.create({
   headerContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-    backgroundColor: '#0F0F0F',
+    borderBottomColor: "#374151",
+    backgroundColor: "#0F0F0F",
   },
   headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -237,33 +276,33 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   subtitle: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: "#9CA3AF",
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   refreshButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(139, 92, 246, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(156, 163, 175, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(156, 163, 175, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollView: {
     flex: 1,
@@ -272,29 +311,29 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   envVarContainer: {
-    backgroundColor: '#1F2937',
+    backgroundColor: "#1F2937",
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: "#374151",
   },
   envVarHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   envVarTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     flex: 1,
   },
   envVarKey: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
     flex: 1,
   },
   statusBadge: {
@@ -304,36 +343,36 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   envVarValueContainer: {
-    backgroundColor: '#111827',
+    backgroundColor: "#111827",
     borderRadius: 6,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: "#374151",
   },
   envVarValue: {
     fontSize: 14,
-    color: '#D1D5DB',
-    fontFamily: 'monospace',
+    color: "#D1D5DB",
+    fontFamily: "monospace",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 60,
   },
   emptyText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#9CA3AF',
+    fontWeight: "500",
+    color: "#9CA3AF",
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
+    color: "#6B7280",
+    textAlign: "center",
     maxWidth: 300,
   },
 });

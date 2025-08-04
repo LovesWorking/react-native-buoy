@@ -7,7 +7,7 @@ module.exports = {
     "prettier",
   ],
   parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint", "react"],
+  plugins: ["@typescript-eslint", "react", "sentry-tracking"],
   rules: {
     // React Native specific
     "react-native/no-inline-styles": "off",
@@ -25,6 +25,9 @@ module.exports = {
 
     // React Hooks
     "react-hooks/exhaustive-deps": "warn",
+
+    // Sentry tracking for dev tools
+    "sentry-tracking/require-ignore-label": "error",
 
     // General
     "prefer-arrow-callback": ["warn", { allowNamedFunctions: true }],

@@ -27,6 +27,9 @@ export function DevToolsModal({
 
   return (
     <Modal
+      accessibilityLabel="Dev tools modal"
+      accessibilityHint="View dev tools modal"
+      sentry-label="ignore dev tools modal"
       visible={visible}
       transparent
       animationType="slide"
@@ -36,6 +39,9 @@ export function DevToolsModal({
         {/* Backdrop */}
         <View style={styles.backdrop}>
           <TouchableOpacity
+            accessibilityLabel="Dev tools modal backdrop"
+            accessibilityHint="View dev tools modal backdrop"
+            sentry-label="ignore dev tools modal backdrop"
             style={styles.backdropTouchable}
             onPress={onDismiss}
             activeOpacity={1}

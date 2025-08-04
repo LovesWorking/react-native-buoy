@@ -24,6 +24,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
       <Text style={styles.headerText}>Actions</Text>
       <View style={styles.buttonsContainer}>
         <ActionButton
+          sentry-label="ignore devtools query refetch action"
           disabled={getQueryStatusLabel(query) === "fetching"}
           onClick={() => {
             refetch({
@@ -35,6 +36,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           _textColorClass="btnRefetch"
         />
         <ActionButton
+          sentry-label="ignore devtools query invalidate action"
           disabled={queryStatus === "pending"}
           onClick={() => {
             invalidate({ query, queryClient });
@@ -44,6 +46,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           _textColorClass="btnInvalidate"
         />
         <ActionButton
+          sentry-label="ignore devtools query reset action"
           disabled={queryStatus === "pending"}
           onClick={() => {
             reset({ queryClient, query });
@@ -53,6 +56,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           _textColorClass="btnReset"
         />
         <ActionButton
+          sentry-label="ignore devtools query remove action"
           disabled={getQueryStatusLabel(query) === "fetching"}
           onClick={() => {
             remove({ queryClient, query });
@@ -63,6 +67,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           _textColorClass="btnRemove"
         />
         <ActionButton
+          sentry-label="ignore devtools query trigger loading action"
           disabled={false}
           onClick={() => {
             triggerLoading({ query });
@@ -76,6 +81,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           _textColorClass="btnTriggerLoading"
         />
         <ActionButton
+          sentry-label="ignore devtools query trigger error action"
           disabled={queryStatus === "pending"}
           onClick={() => {
             triggerError({ query, queryClient });

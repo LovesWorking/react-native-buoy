@@ -41,6 +41,7 @@ export function EnvVarsDetailContent({
 }) {
   return (
     <ScrollView
+      sentry-label="ignore devtools env vars section scroll"
       style={{ flex: 1, backgroundColor: "#2A2A2A" }}
       contentContainerStyle={{ padding: 24 }}
     >

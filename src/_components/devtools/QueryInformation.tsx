@@ -14,6 +14,7 @@ export default function QueryInformation({
 }: Props) {
   return (
     <ScrollView
+      sentry-label="ignore devtools query info scroll"
       style={styles.flexOne}
       contentContainerStyle={styles.scrollContent}
     >

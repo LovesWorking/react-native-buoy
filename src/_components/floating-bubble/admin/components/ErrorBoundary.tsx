@@ -45,6 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error?.message || "Something went wrong"}
             </Text>
             <TouchableOpacity
+              sentry-label="ignore devtools error boundary retry"
               style={styles.retryButton}
               onPress={this.handleRetry}
             >

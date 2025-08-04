@@ -43,6 +43,9 @@ const HeaderControls = ({
   <View style={styles.headerControls}>
     {showToggleButton && (
       <Pressable
+        accessibilityLabel="Toggle floating mode"
+        accessibilityHint="Toggle floating mode"
+        sentry-label="ignore user interaction"
         onPress={onToggleFloatingMode}
         style={[styles.controlButton, styles.controlButtonSecondary]}
         hitSlop={HIT_SLOP}
@@ -55,6 +58,9 @@ const HeaderControls = ({
       </Pressable>
     )}
     <Pressable
+      accessibilityLabel="Close"
+      accessibilityHint="Close floating modal"
+      sentry-label="ignore user interaction"
       onPress={onClose}
       style={[styles.controlButton, styles.controlButtonDanger]}
       hitSlop={HIT_SLOP}

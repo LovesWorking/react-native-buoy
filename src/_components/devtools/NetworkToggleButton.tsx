@@ -12,6 +12,7 @@ const NetworkToggleButton: React.FC<NetworkToggleButtonProps> = ({
 }) => {
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools network toggle button"
       style={[styles.button, isOffline && styles.offlineButton]}
       onPress={onToggle}
       activeOpacity={0.7}

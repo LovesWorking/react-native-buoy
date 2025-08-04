@@ -76,7 +76,9 @@ export function ExpandableSectionWithModal({
       </ExpandableSection>
 
       <Modal
-        sentry-label="expandable section modal"
+        accessibilityLabel="Expandable section modal"
+        accessibilityHint="View expandable section modal"
+        sentry-label="ignore expandable section modal"
         visible={isModalOpen}
         transparent
         animationType="slide"
@@ -86,7 +88,9 @@ export function ExpandableSectionWithModal({
           {/* Backdrop */}
           <View style={styles.backdrop}>
             <TouchableOpacity
-              sentry-label="modal backdrop close"
+              accessibilityLabel="Modal backdrop close"
+              accessibilityHint="View modal backdrop close"
+              sentry-label="ignore modal backdrop close"
               accessibilityRole="button"
               style={styles.backdropTouchable}
               onPress={closeModal}
@@ -119,7 +123,9 @@ export function ExpandableSectionWithModal({
               {showModalHeader && (
                 <View style={styles.headerContainer}>
                   <TouchableOpacity
-                    sentry-label="modal close button"
+                    accessibilityLabel="Modal close button"
+                    accessibilityHint="View modal close button"
+                    sentry-label="ignore modal close button"
                     accessibilityRole="button"
                     onPress={closeModal}
                     style={styles.closeButton}
@@ -132,7 +138,9 @@ export function ExpandableSectionWithModal({
               {/* Content */}
               {showModalHeader ? (
                 <ScrollView
-                  sentry-label="modal content scroll"
+                  accessibilityLabel="Modal content scroll"
+                  accessibilityHint="View modal content scroll"
+                  sentry-label="ignore modal content scroll"
                   style={styles.scrollView}
                   contentContainerStyle={styles.contentContainer}
                   showsVerticalScrollIndicator={false}

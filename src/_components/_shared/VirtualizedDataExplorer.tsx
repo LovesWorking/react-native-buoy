@@ -348,6 +348,7 @@ const getTypeColor = (valueType: string): string => {
 const Expander = React.memo(
   ({ expanded, onPress }: { expanded: boolean; onPress: () => void }) => (
     <TouchableOpacity
+      sentry-label="ignore devtools data explorer expander"
       style={STABLE_STYLES.expanderContainer}
       onPress={onPress}
       hitSlop={HIT_SLOP_10}
@@ -432,6 +433,7 @@ const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
 
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools data explorer copy button"
       style={STABLE_STYLES.copyButton}
       onPress={copyState === "NoCopy" ? handleCopy : undefined}
       hitSlop={HIT_SLOP_10}
@@ -710,6 +712,7 @@ const VirtualizedItem = React.memo(
           />
         )}
         <TouchableOpacity
+          sentry-label="ignore devtools data explorer item"
           style={[
             STABLE_STYLES.itemTouchable,
             isPressed && STABLE_STYLES.itemTouchablePressed,
@@ -731,7 +734,11 @@ const VirtualizedItem = React.memo(
             // Vertical layout for long keys
             <View style={STABLE_STYLES.labelContainerVertical}>
               <View style={STABLE_STYLES.labelContainerVerticalRow}>
-                <TouchableOpacity onPress={handleKeyPress} style={{ flex: 1 }}>
+                <TouchableOpacity
+                  sentry-label="ignore devtools data explorer key press"
+                  onPress={handleKeyPress}
+                  style={{ flex: 1 }}
+                >
                   <Text
                     style={STABLE_STYLES.labelTextTruncated}
                     numberOfLines={undefined}
@@ -867,6 +874,7 @@ export const VirtualizedDataExplorer: React.FC<
           </View>
         ) : (
           <FlashList
+            sentry-label="ignore devtools data explorer list"
             data={flatData}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
@@ -906,6 +914,7 @@ export const VirtualizedDataExplorer: React.FC<
       <View style={STABLE_STYLES.header}>
         <View style={STABLE_STYLES.headerRow}>
           <TouchableOpacity
+            sentry-label="ignore devtools data explorer header toggle"
             onPress={toggleMainExpanded}
             hitSlop={HIT_SLOP_10}
             style={STABLE_STYLES.headerTouchable}
@@ -941,6 +950,7 @@ export const VirtualizedDataExplorer: React.FC<
               }}
             >
               <FlashList
+                sentry-label="ignore devtools data explorer collapsed list"
                 data={flatData}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}

@@ -54,6 +54,7 @@ export default function DevToolsHeader({
         {/* Left Section: Toggle Buttons */}
         <View style={styles.toggleButtonsContainer}>
           <TouchableOpacity
+            sentry-label="ignore devtools header queries tab"
             onPress={() => handleTabChange(true)}
             style={[
               styles.toggleButton,
@@ -74,6 +75,7 @@ export default function DevToolsHeader({
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            sentry-label="ignore devtools header mutations tab"
             onPress={() => handleTabChange(false)}
             style={[
               styles.toggleButton,
@@ -106,6 +108,7 @@ export default function DevToolsHeader({
             onClear={onClearCache}
           />
           <TouchableOpacity
+            sentry-label="ignore devtools header close button"
             style={styles.closeButton}
             onPress={() => setShowDevTools(false)}
             activeOpacity={0.7}

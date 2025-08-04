@@ -87,7 +87,9 @@ export function EnvVarCard({ envVar, isExpanded, onToggle }: EnvVarCardProps) {
   return (
     <View style={[styles.envVarCard, { borderColor: config.borderColor }]}>
       <TouchableOpacity
-        sentry-label={`env var card ${envVar.key}`}
+        accessibilityLabel="Env var card"
+        accessibilityHint="View env var card"
+        sentry-label={`ignore env var card ${envVar.key}`}
         accessibilityRole="button"
         style={styles.cardHeader}
         onPress={onToggle}
@@ -123,7 +125,9 @@ export function EnvVarCard({ envVar, isExpanded, onToggle }: EnvVarCardProps) {
         </View>
         <View style={styles.cardHeaderRight}>
           <TouchableOpacity
-            sentry-label={`env var card ${envVar.key} expand`}
+            accessibilityLabel="Expand"
+            accessibilityHint="Expand env var card"
+            sentry-label={`ignore env var card ${envVar.key} expand`}
             accessibilityRole="button"
             style={styles.actionButton}
             onPress={onToggle}

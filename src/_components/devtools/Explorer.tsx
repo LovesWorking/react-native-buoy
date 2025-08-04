@@ -91,6 +91,7 @@ const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
 
   return (
     <TouchableOpacity
+      sentry-label="ignore devtools copy button"
       style={styles.buttonStyle}
       aria-label={
         copyState === "NoCopy"
@@ -136,6 +137,7 @@ const DeleteItemButton = React.memo(
 
     return (
       <TouchableOpacity
+        sentry-label="ignore devtools explorer delete button"
         onPress={handleDelete}
         style={styles.buttonStyle1}
         accessibilityLabel="Delete item"
@@ -172,6 +174,7 @@ const ClearArrayButton = React.memo(
 
     return (
       <TouchableOpacity
+        sentry-label="ignore devtools explorer clear button"
         style={styles.buttonStyle2}
         aria-label="Remove all items"
         onPress={handleClear}
@@ -223,6 +226,7 @@ const ToggleValueButton = React.memo(
 
     return (
       <TouchableOpacity
+        sentry-label="ignore devtools explorer toggle button"
         style={styles.modernToggleButton}
         onPress={handleClick}
         hitSlop={HIT_SLOP_OPTIMIZED}
@@ -367,6 +371,7 @@ export default function Explorer({
           <>
             <View style={styles.flexRowItemsCenterGap}>
               <TouchableOpacity
+                sentry-label="ignore devtools explorer expander button"
                 style={styles.expanderButton}
                 onPress={toggleExpanded}
                 hitSlop={HIT_SLOP_OPTIMIZED}
@@ -427,6 +432,7 @@ export default function Explorer({
                       <View key={index}>
                         <View style={styles.relativeOutlineNone}>
                           <TouchableOpacity
+                            sentry-label="ignore devtools explorer page toggle"
                             onPress={() =>
                               setExpandedPages((old) =>
                                 old.includes(index)
@@ -483,6 +489,8 @@ export default function Explorer({
                   (valueType === "string" || valueType === "number") && (
                     <View style={styles.inputContainer}>
                       <TextInput
+                        sentry-label="ignore devtools data input field"
+                        accessibilityLabel="Data input field for editing values"
                         style={[
                           styles.textInput,
                           valueType === "number"
@@ -505,6 +513,7 @@ export default function Explorer({
                       {valueType === "number" && (
                         <View style={styles.numberInputButtons}>
                           <TouchableOpacity
+                            sentry-label="ignore devtools explorer number increment"
                             style={styles.touchableButton}
                             onPressIn={() =>
                               handleChange(
@@ -530,6 +539,7 @@ export default function Explorer({
                             </Svg>
                           </TouchableOpacity>
                           <TouchableOpacity
+                            sentry-label="ignore devtools explorer number decrement"
                             style={styles.touchableButton}
                             onPressIn={() =>
                               handleChange(

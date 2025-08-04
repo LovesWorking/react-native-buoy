@@ -159,6 +159,7 @@ export function SentryEventDetailView({
       {/* Tab navigation */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
+          sentry-label="ignore devtools sentry tab message"
           onPress={() => setActiveTab("message")}
           style={[styles.tab, activeTab === "message" && styles.activeTab]}
         >
@@ -173,6 +174,7 @@ export function SentryEventDetailView({
         </TouchableOpacity>
 
         <TouchableOpacity
+          sentry-label="ignore devtools sentry tab event data"
           onPress={() => setActiveTab("eventData")}
           style={[styles.tab, activeTab === "eventData" && styles.activeTab]}
         >
@@ -187,6 +189,7 @@ export function SentryEventDetailView({
         </TouchableOpacity>
 
         <TouchableOpacity
+          sentry-label="ignore devtools sentry tab raw data"
           onPress={() => setActiveTab("rawData")}
           style={[styles.tab, activeTab === "rawData" && styles.activeTab]}
         >
@@ -201,6 +204,7 @@ export function SentryEventDetailView({
         </TouchableOpacity>
 
         <TouchableOpacity
+          sentry-label="ignore devtools sentry tab debug info"
           onPress={() => setActiveTab("debugInfo")}
           style={[styles.tab, activeTab === "debugInfo" && styles.activeTab]}
         >
@@ -217,6 +221,7 @@ export function SentryEventDetailView({
 
       {/* Tab content */}
       <ScrollView
+        sentry-label="ignore devtools sentry event detail scroll"
         style={styles.contentContainer}
         contentContainerStyle={[
           styles.scrollContent,
