@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Query } from "@tanstack/react-query";
+import { Query, useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Explorer from "../../../devtools/Explorer";
 import QueryDetails from "../../../devtools/QueryDetails";
@@ -21,7 +21,8 @@ interface DataEditorModeProps {
 
 export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
   const insets = useSafeAreaInsets();
-  const actionButtons = useActionButtons(selectedQuery);
+  const queryClient = useQueryClient();
+  const actionButtons = useActionButtons(selectedQuery, queryClient);
 
   return (
     <>

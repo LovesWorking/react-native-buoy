@@ -8,9 +8,9 @@ import {
 } from "../_util/storageQueryUtils";
 
 interface StorageQueryRowProps {
-  query: Query<any, any, any, any>;
+  query: Query;
   isSelected: boolean;
-  onSelect: (query: Query<any, any, any, any>) => void;
+  onSelect: (query: Query) => void;
 }
 
 /**

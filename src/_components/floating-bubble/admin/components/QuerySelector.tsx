@@ -14,11 +14,11 @@ import { getQueryStatusLabel } from "../../../../_components/_util/getQueryStatu
 import { QueryDebugInfo } from "./QueryDebugInfo";
 
 interface QuerySelectorProps {
-  queries: Query<any, any, any, any>[];
-  selectedQuery?: Query<any, any, any, any>;
+  queries: Query[];
+  selectedQuery?: Query;
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (query: Query<any, any, any, any>) => void;
+  onSelect: (query: Query) => void;
 }
 
 export function QuerySelector({
@@ -28,7 +28,7 @@ export function QuerySelector({
   onClose,
   onSelect,
 }: QuerySelectorProps) {
-  const getQueryDisplayName = (query: Query<any, any, any, any>) => {
+  const getQueryDisplayName = (query: Query) => {
     return Array.isArray(query.queryKey)
       ? query.queryKey.join(" - ")
       : String(query.queryKey);
@@ -129,7 +129,7 @@ function QuerySelectorTrigger({
   selectedQuery,
   onPress,
 }: {
-  selectedQuery?: Query<any, any, any, any>;
+  selectedQuery?: Query;
   onPress: () => void;
 }) {
   const displayName = selectedQuery

@@ -51,7 +51,7 @@ interface Props {
 export default function ActionButton({
   onClick,
   text,
-  textColorClass,
+  _textColorClass,
   bgColorClass,
   disabled,
 }: Props) {

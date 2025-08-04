@@ -209,6 +209,7 @@ export function SentryEventLogDumpModalContent({
       }, 200);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [entries]);
 
   const generateTestLogs = async () => {

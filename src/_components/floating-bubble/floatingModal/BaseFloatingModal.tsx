@@ -88,7 +88,6 @@ export function BaseFloatingModal({
       showToggleButton={showToggleButton}
       customHeaderContent={customHeaderContent}
       headerSubtitle={headerSubtitle}
-      children={children}
       panelDimensions={modalState.panelDimensions}
       containerBounds={modalState.containerBounds}
       resizeGesture={resizeGesture}
@@ -101,6 +100,8 @@ export function BaseFloatingModal({
       onResizeStart={handleResizeStart}
       onResizeEnd={handleResizeEnd}
       onContainerLayout={modalState.setContainerBounds}
-    />
+    >
+      {children}
+    </FloatingModalContent>
   );
 }

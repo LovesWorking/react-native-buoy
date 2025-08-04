@@ -148,6 +148,7 @@ export function LogDumpModalContent({ onClose }: LogDumpModalContentProps) {
       }, 200);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [entries]);
 
   const generateTestLogs = async () => {

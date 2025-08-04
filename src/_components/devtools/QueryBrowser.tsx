@@ -7,12 +7,12 @@ import useAllQueries from "../_hooks/useAllQueries";
 import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
 
 interface Props {
-  selectedQuery: Query<any, any, any, any> | undefined;
-  onQuerySelect: (query: Query<any, any, any, any> | undefined) => void;
+  selectedQuery: Query | undefined;
+  onQuerySelect: (query: Query | undefined) => void;
   activeFilter?: string | null;
   emptyStateMessage?: string;
   contentContainerStyle?: ContentStyle;
-  queries?: Query<any, any, any, any>[]; // Optional external queries to override useAllQueries
+  queries?: Query[]; // Optional external queries to override useAllQueries
 }
 
 // Stable module-scope functions to prevent FlashList view recreation [[memory:4875251]]
@@ -25,7 +25,7 @@ const renderItem = ({ item, extraData }: any) => (
 );
 
 // Key extractor for FlashList optimization [[memory:4875251]]
-const keyExtractor = (item: Query<any, any, any, any>) => item.queryHash;
+const keyExtractor = (item: Query) => item.queryHash;
 
 // EstimatedItemSize for FlashList performance [[memory:4875251]]
 const ESTIMATED_ITEM_SIZE = 53;
@@ -56,7 +56,7 @@ export default function QueryBrowser({
 
   // Function to handle query selection with stable comparison - exact same logic as working version
   const handleQuerySelect = React.useCallback(
-    (query: Query<any, any, any, any>) => {
+    (query: Query) => {
       // Compare queries by their queryKey and queryHash for stable selection
       const isCurrentlySelected = selectedQuery?.queryHash === query.queryHash;
 

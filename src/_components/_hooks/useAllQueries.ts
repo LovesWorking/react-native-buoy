@@ -10,10 +10,10 @@ const getStatusRank = (q: Query) =>
   q.state.fetchStatus !== "idle"
     ? 0
     : !q.getObserversCount()
-    ? 3
-    : q.isStale()
-    ? 2
-    : 1;
+      ? 3
+      : q.isStale()
+        ? 2
+        : 1;
 
 const dateSort: SortFn = (a, b) =>
   a.state.dataUpdatedAt < b.state.dataUpdatedAt ? 1 : -1;
@@ -28,7 +28,7 @@ const statusAndDateSort: SortFn = (a, b) => {
 
 function useAllQueries() {
   const queryClient = useQueryClient();
-  const [queries, setQueries] = useState<Query<any, any, any, any>[]>([]);
+  const [queries, setQueries] = useState<Query[]>([]);
   const queriesRef = useRef<any[]>([]);
 
   useEffect(() => {

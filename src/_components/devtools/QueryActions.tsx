@@ -10,10 +10,8 @@ import triggerError from "../_util/actions/triggerError";
 import { View, Text, StyleSheet } from "react-native";
 
 interface Props {
-  setSelectedQuery: React.Dispatch<
-    React.SetStateAction<Query<any, any, any, any> | undefined>
-  >;
-  query: Query<any, any, any, any> | undefined;
+  setSelectedQuery: React.Dispatch<React.SetStateAction<Query | undefined>>;
+  query: Query | undefined;
 }
 export default function QueryActions({ query, setSelectedQuery }: Props) {
   const queryClient = useQueryClient();
@@ -80,7 +78,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
         <ActionButton
           disabled={queryStatus === "pending"}
           onClick={() => {
-            triggerError({ query });
+            triggerError({ query, queryClient });
           }}
           bgColorClass="btnTriggerLoadiError"
           text={queryStatus === "error" ? "Restore" : "Trigger Error"}

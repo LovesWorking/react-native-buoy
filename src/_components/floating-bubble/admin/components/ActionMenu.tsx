@@ -18,8 +18,8 @@ import invalidate from "../../../_util/actions/invalidate";
 import triggerError from "../../../_util/actions/triggerError";
 
 interface ActionMenuProps {
-  selectedQuery?: Query<any, any, any, any>;
-  onQueryChange?: (query: Query<any, any, any, any> | undefined) => void;
+  selectedQuery?: Query;
+  onQueryChange?: (query: Query | undefined) => void;
   onEditData?: () => void;
 }
 
@@ -136,7 +136,7 @@ function ActionMenu({
       destructive: queryStatus !== "error",
       disabled: queryStatus === "pending",
       onPress: () => {
-        triggerError({ query: selectedQuery });
+        triggerError({ query: selectedQuery, queryClient });
         setIsOpen(false);
       },
     },

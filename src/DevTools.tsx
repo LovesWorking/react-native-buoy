@@ -27,9 +27,9 @@ export default function DevTools({
   const [showQueries, setShowQueries] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  const [selectedQuery, setSelectedQuery] = useState<
-    Query<any, any, any, any> | undefined
-  >(undefined);
+  const [selectedQuery, setSelectedQuery] = useState<Query | undefined>(
+    undefined
+  );
   const [selectedMutation, setSelectedMutation] = useState<
     Mutation<any, any, any, any> | undefined
   >(undefined);

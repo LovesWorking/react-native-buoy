@@ -17,10 +17,8 @@ import QueryInformation from "./QueryInformation";
 import { ContentStyle } from "@shopify/flash-list";
 
 interface Props {
-  selectedQuery: Query<any, any, any, any> | undefined;
-  setSelectedQuery: React.Dispatch<
-    React.SetStateAction<Query<any, any, any, any> | undefined>
-  >;
+  selectedQuery: Query | undefined;
+  setSelectedQuery: React.Dispatch<React.SetStateAction<Query | undefined>>;
   activeFilter?: string | null;
   containerHeight?: number; // Optional prop for modal environments
   hideInfoPanel?: boolean;
@@ -98,7 +96,7 @@ export default function QueriesList({
   ).current;
 
   // Simple wrapper for setSelectedQuery to match QueryBrowser interface
-  const handleQuerySelect = (query: Query<any, any, any, any> | undefined) => {
+  const handleQuerySelect = (query: Query | undefined) => {
     setSelectedQuery(query);
   };
 

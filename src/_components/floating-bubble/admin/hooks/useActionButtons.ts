@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Query } from "@tanstack/react-query";
+import { Query, QueryClient } from "@tanstack/react-query";
 import triggerLoading from "../../../_util/actions/triggerLoading";
 import refetch from "../../../_util/actions/refetch";
 import triggerError from "../../../_util/actions/triggerError";
@@ -13,7 +13,10 @@ interface ActionButtonConfig {
   onPress: () => void;
 }
 
-export function useActionButtons(selectedQuery: Query): ActionButtonConfig[] {
+export function useActionButtons(
+  selectedQuery: Query,
+  queryClient: QueryClient
+): ActionButtonConfig[] {
   return useMemo(() => {
     const queryStatus = selectedQuery.state.status;
     const isFetching = getQueryStatusLabel(selectedQuery) === "fetching";
@@ -38,8 +41,8 @@ export function useActionButtons(selectedQuery: Query): ActionButtonConfig[] {
         bgColorClass: "btnTriggerLoadiError" as const,
         textColorClass: "btnTriggerLoadiError" as const,
         disabled: queryStatus === "pending",
-        onPress: () => triggerError({ query: selectedQuery }),
+        onPress: () => triggerError({ query: selectedQuery, queryClient }),
       },
     ];
-  }, [selectedQuery]);
+  }, [selectedQuery, queryClient]);
 }

@@ -63,9 +63,8 @@ export const useModalState = ({
   // Load persisted state on component mount
   useEffect(() => {
     const loadState = async () => {
-      const { dimensions, height, isFloating } = await loadPanelState(
-        storagePrefix
-      );
+      const { dimensions, height, isFloating } =
+        await loadPanelState(storagePrefix);
 
       if (dimensions) {
         // Validate stored dimensions are within current screen bounds
@@ -125,6 +124,7 @@ export const useModalState = ({
 
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [panelHeight, isStateLoaded, storagePrefix]);
 
   const toggleFloatingMode = () => {

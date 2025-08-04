@@ -1,5 +1,5 @@
 // Safe import for optional Sentry dependency
-let sentryClient: any = null;
+const sentryClient: any = null;
 let getSentryClient: (() => any) | null = null;
 let userProvidedGetClient: (() => any) | null = null;
 

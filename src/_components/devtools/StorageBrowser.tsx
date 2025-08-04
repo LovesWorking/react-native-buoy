@@ -5,9 +5,9 @@ import { FlashList, ContentStyle } from "@shopify/flash-list";
 import StorageQueryRow from "./StorageQueryRow";
 
 interface Props {
-  queries: Query<any, any, any, any>[];
-  selectedQuery: Query<any, any, any, any> | undefined;
-  onQuerySelect: (query: Query<any, any, any, any> | undefined) => void;
+  queries: Query[];
+  selectedQuery: Query | undefined;
+  onQuerySelect: (query: Query | undefined) => void;
   emptyStateMessage?: string;
   contentContainerStyle?: ContentStyle;
 }
@@ -22,7 +22,7 @@ const renderStorageItem = ({ item, extraData }: any) => (
 );
 
 // Key extractor for FlashList optimization [[memory:4875251]]
-const keyExtractor = (item: Query<any, any, any, any>) => item.queryHash;
+const keyExtractor = (item: Query) => item.queryHash;
 
 // EstimatedItemSize for FlashList performance [[memory:4875251]]
 const ESTIMATED_ITEM_SIZE = 53;
@@ -44,7 +44,7 @@ export default function StorageBrowser({
 }: Props) {
   // Stable callback to prevent FlashList view recreation [[memory:4875251]]
   const handleQuerySelect = React.useCallback(
-    (query: Query<any, any, any, any>) => {
+    (query: Query) => {
       onQuerySelect(query);
     },
     [onQuerySelect]

@@ -17,7 +17,7 @@ interface RnBetterDevToolsBubbleContentProps {
   userRole: UserRole;
   isOnline: boolean;
   isDragging: boolean;
-  selectedQuery?: Query<any, any, any, any>;
+  selectedQuery?: Query;
   onEnvironmentLayout: (event: LayoutChangeEvent) => void;
   onStatusLayout: (event: LayoutChangeEvent) => void;
   onQueryLayout: (event: LayoutChangeEvent) => void;

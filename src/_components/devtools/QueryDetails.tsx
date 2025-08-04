@@ -4,7 +4,7 @@ import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { displayValue } from "./displayValue";
 
 interface Props {
-  query: Query<any, any, any, any> | undefined;
+  query: Query | undefined;
 }
 export default function QueryDetails({ query }: Props) {
   if (query === undefined) {

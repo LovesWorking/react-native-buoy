@@ -2,7 +2,6 @@ import { Query } from "@tanstack/react-query";
 import {
   isStorageQuery,
   getStorageType,
-  StorageType,
 } from "./storageQueryUtils";
 
 export interface StorageTypeCounts {

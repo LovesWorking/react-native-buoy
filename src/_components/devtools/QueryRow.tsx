@@ -17,9 +17,9 @@ const getQueryText = (query: Query) => {
 };
 
 interface QueryRowProps {
-  query: Query<any, any, any, any>;
+  query: Query;
   isSelected: boolean;
-  onSelect: (query: Query<any, any, any, any>) => void;
+  onSelect: (query: Query) => void;
 }
 
 const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {

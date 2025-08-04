@@ -3,25 +3,42 @@
     "target": "esnext",
     "module": "esnext",
     "lib": ["esnext", "dom"],
-    // "jsx": "react-native",
     "jsx": "react-jsx",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    // "noEmit": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "declaration": true,
-    "declarationDir": "./dist/types"
+    "declarationDir": "./dist/types",
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["*"]
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    // React Native New Architecture specific
+    "allowUmdGlobalAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "node_modules",
+    "dist",
     "babel.config.js",
     "metro.config.js",
-    "jest.config.js"
+    "jest.config.js",
+    "build.js",
+    "check-jsx-transform.js",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }

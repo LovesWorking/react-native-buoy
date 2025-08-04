@@ -177,7 +177,7 @@ export function safeStringify(
     const result = JSON.stringify(obj, replacer, space);
 
     return result;
-  } catch (error) {
+  } catch {
     // Fallback for complex circular references
     return JSON.stringify(
       "[unable to serialize, circular reference is too complex to analyze]"

@@ -104,7 +104,7 @@ export function Check(props: { checked: boolean; theme: "light" | "dark" }) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-          ></Path>
+           />
         </Svg>
       )}
     </>
@@ -191,7 +191,7 @@ export function TanstackLogo() {
         <Stop stopColor="#FF7373" offset={1} />
       </LinearGradient>
       <Circle cx={316.5} cy={316.5} r={316.5} fill="url(#a)" />
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={-137.5}
         y={412}
@@ -215,7 +215,7 @@ export function TanstackLogo() {
           strokeWidth={25}
         />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={316.5}
         y={412}
@@ -239,7 +239,7 @@ export function TanstackLogo() {
           strokeWidth={25}
         />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={-137.5}
         y={450}
@@ -263,7 +263,7 @@ export function TanstackLogo() {
           strokeWidth={25}
         />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={316.5}
         y={450}
@@ -287,7 +287,7 @@ export function TanstackLogo() {
           strokeWidth={25}
         />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={-137.5}
         y={486}
@@ -311,7 +311,7 @@ export function TanstackLogo() {
           strokeWidth={25}
         />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={316.5}
         y={486}
@@ -335,7 +335,7 @@ export function TanstackLogo() {
           strokeWidth={25}
         />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={272.2}
         y={308}
@@ -432,7 +432,7 @@ export function TanstackLogo() {
           d="M303.2 331.3L307.4 327.4"
         />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={73.2}
         y={113.8}
@@ -593,7 +593,7 @@ export function TanstackLogo() {
           />
         </G>
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={50.5}
         y={399}
@@ -621,7 +621,7 @@ export function TanstackLogo() {
         </LinearGradient>
         <Ellipse cx={316.5} cy={715.5} rx={266} ry={316.5} fill="url(#B)" />
       </G>
-      <Defs></Defs>
+      <Defs />
       <Mask
         x={391}
         y={-24}

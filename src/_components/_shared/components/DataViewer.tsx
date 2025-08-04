@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { VirtualizedDataExplorer } from "../VirtualizedDataExplorer";
 import { TypeLegend } from "./TypeLegend";
 
