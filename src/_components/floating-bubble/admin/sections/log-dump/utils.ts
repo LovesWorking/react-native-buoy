@@ -25,24 +25,6 @@ export const formatTimestamp = (timestamp: number) => {
     hour12: true,
   });
 };
-
-export const getLevelColor = (level: string) => {
-  switch (level) {
-    case "debug":
-      return "text-blue-400";
-    case "info":
-      return "text-cyan-400";
-    case "log":
-      return "text-gray-400";
-    case "warn":
-      return "text-yellow-400";
-    case "error":
-      return "text-red-400";
-    default:
-      return "text-gray-400";
-  }
-};
-
 // Add new helper functions for type styling
 export const getTypeIcon = (type: string) => {
   switch (type) {
@@ -107,7 +89,7 @@ export const getTypeColor = (type: string) => {
 };
 
 // Helper functions for log dump components
-export const formatCount = (count: number) => {
+const formatCount = (count: number) => {
   if (count === 0) return "";
   if (count > 99) return " (99+)";
   return ` (${count})`;
@@ -125,20 +107,6 @@ export const getLevelCount = (
   level: LogLevel
 ) => {
   return formatCount(entries.filter((entry) => entry.level === level).length);
-};
-
-export const formatRelativeTime = (timestamp: number) => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) return "now";
-  if (diffMins < 60) return `${diffMins}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  return `${diffDays}d`;
 };
 
 // Level styling utilities

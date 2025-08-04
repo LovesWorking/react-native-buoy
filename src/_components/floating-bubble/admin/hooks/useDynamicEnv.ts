@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-export interface UseDynamicEnvOptions {
+interface UseDynamicEnvOptions {
   /**
    * Optional filter function to determine which env vars to include
    * Note: Only EXPO_PUBLIC_ prefixed variables are available in process.env
@@ -8,7 +8,7 @@ export interface UseDynamicEnvOptions {
   envFilter?: (key: string, value: string | undefined) => boolean;
 }
 
-export interface EnvResult {
+interface EnvResult {
   key: string;
   data: unknown;
 }

@@ -18,13 +18,4 @@ export { CornerResizeHandle } from "./CornerResizeHandle";
 export { useModalState, useModalResize } from "../hooks";
 
 // Storage Operations
-export type {
-  PanelDimensions,
-  PanelState,
-} from "./storage/modalStorageOperations";
-export {
-  savePanelDimensions,
-  savePanelHeight,
-  saveFloatingMode,
-  loadPanelState,
-} from "./storage/modalStorageOperations";
+export type { PanelDimensions } from "./storage/modalStorageOperations";

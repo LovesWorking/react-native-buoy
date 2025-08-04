@@ -109,7 +109,7 @@ const refineLogTypeFromContext = (
 /**
  * Converts a SentryEventEntry to ConsoleTransportEntry format for UI compatibility
  */
-export const adaptSentryEventToConsoleEntry = (
+const adaptSentryEventToConsoleEntry = (
   sentryEntry: SentryEventEntry
 ): ConsoleTransportEntry => {
   const baseLogType = mapEventTypeToLogType(sentryEntry.eventType);

@@ -33,6 +33,3 @@ export {
   LogDumpModalContent,
   SentryEventLogDumpModalContent,
 } from "./sections/log-dump";
-
-// Examples
-export { ExampleCustomSection } from "./ExampleCustomSection";

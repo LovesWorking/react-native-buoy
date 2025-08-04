@@ -35,8 +35,3 @@ export interface StorageKeyStats {
   asyncCount: number;
   secureCount: number;
 }
-
-export interface RequiredStorageConfig {
-  requiredKeys?: RequiredStorageKey[];
-  validateOnMount?: boolean;
-}

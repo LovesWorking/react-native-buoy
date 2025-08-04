@@ -76,21 +76,6 @@ export function getStorageType(
 }
 
 /**
- * Check if a storage type should be filtered out based on enabled storage types
- */
-export function shouldFilterStorageQuery(
-  queryKey: readonly unknown[],
-  enabledStorageTypes: Set<StorageType>
-): boolean {
-  const storageType = getStorageType(queryKey);
-  if (storageType === null) {
-    return false; // Not a storage query, don't filter
-  }
-
-  return !enabledStorageTypes.has(storageType);
-}
-
-/**
  * Get display label for storage type
  */
 export function getStorageTypeLabel(storageType: StorageType): string {
