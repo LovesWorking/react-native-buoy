@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { ChevronRight, ChevronDown, Copy } from "lucide-react-native";
 import { TypeLegend } from "./TypeLegend";
-import { useCopy } from "../../context/CopyContext";
+import { useCopy } from "../../../context/CopyContext";
 import { displayValue } from "../../devtools/displayValue";
 
 interface EnhancedDataViewerProps {

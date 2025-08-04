@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 import { SentryLogsContent } from "../sections";
 import { View, Text } from "react-native";
 import { BackButton } from "../../admin/components/BackButton";
+import { ConsoleTransportEntry } from "../../admin/logger/types";
 
 interface SentryLogsModalProps {
   visible: boolean;
@@ -22,9 +24,24 @@ export function SentryLogsModal({
   onBack,
   enableSharedModalDimensions = false,
 }: SentryLogsModalProps) {
+  const [selectedEntry, setSelectedEntry] =
+    useState<ConsoleTransportEntry | null>(null);
+  const [showFilterView, setShowFilterView] = useState(false);
+
   if (!visible) return null;
 
   const subtitle = getSentrySubtitle();
+
+  // Handle back navigation - back to list from detail/filter view or back to main menu
+  const handleBackPress = () => {
+    if (selectedEntry) {
+      setSelectedEntry(null);
+    } else if (showFilterView) {
+      setShowFilterView(false);
+    } else if (onBack) {
+      onBack();
+    }
+  };
 
   const renderHeaderContent = () => (
     <View
@@ -37,12 +54,18 @@ export function SentryLogsModal({
         paddingLeft: 4,
       }}
     >
-      {onBack && <BackButton onPress={onBack} color="#FFFFFF" size={16} />}
+      {(onBack || selectedEntry || showFilterView) && (
+        <BackButton onPress={handleBackPress} color="#FFFFFF" size={16} />
+      )}
       <Text
         style={{ color: "#E5E7EB", fontSize: 14, fontWeight: "500", flex: 1 }}
         numberOfLines={1}
       >
-        Sentry Logs
+        {selectedEntry
+          ? "Event Details"
+          : showFilterView
+          ? "Filters"
+          : "Sentry Logs"}
       </Text>
     </View>
   );
@@ -60,7 +83,12 @@ export function SentryLogsModal({
       customHeaderContent={renderHeaderContent()}
       headerSubtitle={undefined}
     >
-      <SentryLogsContent onClose={onClose} />
+      <SentryLogsContent
+        selectedEntry={selectedEntry}
+        onSelectEntry={setSelectedEntry}
+        showFilterView={showFilterView}
+        onShowFilterView={setShowFilterView}
+      />
     </BaseFloatingModal>
   );
 }

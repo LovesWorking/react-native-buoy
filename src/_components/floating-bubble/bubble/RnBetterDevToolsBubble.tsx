@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  useSentryEvents,
+  useSentrySubtitle,
   useReactQueryState,
   useModalManager,
 } from "../admin/hooks";
@@ -38,7 +38,7 @@ export function RnBetterDevToolsBubble({
   enableSharedModalDimensions = false,
 }: RnBetterDevToolsBubbleProps) {
   // Specialized hooks for different concerns following composition principles
-  const { getSentrySubtitle } = useSentryEvents();
+  const { getSentrySubtitle } = useSentrySubtitle();
   const { getRnBetterDevToolsSubtitle } = useReactQueryState(queryClient);
   const envVarsSubtitle = useEnvVarsSubtitle(requiredEnvVars);
 

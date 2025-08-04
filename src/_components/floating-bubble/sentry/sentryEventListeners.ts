@@ -100,80 +100,8 @@ type SentryEnvelopeItemHeader = {
 type SentryEnvelopeItem = [SentryEnvelopeItemHeader, unknown];
 type SentryEnvelope = [SentryEnvelopeHeader, SentryEnvelopeItem[]];
 
-// =============================================================================
-// STORAGE SYSTEM
-// =============================================================================
-
-/**
- * In-memory storage for Sentry events with configurable limits
- */
-class SentryEventStore {
-  private events: SentryEventEntry[] = [];
-  private maxEvents: number = 500;
-
-  /**
-   * Set maximum number of events to store
-   */
-  setMaxEvents(max: number): void {
-    this.maxEvents = max;
-    this.trimEvents();
-  }
-
-  /**
-   * Add a new event to storage
-   */
-  add(event: SentryEventEntry): void {
-    this.events.unshift(event);
-    this.trimEvents();
-  }
-
-  /**
-   * Get all stored events
-   */
-  getEvents(): SentryEventEntry[] {
-    return [...this.events];
-  }
-
-  /**
-   * Clear all stored events
-   */
-  clear(): void {
-    this.events = [];
-  }
-
-  /**
-   * Get events filtered by type
-   */
-  getEventsByType(type: SentryEventType): SentryEventEntry[] {
-    return this.events.filter((event) => event.eventType === type);
-  }
-
-  /**
-   * Get events filtered by level
-   */
-  getEventsByLevel(level: SentryEventLevel): SentryEventEntry[] {
-    return this.events.filter((event) => event.level === level);
-  }
-
-  /**
-   * Get event count
-   */
-  getCount(): number {
-    return this.events.length;
-  }
-
-  /**
-   * Trim events to max limit
-   */
-  private trimEvents(): void {
-    if (this.events.length > this.maxEvents) {
-      this.events = this.events.slice(0, this.maxEvents);
-    }
-  }
-}
-
-// Global store instance
-const eventStore = new SentryEventStore();
+// Import the reactive store instead of creating a local one
+import { reactiveSentryEventStore as eventStore } from "./sentryEventStore";
 
 // =============================================================================
 // UTILITY FUNCTIONS

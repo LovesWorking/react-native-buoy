@@ -1,7 +1,6 @@
-import React from "react";
 import { FileText } from "lucide-react-native";
 import { ConsoleSection } from "../ConsoleSection";
-import { SentryEventLogDumpModalContent } from "../../admin/sections/log-dump/SentryEventLogDumpModalContent";
+import { SentryLogsDetailContent } from "./SentryLogsDetailContent";
 
 interface SentryLogsSectionProps {
   onPress: () => void;
@@ -33,6 +32,23 @@ export function SentryLogsSection({
  * Content component for sentry logs detail view.
  * Separates content rendering from section UI.
  */
-export function SentryLogsContent({ onClose }: { onClose: () => void }) {
-  return <SentryEventLogDumpModalContent onClose={onClose} />;
+export function SentryLogsContent({
+  selectedEntry,
+  onSelectEntry,
+  showFilterView,
+  onShowFilterView,
+}: {
+  selectedEntry: any | null;
+  onSelectEntry: (entry: any | null) => void;
+  showFilterView: boolean;
+  onShowFilterView: (show: boolean) => void;
+}) {
+  return (
+    <SentryLogsDetailContent
+      selectedEntry={selectedEntry}
+      onSelectEntry={onSelectEntry}
+      showFilterView={showFilterView}
+      onShowFilterView={onShowFilterView}
+    />
+  );
 }
