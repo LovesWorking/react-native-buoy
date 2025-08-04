@@ -60,10 +60,10 @@ export const LogDetailView = ({
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
   // Create sections data for FlashList
-  const sections = [
+  const sections: SectionItem[] = [
     {
       id: "header",
-      type: "header",
+      type: "header" as const,
       data: {
         type: entry.type,
         level: entry.level,
@@ -75,7 +75,7 @@ export const LogDetailView = ({
       ? [
           {
             id: "metadata",
-            type: "dataCard",
+            type: "dataCard" as const,
             title: "METADATA",
             description:
               "Additional context and data attached to this log entry",
@@ -85,7 +85,7 @@ export const LogDetailView = ({
       : []),
     {
       id: "debugInfo",
-      type: "explorer",
+      type: "explorer" as const,
       title: "DEBUG INFO",
       description: "Internal logging metadata and identifiers",
       data: {
@@ -96,7 +96,35 @@ export const LogDetailView = ({
     },
   ];
 
-  const renderItem = ({ item }: { item: any }) => {
+  type SectionItem =
+    | {
+        id: string;
+        type: "header";
+        data: {
+          type: string;
+          level: string;
+          timestamp: number;
+          message: string | Error;
+        };
+        title?: string;
+        description?: string;
+      }
+    | {
+        id: string;
+        type: "dataCard";
+        title: string;
+        description: string;
+        data: unknown;
+      }
+    | {
+        id: string;
+        type: "explorer";
+        title: string;
+        description: string;
+        data: unknown;
+      };
+
+  const renderItem = ({ item }: { item: SectionItem }) => {
     switch (item.type) {
       case "header":
         return (

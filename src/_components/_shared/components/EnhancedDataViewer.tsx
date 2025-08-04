@@ -1,5 +1,6 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { JsonValue, isPlainObject } from "../types";
 import { ChevronRight, ChevronDown, Copy } from "lucide-react-native";
 import { TypeLegend } from "./TypeLegend";
 import { useCopy } from "../../../context/CopyContext";
@@ -7,7 +8,7 @@ import { displayValue } from "../../devtools/displayValue";
 
 interface EnhancedDataViewerProps {
   title: string;
-  data: unknown;
+  data: JsonValue;
   showTypeFilter?: boolean;
   defaultExpanded?: boolean;
 }
@@ -73,18 +74,20 @@ export const EnhancedDataViewer: React.FC<EnhancedDataViewerProps> = ({
     if (!data || !showTypeFilter) return [];
 
     const types: string[] = [];
-    const processValue = (value: any, depth = 0) => {
+    const processValue = (value: JsonValue, depth = 0) => {
       if (depth > 3) return; // Limit depth for performance
 
       const type = getValueType(value);
       types.push(type);
 
-      if (type === "object" && value !== null) {
+      if (type === "object" && isPlainObject(value)) {
         Object.values(value)
           .slice(0, 10)
           .forEach((v) => processValue(v, depth + 1));
-      } else if (type === "array") {
-        value.slice(0, 10).forEach((v: any) => processValue(v, depth + 1));
+      } else if (Array.isArray(value)) {
+        value
+          .slice(0, 10)
+          .forEach((v: JsonValue) => processValue(v, depth + 1));
       }
     };
 
@@ -107,14 +110,14 @@ export const EnhancedDataViewer: React.FC<EnhancedDataViewerProps> = ({
 
   // Handle copy
   const handleCopy = useCallback(
-    async (value: any) => {
+    async (value: JsonValue) => {
       if (!onCopy) {
         Alert.alert("Copy", "Copy functionality not configured");
         return;
       }
 
       try {
-        const success = await onCopy(value);
+        const success = await onCopy(displayValue(value));
         if (success) {
           // Could add visual feedback here
         }
@@ -128,7 +131,7 @@ export const EnhancedDataViewer: React.FC<EnhancedDataViewerProps> = ({
   // Render a data node
   const renderNode = (
     key: string,
-    value: any,
+    value: JsonValue,
     path: string,
     depth: number = 0
   ): React.ReactNode => {
@@ -143,10 +146,9 @@ export const EnhancedDataViewer: React.FC<EnhancedDataViewerProps> = ({
     const isExpandable =
       (type === "object" && value !== null) || type === "array";
     const isExpanded = expandedPaths.has(path);
-    const itemCount =
-      type === "array"
-        ? value.length
-        : type === "object"
+    const itemCount = Array.isArray(value)
+      ? value.length
+      : type === "object" && isPlainObject(value)
         ? Object.keys(value).length
         : 0;
 
@@ -183,7 +185,7 @@ export const EnhancedDataViewer: React.FC<EnhancedDataViewerProps> = ({
 
             {!isExpandable && (
               <Text style={styles.nodeValue} numberOfLines={1}>
-                {displayValue(value, false)}
+                {displayValue(value)}
               </Text>
             )}
           </TouchableOpacity>
@@ -199,18 +201,20 @@ export const EnhancedDataViewer: React.FC<EnhancedDataViewerProps> = ({
 
         {isExpanded && isExpandable && (
           <View style={styles.childrenContainer}>
-            {type === "array"
-              ? value.map((item: any, index: number) =>
+            {Array.isArray(value)
+              ? value.map((item: JsonValue, index: number) =>
                   renderNode(String(index), item, `${path}.${index}`, depth + 1)
                 )
-              : Object.entries(value).map(([childKey, childValue]) =>
-                  renderNode(
-                    childKey,
-                    childValue,
-                    `${path}.${childKey}`,
-                    depth + 1
+              : type === "object" && isPlainObject(value)
+                ? Object.entries(value).map(([childKey, childValue]) =>
+                    renderNode(
+                      childKey,
+                      childValue,
+                      `${path}.${childKey}`,
+                      depth + 1
+                    )
                   )
-                )}
+                : null}
           </View>
         )}
       </View>

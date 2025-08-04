@@ -1,11 +1,18 @@
+interface SentryClient extends Record<string, unknown> {
+  on?: (event: string, callback: (arg: unknown) => unknown) => void;
+}
+
 // Safe import for optional Sentry dependency
-let getSentryClient: (() => any) | null = null;
-let userProvidedGetClient: (() => any) | null = null;
+let getSentryClient: (() => SentryClient | null) | null = null;
+let userProvidedGetClient: (() => SentryClient | null) | null = null;
 
 try {
   // Dynamic import to avoid bundling if not installed
-  const sentry = require("@sentry/react-native");
-  getSentryClient = sentry.getClient;
+  import("@sentry/react-native").then(
+    (sentry: { getClient: () => SentryClient }) => {
+      getSentryClient = sentry.getClient;
+    }
+  );
 } catch {
   // Sentry not installed - will gracefully degrade
   getSentryClient = null;
@@ -16,7 +23,9 @@ try {
  * Use this if you prefer to manually provide the Sentry getClient function
  * @param getClientFn - Function that returns the Sentry client instance
  */
-export function configureSentryClient(getClientFn: () => any): void {
+export function configureSentryClient(
+  getClientFn: () => SentryClient | null
+): void {
   userProvidedGetClient = getClientFn;
 }
 
@@ -95,6 +104,14 @@ type SentryEnvelopeItemHeader = {
   content_type?: string;
   filename?: string;
 };
+
+interface SentryBreadcrumb {
+  category?: string;
+  message?: string;
+  level?: string;
+  type?: string;
+  data?: Record<string, unknown>;
+}
 
 type SentryEnvelopeItem = [SentryEnvelopeItemHeader, unknown];
 type SentryEnvelope = [SentryEnvelopeHeader, SentryEnvelopeItem[]];
@@ -305,9 +322,7 @@ export class SentryEventLogger {
       }
 
       // Type assertion to access the on method safely
-      const clientWithEvents = client as {
-        on?: (event: string, callback: (...args: any[]) => void) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
-      };
+      const clientWithEvents = client as SentryClient;
 
       if (!clientWithEvents.on || typeof clientWithEvents.on !== "function") {
         console.warn("Sentry client does not support event listeners");
@@ -343,9 +358,10 @@ export class SentryEventLogger {
    */
   private setupEnvelopeListeners(client: Record<string, unknown>): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).on("beforeEnvelope", (envelope: SentryEnvelope) => {
-        const events = parseEnvelope(envelope);
+      (client as SentryClient).on?.("beforeEnvelope", (envelope: unknown) => {
+        if (!Array.isArray(envelope) || envelope.length !== 2) return;
+        const typedEnvelope = envelope as unknown as SentryEnvelope;
+        const events = parseEnvelope(typedEnvelope);
         events.forEach((event) => {
           eventStore.add(event);
         });
@@ -360,43 +376,43 @@ export class SentryEventLogger {
    */
   private setupSpanListeners(client: Record<string, unknown>): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).on("spanEnd", (span: Record<string, unknown>) => {
+      (client as SentryClient).on?.("spanEnd", (span: unknown) => {
+        const spanData = span as Record<string, unknown>;
         const event: SentryEventEntry = {
           id: generateId(),
           timestamp: Date.now(),
           source: "span",
           eventType: SentryEventType.Span,
           level: SentryEventLevel.Info,
-          message: `Span ended: ${span.description || span.op || "Unknown"}`,
+          message: `Span ended: ${spanData.description || spanData.op || "Unknown"}`,
           data: {
-            spanId: span.span_id,
-            traceId: span.trace_id,
-            operation: span.op || span.operation,
-            description: span.description,
-            status: span.status,
+            spanId: spanData.span_id,
+            traceId: spanData.trace_id,
+            operation: spanData.op || spanData.operation,
+            description: spanData.description,
+            status: spanData.status,
           },
-          rawData: span,
+          rawData: spanData,
         };
         eventStore.add(event);
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).on("spanStart", (span: Record<string, unknown>) => {
+      (client as SentryClient).on?.("spanStart", (span: unknown) => {
+        const spanData = span as Record<string, unknown>;
         const event: SentryEventEntry = {
           id: generateId(),
           timestamp: Date.now(),
           source: "span",
           eventType: SentryEventType.Span,
           level: SentryEventLevel.Debug,
-          message: `Span started: ${span.description || span.op || "Unknown"}`,
+          message: `Span started: ${spanData.description || spanData.op || "Unknown"}`,
           data: {
-            spanId: span.span_id,
-            traceId: span.trace_id,
-            operation: span.op || span.operation,
-            description: span.description,
+            spanId: spanData.span_id,
+            traceId: spanData.trace_id,
+            operation: spanData.op || spanData.operation,
+            description: spanData.description,
           },
-          rawData: span,
+          rawData: spanData,
         };
         eventStore.add(event);
       });
@@ -410,36 +426,36 @@ export class SentryEventLogger {
    */
   private setupTransactionListeners(client: Record<string, unknown>): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).on(
+      (client as SentryClient).on?.(
         "transactionStart",
-        (transaction: Record<string, unknown>) => {
+        (transaction: unknown) => {
+          const transactionData = transaction as Record<string, unknown>;
           const event: SentryEventEntry = {
             id: generateId(),
             timestamp: Date.now(),
             source: "transaction",
             eventType: SentryEventType.Transaction,
             level: SentryEventLevel.Info,
-            message: `Transaction started: ${transaction.name || "Unknown"}`,
+            message: `Transaction started: ${transactionData.name || "Unknown"}`,
             data: {
-              transactionName: transaction.name,
-              operation: transaction.op,
-              traceId: transaction.traceId,
+              transactionName: transactionData.name,
+              operation: transactionData.op,
+              traceId: transactionData.traceId,
             },
-            rawData: transaction,
+            rawData: transactionData,
           };
           eventStore.add(event);
         }
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).on(
+      (client as SentryClient).on?.(
         "transactionFinish",
-        (transaction: Record<string, unknown>) => {
+        (transaction: unknown) => {
+          const transactionData = transaction as Record<string, unknown>;
           const duration =
-            typeof transaction.endTimestamp === "number" &&
-            typeof transaction.startTimestamp === "number"
-              ? transaction.endTimestamp - transaction.startTimestamp
+            typeof transactionData.endTimestamp === "number" &&
+            typeof transactionData.startTimestamp === "number"
+              ? transactionData.endTimestamp - transactionData.startTimestamp
               : null;
 
           const event: SentryEventEntry = {
@@ -448,17 +464,17 @@ export class SentryEventLogger {
             source: "transaction",
             eventType: SentryEventType.Transaction,
             level: SentryEventLevel.Info,
-            message: `Transaction finished: ${transaction.name || "Unknown"}${
+            message: `Transaction finished: ${transactionData.name || "Unknown"}${
               duration ? ` (${duration}ms)` : ""
             }`,
             data: {
-              transactionName: transaction.name,
-              operation: transaction.op,
-              traceId: transaction.traceId,
-              status: transaction.status,
+              transactionName: transactionData.name,
+              operation: transactionData.op,
+              traceId: transactionData.traceId,
+              status: transactionData.status,
               duration,
             },
-            rawData: transaction,
+            rawData: transactionData,
           };
           eventStore.add(event);
         }
@@ -473,12 +489,12 @@ export class SentryEventLogger {
    */
   private setupBreadcrumbListeners(client: Record<string, unknown>): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (client as any).on(
+      (client as SentryClient).on?.(
         "beforeAddBreadcrumb",
-        (breadcrumb: Record<string, unknown>) => {
-          const category = String(breadcrumb.category || "unknown");
-          const message = String(breadcrumb.message || "no message");
+        (breadcrumb: unknown) => {
+          const breadcrumbData = breadcrumb as SentryBreadcrumb;
+          const category = String(breadcrumbData.category || "unknown");
+          const message = String(breadcrumbData.message || "no message");
 
           // Skip breadcrumbs from our own logging to prevent infinite loops
           if (
@@ -503,14 +519,14 @@ export class SentryEventLogger {
             timestamp: Date.now(),
             source: "breadcrumb",
             eventType: SentryEventType.Breadcrumb,
-            level: mapLevelToEventLevel(String(breadcrumb.level)),
+            level: mapLevelToEventLevel(breadcrumbData.level),
             message: message,
             data: {
               category,
-              type: breadcrumb.type,
-              data: breadcrumb.data,
+              type: breadcrumbData.type,
+              data: breadcrumbData.data,
             },
-            rawData: breadcrumb,
+            rawData: breadcrumbData,
           };
           eventStore.add(event);
 
@@ -1009,9 +1025,10 @@ export function generateTestSentryEvents(): void {
           validationError: new TypeError("Invalid parameter type"),
           customError: (() => {
             const err = new Error("Custom validation failed");
-            (err as any).code = "VALIDATION_ERROR";
-            (err as any).statusCode = 400;
-            (err as any).details = { field: "email", reason: "invalid_format" };
+            const extendedErr = err as unknown as Record<string, unknown>;
+            extendedErr.code = "VALIDATION_ERROR";
+            extendedErr.statusCode = 400;
+            extendedErr.details = { field: "email", reason: "invalid_format" };
             return err;
           })(),
 
@@ -1163,8 +1180,15 @@ export function generateTestSentryEvents(): void {
           },
         },
         rawData: (() => {
+          interface TestRawData extends Record<string, unknown> {
+            extra?: {
+              circular_test?: unknown;
+              [key: string]: unknown;
+            };
+          }
+
           // Create circular reference for testing circular detection
-          const rawData: any = {
+          const rawData: TestRawData = {
             message: "🔍 DataExplorer Test Event - All Data Types Showcase",
             level: "error",
             environment: "development",
@@ -1233,6 +1257,9 @@ export function generateTestSentryEvents(): void {
 
           // Add circular reference to test circular detection
           rawData.circularRef = rawData;
+          if (!rawData.extra) {
+            rawData.extra = {};
+          }
           rawData.extra.circular_test = rawData;
 
           return rawData;
@@ -1242,7 +1269,12 @@ export function generateTestSentryEvents(): void {
       // Add circular references to test circular detection in main data
       testEventData.data.circularSelf = testEventData.data;
       testEventData.data.circularParent = testEventData;
-      (testEventData.data as any).deeplyNested.circularRef = testEventData.data;
+      (
+        (testEventData.data as Record<string, unknown>).deeplyNested as Record<
+          string,
+          unknown
+        >
+      ).circularRef = testEventData.data;
 
       return testEventData;
     })(),

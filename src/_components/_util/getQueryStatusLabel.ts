@@ -1,4 +1,4 @@
-import { QueryKey, Query } from "@tanstack/react-query";
+import { Query } from "@tanstack/react-query";
 type QueryStatus =
   | "fetching"
   | "inactive"
@@ -7,16 +7,14 @@ type QueryStatus =
   | "fresh"
   | "error";
 
-export function getQueryStatusLabel(
-  query: Query<any, any, any, QueryKey>
-): QueryStatus {
+export function getQueryStatusLabel(query: Query): QueryStatus {
   return query.state.fetchStatus === "fetching"
     ? "fetching"
     : !query.getObserversCount()
-    ? "inactive"
-    : query.state.fetchStatus === "paused"
-    ? "paused"
-    : query.isStale()
-    ? "stale"
-    : "fresh";
+      ? "inactive"
+      : query.state.fetchStatus === "paused"
+        ? "paused"
+        : query.isStale()
+          ? "stale"
+          : "fresh";
 }

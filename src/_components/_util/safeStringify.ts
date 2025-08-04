@@ -1,3 +1,14 @@
+import { JsonValue } from "../_shared/types";
+
+type SerializedError = {
+  name: string;
+  message: string;
+  stack?: string;
+  [key: string]: JsonValue | undefined;
+};
+
+type JsonObject = { [key: string | number]: JsonValue };
+
 /**
  * Safely stringifies objects with circular references by:
  * 1. Pre-processing to detect and temporarily replace circular references
@@ -15,7 +26,7 @@ const CIRCULAR_REPLACE_NODE = "[Circular]";
 const LIMIT_REPLACE_NODE = "[...]";
 
 export function safeStringify(
-  obj: any,
+  obj: JsonValue,
   space?: number,
   options: SafeStringifyOptions = {}
 ): string {
@@ -23,15 +34,18 @@ export function safeStringify(
     depthLimit = Number.MAX_SAFE_INTEGER,
     edgesLimit = Number.MAX_SAFE_INTEGER,
   } = options;
-  const arr: any[] = []; // Store original values to restore after stringification
+  type RestoreEntry =
+    | [JsonObject, string | number, JsonValue]
+    | [JsonObject, string | number, JsonValue, PropertyDescriptor];
+  const arr: RestoreEntry[] = []; // Store original values to restore after stringification
 
   // Pre-process the object to handle circular references and depth limits
   function decirc(
-    val: any,
+    val: JsonValue,
     k: string | number,
     edgeIndex: number,
-    stack: any[],
-    parent: any,
+    stack: JsonValue[],
+    parent: JsonObject | null,
     depth: number
   ): void {
     depth += 1;
@@ -61,14 +75,26 @@ export function safeStringify(
 
       // Optimize for Arrays
       if (Array.isArray(val)) {
+        const arrayParent = val as unknown as JsonObject;
         for (let i = 0; i < val.length; i++) {
-          decirc(val[i], i, i, stack, val, depth);
+          decirc(val[i], i, i, stack, arrayParent, depth);
         }
+      } else if (
+        val instanceof Map ||
+        val instanceof Set ||
+        val instanceof RegExp ||
+        val instanceof Date ||
+        val instanceof Error
+      ) {
+        // Skip special objects
+        stack.pop();
+        return;
       } else {
-        const keys = Object.keys(val);
+        const objParent = val as JsonObject;
+        const keys = Object.keys(objParent);
         for (let i = 0; i < keys.length; i++) {
           const key = keys[i];
-          decirc(val[key], key, i, stack, val, depth);
+          decirc(objParent[key], key, i, stack, objParent, depth);
         }
       }
 
@@ -77,11 +103,13 @@ export function safeStringify(
   }
 
   function setReplace(
-    replace: any,
-    val: any,
+    replace: JsonValue,
+    val: JsonValue,
     k: string | number,
-    parent: any
+    parent: JsonObject | null
   ): void {
+    if (!parent) return;
+
     const propertyDescriptor = Object.getOwnPropertyDescriptor(parent, k);
     if (propertyDescriptor?.get !== undefined) {
       if (propertyDescriptor.configurable) {
@@ -92,13 +120,13 @@ export function safeStringify(
         return;
       }
     } else {
-      (parent as any)[k] = replace;
+      parent[k] = replace;
       arr.push([parent, k, val]);
     }
   }
 
   // Custom replacer for special types
-  const replacer = (key: string, value: any): any => {
+  const replacer = (key: string, value: JsonValue): JsonValue => {
     // Handle primitives that JSON.stringify can't handle
     if (typeof value === "bigint") return `${value.toString()}n`;
     if (typeof value === "symbol") return value.toString();
@@ -116,7 +144,7 @@ export function safeStringify(
 
     // Handle special objects
     if (value instanceof Error) {
-      const errorObj: any = {
+      const errorObj: SerializedError = {
         name: value.name,
         message: value.message,
         stack: value.stack,
@@ -125,13 +153,18 @@ export function safeStringify(
       Object.getOwnPropertyNames(value).forEach((prop) => {
         if (!["name", "message", "stack"].includes(prop)) {
           try {
-            errorObj[prop] = (value as any)[prop];
+            const propValue = (value as unknown as Record<string, unknown>)[
+              prop
+            ];
+            if (propValue !== undefined) {
+              errorObj[prop] = propValue as JsonValue;
+            }
           } catch {
             // Skip properties that can't be accessed
           }
         }
       });
-      return errorObj;
+      return errorObj as JsonValue;
     }
 
     if (value instanceof Date) return value.toISOString();
@@ -139,16 +172,22 @@ export function safeStringify(
 
     // Handle Map objects
     if (value instanceof Map) {
-      const mapObj: any = { __type: "Map", entries: [] };
       try {
-        value.forEach((val, mapKey) => {
-          mapObj.entries.push([mapKey, val]);
-        });
+        const entries = Array.from(value.entries()).map(([mapKey, val]) => [
+          String(mapKey),
+          val,
+        ]);
+        return {
+          __type: "Map",
+          entries: entries as JsonValue[],
+        };
       } catch {
         // Handle cases where Map iteration fails
-        mapObj.entries = "[Map iteration failed]";
+        return {
+          __type: "Map",
+          entries: "[Map iteration failed]" as string,
+        };
       }
-      return mapObj;
     }
 
     // Handle Set objects
@@ -171,7 +210,7 @@ export function safeStringify(
 
   // Pre-process to handle circular references
   try {
-    decirc(obj, "", 0, [], undefined, 0);
+    decirc(obj, "", 0, [], null, 0);
 
     // Stringify with custom replacer
     const result = JSON.stringify(obj, replacer, space);
@@ -186,12 +225,22 @@ export function safeStringify(
     // Restore original object structure
     while (arr.length !== 0) {
       const part = arr.pop();
-      if (part.length === 4) {
+      if (part && part.length === 4) {
         // Restore property descriptor
-        Object.defineProperty(part[0], part[1], part[3]);
-      } else {
+        const [targetObj, key, , descriptor] = part;
+        if (targetObj && typeof targetObj === "object" && descriptor) {
+          Object.defineProperty(targetObj, key, descriptor);
+        }
+      } else if (part) {
         // Restore simple property
-        part[0][part[1]] = part[2];
+        const [targetObj, key, value] = part;
+        if (
+          targetObj &&
+          typeof targetObj === "object" &&
+          (typeof key === "string" || typeof key === "number")
+        ) {
+          (targetObj as JsonObject)[key] = value;
+        }
       }
     }
   }

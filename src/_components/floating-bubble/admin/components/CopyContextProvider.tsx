@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 import {
   CopyContext,
   type ClipboardFunction,
@@ -18,13 +18,14 @@ export function CopyContextProvider({
   children,
   onCopy,
 }: CopyContextProviderProps) {
-  const handleCopy = async (value: any) => {
+  const handleCopy = async (value: unknown) => {
     try {
       // If it's already a string, use it directly
       const textToCopy =
         typeof value === "string"
           ? value
-          : safeStringify(value, 2, {
+          : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            safeStringify(value as any, 2, {
               depthLimit: 100,
               edgesLimit: 1000,
             }); // Pretty print with limits

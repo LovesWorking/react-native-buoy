@@ -75,7 +75,7 @@ export function useSentryEvents(options: UseSentryEventsOptions = {}) {
     const unsubscribe = reactiveSentryEventStore.subscribe(updateEntries);
 
     return () => unsubscribe();
-  }, []); // Empty deps - subscription handles updates
+  }, [calculateEntries]); // Add calculateEntries as dependency since it's used in the effect
 
   // Memoized filtering to prevent expensive recalculation [[memory:4875251]]
   const filteredEntries = useMemo(() => {

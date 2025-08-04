@@ -1,5 +1,5 @@
 import { useRef, useState, useLayoutEffect } from "react";
-import { Dimensions } from "react-native";
+import { Dimensions, View } from "react-native";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -11,7 +11,7 @@ const { width: screenWidth } = Dimensions.get("window");
  * Uses useLayoutEffect for synchronous measurement to prevent visual jumps.
  */
 export function useDynamicBubbleWidth() {
-  const contentRef = useRef<any>(null);
+  const contentRef = useRef<View>(null);
   const [measuredWidth, setMeasuredWidth] = useState(240); // Default width
   const [isFirstMeasurement, setIsFirstMeasurement] = useState(true);
 

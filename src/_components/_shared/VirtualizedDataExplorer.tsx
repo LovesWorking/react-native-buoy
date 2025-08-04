@@ -1,3 +1,5 @@
+import { JsonValue } from "./types";
+
 import React, {
   useState,
   useMemo,
@@ -250,7 +252,7 @@ const STABLE_STYLES = StyleSheet.create({
 interface FlatDataItem {
   id: string;
   key: string;
-  value: any;
+  value: JsonValue;
   valueType: string;
   depth: number;
   isExpandable: boolean;
@@ -265,7 +267,7 @@ interface FlatDataItem {
 type CopyState = "NoCopy" | "SuccessCopy" | "ErrorCopy";
 
 // Enhanced type detection optimized for performance
-const getValueType = (value: any): string => {
+const getValueType = (value: JsonValue): string => {
   if (value === null) return "null";
   if (value === undefined) return "undefined";
   if (Array.isArray(value)) return "array";
@@ -282,43 +284,56 @@ const getValueType = (value: any): string => {
 };
 
 // Get value count for collections
-const getValueCount = (value: any, valueType: string): number => {
+const getValueCount = (value: JsonValue, valueType: string): number => {
+  if (value === null) return 0;
+
   switch (valueType) {
     case "array":
-      return value.length;
+      return Array.isArray(value) ? value.length : 0;
     case "object":
-      return Object.keys(value).length;
+      return typeof value === "object" &&
+        !(value instanceof Date) &&
+        !(value instanceof Error) &&
+        !(value instanceof RegExp) &&
+        !(value instanceof Map) &&
+        !(value instanceof Set)
+        ? Object.keys(value).length
+        : 0;
     case "map":
+      return value instanceof Map ? value.size : 0;
     case "set":
-      return value.size;
+      return value instanceof Set ? value.size : 0;
     default:
       return 0;
   }
 };
 
 // Format value for display
-const formatValue = (value: any, valueType: string): string => {
+const formatValue = (value: JsonValue, valueType: string): string => {
+  if (value === null) return "null";
+  if (value === undefined) return "undefined";
+
   switch (valueType) {
     case "string":
-      return `"${value}"`;
+      return `"${String(value)}"`;
     case "boolean":
-      return value ? "true" : "false";
-    case "null":
-      return "null";
-    case "undefined":
-      return "undefined";
+      return value === true ? "true" : "false";
     case "function":
-      return value.toString().slice(0, 50) + "...";
+      return typeof value === "function"
+        ? value.toString().slice(0, 50) + "..."
+        : "undefined";
     case "symbol":
-      return value.toString();
+      return typeof value === "symbol" ? String(value) : "undefined";
     case "date":
-      return value.toISOString();
+      return value instanceof Date ? value.toISOString() : "undefined";
     case "regexp":
-      return value.toString();
+      return value instanceof RegExp ? value.toString() : "undefined";
     case "bigint":
-      return value.toString() + "n";
+      return typeof value === "bigint" ? value.toString() + "n" : "undefined";
     case "error":
-      return `${value.name}: ${value.message}`;
+      return value instanceof Error
+        ? `${value.name}: ${value.message}`
+        : "undefined";
     default:
       return displayValue(value);
   }
@@ -388,7 +403,7 @@ const TypeLegend = React.memo(
   }
 );
 
-const CopyButton = React.memo(({ value }: { value: any }) => {
+const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
   const [copyState, setCopyState] = useState<CopyState>("NoCopy");
   const { onCopy } = useCopy();
 
@@ -400,7 +415,7 @@ const CopyButton = React.memo(({ value }: { value: any }) => {
 
     try {
       // Pass the raw value to onCopy - let the context handle safe stringification
-      const copied = await onCopy(value);
+      const copied = await onCopy(displayValue(value));
       if (copied) {
         setCopyState("SuccessCopy");
         setTimeout(() => setCopyState("NoCopy"), 1500);
@@ -436,7 +451,7 @@ const CopyButton = React.memo(({ value }: { value: any }) => {
 });
 
 // Optimized data flattening with chunked processing to prevent UI blocking [[memory:4875251]]
-const useDataFlattening = (data: any, maxDepth = 10) => {
+const useDataFlattening = (data: JsonValue, maxDepth = 10) => {
   const [flatData, setFlatData] = useState<FlatDataItem[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
     new Set(["root"])
@@ -446,7 +461,7 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
 
   const flattenData = useCallback(
     (
-      value: any,
+      value: JsonValue,
       key = "root",
       depth = 0,
       parentId?: string,
@@ -459,7 +474,7 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
       const id = currentPath.join(".");
       const valueType = getValueType(value);
       const isExpandable =
-        ["object", "array", "map", "set"].includes(valueType) && value;
+        ["object", "array", "map", "set"].includes(valueType) && value !== null;
       const rawChildCount = isExpandable ? getValueCount(value, valueType) : 0;
       // Limit child count to prevent performance issues [[memory:4875251]]
       const childCount = Math.min(rawChildCount, MAX_ITEMS_PER_LEVEL);
@@ -511,23 +526,46 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
         depth < Math.min(maxDepth, MAX_DEPTH_LIMIT)
       ) {
         try {
-          let entries: [string, any][] = [];
+          let entries: [string, JsonValue][] = [];
 
           switch (valueType) {
             case "array":
-              entries = (value as any[]).map((item, index) => [
-                index.toString(),
-                item,
-              ]);
+              entries = Array.isArray(value)
+                ? value.map((item, index): [string, JsonValue] => [
+                    index.toString(),
+                    item,
+                  ])
+                : [];
               break;
             case "object":
-              entries = Object.entries(value);
+              entries =
+                typeof value === "object" &&
+                value !== null &&
+                !(value instanceof Date) &&
+                !(value instanceof Error) &&
+                !(value instanceof RegExp) &&
+                !(value instanceof Map) &&
+                !(value instanceof Set)
+                  ? Object.entries(value)
+                  : [];
               break;
             case "map":
-              entries = Array.from(value.entries());
+              entries =
+                value instanceof Map
+                  ? Array.from(value.entries()).map(([k, v]) => [
+                      String(k),
+                      v as JsonValue,
+                    ])
+                  : [];
               break;
             case "set":
-              entries = Array.from(value.entries());
+              entries =
+                value instanceof Set
+                  ? Array.from(value.values()).map((v, index) => [
+                      index.toString(),
+                      v as JsonValue,
+                    ])
+                  : [];
               break;
           }
 
@@ -749,7 +787,7 @@ const VirtualizedItem = React.memo(
 interface VirtualizedDataExplorerProps {
   title: string;
   description?: string;
-  data: unknown;
+  data: JsonValue;
   maxDepth?: number;
   rawMode?: boolean; // When true, shows data directly without container/header/badges
 }

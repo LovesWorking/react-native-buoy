@@ -5,7 +5,7 @@ import isEqual from "fast-deep-equal";
 function useAllMutations() {
   const queryClient = useQueryClient();
   const [mutations, setMutations] = useState<Mutation[]>([]);
-  const mutationsRef = useRef<any[]>([]);
+  const mutationsRef = useRef<Mutation["state"][]>([]);
   useEffect(() => {
     const updateMutations = () => {
       const newMutations = queryClient.getMutationCache().getAll();

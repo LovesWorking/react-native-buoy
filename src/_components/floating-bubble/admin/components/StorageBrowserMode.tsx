@@ -7,6 +7,7 @@ import {
   getStorageType,
   isStorageQuery,
 } from "../../../_util/storageQueryUtils";
+import { StorageTypeCounts } from "../../../_util/getStorageQueryCounts";
 import { useStorageQueryCounts } from "../../../_hooks/useStorageQueryCounts";
 import { StorageKeyStatsSection } from "../sections/storage/components/StorageKeyStats";
 import { StorageKeySection } from "../sections/storage/components/StorageKeySection";
@@ -21,7 +22,7 @@ interface StorageBrowserModeProps {
   selectedQuery: Query | undefined;
   onQuerySelect: (query: Query | undefined) => void;
   activeStorageTypes: Set<StorageType>;
-  onCountsChange?: (counts: any) => void; // To pass counts up to parent
+  onCountsChange?: (counts: StorageTypeCounts) => void; // To pass counts up to parent
   requiredStorageKeys?: RequiredStorageKey[]; // Configuration for required keys
 }
 
@@ -142,7 +143,7 @@ export function StorageBrowserMode({
 
     // Calculate stats
     const keys = Array.from(keyInfoMap.values());
-    const stats: StorageKeyStats = {
+    const storageStats: StorageKeyStats = {
       totalCount: keys.length,
       requiredCount: keys.filter((k) => k.category === "required").length,
       missingCount: keys.filter((k) => k.status === "required_missing").length,
@@ -158,7 +159,7 @@ export function StorageBrowserMode({
       secureCount: keys.filter((k) => k.storageType === "secure").length,
     };
 
-    return { storageKeys: keys, stats };
+    return { storageKeys: keys, stats: storageStats };
   }, [storageQueriesData, activeStorageTypes, requiredStorageKeys]);
 
   // Get stable storage counts using dedicated hook [[rule3]]

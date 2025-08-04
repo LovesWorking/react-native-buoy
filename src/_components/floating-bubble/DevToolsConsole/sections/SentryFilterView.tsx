@@ -91,7 +91,7 @@ export function SentryFilterView({
     count: number,
     isSelected: boolean,
     onPress: () => void,
-    Icon?: any,
+    Icon?: React.ComponentType<{ size?: number; color?: string }>,
     color?: string
   ) => (
     <TouchableOpacity

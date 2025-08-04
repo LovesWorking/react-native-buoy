@@ -1,6 +1,7 @@
 import { FileText } from "lucide-react-native";
 import { ConsoleSection } from "../ConsoleSection";
 import { SentryLogsDetailContent } from "./SentryLogsDetailContent";
+import { ConsoleTransportEntry } from "../../admin/logger/types";
 
 interface SentryLogsSectionProps {
   onPress: () => void;
@@ -38,8 +39,8 @@ export function SentryLogsContent({
   showFilterView,
   onShowFilterView,
 }: {
-  selectedEntry: any | null;
-  onSelectEntry: (entry: any | null) => void;
+  selectedEntry: ConsoleTransportEntry | null;
+  onSelectEntry: (entry: ConsoleTransportEntry | null) => void;
   showFilterView: boolean;
   onShowFilterView: (show: boolean) => void;
 }) {

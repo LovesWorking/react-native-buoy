@@ -41,7 +41,7 @@ const statusAndDateSort: SortFn = (a, b) => {
 function useStorageQueries(enabledStorageTypes?: Set<StorageType>) {
   const queryClient = useQueryClient();
   const [queries, setQueries] = useState<Query[]>([]);
-  const queriesRef = useRef<any[]>([]);
+  const queriesRef = useRef<Query["state"][]>([]);
 
   useEffect(() => {
     const updateQueries = () => {

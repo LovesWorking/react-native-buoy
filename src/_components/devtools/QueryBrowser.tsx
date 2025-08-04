@@ -16,11 +16,23 @@ interface Props {
 }
 
 // Stable module-scope functions to prevent FlashList view recreation [[memory:4875251]]
-const renderItem = ({ item, extraData }: any) => (
+interface ExtraData {
+  selectedQuery: Query | undefined;
+  handleQuerySelect: (query: Query) => void;
+  filteredQueries: Query[];
+}
+
+const renderItem = ({
+  item,
+  extraData,
+}: {
+  item: Query;
+  extraData?: ExtraData;
+}) => (
   <QueryRow
     query={item}
     isSelected={extraData?.selectedQuery?.queryHash === item.queryHash}
-    onSelect={extraData?.handleQuerySelect}
+    onSelect={extraData?.handleQuerySelect ?? (() => {})}
   />
 );
 
@@ -66,7 +78,7 @@ export default function QueryBrowser({
       }
       onQuerySelect(query);
     },
-    [selectedQuery?.queryHash, selectedQuery?.queryKey, onQuerySelect]
+    [selectedQuery?.queryHash, onQuerySelect]
   );
 
   if (filteredQueries.length === 0) {

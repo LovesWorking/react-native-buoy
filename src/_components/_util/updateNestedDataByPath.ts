@@ -1,15 +1,17 @@
+import { JsonValue } from "../_shared/types";
+
 /**
  * updates nested data by path
  *
- * @param {unknown} oldData Data to be updated
+ * @param {JsonValue} oldData Data to be updated
  * @param {Array<string>} updatePath Path to the data to be updated
- * @param {unknown} value New value
+ * @param {JsonValue} value New value
  */
 export const updateNestedDataByPath = (
-  oldData: unknown,
+  oldData: JsonValue,
   updatePath: Array<string>,
-  value: unknown
-): any => {
+  value: JsonValue
+): JsonValue => {
   if (updatePath.length === 0) {
     return value;
   }
@@ -23,18 +25,22 @@ export const updateNestedDataByPath = (
     }
 
     const [head, ...tail] = updatePath;
-    newData.set(head, updateNestedDataByPath(newData.get(head), tail, value));
+    const currentValue = newData.get(head);
+    newData.set(
+      head,
+      updateNestedDataByPath(currentValue ?? null, tail, value)
+    );
     return newData;
   }
 
   if (oldData instanceof Set) {
     const setAsArray = updateNestedDataByPath(
-      Array.from(oldData),
+      Array.from(oldData) as JsonValue[],
       updatePath,
       value
     );
 
-    return new Set(setAsArray);
+    return new Set(Array.isArray(setAsArray) ? setAsArray : []);
   }
 
   if (Array.isArray(oldData)) {

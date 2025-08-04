@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import { VirtualizedDataExplorer } from "../VirtualizedDataExplorer";
 import { TypeLegend } from "./TypeLegend";
+import { JsonValue, isPlainObject } from "../types";
 
 interface DataViewerProps {
   title: string;
-  data: unknown;
+  data: JsonValue;
   maxDepth?: number;
   rawMode?: boolean;
   showTypeFilter?: boolean;
@@ -34,21 +35,21 @@ export const DataViewer: React.FC<DataViewerProps> = ({
     if (!data || !showTypeFilter) return [];
 
     const types: string[] = [];
-    const processValue = (value: any, depth = 0) => {
+    const processValue = (value: JsonValue, depth = 0) => {
       if (depth > 3) return; // Limit depth for performance
 
       const type = Array.isArray(value)
         ? "array"
         : value === null
-        ? "null"
-        : typeof value;
+          ? "null"
+          : typeof value;
 
       types.push(type);
 
-      if (type === "object" && value !== null) {
+      if (type === "object" && isPlainObject(value)) {
         Object.values(value).forEach((v) => processValue(v, depth + 1));
-      } else if (type === "array") {
-        value.forEach((v: any) => processValue(v, depth + 1));
+      } else if (Array.isArray(value)) {
+        value.forEach((v: JsonValue) => processValue(v, depth + 1));
       }
     };
 
@@ -60,11 +61,11 @@ export const DataViewer: React.FC<DataViewerProps> = ({
   const getFilteredData = useMemo(() => {
     if (!activeFilter || !data) return null;
 
-    const filteredObject: any = {};
+    const filteredObject: Record<string, JsonValue> = {};
     let itemCount = 0;
 
     const flattenByType = (
-      obj: any,
+      obj: JsonValue,
       targetType: string,
       path = "",
       depth = 0
@@ -92,8 +93,8 @@ export const DataViewer: React.FC<DataViewerProps> = ({
           const valueType = Array.isArray(value)
             ? "array"
             : value === null
-            ? "null"
-            : typeof value;
+              ? "null"
+              : typeof value;
 
           if (valueType === targetType) {
             filteredObject[currentPath] = value;

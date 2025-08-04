@@ -8,7 +8,7 @@
 export const deleteNestedDataByPath = (
   oldData: unknown,
   deletePath: Array<string>
-): any => {
+): unknown => {
   if (oldData instanceof Map) {
     const newData = new Map(oldData);
 
@@ -24,7 +24,7 @@ export const deleteNestedDataByPath = (
 
   if (oldData instanceof Set) {
     const setAsArray = deleteNestedDataByPath(Array.from(oldData), deletePath);
-    return new Set(setAsArray);
+    return new Set(setAsArray as Iterable<unknown>);
   }
 
   if (Array.isArray(oldData)) {

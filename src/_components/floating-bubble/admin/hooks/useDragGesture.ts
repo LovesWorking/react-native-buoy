@@ -12,9 +12,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // Debounced save function will be created inside the hook
 
 // AsyncStorage import with fallback for when it's not available
-let AsyncStorage: any = null;
+let AsyncStorage: {
+  getItem: (key: string) => Promise<string | null>;
+  setItem: (key: string, value: string) => Promise<void>;
+} | null = null;
 try {
-  AsyncStorage = require("@react-native-async-storage/async-storage").default;
+  import("@react-native-async-storage/async-storage").then((module) => {
+    AsyncStorage = module.default;
+  });
 } catch {
   // AsyncStorage not available - will fall back to in-memory storage
   console.warn(
@@ -79,7 +84,7 @@ export function useDragGesture({
     }
   };
 
-  const loadBubblePosition = async (): Promise<{
+  const loadBubblePosition = useCallback(async (): Promise<{
     x: number | null;
     y: number | null;
   }> => {
@@ -97,7 +102,10 @@ export function useDragGesture({
       console.warn("Failed to load bubble position");
       return { x: null, y: null };
     }
-  };
+  }, [
+    dynamicStorageKeys.BUBBLE_POSITION_X,
+    dynamicStorageKeys.BUBBLE_POSITION_Y,
+  ]);
 
   // Animation values
   const translateX = useSharedValue(screenWidth - bubbleWidth - 5);
@@ -223,7 +231,7 @@ export function useDragGesture({
     };
 
     initializePosition();
-  }, [bubbleWidth, translateX, translateY, top, bottom]);
+  }, [bubbleWidth, translateX, translateY, top, bottom, loadBubblePosition]);
 
   return {
     panGesture,

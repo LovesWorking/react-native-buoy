@@ -13,11 +13,22 @@ export function MutationBrowserMode({
   onMutationSelect,
   activeFilter,
 }: MutationBrowserModeProps) {
+  // Convert function to React.Dispatch compatible format
+  const handleMutationSelect: React.Dispatch<
+    React.SetStateAction<Mutation | undefined>
+  > = (action) => {
+    if (typeof action === "function") {
+      onMutationSelect(action(selectedMutation));
+    } else {
+      onMutationSelect(action);
+    }
+  };
+
   return (
     <View style={styles.mutationListContainer}>
       <MutationsList
         selectedMutation={selectedMutation}
-        setSelectedMutation={onMutationSelect as any}
+        setSelectedMutation={handleMutationSelect}
         activeFilter={activeFilter}
         hideInfoPanel={true}
         contentContainerStyle={styles.mutationListContent}

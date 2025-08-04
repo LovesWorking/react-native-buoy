@@ -6,14 +6,14 @@
 export const displayValue = (value: unknown, beautify: boolean = false) => {
   const getCircularReplacer = () => {
     const seen = new WeakSet();
-    return (_key: string, value: any) => {
-      if (typeof value === "object" && value !== null) {
-        if (seen.has(value)) {
+    return (_key: string, currentValue: unknown) => {
+      if (typeof currentValue === "object" && currentValue !== null) {
+        if (seen.has(currentValue)) {
           return "[Circular]";
         }
-        seen.add(value);
+        seen.add(currentValue);
       }
-      return value;
+      return currentValue;
     };
   };
 

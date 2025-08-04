@@ -1,7 +1,12 @@
 // AsyncStorage import with fallback for when it's not available
-let AsyncStorage: any = null;
+let AsyncStorage: {
+  getItem: (key: string) => Promise<string | null>;
+  setItem: (key: string, value: string) => Promise<void>;
+} | null = null;
 try {
-  AsyncStorage = require("@react-native-async-storage/async-storage").default;
+  import("@react-native-async-storage/async-storage").then((module) => {
+    AsyncStorage = module.default;
+  });
 } catch {
   // AsyncStorage not available - will fall back to in-memory storage
   console.warn(

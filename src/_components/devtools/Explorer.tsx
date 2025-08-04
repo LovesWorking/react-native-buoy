@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
+import { JsonValue } from "../_shared/types";
 import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
 import { CopiedCopier, Copier, ErrorCopier, List, Trash } from "./svgs";
 import { updateNestedDataByPath } from "../_util/updateNestedDataByPath";
@@ -21,11 +22,8 @@ const HIT_SLOP_OPTIMIZED = { top: 8, bottom: 8, left: 8, right: 8 };
 
 const EXPANDER_SIZE = 16;
 
-function isIterable(x: any): x is Iterable<unknown> {
-  return Symbol.iterator in x;
-}
 // Optimized chunking function moved to module scope [[memory:4875251]]
-const chunkArray = <T extends { label: string; value: unknown }>(
+const chunkArray = <T extends { label: string; value: JsonValue }>(
   array: Array<T>,
   size: number = CHUNK_SIZE
 ): Array<Array<T>> => {
@@ -59,7 +57,7 @@ const Expander = React.memo(({ expanded }: { expanded: boolean }) => {
 type CopyState = "NoCopy" | "SuccessCopy" | "ErrorCopy";
 
 // Memoized CopyButton component optimized with ref pattern [[memory:4875251]]
-const CopyButton = React.memo(({ value }: { value: any }) => {
+const CopyButton = React.memo(({ value }: { value: JsonValue }) => {
   const [copyState, setCopyState] = useState<CopyState>("NoCopy");
   const { onCopy } = useCopy();
   const valueRef = useRef(value);
@@ -76,7 +74,7 @@ const CopyButton = React.memo(({ value }: { value: any }) => {
 
     try {
       // Use ref to avoid stale closures [[memory:4875251]]
-      const copied = await onCopy(valueRef.current);
+      const copied = await onCopy(displayValue(valueRef.current));
       if (copied) {
         setCopyState("SuccessCopy");
         setTimeout(() => setCopyState("NoCopy"), 1500);
@@ -165,7 +163,7 @@ const ClearArrayButton = React.memo(
 
     const handleClear = useCallback(() => {
       if (!activeQueryRef.current) return;
-      const oldData = activeQueryRef.current.state.data;
+      const oldData = activeQueryRef.current.state.data as unknown as JsonValue;
       const newData = updateNestedDataByPath(oldData, dataPathRef.current, []);
       queryClient.setQueryData(activeQueryRef.current.queryKey, newData);
     }, [queryClient]);
@@ -193,7 +191,7 @@ const ToggleValueButton = React.memo(
   }: {
     dataPath: Array<string>;
     activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
-    value: any;
+    value: JsonValue;
   }) => {
     const queryClient = useQueryClient();
     const dataPathRef = useRef(dataPath);
@@ -205,11 +203,13 @@ const ToggleValueButton = React.memo(
 
     const handleClick = useCallback(() => {
       if (!activeQueryRef.current) return;
-      const oldData = activeQueryRef.current.state.data;
+      const oldData = activeQueryRef.current.state.data as unknown as JsonValue;
+      const currentValue =
+        typeof valueRef.current === "boolean" ? valueRef.current : false;
       const newData = updateNestedDataByPath(
         oldData,
         dataPathRef.current,
-        !valueRef.current
+        !currentValue
       );
       queryClient.setQueryData(activeQueryRef.current.queryKey, newData);
     }, [queryClient]);
@@ -243,11 +243,11 @@ const ToggleValueButton = React.memo(
   }
 );
 type Props = {
-  editable?: boolean; // true
-  label: string; //Data
-  value: any; //unknown; // activeQueryStateData()
-  defaultExpanded?: Array<string>; // {['Data']} // Label for Data Explorer
-  activeQuery?: Query<unknown, Error, unknown, QueryKey> | undefined; // activeQuery()
+  editable?: boolean;
+  label: string;
+  value: JsonValue;
+  defaultExpanded?: Array<string>;
+  activeQuery?: Query<unknown, Error, unknown, QueryKey> | undefined;
   dataPath?: Array<string>;
   itemsDeletable?: boolean;
 };
@@ -280,33 +280,41 @@ export default function Explorer({
 
     if (Array.isArray(value)) {
       // Limit array processing for performance [[memory:4875251]]
-      const limitedValue = value.length > 1000 ? value.slice(0, 1000) : value;
-      return limitedValue.map((d, i) => ({
-        label: i.toString(),
-        value: d,
+      const limitedValue = (
+        value.length > 1000 ? value.slice(0, 1000) : value
+      ) as JsonValue[];
+      return limitedValue.map(
+        (d: JsonValue, i): { label: string; value: JsonValue } => ({
+          label: i.toString(),
+          value: d,
+        })
+      );
+    }
+
+    if (value instanceof Map) {
+      // Limit Map entries for performance
+      const entries = Array.from(value.entries()).slice(0, 1000);
+      return entries.map(([key, val]): { label: string; value: JsonValue } => ({
+        label: key.toString(),
+        value: val,
       }));
     }
 
-    if (isIterable(value)) {
-      if (value instanceof Map) {
-        // Limit Map entries for performance
-        const entries = Array.from(value.entries()).slice(0, 1000);
-        return entries.map(([key, val]) => ({
-          label: key.toString(),
-          value: val,
-        }));
-      }
-      // Limit other iterables
+    if (value instanceof Set) {
+      // Limit Set entries for performance
       const entries = Array.from(value).slice(0, 1000);
-      return entries.map((val, i) => ({
+      return entries.map((val, i): { label: string; value: JsonValue } => ({
         label: i.toString(),
         value: val,
       }));
     }
 
     // Handle regular objects with key limiting
-    const entries = Object.entries(value).slice(0, 1000);
-    return entries.map(([key, val]) => ({
+    const entries = Object.entries(value as Record<string, JsonValue>).slice(
+      0,
+      1000
+    );
+    return entries.map(([key, val]): { label: string; value: JsonValue } => ({
       label: key,
       value: val,
     }));
@@ -316,8 +324,7 @@ export default function Explorer({
   const valueType = useMemo(() => {
     if (Array.isArray(value)) return "array";
     if (value === null || typeof value !== "object") return typeof value;
-    if (isIterable(value) && typeof value[Symbol.iterator] === "function")
-      return "Iterable";
+    if (value instanceof Map || value instanceof Set) return "Iterable";
     return "object";
   }, [value]);
 
@@ -339,7 +346,7 @@ export default function Explorer({
   const handleChange = useCallback(
     (isNumber: boolean, newValue: string) => {
       if (!activeQueryRef.current) return;
-      const oldData = activeQueryRef.current.state.data;
+      const oldData = activeQueryRef.current.state.data as unknown as JsonValue;
       if (isNumber && isNaN(Number(newValue))) return;
       const updatedValue =
         valueTypeRef.current === "number" ? Number(newValue) : newValue;
@@ -485,7 +492,11 @@ export default function Explorer({
                         keyboardType={
                           valueType === "number" ? "numeric" : "default"
                         }
-                        value={value.toString()}
+                        value={
+                          value === null || value === undefined
+                            ? ""
+                            : value.toString()
+                        }
                         onChangeText={(newValue) =>
                           handleChange(valueType === "number", newValue)
                         }
@@ -496,7 +507,12 @@ export default function Explorer({
                           <TouchableOpacity
                             style={styles.touchableButton}
                             onPressIn={() =>
-                              handleChange(true, String(value + 1))
+                              handleChange(
+                                true,
+                                String(
+                                  typeof value === "number" ? value + 1 : 1
+                                )
+                              )
                             }
                             hitSlop={HIT_SLOP_OPTIMIZED}
                           >
@@ -516,7 +532,12 @@ export default function Explorer({
                           <TouchableOpacity
                             style={styles.touchableButton}
                             onPressIn={() =>
-                              handleChange(true, String(value - 1))
+                              handleChange(
+                                true,
+                                String(
+                                  typeof value === "number" ? value - 1 : -1
+                                )
+                              )
                             }
                             hitSlop={HIT_SLOP_OPTIMIZED}
                           >

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { QueryKey } from "@tanstack/react-query";
 import {
   saveModalVisibilityState,
@@ -43,7 +43,7 @@ export function useModalPersistence({
   activeStorageTypes,
   isStateRestored,
 }: UseModalPersistenceProps): UseModalPersistenceReturn {
-  const saveCurrentState = async () => {
+  const saveCurrentState = useCallback(async () => {
     const state: ModalVisibilityState = {
       isModalOpen,
       isDebugModalOpen,
@@ -60,15 +60,26 @@ export function useModalPersistence({
     };
 
     await saveModalVisibilityState(storagePrefix, state);
-  };
+  }, [
+    storagePrefix,
+    isModalOpen,
+    isDebugModalOpen,
+    selectedQueryKey,
+    selectedSection,
+    activeFilter,
+    activeTab,
+    selectedMutationId,
+    activeStorageTypes,
+  ]);
 
-  const loadSavedState = async (): Promise<ModalVisibilityState | null> => {
-    return await loadModalVisibilityState(storagePrefix);
-  };
+  const loadSavedState =
+    useCallback(async (): Promise<ModalVisibilityState | null> => {
+      return await loadModalVisibilityState(storagePrefix);
+    }, [storagePrefix]);
 
-  const clearSavedState = async () => {
+  const clearSavedState = useCallback(async () => {
     await clearModalVisibilityState(storagePrefix);
-  };
+  }, [storagePrefix]);
 
   // Auto-save state when modal state changes
   useEffect(() => {
@@ -94,6 +105,8 @@ export function useModalPersistence({
     selectedMutationId,
     activeStorageTypes,
     isStateRestored,
+    saveCurrentState,
+    clearSavedState,
   ]);
 
   return {

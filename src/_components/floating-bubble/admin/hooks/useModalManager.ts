@@ -93,7 +93,7 @@ export function useModalManager() {
     };
 
     restoreState();
-  }, []);
+  }, [loadSavedState]);
 
   const handleModalDismiss = () => {
     setIsModalOpen(false);

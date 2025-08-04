@@ -24,6 +24,20 @@ const MAX_EXPLORER_DEPTH = 15;
 // Tab types for the toggle
 type TabType = "message" | "eventData" | "rawData" | "debugInfo";
 
+// Extended JsonValue type to handle Sentry event data
+type SentryJsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | SentryJsonValue[]
+  | { [key: string]: SentryJsonValue }
+  | Date
+  | Error
+  | undefined
+  | symbol
+  | bigint;
+
 interface SentryEventDetailViewProps {
   entry: ConsoleTransportEntry;
   _onBack: () => void;
@@ -72,7 +86,7 @@ export function SentryEventDetailView({
         return (
           <DataViewer
             title="Event Data"
-            data={eventData}
+            data={eventData as unknown as SentryJsonValue}
             maxDepth={MAX_EXPLORER_DEPTH}
             rawMode={true}
             showTypeFilter={true}
@@ -82,7 +96,7 @@ export function SentryEventDetailView({
         return (
           <DataViewer
             title="Raw Sentry Data"
-            data={_sentryRawData}
+            data={_sentryRawData as unknown as SentryJsonValue}
             maxDepth={MAX_EXPLORER_DEPTH}
             rawMode={true}
             showTypeFilter={true}
@@ -92,7 +106,7 @@ export function SentryEventDetailView({
         return (
           <DataViewer
             title="Debug Info"
-            data={debugInfo}
+            data={debugInfo as unknown as SentryJsonValue}
             maxDepth={MAX_EXPLORER_DEPTH}
             rawMode={true}
             showTypeFilter={true}

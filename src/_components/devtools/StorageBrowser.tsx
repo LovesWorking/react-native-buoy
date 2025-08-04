@@ -13,11 +13,20 @@ interface Props {
 }
 
 // Stable module-scope functions to prevent FlashList view recreation [[memory:4875251]]
-const renderStorageItem = ({ item, extraData }: any) => (
+const renderStorageItem = ({
+  item,
+  extraData,
+}: {
+  item: Query;
+  extraData?: {
+    selectedQuery?: Query;
+    handleQuerySelect?: (query: Query | undefined) => void;
+  };
+}) => (
   <StorageQueryRow
     query={item}
     isSelected={extraData?.selectedQuery?.queryHash === item.queryHash}
-    onSelect={extraData?.handleQuerySelect}
+    onSelect={extraData?.handleQuerySelect || (() => {})}
   />
 );
 

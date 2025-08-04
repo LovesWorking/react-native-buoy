@@ -16,11 +16,11 @@ const getMutationText = (mutation: Mutation) => {
 };
 
 interface Props {
-  mutation: Mutation<any, any, any, any>;
+  mutation: Mutation;
   setSelectedMutation: React.Dispatch<
-    React.SetStateAction<Mutation<any, any, any, any> | undefined>
+    React.SetStateAction<Mutation | undefined>
   >;
-  selected: Mutation<any, any, any, any> | undefined;
+  selected: Mutation | undefined;
 }
 export default function MutationButton({
   mutation,
