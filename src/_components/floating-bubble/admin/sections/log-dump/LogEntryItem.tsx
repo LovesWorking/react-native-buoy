@@ -1,10 +1,4 @@
-import {
-  ListRenderItem,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
 import { ConsoleTransportEntry } from "../../logger/types";
@@ -71,15 +65,6 @@ export const LogEntryItem = ({ entry, onSelectEntry }: LogEntryItemProps) => {
     </View>
   );
 };
-
-const renderLogEntry: ListRenderItem<ConsoleTransportEntry> = ({
-  item: entry,
-}) => {
-  // We'll need to pass the selectEntry function through FlatList's extraData
-  // and access it in the parent component
-  return <LogEntryItem entry={entry} onSelectEntry={() => {}} />;
-};
-
 const getLevelDotStyle = (level: string) => {
   switch (level) {
     case "error":

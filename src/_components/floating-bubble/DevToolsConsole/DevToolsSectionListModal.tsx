@@ -14,7 +14,7 @@ interface DevToolsSectionListModalProps {
   onClose: () => void;
   onSectionSelect: (sectionType: SectionType) => void;
   requiredEnvVars: RequiredEnvVar[];
-  getSentrySubtitle: () => string;
+  _getSentrySubtitle: () => string;
   getRnBetterDevToolsSubtitle: () => string;
   envVarsSubtitle: string;
   enableSharedModalDimensions?: boolean;
@@ -29,7 +29,7 @@ export function DevToolsSectionListModal({
   onClose,
   onSectionSelect,
   requiredEnvVars,
-  getSentrySubtitle,
+  _getSentrySubtitle,
   getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
   enableSharedModalDimensions = false,
@@ -72,7 +72,7 @@ export function DevToolsSectionListModal({
       <ConsoleSectionList>
         <SentryLogsSection
           onPress={() => onSectionSelect("sentry-logs")}
-          getSentrySubtitle={getSentrySubtitle}
+          getSentrySubtitle={_getSentrySubtitle}
         />
         <EnvVarsSection
           onPress={() => onSectionSelect("env-vars")}

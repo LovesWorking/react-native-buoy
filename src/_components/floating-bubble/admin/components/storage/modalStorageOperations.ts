@@ -2,7 +2,7 @@
 let AsyncStorage: any = null;
 try {
   AsyncStorage = require("@react-native-async-storage/async-storage").default;
-} catch (error) {
+} catch {
   // AsyncStorage not available - will fall back to in-memory storage
   console.warn(
     "AsyncStorage not found. Panel position will not persist across app restarts. To enable persistence, install @react-native-async-storage/async-storage"
@@ -63,8 +63,8 @@ export const savePanelDimensions = async (
       `${storagePrefix}_panel_dimensions`,
       JSON.stringify(dimensions)
     );
-  } catch (error) {
-    console.warn("Failed to save panel dimensions:", error);
+  } catch {
+    console.warn("Failed to save panel dimensions");
   }
 };
 
@@ -74,8 +74,8 @@ export const savePanelHeight = async (
 ) => {
   try {
     await setItem(`${storagePrefix}_panel_height`, height.toString());
-  } catch (error) {
-    console.warn("Failed to save panel height:", error);
+  } catch {
+    console.warn("Failed to save panel height");
   }
 };
 
@@ -105,8 +105,8 @@ export const loadPanelState = async (
     const isFloating = floatingModeStr ? floatingModeStr === "true" : null;
 
     return { dimensions, height, isFloating };
-  } catch (error) {
-    console.warn("Failed to load panel state:", error);
+  } catch {
+    console.warn("Failed to load panel state");
     return { dimensions: null, height: null, isFloating: null };
   }
 };

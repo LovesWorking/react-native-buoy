@@ -1,17 +1,12 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FlashList } from "@shopify/flash-list";
-import { ChevronLeft } from "lucide-react-native";
 
 import { ConsoleTransportEntry } from "../../logger/types";
 
 import { DetailHeader } from "./components/DetailHeader";
-import { MessageSection } from "./components/MessageSection";
 import { DataViewer } from "../../../../_shared/components/DataViewer";
 
-// Stable constants to prevent re-creation [[memory:4875251]]
-const ESTIMATED_ITEM_SIZE = 200;
+// Stable constants to prevent re-creation [[memory:4875251]] [[memory:4875251]]
 const MAX_EXPLORER_DEPTH = 15; // Reduced for better performance with large datasets
 
 // Tab types for the toggle
@@ -24,7 +19,6 @@ export const SentryEventLogDetailView = ({
   entry: ConsoleTransportEntry;
   onBack: () => void;
 }) => {
-  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>("message");
 
   // Filter out Sentry-specific metadata for the general event data

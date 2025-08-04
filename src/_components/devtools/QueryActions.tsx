@@ -1,4 +1,4 @@
-import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
+import { Query, useQueryClient } from "@tanstack/react-query";
 import ActionButton from "./ActionButton";
 import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
 import triggerLoading from "../_util/actions/triggerLoading";
@@ -32,7 +32,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           }}
           bgColorClass="btnRefetch"
           text="Refetch"
-          textColorClass="btnRefetch"
+          _textColorClass="btnRefetch"
         />
         <ActionButton
           disabled={queryStatus === "pending"}
@@ -41,7 +41,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           }}
           bgColorClass="btnInvalidate"
           text="Invalidate"
-          textColorClass="btnInvalidate"
+          _textColorClass="btnInvalidate"
         />
         <ActionButton
           disabled={queryStatus === "pending"}
@@ -50,7 +50,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           }}
           bgColorClass="btnReset"
           text="Reset"
-          textColorClass="btnReset"
+          _textColorClass="btnReset"
         />
         <ActionButton
           disabled={getQueryStatusLabel(query) === "fetching"}
@@ -60,7 +60,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           }}
           bgColorClass="btnRemove"
           text="Remove"
-          textColorClass="btnRemove"
+          _textColorClass="btnRemove"
         />
         <ActionButton
           disabled={false}
@@ -73,7 +73,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
               ? "Restore Loading"
               : "Trigger Loading"
           }
-          textColorClass="btnTriggerLoading"
+          _textColorClass="btnTriggerLoading"
         />
         <ActionButton
           disabled={queryStatus === "pending"}
@@ -82,7 +82,7 @@ export default function QueryActions({ query, setSelectedQuery }: Props) {
           }}
           bgColorClass="btnTriggerLoadiError"
           text={queryStatus === "error" ? "Restore" : "Trigger Error"}
-          textColorClass="btnTriggerLoadiError"
+          _textColorClass="btnTriggerLoadiError"
         />
       </View>
     </View>

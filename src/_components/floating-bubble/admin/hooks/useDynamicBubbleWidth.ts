@@ -23,7 +23,7 @@ export function useDynamicBubbleWidth() {
     if (contentRef.current) {
       // Use measure() to get the actual rendered width of the content
       contentRef.current.measure(
-        (x: number, y: number, width: number, height: number) => {
+        (x: number, y: number, width: number, _height: number) => {
           if (!isMounted) return; // Prevent state updates after unmount
 
           if (width > 0) {

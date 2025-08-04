@@ -6,7 +6,7 @@
 export const displayValue = (value: unknown, beautify: boolean = false) => {
   const getCircularReplacer = () => {
     const seen = new WeakSet();
-    return (key: string, value: any) => {
+    return (_key: string, value: any) => {
       if (typeof value === "object" && value !== null) {
         if (seen.has(value)) {
           return "[Circular]";

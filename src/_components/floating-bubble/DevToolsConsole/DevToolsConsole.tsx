@@ -72,7 +72,6 @@ export function DevToolsConsole({
   const showSectionList = visible && selectedSection === null;
 
   // Show section detail when a section is selected
-  const showSectionDetail = selectedSection !== null;
 
   return (
     <>
@@ -82,7 +81,7 @@ export function DevToolsConsole({
         onClose={handleSectionListClose}
         onSectionSelect={handleSectionSelect}
         requiredEnvVars={requiredEnvVars}
-        getSentrySubtitle={getSentrySubtitle}
+        _getSentrySubtitle={getSentrySubtitle}
         getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
         envVarsSubtitle={envVarsSubtitle}
         enableSharedModalDimensions={enableSharedModalDimensions}
@@ -93,7 +92,7 @@ export function DevToolsConsole({
         selectedSection={selectedSection}
         onClose={handleModalClose}
         requiredEnvVars={requiredEnvVars}
-        getSentrySubtitle={getSentrySubtitle}
+        _getSentrySubtitle={getSentrySubtitle}
         envVarsSubtitle={envVarsSubtitle}
         onBack={handleBack}
         enableSharedModalDimensions={enableSharedModalDimensions}

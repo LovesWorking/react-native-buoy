@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 let AsyncStorage: any = null;
 try {
   AsyncStorage = require("@react-native-async-storage/async-storage").default;
-} catch (error) {
+} catch {
   // AsyncStorage not available - will fall back to in-memory storage
   console.warn(
     "AsyncStorage not found. Bubble position will not persist across app restarts. To enable persistence, install @react-native-async-storage/async-storage"
@@ -74,8 +74,8 @@ export function useDragGesture({
         setItem(dynamicStorageKeys.BUBBLE_POSITION_X, x.toString()),
         setItem(dynamicStorageKeys.BUBBLE_POSITION_Y, y.toString()),
       ]);
-    } catch (error) {
-      console.warn("Failed to save bubble position:", error);
+    } catch {
+      console.warn("Failed to save bubble position");
     }
   };
 
@@ -93,8 +93,8 @@ export function useDragGesture({
       const y = yStr ? parseFloat(yStr) : null;
 
       return { x, y };
-    } catch (error) {
-      console.warn("Failed to load bubble position:", error);
+    } catch {
+      console.warn("Failed to load bubble position");
       return { x: null, y: null };
     }
   };

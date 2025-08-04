@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from "react-native";
+import { useEffect, useMemo } from "react";
+import { StyleSheet, ScrollView } from "react-native";
 import { Query, useQueryClient } from "@tanstack/react-query";
 import {
   StorageType,
@@ -7,7 +7,6 @@ import {
   getStorageType,
   isStorageQuery,
 } from "../../../_util/storageQueryUtils";
-import useStorageQueries from "../../../_hooks/useStorageQueries";
 import { useStorageQueryCounts } from "../../../_hooks/useStorageQueryCounts";
 import { StorageKeyStatsSection } from "../sections/storage/components/StorageKeyStats";
 import { StorageKeySection } from "../sections/storage/components/StorageKeySection";
@@ -35,8 +34,6 @@ interface StorageBrowserModeProps {
  * - Extract Reusable Logic: Uses existing QueryBrowser component for consistency
  */
 export function StorageBrowserMode({
-  selectedQuery,
-  onQuerySelect,
   activeStorageTypes,
   onCountsChange,
   requiredStorageKeys = [],

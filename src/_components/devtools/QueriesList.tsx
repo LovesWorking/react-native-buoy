@@ -1,16 +1,12 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { Query } from "@tanstack/react-query";
 import {
   View,
   StyleSheet,
   SafeAreaView,
-  Text,
   PanResponder,
   Animated,
   Dimensions,
-  ScrollView,
-  StyleProp,
-  ViewStyle,
 } from "react-native";
 import { QueryBrowser } from "./index";
 import QueryInformation from "./QueryInformation";
@@ -40,7 +36,6 @@ export default function QueriesList({
   const maxInfoHeight = screenHeight * 0.7; // 70% of available height
 
   const infoHeightAnim = useRef(new Animated.Value(defaultInfoHeight)).current;
-  const [currentInfoHeight, setCurrentInfoHeight] = useState(defaultInfoHeight);
   const currentInfoHeightRef = useRef(defaultInfoHeight);
 
   // Pan responder for dragging the query information panel
@@ -56,7 +51,6 @@ export default function QueriesList({
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
         infoHeightAnim.stopAnimation((value) => {
-          setCurrentInfoHeight(value);
           currentInfoHeightRef.current = value;
           infoHeightAnim.setValue(value);
         });
@@ -78,7 +72,6 @@ export default function QueriesList({
             currentInfoHeightRef.current - gestureState.dy
           )
         );
-        setCurrentInfoHeight(finalHeight);
         currentInfoHeightRef.current = finalHeight;
 
         Animated.timing(infoHeightAnim, {
@@ -88,7 +81,6 @@ export default function QueriesList({
         }).start(() => {
           // Ensure the animated value and state are perfectly synced after animation
           infoHeightAnim.setValue(finalHeight);
-          setCurrentInfoHeight(finalHeight);
           currentInfoHeightRef.current = finalHeight;
         });
       },

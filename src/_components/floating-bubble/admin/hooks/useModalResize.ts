@@ -23,7 +23,6 @@ interface UseModalResizeProps {
 export const useModalResize = ({
   isFloatingMode,
   panelHeight,
-  isResizing,
   setIsResizing,
   updatePanelHeight,
 }: UseModalResizeProps) => {

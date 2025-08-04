@@ -101,10 +101,6 @@ export function SwipeIndicator({
     // Base scale 0.8 → 1.0 through visibleProgress, plus 0.2 in the pop-out window
     const scale = 0.8 + 0.2 * visibleProgress + 0.2 * popOutProgress;
 
-    // During the final 1 % (99-100%), slide arrow outward 16 px
-    const commitProgress = Math.max(0, (progress - 0.99) / 0.01);
-    const translateX = 16 * commitProgress;
-
     return {
       opacity: visibleProgress,
       transform: [{ scale }],
@@ -152,9 +148,6 @@ export function SwipeIndicator({
 
     // for right side progress goes 1→0, invert for scale
     const scale = 0.8 + 0.2 * visibleProgress + 0.2 * popOutProgress;
-
-    const commitProgress = Math.max(0, (progress - 0.99) / 0.01);
-    const translateX = -16 * commitProgress; // slide inward (towards center)
 
     return {
       opacity: visibleProgress,

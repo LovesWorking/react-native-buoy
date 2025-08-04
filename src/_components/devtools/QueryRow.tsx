@@ -1,7 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Query } from "@tanstack/react-query";
 import { getQueryStatusLabel } from "../_util/getQueryStatusLabel";
-import { displayValue } from "./displayValue";
 
 const getQueryText = (query: Query) => {
   if (!query?.queryKey) return "Unknown Query";

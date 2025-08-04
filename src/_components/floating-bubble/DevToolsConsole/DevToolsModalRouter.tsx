@@ -9,7 +9,7 @@ interface DevToolsModalRouterProps {
   selectedSection: SectionType | null;
   onClose: () => void;
   requiredEnvVars: RequiredEnvVar[];
-  getSentrySubtitle: () => string;
+  _getSentrySubtitle: () => string;
   envVarsSubtitle: string;
   onBack?: () => void;
   enableSharedModalDimensions?: boolean;
@@ -24,7 +24,7 @@ export function DevToolsModalRouter({
   selectedSection,
   onClose,
   requiredEnvVars,
-  getSentrySubtitle,
+  _getSentrySubtitle,
   envVarsSubtitle,
   onBack,
   enableSharedModalDimensions = false,
@@ -34,7 +34,7 @@ export function DevToolsModalRouter({
       <SentryLogsModal
         visible={selectedSection === "sentry-logs"}
         onClose={onClose}
-        getSentrySubtitle={getSentrySubtitle}
+        getSentrySubtitle={_getSentrySubtitle}
         onBack={onBack}
         enableSharedModalDimensions={enableSharedModalDimensions}
       />
@@ -43,7 +43,7 @@ export function DevToolsModalRouter({
         visible={selectedSection === "env-vars"}
         onClose={onClose}
         requiredEnvVars={requiredEnvVars}
-        envVarsSubtitle={envVarsSubtitle}
+        _envVarsSubtitle={envVarsSubtitle}
         onBack={onBack}
         enableSharedModalDimensions={enableSharedModalDimensions}
       />

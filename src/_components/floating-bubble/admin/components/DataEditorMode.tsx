@@ -67,7 +67,7 @@ export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
               onClick={action.onPress}
               text={action.label}
               bgColorClass={action.bgColorClass}
-              textColorClass={action.textColorClass}
+              _textColorClass={action.textColorClass}
               disabled={action.disabled}
             />
           ))}
@@ -75,10 +75,6 @@ export function DataEditorMode({ selectedQuery }: DataEditorModeProps) {
       </View>
     </>
   );
-}
-
-interface DataEmptyStateProps {
-  selectedQuery: Query;
 }
 
 function DataExplorer({

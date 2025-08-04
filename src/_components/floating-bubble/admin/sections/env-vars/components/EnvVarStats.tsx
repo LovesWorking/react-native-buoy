@@ -1,12 +1,5 @@
-import { View, Text, StyleSheet } from "react-native";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Settings,
-  XCircle,
-  Eye,
-  Shield,
-} from "lucide-react-native";
+import { StyleSheet, View, Text } from "react-native";
+import { AlertCircle, CheckCircle2, Eye, XCircle } from "lucide-react-native";
 import { EnvVarStats } from "../types";
 
 interface EnvVarStatsProps {
@@ -65,19 +58,12 @@ const variableTypeData = [
 export function EnvVarStatsSection({ stats }: EnvVarStatsProps) {
   const {
     totalCount,
-    requiredCount,
     missingCount,
     wrongValueCount,
     wrongTypeCount,
     presentRequiredCount,
     optionalCount,
   } = stats;
-
-  const totalIssues = missingCount + wrongValueCount + wrongTypeCount;
-  const healthScore =
-    requiredCount > 0
-      ? Math.round((presentRequiredCount / requiredCount) * 100)
-      : 100;
 
   // If no variables at all, show minimal stats
   if (totalCount === 0) {

@@ -44,7 +44,7 @@ interface Props {
   onClick: () => void;
   text: string;
   bgColorClass: keyof typeof buttonConfigs;
-  textColorClass: keyof typeof buttonConfigs;
+  _textColorClass: keyof typeof buttonConfigs;
   disabled: boolean;
 }
 

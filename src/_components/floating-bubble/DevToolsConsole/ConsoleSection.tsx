@@ -1,9 +1,8 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { ExpandableSectionHeader } from "../admin/sections/ExpandableSectionHeader";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
-const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
 
 interface ConsoleSectionProps {
   id: string;
@@ -21,7 +20,7 @@ interface ConsoleSectionProps {
  * Separates section UI rendering from business logic.
  */
 export function ConsoleSection({
-  id,
+  id: _id,
   title,
   subtitle,
   icon,

@@ -28,12 +28,12 @@ import {
 import { useSentryEventCounts } from "../../admin/hooks/useSentryEvents";
 
 interface SentryFilterViewProps {
-  entries: ConsoleTransportEntry[];
+  _entries: ConsoleTransportEntry[];
   selectedTypes: Set<LogType>;
   selectedLevels: Set<LogLevel>;
   onToggleTypeFilter: (type: LogType) => void;
   onToggleLevelFilter: (level: LogLevel) => void;
-  onBack: () => void;
+  _onBack: () => void;
 }
 
 // Define all possible log types with their icons and colors
@@ -61,12 +61,12 @@ const ALL_LOG_LEVELS = [
 ];
 
 export function SentryFilterView({
-  entries,
+  _entries,
   selectedTypes,
   selectedLevels,
   onToggleTypeFilter,
   onToggleLevelFilter,
-  onBack,
+  _onBack,
 }: SentryFilterViewProps) {
   // Use reactive counts hook for real-time updates
   const counts = useSentryEventCounts();
@@ -161,8 +161,8 @@ export function SentryFilterView({
                 type === LogType.HTTPRequest
                   ? "HTTP Request"
                   : type === LogType.UserAction
-                  ? "User Action"
-                  : type;
+                    ? "User Action"
+                    : type;
 
               return renderFilterItem(
                 `type-${type}`,

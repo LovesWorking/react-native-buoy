@@ -58,7 +58,7 @@ export function MutationEditorMode({
               onClick={action.onPress}
               text={action.label}
               bgColorClass={action.bgColorClass}
-              textColorClass={action.textColorClass}
+              _textColorClass={action.textColorClass}
               disabled={action.disabled}
             />
           ))}
@@ -85,10 +85,6 @@ function DataExplorer({
       defaultExpanded={["Data"]}
     />
   );
-}
-
-interface DataEmptyStateProps {
-  selectedMutation: Mutation;
 }
 
 function DataEmptyState({

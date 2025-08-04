@@ -88,21 +88,6 @@ const getStorageIcon = (storageType: StorageKeyInfo["storageType"]) => {
   }
 };
 
-const formatValue = (value: unknown, isExpanded: boolean = false): string => {
-  if (value === undefined || value === null) {
-    return "undefined";
-  }
-  if (typeof value === "string") {
-    if (isExpanded) return value;
-    return value.length > 40 ? `${value.substring(0, 40)}...` : value;
-  }
-  const stringified = JSON.stringify(value, null, isExpanded ? 2 : 0);
-  if (isExpanded) return stringified;
-  return stringified.length > 40
-    ? `${stringified.substring(0, 40)}...`
-    : stringified;
-};
-
 /**
  * Storage key card component following composition principles [[rule3]]
  *

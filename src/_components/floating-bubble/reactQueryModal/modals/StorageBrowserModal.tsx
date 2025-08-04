@@ -6,16 +6,13 @@ import { StorageBrowserMode } from "../../admin/components/StorageBrowserMode";
 import { StorageBrowserFooter } from "../components/StorageBrowserFooter";
 import { useState, useCallback } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { View, Dimensions } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
+import { View } from "react-native";
+import { useSharedValue, withSpring } from "react-native-reanimated";
 import { SwipeIndicator } from "../components/SwipeIndicator";
 import { StorageType } from "../../../_util/storageQueryUtils";
 import { useModalState } from "../../admin/hooks";
 import { StorageTypeCounts } from "../../../_util/getStorageQueryCounts";
+import { RequiredStorageKey } from "../../admin/sections/storage/types";
 
 interface StorageBrowserModalProps {
   visible: boolean;
@@ -26,7 +23,7 @@ interface StorageBrowserModalProps {
   onStorageTypesChange?: (storageTypes: Set<StorageType>) => void;
   enableSharedModalDimensions?: boolean;
   onTabChange: (tab: "queries" | "mutations" | "storage") => void;
-  requiredStorageKeys?: any[]; // Configuration for required storage keys
+  requiredStorageKeys?: RequiredStorageKey[]; // Configuration for required storage keys
 }
 
 /**
@@ -65,7 +62,6 @@ export function StorageBrowserModal({
 
   // Shared values for gesture tracking [[memory:4875251]]
   const translationX = useSharedValue(0);
-  const screenWidth = Dimensions.get("window").width;
 
   const handleSwipeNavigation = useCallback(
     (direction: "left" | "right") => {

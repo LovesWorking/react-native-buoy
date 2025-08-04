@@ -8,9 +8,9 @@ import {
   Pressable,
 } from "react-native";
 import { Query } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react-native";
+
 import { getQueryStatusColor } from "../../../../_components/_util/getQueryStatusColor";
-import { getQueryStatusLabel } from "../../../../_components/_util/getQueryStatusLabel";
+
 import { QueryDebugInfo } from "./QueryDebugInfo";
 
 interface QuerySelectorProps {
@@ -71,7 +71,6 @@ export function QuerySelector({
               queries.map((query, index) => {
                 const displayName = getQueryDisplayName(query);
 
-                const status = getQueryStatusLabel(query);
                 const statusColorName = getQueryStatusColor({
                   queryState: query.state,
                   observerCount: query.getObserversCount(),
@@ -122,52 +121,6 @@ export function QuerySelector({
         </View>
       </Pressable>
     </Modal>
-  );
-}
-
-function QuerySelectorTrigger({
-  selectedQuery,
-  onPress,
-}: {
-  selectedQuery?: Query;
-  onPress: () => void;
-}) {
-  const displayName = selectedQuery
-    ? Array.isArray(selectedQuery.queryKey)
-      ? selectedQuery.queryKey.join(" - ")
-      : String(selectedQuery.queryKey)
-    : "Select Query";
-
-  const status = selectedQuery ? getQueryStatusLabel(selectedQuery) : undefined;
-  const statusColorName = selectedQuery
-    ? getQueryStatusColor({
-        queryState: selectedQuery.state,
-        observerCount: selectedQuery.getObserversCount(),
-        isStale: selectedQuery.isStale(),
-      })
-    : "gray";
-
-  // Convert color names to hex colors
-  const colorMap: Record<string, string> = {
-    blue: "#3B82F6",
-    gray: "#6B7280",
-    purple: "#8B5CF6",
-    yellow: "#F59E0B",
-    green: "#10B981",
-  };
-
-  const statusColor = colorMap[statusColorName] || "#6B7280";
-
-  return (
-    <TouchableOpacity style={styles.trigger} onPress={onPress}>
-      {selectedQuery && (
-        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-      )}
-      <Text style={styles.triggerText} numberOfLines={1}>
-        {displayName}
-      </Text>
-      <ChevronDown color="#6B7280" size={14} />
-    </TouchableOpacity>
   );
 }
 

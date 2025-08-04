@@ -1,5 +1,5 @@
 import { View, StyleSheet } from "react-native";
-import { Query, QueryKey } from "@tanstack/react-query";
+import { Query } from "@tanstack/react-query";
 import { QueryBrowser } from "../../../devtools/index";
 
 interface QueryBrowserModeProps {

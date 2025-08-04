@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
 import Animated, { AnimatedStyleProp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,9 +31,9 @@ interface FloatingModalContentProps {
   onToggleFloatingMode: () => void;
   onClose: () => void;
   onDragStart: () => void;
-  onDragEnd: (dimensions: any) => void;
+  onDragEnd: (dimensions: PanelDimensions) => void;
   onResizeStart: () => void;
-  onResizeEnd: (dimensions: any) => void;
+  onResizeEnd: (dimensions: PanelDimensions) => void;
   onContainerLayout: (bounds: { width: number; height: number }) => void;
 }
 

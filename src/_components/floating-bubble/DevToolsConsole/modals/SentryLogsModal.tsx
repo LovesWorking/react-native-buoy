@@ -20,7 +20,6 @@ interface SentryLogsModalProps {
 export function SentryLogsModal({
   visible,
   onClose,
-  getSentrySubtitle,
   onBack,
   enableSharedModalDimensions = false,
 }: SentryLogsModalProps) {
@@ -29,8 +28,6 @@ export function SentryLogsModal({
   const [showFilterView, setShowFilterView] = useState(false);
 
   if (!visible) return null;
-
-  const subtitle = getSentrySubtitle();
 
   // Handle back navigation - back to list from detail/filter view or back to main menu
   const handleBackPress = () => {
@@ -64,8 +61,8 @@ export function SentryLogsModal({
         {selectedEntry
           ? "Event Details"
           : showFilterView
-          ? "Filters"
-          : "Sentry Logs"}
+            ? "Filters"
+            : "Sentry Logs"}
       </Text>
     </View>
   );

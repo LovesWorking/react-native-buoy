@@ -1,8 +1,6 @@
 import { Mutation } from "@tanstack/react-query";
 import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 import { CheckCircle, LoadingCircle, PauseCircle, XCircle } from "./svgs";
-import { getMutationStatusColors } from "../_util/mutationStatusToColorClass";
-import { displayValue } from "./displayValue";
 
 const getMutationText = (mutation: Mutation) => {
   if (!mutation.options.mutationKey) return "Anonymous Mutation";
@@ -31,10 +29,6 @@ export default function MutationButton({
 }: Props) {
   const submittedAt = new Date(mutation.state.submittedAt).toLocaleTimeString();
 
-  const { backgroundColor, textColor } = getMutationStatusColors({
-    isPaused: mutation.state.isPaused,
-    status: mutation.state.status,
-  });
   const getStatusInfo = () => {
     if (mutation.state.isPaused) {
       return { status: "Paused", color: "#8B5CF6", icon: <PauseCircle /> };

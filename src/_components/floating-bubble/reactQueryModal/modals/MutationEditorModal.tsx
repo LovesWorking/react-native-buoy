@@ -3,7 +3,6 @@ import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 import { useGetMutationById } from "../../../_hooks/useSelectedMutation";
 import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
 import { MutationEditorMode } from "../../admin/components/MutationEditorMode";
-import { useState } from "react";
 
 interface MutationEditorModalProps {
   visible: boolean;
@@ -21,17 +20,10 @@ export function MutationEditorModal({
   selectedMutationId,
   onMutationSelect,
   onClose,
-  activeFilter: externalActiveFilter,
-  onFilterChange: externalOnFilterChange,
   onTabChange,
   enableSharedModalDimensions = false,
 }: MutationEditorModalProps) {
   const selectedMutation = useGetMutationById(selectedMutationId);
-  const [internalActiveFilter, setInternalActiveFilter] = useState<
-    string | null
-  >(null);
-  const activeFilter = externalActiveFilter ?? internalActiveFilter;
-  const setActiveFilter = externalOnFilterChange ?? setInternalActiveFilter;
 
   const renderHeaderContent = () => (
     <ReactQueryModalHeader

@@ -2,7 +2,6 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Query } from "@tanstack/react-query";
 import { BackButton } from "../admin/components/BackButton";
 import { Mutation } from "@tanstack/react-query";
-import { displayValue } from "../../devtools/displayValue";
 
 interface ReactQueryModalHeaderProps {
   selectedQuery?: Query;

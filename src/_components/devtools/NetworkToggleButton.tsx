@@ -1,4 +1,4 @@
-import { TouchableOpacity, StyleSheet, View } from "react-native";
+import { TouchableOpacity, StyleSheet } from "react-native";
 import { Svg, Path } from "react-native-svg";
 
 interface NetworkToggleButtonProps {

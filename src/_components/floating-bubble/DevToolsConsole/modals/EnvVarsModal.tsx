@@ -8,7 +8,7 @@ interface EnvVarsModalProps {
   visible: boolean;
   onClose: () => void;
   requiredEnvVars: RequiredEnvVar[];
-  envVarsSubtitle: string;
+  _envVarsSubtitle: string;
   onBack?: () => void;
   enableSharedModalDimensions?: boolean;
 }
@@ -21,7 +21,7 @@ export function EnvVarsModal({
   visible,
   onClose,
   requiredEnvVars,
-  envVarsSubtitle,
+  _envVarsSubtitle,
   onBack,
   enableSharedModalDimensions = false,
 }: EnvVarsModalProps) {

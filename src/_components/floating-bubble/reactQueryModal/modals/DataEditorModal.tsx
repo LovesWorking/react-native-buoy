@@ -3,7 +3,6 @@ import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 import { useGetQueryByQueryKey } from "../../../_hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
 import { DataEditorMode } from "../../admin/components/DataEditorMode";
-import { useState } from "react";
 
 interface DataEditorModalProps {
   visible: boolean;
@@ -25,18 +24,10 @@ export function DataEditorModal({
   selectedQueryKey,
   onQuerySelect,
   onClose,
-  activeFilter: externalActiveFilter,
-  onFilterChange: externalOnFilterChange,
   enableSharedModalDimensions = false,
   onTabChange,
 }: DataEditorModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
-  // Use external filter state if provided (for persistence), otherwise use internal state
-  const [internalActiveFilter, setInternalActiveFilter] = useState<
-    string | null
-  >(null);
-  const activeFilter = externalActiveFilter ?? internalActiveFilter;
-  const setActiveFilter = externalOnFilterChange ?? setInternalActiveFilter;
 
   const renderHeaderContent = () => (
     <ReactQueryModalHeader

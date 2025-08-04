@@ -13,7 +13,7 @@ const MutationStatusCount: React.FC<MutationStatusCountProps> = ({
   activeFilter,
   onFilterChange,
 }) => {
-  const { pending, success, error, paused, idle } = useMutationStatusCounts();
+  const { pending, success, error, paused } = useMutationStatusCounts();
 
   const [isScrolling, setIsScrolling] = useState(false);
   const touchStartX = useRef(0);

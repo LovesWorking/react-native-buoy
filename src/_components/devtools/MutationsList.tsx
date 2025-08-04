@@ -7,8 +7,6 @@ import {
   PanResponder,
   Animated,
   Dimensions,
-  StyleProp,
-  ViewStyle,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { Mutation } from "@tanstack/react-query";
@@ -18,9 +16,9 @@ import useAllMutations from "../_hooks/useAllMutations";
 import { ContentStyle } from "@shopify/flash-list";
 
 interface Props {
-  selectedMutation: Mutation<any, any, any, any> | undefined;
+  selectedMutation: Mutation | undefined;
   setSelectedMutation: React.Dispatch<
-    React.SetStateAction<Mutation<any, any, any, any> | undefined>
+    React.SetStateAction<Mutation | undefined>
   >;
   activeFilter?: string | null;
   hideInfoPanel?: boolean;
@@ -37,7 +35,7 @@ export default function MutationsList({
   const { mutations: allmutations } = useAllMutations();
 
   // Helper function to get mutation status for filtering
-  const getMutationStatus = (mutation: Mutation<any, any, any, any>) => {
+  const getMutationStatus = (mutation: Mutation) => {
     if (mutation.state.isPaused) return "paused";
     const status = mutation.state.status;
     return status; // 'idle', 'pending', 'success', 'error'
@@ -62,7 +60,7 @@ export default function MutationsList({
   const maxInfoHeight = screenHeight * 0.7; // 70% of screen height
 
   const infoHeightAnim = useRef(new Animated.Value(defaultInfoHeight)).current;
-  const [currentInfoHeight, setCurrentInfoHeight] = useState(defaultInfoHeight);
+  const [, setCurrentInfoHeight] = useState(defaultInfoHeight);
   const currentInfoHeightRef = useRef(defaultInfoHeight);
 
   // Pan responder for dragging the mutation information panel
@@ -115,7 +113,7 @@ export default function MutationsList({
     })
   ).current;
 
-  const renderMutation = ({ item }: { item: Mutation<any, any, any, any> }) => (
+  const renderMutation = ({ item }: { item: Mutation }) => (
     <MutationButton
       selected={selectedMutation}
       setSelectedMutation={setSelectedMutation}

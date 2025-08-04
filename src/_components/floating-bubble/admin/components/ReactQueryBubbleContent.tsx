@@ -29,7 +29,6 @@ interface RnBetterDevToolsBubbleContentProps {
 export function RnBetterDevToolsBubbleContent({
   environment,
   userRole,
-  isOnline,
   isDragging,
   selectedQuery,
   onEnvironmentLayout,
@@ -37,7 +36,6 @@ export function RnBetterDevToolsBubbleContent({
   onQueryLayout,
   onStatusPress,
   onQueryPress,
-  onWifiToggle,
 }: RnBetterDevToolsBubbleContentProps) {
   const contentLayout = useAnimatedStyle(() => {
     return {
@@ -77,7 +75,7 @@ export function RnBetterDevToolsBubbleContent({
             ●
           </Text>
         );
-      } catch (err) {
+      } catch {
         return <TanstackLogo />;
       }
     }

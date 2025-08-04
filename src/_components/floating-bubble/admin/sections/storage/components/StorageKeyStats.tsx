@@ -2,7 +2,6 @@ import { View, Text, StyleSheet } from "react-native";
 import {
   AlertCircle,
   CheckCircle2,
-  Settings,
   XCircle,
   Eye,
   HardDrive,
@@ -10,7 +9,10 @@ import {
   Shield,
 } from "lucide-react-native";
 import { StorageKeyStats } from "../types";
-import { getStorageTypeHexColor } from "../../../../../_util/storageQueryUtils";
+import {
+  getStorageTypeHexColor,
+  StorageType,
+} from "../../../../../_util/storageQueryUtils";
 
 interface StorageKeyStatsProps {
   stats: StorageKeyStats;
@@ -98,7 +100,6 @@ const storageTypeData = [
 export function StorageKeyStatsSection({ stats }: StorageKeyStatsProps) {
   const {
     totalCount,
-    requiredCount,
     missingCount,
     wrongValueCount,
     wrongTypeCount,
@@ -108,12 +109,6 @@ export function StorageKeyStatsSection({ stats }: StorageKeyStatsProps) {
     asyncCount,
     secureCount,
   } = stats;
-
-  const totalIssues = missingCount + wrongValueCount + wrongTypeCount;
-  const healthScore =
-    requiredCount > 0
-      ? Math.round((presentRequiredCount / requiredCount) * 100)
-      : 100;
 
   // If no storage keys at all, show minimal stats
   if (totalCount === 0) {
@@ -233,7 +228,9 @@ export function StorageKeyStatsSection({ stats }: StorageKeyStatsProps) {
               const percentage =
                 totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : "0";
               const IconComponent = item.icon;
-              const storageColor = getStorageTypeHexColor(item.key as any);
+              const storageColor = getStorageTypeHexColor(
+                item.key as StorageType
+              );
 
               return (
                 <View key={item.key} style={styles.breakdownItem}>

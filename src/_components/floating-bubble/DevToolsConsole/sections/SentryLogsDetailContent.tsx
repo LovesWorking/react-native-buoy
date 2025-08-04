@@ -1,12 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ScrollView as RNScrollView,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -117,17 +110,6 @@ export function SentryLogsDetailContent({
     onSelectEntry(null);
   };
 
-  const scrollToBottom = () => {
-    if (flatListRef.current && filteredEntries.length > 0) {
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToIndex({
-          index: 0,
-          animated: true,
-        });
-      });
-    }
-  };
-
   const toggleTypeFilter = (type: LogType) => {
     setSelectedTypes((prev) => {
       const newSet = new Set(prev);
@@ -169,7 +151,7 @@ export function SentryLogsDetailContent({
     return (
       <SentryEventDetailView
         entry={externalSelectedEntry}
-        onBack={goBackToList}
+        _onBack={goBackToList}
       />
     );
   }
@@ -178,12 +160,12 @@ export function SentryLogsDetailContent({
   if (showFilterView) {
     return (
       <SentryFilterView
-        entries={filteredEntries}
+        _entries={filteredEntries}
         selectedTypes={selectedTypes}
         selectedLevels={selectedLevels}
         onToggleTypeFilter={toggleTypeFilter}
         onToggleLevelFilter={toggleLevelFilter}
-        onBack={() => onShowFilterView(false)}
+        _onBack={() => onShowFilterView(false)}
       />
     );
   }

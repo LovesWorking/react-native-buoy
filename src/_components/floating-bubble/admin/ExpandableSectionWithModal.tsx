@@ -110,8 +110,8 @@ export function ExpandableSectionWithModal({
                   paddingTop: fullScreen
                     ? insets.top
                     : showModalHeader
-                    ? insets.top
-                    : 0,
+                      ? insets.top
+                      : 0,
                 },
               ]}
             >

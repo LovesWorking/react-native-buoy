@@ -55,7 +55,7 @@ export function useModalManager() {
             try {
               const queryKey = JSON.parse(savedState.selectedQueryKey);
               setSelectedQueryKey(queryKey);
-            } catch (error) {
+            } catch {
               // Silently fail if query key can't be parsed
             }
           }
@@ -80,12 +80,12 @@ export function useModalManager() {
                 savedState.activeStorageTypes
               ) as StorageType[];
               setActiveStorageTypes(new Set(storageTypesArray));
-            } catch (error) {
+            } catch {
               // Silently fail if storage types can't be parsed, use default
             }
           }
         }
-      } catch (error) {
+      } catch {
         // Silently fail if state can't be restored
       } finally {
         setIsStateRestored(true);

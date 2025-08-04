@@ -1,5 +1,4 @@
 // Safe import for optional Sentry dependency
-const sentryClient: any = null;
 let getSentryClient: (() => any) | null = null;
 let userProvidedGetClient: (() => any) | null = null;
 
@@ -7,7 +6,7 @@ try {
   // Dynamic import to avoid bundling if not installed
   const sentry = require("@sentry/react-native");
   getSentryClient = sentry.getClient;
-} catch (error) {
+} catch {
   // Sentry not installed - will gracefully degrade
   getSentryClient = null;
 }
@@ -971,7 +970,7 @@ export function generateTestSentryEvents(): void {
 
     // COMPREHENSIVE DATA EXPLORER TEST EVENT - Shows ALL supported data types
     (() => {
-      const testEventData: any = {
+      const testEventData: SentryEventEntry = {
         id: generateId(),
         timestamp: now - 100,
         source: "envelope",
@@ -1243,7 +1242,7 @@ export function generateTestSentryEvents(): void {
       // Add circular references to test circular detection in main data
       testEventData.data.circularSelf = testEventData.data;
       testEventData.data.circularParent = testEventData;
-      testEventData.data.deeplyNested.circularRef = testEventData.data;
+      (testEventData.data as any).deeplyNested.circularRef = testEventData.data;
 
       return testEventData;
     })(),

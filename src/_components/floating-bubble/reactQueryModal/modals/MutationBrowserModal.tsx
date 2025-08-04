@@ -6,12 +6,8 @@ import { MutationBrowserMode } from "../../admin/components/MutationBrowserMode"
 import { MutationBrowserFooter } from "../components/MutationBrowserFooter";
 import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
 import { ReactQueryModalHeader } from "../ReactQueryModalHeader";
-import { View, Dimensions } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
+import { View } from "react-native";
+import { useSharedValue, withSpring } from "react-native-reanimated";
 import { SwipeIndicator } from "../components/SwipeIndicator";
 import { useModalState } from "../../admin/hooks";
 
@@ -51,7 +47,6 @@ export function MutationBrowserModal({
 
   // Shared values for gesture tracking [[memory:4875251]]
   const translationX = useSharedValue(0);
-  const screenWidth = Dimensions.get("window").width;
 
   const handleSwipeNavigation = useCallback(
     (direction: "left" | "right") => {

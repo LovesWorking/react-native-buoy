@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import isEqual from "fast-deep-equal";
 import { ConsoleTransportEntry, LogLevel, LogType } from "../logger/types";
-import { SentryEventEntry } from "../../sentry/sentryEventListeners";
+
 import { reactiveSentryEventStore } from "../../sentry/sentryEventStore";
 import { adaptSentryEventsToConsoleEntries } from "../sections/log-dump/SentryEventAdapter";
 
@@ -21,7 +21,7 @@ export function useSentryEvents(options: UseSentryEventsOptions = {}) {
   const [entries, setEntries] = useState<ConsoleTransportEntry[]>([]);
 
   // Ref to track previous state for comparison
-  const entriesRef = useRef<any[]>([]);
+  const entriesRef = useRef<unknown[]>([]);
 
   // Calculate and filter entries - memoized to avoid recreation
   const calculateEntries = useMemo(
@@ -116,16 +116,22 @@ export function useSentryEventCounts() {
       const adaptedEntries = adaptSentryEventsToConsoleEntries(events);
 
       // Count by type
-      const byType = adaptedEntries.reduce((acc, entry) => {
-        acc[entry.type] = (acc[entry.type] || 0) + 1;
-        return acc;
-      }, {} as Record<LogType, number>);
+      const byType = adaptedEntries.reduce(
+        (acc, entry) => {
+          acc[entry.type] = (acc[entry.type] || 0) + 1;
+          return acc;
+        },
+        {} as Record<LogType, number>
+      );
 
       // Count by level
-      const byLevel = adaptedEntries.reduce((acc, entry) => {
-        acc[entry.level] = (acc[entry.level] || 0) + 1;
-        return acc;
-      }, {} as Record<LogLevel, number>);
+      const byLevel = adaptedEntries.reduce(
+        (acc, entry) => {
+          acc[entry.level] = (acc[entry.level] || 0) + 1;
+          return acc;
+        },
+        {} as Record<LogLevel, number>
+      );
 
       setCounts({ byType, byLevel });
     };

@@ -7,7 +7,6 @@ import {
   ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft } from "lucide-react-native";
 
 import { ConsoleTransportEntry } from "../../admin/logger/types";
 import { DataViewer } from "../../../_shared/components/DataViewer";
@@ -27,7 +26,7 @@ type TabType = "message" | "eventData" | "rawData" | "debugInfo";
 
 interface SentryEventDetailViewProps {
   entry: ConsoleTransportEntry;
-  onBack: () => void;
+  _onBack: () => void;
 }
 
 /**
@@ -36,7 +35,7 @@ interface SentryEventDetailViewProps {
  */
 export function SentryEventDetailView({
   entry,
-  onBack,
+  _onBack,
 }: SentryEventDetailViewProps) {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>("message");

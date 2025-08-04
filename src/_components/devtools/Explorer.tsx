@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
-import { Check, CopiedCopier, Copier, ErrorCopier, List, Trash } from "./svgs";
+import { CopiedCopier, Copier, ErrorCopier, List, Trash } from "./svgs";
 import { updateNestedDataByPath } from "../_util/updateNestedDataByPath";
 import { displayValue } from "./displayValue";
 import deleteItem from "../_util/actions/deleteItem";
@@ -18,7 +18,7 @@ import { useCopy } from "../../context/CopyContext";
 // Stable constants to prevent re-renders [[memory:4875251]]
 const CHUNK_SIZE = 100;
 const HIT_SLOP_OPTIMIZED = { top: 8, bottom: 8, left: 8, right: 8 };
-const BUTTON_SIZE = 24;
+
 const EXPANDER_SIZE = 16;
 
 function isIterable(x: any): x is Iterable<unknown> {
@@ -98,8 +98,8 @@ const CopyButton = React.memo(({ value }: { value: any }) => {
         copyState === "NoCopy"
           ? "Copy object to clipboard"
           : copyState === "SuccessCopy"
-          ? "Object copied to clipboard"
-          : "Error copying object to clipboard"
+            ? "Object copied to clipboard"
+            : "Error copying object to clipboard"
       }
       onPress={copyState === "NoCopy" ? handleCopy : undefined}
       hitSlop={HIT_SLOP_OPTIMIZED}

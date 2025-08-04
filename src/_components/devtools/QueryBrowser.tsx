@@ -92,7 +92,7 @@ export default function QueryBrowser({
         contentContainerStyle={contentContainerStyle || styles.listContent}
         showsVerticalScrollIndicator
         removeClippedSubviews
-        overrideItemLayout={(layout, item) => {
+        overrideItemLayout={(layout, _item) => {
           layout.size = ESTIMATED_ITEM_SIZE;
         }}
         drawDistance={200}

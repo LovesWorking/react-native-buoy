@@ -4,7 +4,7 @@ import { displayValue } from "./displayValue";
 import MutationDetailsChips from "./MutationDetailsChips";
 
 interface Props {
-  selectedMutation: Mutation<any, any, any, any> | undefined;
+  selectedMutation: Mutation | undefined;
 }
 
 export default function MutationDetails({ selectedMutation }: Props) {

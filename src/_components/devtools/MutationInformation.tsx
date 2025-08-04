@@ -4,7 +4,7 @@ import { ScrollView, Text, View, StyleSheet } from "react-native";
 import MutationDetails from "./MutationDetails";
 
 interface Props {
-  selectedMutation: Mutation<any, any, any, any> | undefined;
+  selectedMutation: Mutation | undefined;
 }
 
 export default function MutationInformation({ selectedMutation }: Props) {

@@ -15,7 +15,6 @@ import {
 import { type BubbleConfig } from "../admin/components/RnBetterDevToolsBubbleContent";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
 import { ReactQueryModal } from "../reactQueryModal/ReactQueryModal";
-import { StorageType } from "../../_util/storageQueryUtils";
 import { DevToolsConsole } from "../DevToolsConsole";
 
 interface RnBetterDevToolsBubbleProps {

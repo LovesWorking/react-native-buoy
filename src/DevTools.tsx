@@ -31,7 +31,7 @@ export default function DevTools({
     undefined
   );
   const [selectedMutation, setSelectedMutation] = useState<
-    Mutation<any, any, any, any> | undefined
+    Mutation | undefined
   >(undefined);
   const [isOffline, setIsOffline] = useState(!onlineManager.isOnline());
 

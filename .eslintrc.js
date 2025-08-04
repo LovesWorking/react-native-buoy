@@ -28,7 +28,7 @@ module.exports = {
 
     // General
     "prefer-arrow-callback": ["warn", { allowNamedFunctions: true }],
-    "no-console": "warn",
+    // "no-console": "warn",
   },
   overrides: [
     {

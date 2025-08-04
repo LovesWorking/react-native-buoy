@@ -55,7 +55,7 @@ export function BaseFloatingModal({
   });
 
   // Event handlers for drag/resize operations
-  const handleDragEnd = (dimensions: any) => {
+  const handleDragEnd = (dimensions: PanelDimensions) => {
     const newDimensions: PanelDimensions = {
       ...modalState.panelDimensions,
       top: dimensions.top,
@@ -65,7 +65,7 @@ export function BaseFloatingModal({
     modalState.setIsDragging(false);
   };
 
-  const handleResizeEnd = (dimensions: any) => {
+  const handleResizeEnd = (dimensions: PanelDimensions) => {
     modalState.updatePanelDimensions(dimensions);
     modalState.setIsResizing(false);
   };

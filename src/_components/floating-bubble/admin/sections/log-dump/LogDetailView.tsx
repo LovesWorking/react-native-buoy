@@ -19,11 +19,9 @@ const DataExplorerModal = ({
 }: {
   title: string;
   description: string;
-  data: any;
+  data: unknown;
   onBack: () => void;
 }) => {
-  const insets = useSafeAreaInsets();
-
   return (
     <View style={styles.modalContainer}>
       {/* Header */}

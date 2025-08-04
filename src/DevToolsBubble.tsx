@@ -38,9 +38,7 @@ export function DevToolsBubble({
   const heightAnim = useRef(
     new Animated.Value(hasSelection ? expandedHeight : defaultHeight)
   ).current;
-  const [currentHeight, setCurrentHeight] = useState(
-    hasSelection ? expandedHeight : defaultHeight
-  );
+
   const currentHeightRef = useRef(
     hasSelection ? expandedHeight : defaultHeight
   );
@@ -48,7 +46,6 @@ export function DevToolsBubble({
   // Update height when selection changes
   React.useEffect(() => {
     const targetHeight = hasSelection ? expandedHeight : defaultHeight;
-    setCurrentHeight(targetHeight);
     currentHeightRef.current = targetHeight;
     Animated.timing(heightAnim, {
       toValue: targetHeight,
@@ -70,12 +67,11 @@ export function DevToolsBubble({
       onPanResponderGrant: () => {
         // Stop any ongoing animations and sync the ref with current animated value
         heightAnim.stopAnimation((value) => {
-          setCurrentHeight(value);
           currentHeightRef.current = value;
           heightAnim.setValue(value);
         });
       },
-      onPanResponderMove: (evt, gestureState) => {
+      onPanResponderMove: (_evt, gestureState) => {
         // Use the ref value which is always current
         const newHeight = currentHeightRef.current - gestureState.dy;
 
@@ -94,7 +90,6 @@ export function DevToolsBubble({
         );
 
         // Update both state and ref immediately
-        setCurrentHeight(finalHeight);
         currentHeightRef.current = finalHeight;
 
         // Animate to the final height and ensure sync
@@ -105,7 +100,6 @@ export function DevToolsBubble({
         }).start(() => {
           // Ensure the animated value and state are perfectly synced after animation
           heightAnim.setValue(finalHeight);
-          setCurrentHeight(finalHeight);
           currentHeightRef.current = finalHeight;
         });
       },

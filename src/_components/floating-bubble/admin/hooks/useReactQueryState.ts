@@ -10,7 +10,7 @@ export function useReactQueryState(queryClient: QueryClient) {
       const allQueries = queryClient.getQueryCache().getAll();
       const allMutations = queryClient.getMutationCache().getAll();
       return `${allQueries.length} queries • ${allMutations.length} mutations`;
-    } catch (error) {
+    } catch {
       return "Data management & cache inspector";
     }
   };

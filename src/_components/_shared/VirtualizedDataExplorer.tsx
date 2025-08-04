@@ -20,7 +20,6 @@ import { useCopy } from "../../context/CopyContext";
 import { displayValue } from "../devtools/displayValue";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
-const STABLE_EMPTY_ARRAY: any[] = [];
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
 const ITEM_HEIGHT = 24; // Fixed height for better performance - reduced for tighter spacing
 const LONG_ITEM_HEIGHT = 36; // Height for items with long keys - reduced for tighter spacing
@@ -57,20 +56,6 @@ const TYPE_COLOR_CACHE = new Map([
   ["map", "#06B6D4"], // Teal for maps (distinct from object/array)
   ["set", "#84CC16"], // Lime for sets (distinct from map/array/object)
   ["circular", "#F59E0B"], // Amber for circular references
-]);
-
-// Stable type icon cache [[memory:4875251]]
-const TYPE_ICON_CACHE = new Map([
-  ["string", "Aa"],
-  ["number", "123"],
-  ["boolean", "bool"],
-  ["null", "null"],
-  ["undefined", "?"],
-  ["function", "f()"],
-  ["array", "[]"],
-  ["object", "{}"],
-  ["map", "Map"],
-  ["set", "Set"],
 ]);
 
 // Pre-computed stable styles with React Query-inspired design
@@ -344,11 +329,6 @@ const getTypeColor = (valueType: string): string => {
   return TYPE_COLOR_CACHE.get(valueType) || "#10B981";
 };
 
-// Optimized type icon lookup using cache [[memory:4875251]]
-const getTypeIcon = (valueType: string): string => {
-  return TYPE_ICON_CACHE.get(valueType) || "○";
-};
-
 // Memoized components for performance
 const Expander = React.memo(
   ({ expanded, onPress }: { expanded: boolean; onPress: () => void }) => (
@@ -447,8 +427,8 @@ const CopyButton = React.memo(({ value }: { value: any }) => {
           copyState === "SuccessCopy"
             ? "#22C55E"
             : copyState === "ErrorCopy"
-            ? "#EF4444"
-            : "#9CA3AF"
+              ? "#EF4444"
+              : "#9CA3AF"
         }
       />
     </TouchableOpacity>
@@ -463,7 +443,6 @@ const useDataFlattening = (data: any, maxDepth = 10) => {
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const circularCache = useRef(new WeakSet());
-  const processingQueue = useRef<Array<() => void>>([]);
 
   const flattenData = useCallback(
     (
