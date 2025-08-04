@@ -1,16 +1,20 @@
+import { EnvVarType } from "./types";
+
 /**
  * Detects the type of an environment variable value
  * First checks if useDynamicEnv already parsed it to the correct type,
  * then analyzes string content to detect what type it represents
+ * 
+ * @returns One of: "string", "number", "boolean", "array", "object"
  */
-export function getEnvVarType(value: unknown): string {
+export function getEnvVarType(value: unknown): EnvVarType | "unknown" {
   // Check the actual parsed value type from useDynamicEnv
   const type = typeof value;
 
-  if (type === "boolean") return "BOOLEAN";
-  if (type === "number") return "NUMBER";
-  if (Array.isArray(value)) return "ARRAY";
-  if (type === "object" && value !== null) return "OBJECT";
+  if (type === "boolean") return "boolean";
+  if (type === "number") return "number";
+  if (Array.isArray(value)) return "array";
+  if (type === "object" && value !== null) return "object";
 
   // For strings, check if they look like other types
   if (type === "string") {
@@ -23,9 +27,9 @@ export function getEnvVarType(value: unknown): string {
     ) {
       try {
         const parsed = JSON.parse(strValue);
-        return Array.isArray(parsed) ? "ARRAY" : "OBJECT";
+        return Array.isArray(parsed) ? "array" : "object";
       } catch {
-        return "STRING";
+        return "string";
       }
     }
 
@@ -34,21 +38,21 @@ export function getEnvVarType(value: unknown): string {
       strValue.toLowerCase() === "true" ||
       strValue.toLowerCase() === "false"
     ) {
-      return "BOOLEAN";
+      return "boolean";
     }
 
     // Check if it's a number string
     if (!isNaN(Number(strValue)) && strValue.trim() !== "") {
-      return "NUMBER";
+      return "number";
     }
 
     // Check if it's a comma-separated array
     if (strValue.includes(",")) {
-      return "ARRAY";
+      return "array";
     }
 
-    return "STRING";
+    return "string";
   }
 
-  return "UNKNOWN";
+  return "unknown";
 }

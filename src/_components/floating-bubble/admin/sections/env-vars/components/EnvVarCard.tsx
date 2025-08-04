@@ -20,7 +20,7 @@ const getStatusConfig = (status: EnvVarInfo["status"]) => {
         color: "#10B981",
         bgColor: "rgba(16, 185, 129, 0.1)",
         borderColor: "rgba(16, 185, 129, 0.2)",
-        label: "REQUIRED",
+        label: "✓ VALID",
         labelColor: "#10B981",
       };
     case "required_missing":
@@ -29,7 +29,7 @@ const getStatusConfig = (status: EnvVarInfo["status"]) => {
         color: "#EF4444",
         bgColor: "rgba(239, 68, 68, 0.1)",
         borderColor: "rgba(239, 68, 68, 0.3)",
-        label: "MISSING",
+        label: "⚠ MISSING",
         labelColor: "#EF4444",
       };
     case "required_wrong_value":
@@ -38,7 +38,7 @@ const getStatusConfig = (status: EnvVarInfo["status"]) => {
         color: "#F97316",
         bgColor: "rgba(249, 115, 22, 0.1)",
         borderColor: "rgba(249, 115, 22, 0.3)",
-        label: "WRONG VALUE",
+        label: "⚠ WRONG VALUE",
         labelColor: "#F97316",
       };
     case "required_wrong_type":
@@ -47,7 +47,7 @@ const getStatusConfig = (status: EnvVarInfo["status"]) => {
         color: "#0891B2",
         bgColor: "rgba(8, 145, 178, 0.1)",
         borderColor: "rgba(8, 145, 178, 0.3)",
-        label: "WRONG TYPE",
+        label: "⚠ WRONG TYPE",
         labelColor: "#0891B2",
       };
     case "optional_present":
@@ -83,6 +83,7 @@ export function EnvVarCard({ envVar, isExpanded, onToggle }: EnvVarCardProps) {
   const hasValue = envVar.value !== undefined && envVar.value !== null;
   const hasExpectedValue = envVar.expectedValue !== undefined;
   const hasExpectedType = envVar.expectedType !== undefined;
+  const hasDescription = envVar.description !== undefined;
 
   return (
     <View style={[styles.envVarCard, { borderColor: config.borderColor }]}>
@@ -102,6 +103,9 @@ export function EnvVarCard({ envVar, isExpanded, onToggle }: EnvVarCardProps) {
           </View>
           <View style={styles.cardHeaderInfo}>
             <Text style={styles.envVarKey}>{envVar.key}</Text>
+            {hasDescription && (
+              <Text style={styles.envVarDescription}>{envVar.description}</Text>
+            )}
             <View style={styles.cardHeaderMeta}>
               <View
                 style={[
@@ -234,6 +238,11 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "500",
     fontSize: 12,
+  },
+  envVarDescription: {
+    color: "#9CA3AF",
+    fontSize: 10,
+    marginTop: 2,
   },
   cardHeaderMeta: {
     flexDirection: "row",

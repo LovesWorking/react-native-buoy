@@ -20,6 +20,10 @@ export const processEnvVars = (
       typeof envVar === "object" && "expectedType" in envVar
         ? envVar.expectedType
         : undefined;
+    const description =
+      typeof envVar === "object" && "description" in envVar
+        ? envVar.description
+        : undefined;
 
     processedKeys.add(key);
     const actualValue = autoCollectedEnvVars[key];
@@ -32,7 +36,7 @@ export const processEnvVars = (
       status = "required_wrong_value";
     } else if (
       expectedType &&
-      getEnvVarType(actualValue) !== expectedType.toUpperCase()
+      getEnvVarType(actualValue).toLowerCase() !== expectedType.toLowerCase()
     ) {
       status = "required_wrong_type";
     } else {
@@ -44,6 +48,7 @@ export const processEnvVars = (
       value: actualValue,
       expectedValue,
       expectedType,
+      description,
       status,
       category: "required",
     });
@@ -123,16 +128,23 @@ export const getSubtitle = (stats: EnvVarStats) => {
     wrongValueCount,
     wrongTypeCount,
     optionalCount,
+    presentRequiredCount,
   } = stats;
   const issueCount = missingCount + wrongValueCount + wrongTypeCount;
 
   if (requiredCount > 0) {
     if (issueCount > 0) {
-      return `${issueCount}/${requiredCount} required issues • ${optionalCount} optional`;
+      // Break down the issues for clarity
+      const issues: string[] = [];
+      if (missingCount > 0) issues.push(`${missingCount} missing`);
+      if (wrongTypeCount > 0) issues.push(`${wrongTypeCount} wrong type`);
+      if (wrongValueCount > 0) issues.push(`${wrongValueCount} wrong value`);
+      
+      return `⚠️ ${issueCount} issue${issueCount > 1 ? 's' : ''}: ${issues.join(', ')}`;
     } else {
-      return `${requiredCount}/${requiredCount} required valid • ${optionalCount} optional`;
+      return `✅ All ${requiredCount} required vars valid${optionalCount > 0 ? ` • ${optionalCount} optional` : ''}`;
     }
   } else {
-    return `${optionalCount} variables found`;
+    return `${optionalCount} variable${optionalCount !== 1 ? 's' : ''} found`;
   }
 };

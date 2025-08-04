@@ -11,9 +11,21 @@ export {
 
 // Types
 export type { SentryEventEntry } from "./_components/floating-bubble/sentry/sentryEventListeners";
-export type { RequiredEnvVar } from "./_components/floating-bubble/admin/sections/env-vars/types";
+export type { 
+  RequiredEnvVar,
+  EnvVarType 
+} from "./_components/floating-bubble/admin/sections/env-vars/types";
 export type {
   Environment,
   UserRole,
   BubbleConfig,
 } from "./_components/floating-bubble/admin/components";
+
+// Environment variable utilities
+export {
+  envVar,
+  createEnvVarConfig,
+  validateEnvVars,
+  hasExpectedValue,
+  hasExpectedType,
+} from "./_components/floating-bubble/admin/sections/env-vars/helpers";
