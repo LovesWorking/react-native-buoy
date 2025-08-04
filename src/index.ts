@@ -1,9 +1,6 @@
 // RN Better DevTools bubble (main component)
 export { RnBetterDevToolsBubble } from "./_components/floating-bubble/bubble/RnBetterDevToolsBubble";
 
-// Legacy DevToolsBubble (deprecated - use RnBetterDevToolsBubble instead)
-export { DevToolsBubble } from "./DevToolsBubble";
-
 // Sentry event logging functionality
 export {
   configureSentryClient,
