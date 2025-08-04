@@ -24,11 +24,11 @@ export {
 } from "../sentry/sentryEventListeners";
 
 // Default sections
-export { EnvVarsSection } from "./sections/EnvVarsSection";
+export { AdminEnvVarsSection as EnvVarsSection } from "../../../_sections/env";
 
 // Utilities for creating custom sections
 export { ExpandableSectionWithModal } from "./ExpandableSectionWithModal";
-export { EnvVarsModalContent } from "./sections/env-vars";
+export { EnvVarsModalContent } from "../../../_sections/env";
 export {
   LogDumpModalContent,
   SentryEventLogDumpModalContent,

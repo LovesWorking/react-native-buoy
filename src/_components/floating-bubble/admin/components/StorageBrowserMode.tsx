@@ -14,7 +14,7 @@ import {
   RequiredStorageKey,
   StorageKeyStats,
 } from "../sections/storage/types";
-import { getEnvVarType } from "../sections/env-vars/envTypeDetector";
+import { getEnvVarType } from "../../../../_sections/env/utils/envTypeDetector";
 
 interface StorageBrowserModeProps {
   selectedQuery: Query | undefined;

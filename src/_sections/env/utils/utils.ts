@@ -1,4 +1,4 @@
-import { EnvVarInfo, RequiredEnvVar, EnvVarStats } from "./types";
+import { EnvVarInfo, RequiredEnvVar, EnvVarStats } from "../types";
 import { getEnvVarType } from "./envTypeDetector";
 
 export const processEnvVars = (

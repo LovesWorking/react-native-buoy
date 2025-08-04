@@ -1,6 +1,6 @@
-import { RequiredEnvVar } from "../admin/sections/env-vars/types";
+import { RequiredEnvVar } from "../../../_sections/env/types";
 import { SentryLogsModal } from "./modals/SentryLogsModal";
-import { EnvVarsModal } from "./modals/EnvVarsModal";
+import { EnvVarsModal } from "../../../_sections/env/components/EnvVarsModal";
 
 // Available section types for navigation
 export type SectionType = "sentry-logs" | "env-vars" | "rn-better-dev-tools";

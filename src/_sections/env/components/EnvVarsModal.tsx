@@ -1,8 +1,8 @@
-import { BaseFloatingModal } from "../../floatingModal/BaseFloatingModal";
-import { EnvVarsDetailContent } from "../sections";
-import { RequiredEnvVar } from "../../admin/sections/env-vars/types";
+import { BaseFloatingModal } from "../../../_components/floating-bubble/floatingModal/BaseFloatingModal";
+import { EnvVarsDetailContent } from "./EnvVarsSection";
+import { RequiredEnvVar } from "../types";
 import { View, Text } from "react-native";
-import { BackButton } from "../../admin/components/BackButton";
+import { BackButton } from "../../../_components/floating-bubble/admin/components/BackButton";
 
 interface EnvVarsModalProps {
   visible: boolean;

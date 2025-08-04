@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RequiredEnvVar } from "../admin/sections/env-vars/types";
+import { RequiredEnvVar } from "../../../_sections/env/types";
 import { DevToolsModalRouter, SectionType } from "./DevToolsModalRouter";
 import { DevToolsSectionListModal } from "./DevToolsSectionListModal";
 

@@ -1,4 +1,4 @@
-import { EnvVarType } from "./types";
+import { EnvVarType } from "../types";
 
 /**
  * Detects the type of an environment variable value

@@ -16,7 +16,7 @@ import {
   XCircle,
 } from "lucide-react-native";
 
-import { useDynamicEnv } from "../../hooks";
+import { useDynamicEnv } from "../hooks";
 
 interface EnvVarsModalContentProps {
   onClose: () => void;

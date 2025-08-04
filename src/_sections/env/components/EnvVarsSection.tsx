@@ -1,7 +1,8 @@
 import { ScrollView } from "react-native";
 import { Settings } from "lucide-react-native";
-import { ConsoleSection } from "../ConsoleSection";
-import { EnvVarsContent, RequiredEnvVar } from "../../admin/sections/env-vars";
+import { ConsoleSection } from "../../../_components/floating-bubble/DevToolsConsole/ConsoleSection";
+import { EnvVarsContent } from "./EnvVarsContent";
+import { RequiredEnvVar } from "../types";
 
 interface EnvVarsSectionProps {
   onPress: () => void;

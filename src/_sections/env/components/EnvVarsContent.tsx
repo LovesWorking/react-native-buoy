@@ -1,15 +1,14 @@
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { useDynamicEnv } from "../../hooks";
-import {
-  RequiredEnvVar,
+import { useDynamicEnv } from "../hooks";
+import { RequiredEnvVar } from "../types";
+import { 
   processEnvVars,
   calculateStats,
   getSubtitle,
-  EnvVarStatsSection,
-  EnvVarSection,
-} from "./";
+} from "../utils";
+import { EnvVarStatsSection, EnvVarSection } from "./";
 
 interface EnvVarsContentProps {
   requiredEnvVars?: RequiredEnvVar[];

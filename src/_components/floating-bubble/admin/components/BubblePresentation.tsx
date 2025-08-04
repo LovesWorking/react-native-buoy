@@ -5,7 +5,7 @@ import {
   RnBetterDevToolsBubbleContent,
   type BubbleConfig,
 } from "./RnBetterDevToolsBubbleContent";
-import { type Environment } from "../../bubble/EnvironmentIndicator";
+import { type Environment } from "../../../../_sections/env";
 import { type UserRole } from "./UserStatus";
 import { useDynamicBubbleWidth } from "../hooks/useDynamicBubbleWidth";
 import { useDragGesture } from "../hooks/useDragGesture";

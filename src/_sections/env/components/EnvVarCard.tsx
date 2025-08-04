@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AlertCircle, CheckCircle2, Eye, XCircle } from "lucide-react-native";
 import { EnvVarInfo } from "../types";
-import { getEnvVarType } from "../envTypeDetector";
+import { getEnvVarType } from "../utils/envTypeDetector";
 
 // Stable constants moved to module scope to prevent re-renders
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };

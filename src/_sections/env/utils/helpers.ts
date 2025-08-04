@@ -1,4 +1,4 @@
-import { RequiredEnvVar, EnvVarType } from "./types";
+import { RequiredEnvVar, EnvVarType } from "../types";
 
 /**
  * Helper to create a required env var configuration with type checking

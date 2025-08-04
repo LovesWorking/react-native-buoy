@@ -8,7 +8,7 @@ import { WifiToggle } from "./WifiToggle";
 import {
   type Environment,
   EnvironmentIndicator,
-} from "../../bubble/EnvironmentIndicator";
+} from "../../../../_sections/env";
 import { type UserRole, UserStatus } from "./UserStatus";
 import { getQueryStatusColor } from "../../../_util/getQueryStatusColor";
 

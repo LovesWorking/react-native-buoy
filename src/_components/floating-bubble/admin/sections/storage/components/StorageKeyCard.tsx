@@ -13,7 +13,7 @@ import {
   getStorageTypeLabel,
   getStorageTypeHexColor,
 } from "../../../../../_util/storageQueryUtils";
-import { getEnvVarType } from "../../../sections/env-vars/envTypeDetector";
+import { getEnvVarType } from "../../../../../../_sections/env/utils/envTypeDetector";
 import { DataViewer } from "../../../../../_shared/components/DataViewer";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]

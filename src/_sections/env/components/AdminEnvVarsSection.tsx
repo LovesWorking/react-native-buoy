@@ -3,15 +3,10 @@ import { StyleSheet, Text, View } from "react-native";
 import { Settings } from "lucide-react-native";
 
 import { useDynamicEnv } from "../hooks";
-import {
-  RequiredEnvVar,
-  processEnvVars,
-  calculateStats,
-  getSubtitle,
-  EnvVarStatsSection,
-  EnvVarSection,
-} from "./env-vars";
-import { ExpandableSection } from "./ExpandableSection";
+import { RequiredEnvVar } from "../types";
+import { processEnvVars, calculateStats, getSubtitle } from "../utils";
+import { EnvVarStatsSection, EnvVarSection } from "./";
+import { ExpandableSection } from "../../../_components/floating-bubble/admin/sections/ExpandableSection";
 
 interface EnvVarsSectionProps {
   requiredEnvVars?: RequiredEnvVar[]; // Can be strings or objects with expected values

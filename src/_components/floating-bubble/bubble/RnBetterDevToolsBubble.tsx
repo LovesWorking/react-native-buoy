@@ -4,18 +4,19 @@ import {
   useReactQueryState,
   useModalManager,
 } from "../admin/hooks";
-import { RequiredEnvVar, useEnvVarsSubtitle } from "../admin/sections/env-vars";
+import { RequiredEnvVar, useEnvVarsSubtitle } from "../../../_sections/env";
 import {
-  Environment,
   UserRole,
   BubblePresentation,
 } from "../admin/components";
+import type { Environment } from "../../../_sections/env";
 import { ErrorBoundary } from "../admin/components/ErrorBoundary";
 import { ReactQueryModal } from "../reactQueryModal/ReactQueryModal";
 import { DevToolsConsole } from "../DevToolsConsole";
 
 // Re-export types that developers will need
-export type { Environment, UserRole, RequiredEnvVar };
+export type { UserRole } from "../admin/components";
+export type { Environment, RequiredEnvVar } from "../../../_sections/env";
 
 /**
  * Props for the RnBetterDevToolsBubble component

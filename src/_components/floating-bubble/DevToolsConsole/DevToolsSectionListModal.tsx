@@ -1,11 +1,8 @@
 import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
-import { RequiredEnvVar } from "../admin/sections/env-vars/types";
+import { RequiredEnvVar } from "../../../_sections/env/types";
 import { ConsoleSectionList } from "./ConsoleSectionList";
-import {
-  SentryLogsSection,
-  EnvVarsSection,
-  ReactQuerySection,
-} from "./sections";
+import { SentryLogsSection, ReactQuerySection } from "./sections";
+import { EnvVarsSection } from "../../../_sections/env";
 import { SectionType } from "./DevToolsModalRouter";
 import { Text, View } from "react-native";
 

@@ -1,4 +1,4 @@
-export { type Environment } from "../../bubble/EnvironmentIndicator";
+export { type Environment } from "../../../../_sections/env";
 export { type UserRole } from "./UserStatus";
 export { BubblePresentation } from "./BubblePresentation";
 export { type BubbleConfig } from "./RnBetterDevToolsBubbleContent";
