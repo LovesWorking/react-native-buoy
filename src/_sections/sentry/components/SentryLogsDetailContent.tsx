@@ -26,6 +26,7 @@ import {
 } from "../utils/sentryEventListeners";
 import { useSentryEvents } from "../hooks/useSentryEvents";
 import { SentryEventDetailView } from "./SentryEventDetailView";
+import { getDefaultTypeFilters, getDefaultLevelFilters } from "../utils/defaultFilters";
 
 // Stable constants to prevent re-creation on every render [[memory:4875251]]
 const ESTIMATED_ITEM_SIZE = 44; // Reduced for compact cards
@@ -76,9 +77,11 @@ export function SentryLogsDetailContent({
   onShowFilterView,
 }: SentryLogsDetailContentProps) {
   const panGesture = Gesture.Pan().runOnJS(true);
-  const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(new Set());
+  const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(
+    () => getDefaultTypeFilters()
+  );
   const [selectedLevels, setSelectedLevels] = useState<Set<LogLevel>>(
-    new Set()
+    () => getDefaultLevelFilters()
   );
   const [isLoggingEnabled, setIsLoggingEnabled] = useState(true);
   const flatListRef = useRef<FlashList<ConsoleTransportEntry>>(null);
@@ -171,17 +174,17 @@ export function SentryLogsDetailContent({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} sentry-label="ignore devtools sentry container">
       {/* Minimal Stats Section */}
-      <View style={styles.statsSection}>
-        <View style={styles.statsLeft}>
-          <Text style={styles.statText}>
+      <View style={styles.statsSection} sentry-label="ignore devtools sentry stats section">
+        <View style={styles.statsLeft} sentry-label="ignore devtools sentry stats left">
+          <Text style={styles.statText} sentry-label="ignore devtools sentry stats text">
             {filteredEntries.length} of {totalCount} events
             {(selectedTypes.size > 0 || selectedLevels.size > 0) &&
               " (filtered)"}
           </Text>
         </View>
-        <View style={styles.statsRight}>
+        <View style={styles.statsRight} sentry-label="ignore devtools sentry stats right">
           <TouchableOpacity
             sentry-label="ignore devtools sentry filter open"
             onPress={() => onShowFilterView(true)}
@@ -239,11 +242,11 @@ export function SentryLogsDetailContent({
 
       {/* Event Entries */}
       {filteredEntries.length === 0 ? (
-        <View style={styles.emptyContainer}>
+        <View style={styles.emptyContainer} sentry-label="ignore devtools sentry empty container">
           {totalCount === 0 ? <EmptyState /> : <EmptyFilterState />}
         </View>
       ) : (
-        <View style={styles.listContainer}>
+        <View style={styles.listContainer} sentry-label="ignore devtools sentry list container">
           <GestureDetector gesture={panGesture}>
             <FlashList
               accessibilityLabel="Sentry logs detail content"
@@ -264,7 +267,7 @@ export function SentryLogsDetailContent({
               renderScrollComponent={ScrollView}
             />
           </GestureDetector>
-          <View style={[styles.bottomInset, { height: insets.bottom }]} />
+          <View style={[styles.bottomInset, { height: insets.bottom }]} sentry-label="ignore devtools sentry bottom inset" />
         </View>
       )}
     </View>

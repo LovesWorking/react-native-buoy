@@ -32,31 +32,32 @@ export const SentryEventLogEntryItem = React.memo<SentryEventLogEntryItemProps>(
         style={[styles.container, { borderLeftColor: levelColor }]}
       >
         {/* Left section: Type icon only */}
-        <View style={styles.leftSection}>
+        <View style={styles.leftSection} sentry-label="ignore devtools sentry entry left section">
           <View
             style={[styles.typeIcon, { backgroundColor: `${typeColor}15` }]}
+            sentry-label="ignore devtools sentry entry type icon"
           >
             {IconComponent && <IconComponent size={14} color={typeColor} />}
           </View>
         </View>
 
         {/* Middle section: Message and badge */}
-        <View style={styles.middleSection}>
-          <View style={styles.messageRow}>
+        <View style={styles.middleSection} sentry-label="ignore devtools sentry entry middle section">
+          <View style={styles.messageRow} sentry-label="ignore devtools sentry entry message row">
             {entry.metadata.sentryEventType ? (
-              <Text style={styles.badge}>
+              <Text style={styles.badge} sentry-label="ignore devtools sentry entry badge">
                 {String(entry.metadata.sentryEventType)}
               </Text>
             ) : null}
-            <Text style={styles.message} numberOfLines={1}>
+            <Text style={styles.message} numberOfLines={1} sentry-label="ignore devtools sentry entry message">
               {String(entry.message)}
             </Text>
           </View>
         </View>
 
         {/* Right section: Timestamp and chevron */}
-        <View style={styles.rightSection}>
-          <Text style={styles.timestamp}>
+        <View style={styles.rightSection} sentry-label="ignore devtools sentry entry right section">
+          <Text style={styles.timestamp} sentry-label="ignore devtools sentry entry timestamp">
             {formatTimestamp(entry.timestamp)}
           </Text>
           <ChevronRight size={14} color="#6B7280" />

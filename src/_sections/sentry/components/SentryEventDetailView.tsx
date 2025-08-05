@@ -76,8 +76,8 @@ export function SentryEventDetailView({
     switch (activeTab) {
       case "message":
         return (
-          <View style={styles.compactMessage}>
-            <Text style={styles.messageText} selectable>
+          <View style={styles.compactMessage} sentry-label="ignore devtools sentry message container">
+            <Text style={styles.messageText} selectable sentry-label="ignore devtools sentry message text">
               {String(entry.message)}
             </Text>
           </View>
@@ -118,31 +118,33 @@ export function SentryEventDetailView({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} sentry-label="ignore devtools sentry detail container">
       {/* Event Meta Information */}
-      <View style={styles.metaSection}>
-        <View style={styles.metaRow}>
+      <View style={styles.metaSection} sentry-label="ignore devtools sentry detail meta section">
+        <View style={styles.metaRow} sentry-label="ignore devtools sentry detail meta row">
           {/* Type and Level indicators */}
-          <View style={styles.metaLeft}>
+          <View style={styles.metaLeft} sentry-label="ignore devtools sentry detail meta left">
             <View
               style={[
                 styles.typeIndicator,
                 { backgroundColor: `${typeColor}20` },
               ]}
+              sentry-label="ignore devtools sentry detail type indicator"
             >
               {IconComponent && <IconComponent size={14} color={typeColor} />}
-              <Text style={[styles.typeText, { color: typeColor }]}>
+              <Text style={[styles.typeText, { color: typeColor }]} sentry-label="ignore devtools sentry detail type text">
                 {entry.type}
               </Text>
             </View>
 
-            <View style={styles.levelContainer}>
-              <View style={[styles.levelDot, getLevelDotStyle(entry.level)]} />
+            <View style={styles.levelContainer} sentry-label="ignore devtools sentry detail level container">
+              <View style={[styles.levelDot, getLevelDotStyle(entry.level)]} sentry-label="ignore devtools sentry detail level dot" />
               <Text
                 style={[
                   styles.levelText,
                   { color: getLevelTextColor(entry.level) },
                 ]}
+                sentry-label="ignore devtools sentry detail level text"
               >
                 {entry.level.toUpperCase()}
               </Text>
@@ -150,14 +152,14 @@ export function SentryEventDetailView({
           </View>
 
           {/* Timestamp on the right */}
-          <Text style={styles.timestamp}>
+          <Text style={styles.timestamp} sentry-label="ignore devtools sentry detail timestamp">
             {formatTimestamp(entry.timestamp)}
           </Text>
         </View>
       </View>
 
       {/* Tab navigation */}
-      <View style={styles.tabsContainer}>
+      <View style={styles.tabsContainer} sentry-label="ignore devtools sentry detail tabs container">
         <TouchableOpacity
           sentry-label="ignore devtools sentry tab message"
           onPress={() => setActiveTab("message")}
@@ -168,6 +170,7 @@ export function SentryEventDetailView({
               styles.tabText,
               activeTab === "message" && styles.activeTabText,
             ]}
+            sentry-label="ignore devtools sentry tab text"
           >
             Message
           </Text>
@@ -183,6 +186,7 @@ export function SentryEventDetailView({
               styles.tabText,
               activeTab === "eventData" && styles.activeTabText,
             ]}
+            sentry-label="ignore devtools sentry tab text"
           >
             Event Data
           </Text>
@@ -198,6 +202,7 @@ export function SentryEventDetailView({
               styles.tabText,
               activeTab === "rawData" && styles.activeTabText,
             ]}
+            sentry-label="ignore devtools sentry tab text"
           >
             Raw Data
           </Text>
@@ -213,6 +218,7 @@ export function SentryEventDetailView({
               styles.tabText,
               activeTab === "debugInfo" && styles.activeTabText,
             ]}
+            sentry-label="ignore devtools sentry tab text"
           >
             Debug
           </Text>

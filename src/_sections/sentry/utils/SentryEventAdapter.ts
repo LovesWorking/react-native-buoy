@@ -128,6 +128,8 @@ const adaptSentryEventToConsoleEntry = (
       ...sentryEntry.data,
       // Keep raw data for detailed view
       _sentryRawData: sentryEntry.rawData,
+      // Flag for span events to support filtering
+      _isSpan: sentryEntry.eventType === SentryEventType.Span,
     },
     type: refinedLogType,
   };

@@ -42,8 +42,8 @@ export const SentryEventLogDetailView = ({
     switch (activeTab) {
       case "message":
         return (
-          <View style={styles.compactMessage}>
-            <Text style={styles.messageText} selectable>
+          <View style={styles.compactMessage} sentry-label="ignore devtools sentry event message container">
+            <Text style={styles.messageText} selectable sentry-label="ignore devtools sentry event message text">
               {String(entry.message)}
             </Text>
           </View>
@@ -84,15 +84,15 @@ export const SentryEventLogDetailView = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} sentry-label="ignore devtools sentry event detail container">
       <DetailHeader entry={entry} onBack={onBack} />
 
       {/* Tab navigation */}
-      <View style={styles.tabsContainer}>
+      <View style={styles.tabsContainer} sentry-label="ignore devtools sentry event tabs container">
         <TouchableOpacity
           accessibilityLabel="Message"
           accessibilityHint="View message"
-          sentry-label="ignore user interaction"
+          sentry-label="ignore devtools sentry tab message button"
           onPress={() => setActiveTab("message")}
           style={[
             styles.tab,
@@ -114,7 +114,7 @@ export const SentryEventLogDetailView = ({
         <TouchableOpacity
           accessibilityLabel="Event Data"
           accessibilityHint="View event data"
-          sentry-label="ignore user interaction"
+          sentry-label="ignore devtools sentry tab event data button"
           onPress={() => setActiveTab("eventData")}
           style={[
             styles.tab,
@@ -136,7 +136,7 @@ export const SentryEventLogDetailView = ({
         <TouchableOpacity
           accessibilityLabel="Raw Data"
           accessibilityHint="View raw data"
-          sentry-label="ignore user interaction"
+          sentry-label="ignore devtools sentry tab raw data button"
           onPress={() => setActiveTab("rawData")}
           style={[
             styles.tab,
@@ -158,7 +158,7 @@ export const SentryEventLogDetailView = ({
         <TouchableOpacity
           accessibilityLabel="Debug"
           accessibilityHint="View debug info"
-          sentry-label="ignore user interaction"
+          sentry-label="ignore devtools sentry tab debug button"
           onPress={() => setActiveTab("debugInfo")}
           style={[
             styles.tab,
@@ -179,7 +179,7 @@ export const SentryEventLogDetailView = ({
       </View>
 
       {/* Tab content */}
-      <View style={styles.tabContent}>{renderTabContent()}</View>
+      <View style={styles.tabContent} sentry-label="ignore devtools sentry event tab content">{renderTabContent()}</View>
     </View>
   );
 };

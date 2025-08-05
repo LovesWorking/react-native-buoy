@@ -105,15 +105,15 @@ export function SentryFilterView({
         isSelected && { backgroundColor: `${color}20`, borderColor: color },
       ]}
     >
-      <View style={styles.filterItemLeft}>
+      <View style={styles.filterItemLeft} sentry-label="ignore devtools sentry filter item left">
         {Icon && <Icon size={16} color={isSelected ? color : "#9CA3AF"} />}
-        <Text style={[styles.filterItemText, isSelected && { color }]}>
+        <Text style={[styles.filterItemText, isSelected && { color }]} sentry-label="ignore devtools sentry filter item text">
           {label}
         </Text>
       </View>
-      <View style={styles.filterItemRight}>
+      <View style={styles.filterItemRight} sentry-label="ignore devtools sentry filter item right">
         {count > 0 && (
-          <Text style={[styles.filterItemCount, isSelected && { color }]}>
+          <Text style={[styles.filterItemCount, isSelected && { color }]} sentry-label="ignore devtools sentry filter item count">
             {count}
           </Text>
         )}
@@ -123,7 +123,7 @@ export function SentryFilterView({
   );
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} sentry-label="ignore devtools sentry filter container">
       <ScrollView
         accessibilityLabel="Sentry filter view"
         accessibilityHint="View sentry filter view"
@@ -133,9 +133,9 @@ export function SentryFilterView({
         showsVerticalScrollIndicator={false}
       >
         {/* Log Levels Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Log Levels</Text>
-          <View style={styles.filterGrid}>
+        <View style={styles.section} sentry-label="ignore devtools sentry filter section">
+          <Text style={styles.sectionTitle} sentry-label="ignore devtools sentry filter section title">Log Levels</Text>
+          <View style={styles.filterGrid} sentry-label="ignore devtools sentry filter grid">
             {sortedLogLevels.map(({ level, color }) => {
               const count = counts.byLevel[level] || 0;
               const label =
@@ -157,9 +157,9 @@ export function SentryFilterView({
         </View>
 
         {/* Event Types Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Event Types</Text>
-          <View style={styles.filterGrid}>
+        <View style={styles.section} sentry-label="ignore devtools sentry filter section">
+          <Text style={styles.sectionTitle} sentry-label="ignore devtools sentry filter section title">Event Types</Text>
+          <View style={styles.filterGrid} sentry-label="ignore devtools sentry filter grid">
             {sortedLogTypes.map(({ type, Icon, color }) => {
               const count = counts.byType[type] || 0;
               const label =

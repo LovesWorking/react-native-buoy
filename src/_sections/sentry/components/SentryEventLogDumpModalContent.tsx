@@ -28,6 +28,7 @@ import { adaptSentryEventsToConsoleEntries } from "../utils/SentryEventAdapter";
 import { SentryEventLogDetailView } from "./SentryEventLogDetailView";
 import { SentryEventLogEntryItem } from "./SentryEventLogEntryItem";
 import { SentryEventLogFilters } from "./SentryEventLogFilters";
+import { getDefaultTypeFilters, getDefaultLevelFilters } from "../utils/defaultFilters";
 import {
   clearSentryEvents,
   generateTestSentryEvents,
@@ -80,9 +81,11 @@ export function SentryEventLogDumpModalContent({
     useState<ConsoleTransportEntry | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [entries, setEntries] = useState<ConsoleTransportEntry[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(new Set());
+  const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(
+    () => getDefaultTypeFilters()
+  );
   const [selectedLevels, setSelectedLevels] = useState<Set<LogLevel>>(
-    new Set()
+    () => getDefaultLevelFilters()
   );
   const flatListRef = useRef<FlashList<ConsoleTransportEntry>>(null);
   const insets = useSafeAreaInsets();
@@ -236,23 +239,23 @@ export function SentryEventLogDumpModalContent({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} sentry-label="ignore devtools sentry dump container">
       {/* Enhanced Header */}
-      <View style={styles.headerContainer}>
+      <View style={styles.headerContainer} sentry-label="ignore devtools sentry dump header container">
         {/* Main header */}
-        <View style={styles.mainHeader}>
-          <View style={styles.headerLeft}>
-            <View style={styles.iconContainer}>
+        <View style={styles.mainHeader} sentry-label="ignore devtools sentry dump main header">
+          <View style={styles.headerLeft} sentry-label="ignore devtools sentry dump header left">
+            <View style={styles.iconContainer} sentry-label="ignore devtools sentry dump icon container">
               <FileText size={18} color="#8B5CF6" />
             </View>
-            <View>
-              <Text style={styles.title}>Sentry Events</Text>
-              <Text style={styles.subtitle}>
+            <View sentry-label="ignore devtools sentry dump header info">
+              <Text style={styles.title} sentry-label="ignore devtools sentry dump title">Sentry Events</Text>
+              <Text style={styles.subtitle} sentry-label="ignore devtools sentry dump subtitle">
                 {filteredEntries.length} of {entries.length} events
               </Text>
             </View>
           </View>
-          <View style={styles.headerRight}>
+          <View style={styles.headerRight} sentry-label="ignore devtools sentry dump header right">
             {/* Test Events Button */}
             <TouchableOpacity
               sentry-label="ignore generate test sentry events button"
@@ -317,11 +320,11 @@ export function SentryEventLogDumpModalContent({
 
       {/* Event Entries */}
       {filteredEntries.length === 0 ? (
-        <View style={styles.emptyContainer}>
+        <View style={styles.emptyContainer} sentry-label="ignore devtools sentry dump empty container">
           {entries.length === 0 ? <EmptyState /> : <EmptyFilterState />}
         </View>
       ) : (
-        <View style={styles.listContainer}>
+        <View style={styles.listContainer} sentry-label="ignore devtools sentry dump list container">
           <GestureDetector gesture={panGesture}>
             <FlashList
               sentry-label="ignore sentry events list"
@@ -340,7 +343,7 @@ export function SentryEventLogDumpModalContent({
               renderScrollComponent={ScrollView}
             />
           </GestureDetector>
-          <View style={[styles.bottomInset, { height: insets.bottom }]} />
+          <View style={[styles.bottomInset, { height: insets.bottom }]} sentry-label="ignore devtools sentry dump bottom inset" />
         </View>
       )}
     </View>

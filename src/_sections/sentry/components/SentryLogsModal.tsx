@@ -50,13 +50,15 @@ export function SentryLogsModal({
         minHeight: 32,
         paddingLeft: 4,
       }}
+      sentry-label="ignore devtools sentry modal header"
     >
       {(onBack || selectedEntry || showFilterView) && (
-        <BackButton onPress={handleBackPress} color="#FFFFFF" size={16} />
+        <BackButton onPress={handleBackPress} color="#FFFFFF" size={16} sentry-label="ignore devtools sentry modal back button" />
       )}
       <Text
         style={{ color: "#E5E7EB", fontSize: 14, fontWeight: "500", flex: 1 }}
         numberOfLines={1}
+        sentry-label="ignore devtools sentry modal header text"
       >
         {selectedEntry
           ? "Event Details"

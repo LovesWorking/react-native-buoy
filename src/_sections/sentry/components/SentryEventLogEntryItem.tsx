@@ -16,7 +16,7 @@ interface SentryEventLogEntryItemProps {
 export const SentryEventLogEntryItem = React.memo<SentryEventLogEntryItemProps>(
   ({ entry, onSelectEntry }) => {
     return (
-      <View style={styles.container}>
+      <View style={styles.container} sentry-label="ignore devtools sentry entry item container">
         <TouchableOpacity
           sentry-label={`ignore view sentry log entry ${entry.id} details`}
           accessibilityLabel={`Sentry log entry: ${entry.message}`}

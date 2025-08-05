@@ -79,11 +79,16 @@ export function useSentryEvents(options: UseSentryEventsOptions = {}) {
 
   // Memoized filtering to prevent expensive recalculation [[memory:4875251]]
   const filteredEntries = useMemo(() => {
-    if (selectedTypes.size === 0 && selectedLevels.size === 0) {
-      return entries;
-    }
-
     return entries.filter((entry) => {
+      // Special handling for spans - they are always hidden by default
+      // unless Navigation type is explicitly selected with no other types
+      if (entry.metadata?._isSpan) {
+        // Only show spans if Navigation is the ONLY selected type
+        // This prevents spans from showing when using default filters
+        return selectedTypes.size === 1 && selectedTypes.has(LogType.Navigation);
+      }
+
+      // Regular filtering logic for non-span events
       const typeMatch =
         selectedTypes.size === 0 || selectedTypes.has(entry.type);
       const levelMatch =
