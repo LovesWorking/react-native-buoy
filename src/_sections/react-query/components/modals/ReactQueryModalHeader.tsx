@@ -6,8 +6,8 @@ import { Mutation } from "@tanstack/react-query";
 interface ReactQueryModalHeaderProps {
   selectedQuery?: Query;
   selectedMutation?: Mutation;
-  activeTab: "queries" | "mutations" | "storage";
-  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
+  activeTab: "queries" | "mutations";
+  onTabChange: (tab: "queries" | "mutations") => void;
   onBack: () => void;
 }
 
@@ -108,29 +108,6 @@ export function ReactQueryModalHeader({
                 ]}
               >
                 Mutations
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              sentry-label="ignore user interaction"
-              accessibilityLabel="Storage"
-              accessibilityHint="View storage keys"
-              onPress={() => onTabChange("storage")}
-              style={[
-                styles.tabButton,
-                activeTab === "storage"
-                  ? styles.tabButtonActive
-                  : styles.tabButtonInactive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  activeTab === "storage"
-                    ? styles.tabButtonTextActive
-                    : styles.tabButtonTextInactive,
-                ]}
-              >
-                Storage
               </Text>
             </TouchableOpacity>
           </View>

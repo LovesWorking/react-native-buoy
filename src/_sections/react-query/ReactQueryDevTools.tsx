@@ -12,7 +12,6 @@ export { QueryBrowserModal } from './components/modals/QueryBrowserModal';
 export { MutationBrowserModal } from './components/modals/MutationBrowserModal';
 export { MutationEditorModal } from './components/modals/MutationEditorModal';
 export { DataEditorModal } from './components/modals/DataEditorModal';
-export { StorageBrowserModal } from './components/modals/StorageBrowserModal';
 
 // Re-export footer components
 export { QueryBrowserFooter } from './components/modals/QueryBrowserFooter';
@@ -54,7 +53,6 @@ export { QueryBrowserMode } from './components/QueryBrowserMode';
 export { MutationBrowserMode } from './components/MutationBrowserMode';
 export { MutationEditorMode } from './components/MutationEditorMode';
 export { DataEditorMode } from './components/DataEditorMode';
-export { StorageBrowserMode } from './components/StorageBrowserMode';
 export { QuerySelector } from './components/QuerySelector';
 export { QueryDebugInfo } from './components/QueryDebugInfo';
 export { WifiToggle } from './components/WifiToggle';

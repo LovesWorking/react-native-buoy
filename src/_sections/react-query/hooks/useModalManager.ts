@@ -17,7 +17,7 @@ export function useModalManager() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [isStateRestored, setIsStateRestored] = useState(true); // Default to true to show bubble immediately
   const [activeTab, setActiveTab] = useState<
-    "queries" | "mutations" | "storage"
+    "queries" | "mutations"
   >("queries");
   const [selectedMutationId, setSelectedMutationId] = useState<
     number | undefined
@@ -109,7 +109,7 @@ export function useModalManager() {
     setSelectedMutationId(mutation?.mutationId);
   };
 
-  const handleTabChange = (newTab: "queries" | "mutations" | "storage") => {
+  const handleTabChange = (newTab: "queries" | "mutations") => {
     if (newTab !== activeTab) {
       setSelectedQueryKey(undefined);
       setSelectedMutationId(undefined);

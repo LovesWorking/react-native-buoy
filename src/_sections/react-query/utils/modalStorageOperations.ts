@@ -53,9 +53,9 @@ export interface ModalVisibilityState {
   selectedQueryKey?: string; // JSON stringified QueryKey
   selectedSection?: string; // For DevTools sections
   activeFilter?: string | null; // React Query filter state: "fresh", "stale", "fetching", "paused", "inactive"
-  activeTab?: "queries" | "mutations" | "storage";
+  activeTab?: "queries" | "mutations";
   selectedMutationId?: string;
-  activeStorageTypes?: string; // JSON stringified Set<StorageType> as Array
+  activeStorageTypes?: string; // JSON stringified Set<StorageType> as Array - kept for backward compatibility
 }
 
 // Storage operations

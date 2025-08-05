@@ -6,14 +6,14 @@ import {
   getCleanStorageKey,
   getStorageType,
   isStorageQuery,
-} from "../utils/storageQueryUtils";
-import { StorageKeyStatsSection } from "../../../_sections/storage/components/StorageKeyStats";
-import { StorageKeySection } from "../../../_sections/storage/components/StorageKeySection";
+} from "../../react-query/utils/storageQueryUtils";
+import { StorageKeyStatsSection } from "./StorageKeyStats";
+import { StorageKeySection } from "./StorageKeySection";
 import {
   StorageKeyInfo,
   RequiredStorageKey,
   StorageKeyStats,
-} from "../../../_sections/storage/types";
+} from "../types";
 import { getEnvVarType } from "../../env/utils/envTypeDetector";
 
 interface StorageBrowserModeProps {

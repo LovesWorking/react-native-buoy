@@ -14,7 +14,7 @@ interface UseModalPersistenceProps {
   selectedQueryKey?: QueryKey;
   selectedSection?: string | null;
   activeFilter?: string | null; // React Query filter state
-  activeTab?: "queries" | "mutations" | "storage";
+  activeTab?: "queries" | "mutations";
   selectedMutationId?: number | undefined;
   isStateRestored: boolean; // Prevent clearing storage before restoration completes
 }

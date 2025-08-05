@@ -20,7 +20,7 @@ interface QueryBrowserModalProps {
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
   enableSharedModalDimensions?: boolean;
-  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
+  onTabChange: (tab: "queries" | "mutations") => void;
 }
 
 /**

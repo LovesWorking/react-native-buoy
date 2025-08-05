@@ -1,9 +1,10 @@
 import { RequiredEnvVar } from "../../../_sections/env/types";
 import { SentryLogsModal } from "../../../_sections/sentry";
 import { EnvVarsModal } from "../../../_sections/env/components/EnvVarsModal";
+import { StorageModal } from "../../../_sections/storage/components/StorageModal";
 
 // Available section types for navigation
-export type SectionType = "sentry-logs" | "env-vars" | "rn-better-dev-tools";
+export type SectionType = "sentry-logs" | "env-vars" | "rn-better-dev-tools" | "storage";
 
 interface DevToolsModalRouterProps {
   selectedSection: SectionType | null;
@@ -44,6 +45,13 @@ export function DevToolsModalRouter({
         onClose={onClose}
         requiredEnvVars={requiredEnvVars}
         _envVarsSubtitle={envVarsSubtitle}
+        onBack={onBack}
+        enableSharedModalDimensions={enableSharedModalDimensions}
+      />
+
+      <StorageModal
+        visible={selectedSection === "storage"}
+        onClose={onClose}
         onBack={onBack}
         enableSharedModalDimensions={enableSharedModalDimensions}
       />

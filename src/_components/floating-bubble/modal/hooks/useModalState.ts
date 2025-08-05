@@ -66,39 +66,43 @@ export const useModalState = ({
       const { dimensions, height, isFloating } =
         await loadPanelState(storagePrefix);
 
-      if (dimensions) {
-        // Validate stored dimensions are within current screen bounds
-        const validatedDimensions = {
-          width: Math.max(MIN_WIDTH, Math.min(dimensions.width, SCREEN_WIDTH)),
-          height: Math.max(
+      // Defer state updates to avoid setState during render
+      // This prevents "Cannot update component while rendering" errors
+      setTimeout(() => {
+        if (dimensions) {
+          // Validate stored dimensions are within current screen bounds
+          const validatedDimensions = {
+            width: Math.max(MIN_WIDTH, Math.min(dimensions.width, SCREEN_WIDTH)),
+            height: Math.max(
+              MIN_HEIGHT,
+              Math.min(dimensions.height, SCREEN_HEIGHT)
+            ),
+            top: Math.max(
+              0,
+              Math.min(dimensions.top, SCREEN_HEIGHT - MIN_HEIGHT)
+            ),
+            left: Math.max(
+              0,
+              Math.min(dimensions.left, SCREEN_WIDTH - MIN_WIDTH)
+            ),
+          };
+          setPanelDimensions(validatedDimensions);
+        }
+
+        if (height !== null) {
+          const validatedHeight = Math.max(
             MIN_HEIGHT,
-            Math.min(dimensions.height, SCREEN_HEIGHT)
-          ),
-          top: Math.max(
-            0,
-            Math.min(dimensions.top, SCREEN_HEIGHT - MIN_HEIGHT)
-          ),
-          left: Math.max(
-            0,
-            Math.min(dimensions.left, SCREEN_WIDTH - MIN_WIDTH)
-          ),
-        };
-        setPanelDimensions(validatedDimensions);
-      }
+            Math.min(height, SCREEN_HEIGHT - insets.top)
+          );
+          setPanelHeight(validatedHeight);
+        }
 
-      if (height !== null) {
-        const validatedHeight = Math.max(
-          MIN_HEIGHT,
-          Math.min(height, SCREEN_HEIGHT - insets.top)
-        );
-        setPanelHeight(validatedHeight);
-      }
+        if (isFloating !== null) {
+          setIsFloatingMode(isFloating);
+        }
 
-      if (isFloating !== null) {
-        setIsFloatingMode(isFloating);
-      }
-
-      setIsStateLoaded(true);
+        setIsStateLoaded(true);
+      }, 0);
     };
 
     loadState();

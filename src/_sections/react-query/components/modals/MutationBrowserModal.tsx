@@ -18,7 +18,7 @@ interface MutationBrowserModalProps {
   onClose: () => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
-  onTabChange: (tab: "queries" | "mutations" | "storage") => void;
+  onTabChange: (tab: "queries" | "mutations") => void;
   enableSharedModalDimensions?: boolean;
 }
 

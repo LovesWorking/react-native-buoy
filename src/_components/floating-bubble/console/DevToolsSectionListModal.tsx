@@ -3,6 +3,7 @@ import { RequiredEnvVar } from "../../../_sections/env/types";
 import { ConsoleSectionList } from "./ConsoleSectionList";
 import { SentryLogsSection, ReactQuerySection } from "./sections";
 import { EnvVarsSection } from "../../../_sections/env";
+import { StorageSection } from "../../../_sections/storage/components/StorageSection";
 import { SectionType } from "./DevToolsModalRouter";
 import { Text, View } from "react-native";
 
@@ -80,6 +81,7 @@ export function DevToolsSectionListModal({
           onPress={() => onSectionSelect("rn-better-dev-tools")}
           getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
         />
+        <StorageSection onPress={() => onSectionSelect("storage")} />
       </ConsoleSectionList>
     </BaseFloatingModal>
   );
