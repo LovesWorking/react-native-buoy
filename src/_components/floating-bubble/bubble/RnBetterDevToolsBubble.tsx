@@ -130,7 +130,6 @@ export function RnBetterDevToolsBubble({
     selectedQueryKey,
     selectedSection,
     activeFilter,
-    isStateRestored,
     activeTab,
     selectedMutationId,
     setSelectedSection,
@@ -147,10 +146,8 @@ export function RnBetterDevToolsBubble({
   // Hide bubble when any modal is open to prevent visual overlap
   const isAnyModalOpen = isModalOpen || isDebugModalOpen;
 
-  // Don't render anything until state is restored to prevent flash
-  if (!isStateRestored) {
-    return null;
-  }
+  // Note: We no longer wait for state restoration to show the bubble
+  // The bubble should be visible immediately on app launch
 
   return (
     <ErrorBoundary>

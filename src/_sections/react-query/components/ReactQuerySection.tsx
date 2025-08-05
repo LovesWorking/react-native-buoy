@@ -1,10 +1,18 @@
-import { FlaskConical } from "lucide-react-native";
+import { View } from "react-native";
 import { ConsoleSection } from "../../../_components/floating-bubble/console/ConsoleSection";
+import { TanstackLogo } from "./query-browser/svgs";
 
 interface ReactQuerySectionProps {
   onPress: () => void;
   getRnBetterDevToolsSubtitle: () => string;
 }
+
+// Component definition moved outside render to prevent recreation on every render
+const TanstackIcon = () => (
+  <View style={{ width: 24, height: 24 }}>
+    <TanstackLogo />
+  </View>
+);
 
 /**
  * React Query section component following composition principles.
@@ -17,11 +25,11 @@ export function ReactQuerySection({
   return (
     <ConsoleSection
       id="rn-better-dev-tools"
-      title="RN Better Dev Tools"
+      title="React Query"
       subtitle={getRnBetterDevToolsSubtitle()}
-      icon={FlaskConical}
-      iconColor="#F59E0B"
-      iconBackgroundColor="rgba(245, 158, 11, 0.1)"
+      icon={TanstackIcon as any}
+      iconColor="#00AAFF"
+      iconBackgroundColor="rgba(0, 170, 255, 0.1)"
       onPress={onPress}
     />
   );

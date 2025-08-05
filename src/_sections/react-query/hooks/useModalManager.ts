@@ -15,7 +15,7 @@ export function useModalManager() {
   >(undefined);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [isStateRestored, setIsStateRestored] = useState(false);
+  const [isStateRestored, setIsStateRestored] = useState(true); // Default to true to show bubble immediately
   const [activeTab, setActiveTab] = useState<
     "queries" | "mutations" | "storage"
   >("queries");
@@ -39,6 +39,7 @@ export function useModalManager() {
   // Restore saved modal state on component mount
   useEffect(() => {
     const restoreState = async () => {
+      setIsStateRestored(false); // Set to false while loading
       try {
         const savedState = await loadSavedState();
 

@@ -19,6 +19,7 @@ export type {
   UserRole,
   BubbleConfig,
 } from "./_components/floating-bubble/bubble";
+export type { Environment } from "./_sections/env";
 
 // Environment variable utilities
 export {
