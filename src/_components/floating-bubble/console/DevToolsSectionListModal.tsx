@@ -1,4 +1,4 @@
-import { BaseFloatingModal } from "../floatingModal/BaseFloatingModal";
+import { BaseFloatingModal } from "../modal/components/BaseFloatingModal";
 import { RequiredEnvVar } from "../../../_sections/env/types";
 import { ConsoleSectionList } from "./ConsoleSectionList";
 import { SentryLogsSection, ReactQuerySection } from "./sections";

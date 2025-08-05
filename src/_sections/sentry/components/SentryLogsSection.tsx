@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react-native";
-import { ConsoleSection } from "../../../_components/floating-bubble/DevToolsConsole/ConsoleSection";
+import { ConsoleSection } from "../../../_components/floating-bubble/console/ConsoleSection";
 import { SentryLogsDetailContent } from "./SentryLogsDetailContent";
 import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 

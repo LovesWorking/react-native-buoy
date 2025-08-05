@@ -4,8 +4,8 @@ import Animated, { AnimatedStyleProp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DragResizable } from "./DragResizable";
 import { FloatingModalHeader } from "./FloatingModalHeader";
-import { CornerResizeHandle } from "../admin/components/CornerResizeHandle";
-import { PanelDimensions } from "../../../_sections/react-query/utils/modalStorageOperations";
+import { CornerResizeHandle } from "./CornerResizeHandle";
+import { PanelDimensions } from "../../../../_sections/react-query/utils/modalStorageOperations";
 import { GestureType } from "react-native-gesture-handler";
 
 // Stable constants moved to module scope to prevent re-renders

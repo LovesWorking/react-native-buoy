@@ -1,5 +1,5 @@
 import { Query, QueryKey } from "@tanstack/react-query";
-import { BaseFloatingModal } from "../../../../_components/floating-bubble/floatingModal/BaseFloatingModal";
+import { BaseFloatingModal } from "../../../../_components/floating-bubble/modal/components/BaseFloatingModal";
 import { useGetQueryByQueryKey } from "../../hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { QueryBrowserMode } from "../QueryBrowserMode";
@@ -10,7 +10,7 @@ import { useCallback } from "react";
 import { View } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 import { SwipeIndicator } from "./SwipeIndicator";
-import { useModalState } from "../../../../_components/floating-bubble/admin/hooks/useModalState";
+import { useModalState } from "../../../../_components/floating-bubble/modal/hooks/useModalState";
 
 interface QueryBrowserModalProps {
   visible: boolean;

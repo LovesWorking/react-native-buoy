@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
-import { BackButton } from "../../_components/floating-bubble/admin/components/BackButton";
+import { BackButton } from "../../_shared/ui/components/BackButton";
 import { FlashList } from "@shopify/flash-list";
 import { useState } from "react";
 

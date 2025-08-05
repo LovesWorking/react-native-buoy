@@ -1,6 +1,6 @@
 import { getAutoDetectedClipboard } from "./autoDetectClipboard";
-import { safeStringify } from "../../../_shared/utils/safeStringify";
-import { displayValue } from "../../../_shared/utils/displayValue";
+import { safeStringify } from "../utils/safeStringify";
+import { displayValue } from "../utils/displayValue";
 
 // Get the clipboard function once
 const clipboardFunction = getAutoDetectedClipboard();

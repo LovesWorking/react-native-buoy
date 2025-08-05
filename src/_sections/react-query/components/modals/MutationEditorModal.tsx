@@ -1,5 +1,5 @@
 import { Mutation } from "@tanstack/react-query";
-import { BaseFloatingModal } from "../../../../_components/floating-bubble/floatingModal/BaseFloatingModal";
+import { BaseFloatingModal } from "../../../../_components/floating-bubble/modal/components/BaseFloatingModal";
 import { useGetMutationById } from "../../hooks/useSelectedMutation";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { MutationEditorMode } from "../MutationEditorMode";

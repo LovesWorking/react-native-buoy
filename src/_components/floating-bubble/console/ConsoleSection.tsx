@@ -1,6 +1,6 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
-import { ExpandableSectionHeader } from "../admin/components/ExpandableSectionHeader";
+import { ExpandableSectionHeader } from "../../../_shared/ui/components/ExpandableSectionHeader";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 

@@ -16,10 +16,9 @@ export type {
   EnvVarType 
 } from "./_sections/env/types";
 export type {
-  Environment,
   UserRole,
   BubbleConfig,
-} from "./_components/floating-bubble/admin/components";
+} from "./_components/floating-bubble/bubble";
 
 // Environment variable utilities
 export {

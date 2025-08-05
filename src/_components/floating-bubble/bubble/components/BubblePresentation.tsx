@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { DragHandle } from "./DragHandle";
+import { DragHandle } from "../../modal/components/DragHandle";
 import {
   RnBetterDevToolsBubbleContent,
   type BubbleConfig,

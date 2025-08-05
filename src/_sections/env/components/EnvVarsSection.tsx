@@ -1,6 +1,6 @@
 import { ScrollView } from "react-native";
 import { Settings } from "lucide-react-native";
-import { ConsoleSection } from "../../../_components/floating-bubble/DevToolsConsole/ConsoleSection";
+import { ConsoleSection } from "../../../_components/floating-bubble/console/ConsoleSection";
 import { EnvVarsContent } from "./EnvVarsContent";
 import { RequiredEnvVar } from "../types";
 

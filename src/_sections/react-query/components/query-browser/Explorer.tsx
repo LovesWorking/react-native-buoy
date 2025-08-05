@@ -13,7 +13,7 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import { copyToClipboard } from "~/src/_components/floating-bubble/utils/copyToClipboard";
+import { copyToClipboard } from "~/src/_shared/clipboard/copyToClipboard";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
 const CHUNK_SIZE = 100;

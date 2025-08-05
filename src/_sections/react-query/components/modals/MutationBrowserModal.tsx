@@ -4,12 +4,12 @@ import { useCallback, useState } from "react";
 import { useGetMutationById } from "../../hooks/useSelectedMutation";
 import { MutationBrowserMode } from "../MutationBrowserMode";
 import { MutationBrowserFooter } from "./MutationBrowserFooter";
-import { BaseFloatingModal } from "../../../../_components/floating-bubble/floatingModal/BaseFloatingModal";
+import { BaseFloatingModal } from "../../../../_components/floating-bubble/modal/components/BaseFloatingModal";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { View } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 import { SwipeIndicator } from "./SwipeIndicator";
-import { useModalState } from "../../../../_components/floating-bubble/admin/hooks/useModalState";
+import { useModalState } from "../../../../_components/floating-bubble/modal/hooks/useModalState";
 
 interface MutationBrowserModalProps {
   visible: boolean;

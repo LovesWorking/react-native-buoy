@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { BackButton } from "../../../_components/floating-bubble/admin/components/BackButton";
+import { BackButton } from "../../../_shared/ui/components/BackButton";
 
 import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 import {

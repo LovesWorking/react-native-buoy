@@ -2,7 +2,7 @@ import { Pressable, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { TanstackLogo } from "../../../../_sections/react-query/components/query-browser/svgs";
 
-import { Divider } from "./Divider";
+import { Divider } from "../../../../_shared/ui/components/Divider";
 import { WifiToggle } from "../../../../_sections/react-query/components/WifiToggle";
 import {
   type Environment,

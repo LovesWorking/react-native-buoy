@@ -1,18 +1,19 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSentrySubtitle } from "../../../_sections/sentry";
 import { RequiredEnvVar, useEnvVarsSubtitle } from "../../../_sections/env";
-import { UserRole, BubblePresentation } from "../admin/components";
+import { BubblePresentation } from "./components/BubblePresentation";
+import type { UserRole } from "./components/UserStatus";
 import type { Environment } from "../../../_sections/env";
-import { ErrorBoundary } from "../admin/components/ErrorBoundary";
+import { ErrorBoundary } from "../../../_shared/ui/components/ErrorBoundary";
 import {
   ReactQueryModal,
   useReactQueryState,
   useModalManager,
 } from "../../../_sections/react-query";
-import { DevToolsConsole } from "../DevToolsConsole";
+import { DevToolsConsole } from "../console/DevToolsConsole";
 
 // Re-export types that developers will need
-export type { UserRole } from "../admin/components";
+export type { UserRole } from "./components/UserStatus";
 export type { Environment, RequiredEnvVar } from "../../../_sections/env";
 
 /**

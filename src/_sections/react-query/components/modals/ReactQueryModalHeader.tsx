@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Query } from "@tanstack/react-query";
-import { BackButton } from "../../../../_components/floating-bubble/admin/components/BackButton";
+import { BackButton } from "../../../../_shared/ui/components/BackButton";
 import { Mutation } from "@tanstack/react-query";
 
 interface ReactQueryModalHeaderProps {

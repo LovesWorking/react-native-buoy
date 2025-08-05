@@ -1,5 +1,5 @@
 import { Query, QueryKey } from "@tanstack/react-query";
-import { BaseFloatingModal } from "../../../../_components/floating-bubble/floatingModal/BaseFloatingModal";
+import { BaseFloatingModal } from "../../../../_components/floating-bubble/modal/components/BaseFloatingModal";
 import { useGetQueryByQueryKey } from "../../hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { StorageBrowserMode } from "../StorageBrowserMode";

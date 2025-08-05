@@ -3,13 +3,13 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Query } from "@tanstack/react-query";
 import { TanstackLogo } from "./query-browser/svgs";
 
-import { Divider } from "../../../_components/floating-bubble/admin/components/Divider";
+import { Divider } from "../../../_shared/ui/components/Divider";
 import { WifiToggle } from "./WifiToggle";
 import {
   type Environment,
   EnvironmentIndicator,
 } from "../../env";
-import { type UserRole, UserStatus } from "../../../_components/floating-bubble/admin/components/UserStatus";
+import { type UserRole, UserStatus } from "../../../_components/floating-bubble/bubble/components/UserStatus";
 import { getQueryStatusColor } from "../utils/getQueryStatusColor";
 
 interface RnBetterDevToolsBubbleContentProps {

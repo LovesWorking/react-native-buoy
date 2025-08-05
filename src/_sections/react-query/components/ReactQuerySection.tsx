@@ -1,5 +1,5 @@
 import { FlaskConical } from "lucide-react-native";
-import { ConsoleSection } from "../../../_components/floating-bubble/DevToolsConsole/ConsoleSection";
+import { ConsoleSection } from "../../../_components/floating-bubble/console/ConsoleSection";
 
 interface ReactQuerySectionProps {
   onPress: () => void;
