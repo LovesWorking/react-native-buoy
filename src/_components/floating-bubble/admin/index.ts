@@ -2,8 +2,8 @@
 export type { Environment, UserRole } from "./components";
 
 // Logger for Sentry events
-export type { ConsoleTransportEntry, LogLevel, LogType } from "./logger";
-export { SentryLogger, sentryLogger, TestLogger, testLogger } from "./logger";
+export type { ConsoleTransportEntry, LogLevel, LogType } from "../../../_shared/logger";
+export { SentryLogger, sentryLogger, TestLogger, testLogger } from "../../../_shared/logger";
 
 // Sentry Event Logger
 export type {
@@ -27,9 +27,11 @@ export {
 export { AdminEnvVarsSection as EnvVarsSection } from "../../../_sections/env";
 
 // Utilities for creating custom sections
-export { ExpandableSectionWithModal } from "./ExpandableSectionWithModal";
+export { ExpandableSectionWithModal } from "./components/ExpandableSectionWithModal";
 export { EnvVarsModalContent } from "../../../_sections/env";
 export {
   LogDumpModalContent,
+} from "../../../_sections/log-dump";
+export {
   SentryEventLogDumpModalContent,
-} from "./sections/log-dump";
+} from "../../../_sections/sentry/components";

@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { LucideIcon } from "lucide-react-native";
 import { X } from "lucide-react-native";
 
-import { ExpandableSection } from "./sections/ExpandableSection";
+import { ExpandableSection } from "./ExpandableSection";
 
 const { height: screenHeight } = Dimensions.get("window");
 

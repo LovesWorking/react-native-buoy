@@ -21,9 +21,9 @@ import {
   X,
 } from "lucide-react-native";
 
-import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_components/floating-bubble/admin/logger/types";
+import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_shared/logger/types";
 
-import { EmptyFilterState, EmptyState } from "../../../_components/floating-bubble/admin/sections/log-dump/EmptyStates";
+import { EmptyFilterState, EmptyState } from "../../log-dump/EmptyStates";
 import { adaptSentryEventsToConsoleEntries } from "../utils/SentryEventAdapter";
 import { SentryEventLogDetailView } from "./SentryEventLogDetailView";
 import { SentryEventLogEntryItem } from "./SentryEventLogEntryItem";

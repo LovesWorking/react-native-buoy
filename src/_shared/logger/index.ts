@@ -1,5 +1,5 @@
 // Main Sentry logger for capturing events
-export { LogLevel, LogType, SentryLogger, sentryLogger } from "../../../../_sections/sentry/logger/index-sentry";
+export { LogLevel, LogType, SentryLogger, sentryLogger } from "../../_sections/sentry/logger/index-sentry";
 
 // Test logger for generating sample logs
 export { TestLogger, testLogger } from "./testLogger";

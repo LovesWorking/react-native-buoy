@@ -12,9 +12,9 @@ import { StorageKeyInfo } from "../types";
 import {
   getStorageTypeLabel,
   getStorageTypeHexColor,
-} from "../../../../../../_sections/react-query/utils/storageQueryUtils";
-import { getEnvVarType } from "../../../../../../_sections/env/utils/envTypeDetector";
-import { DataViewer } from "../../../../../../_sections/react-query/components/shared/DataViewer";
+} from "../../react-query/utils/storageQueryUtils";
+import { getEnvVarType } from "../../env/utils/envTypeDetector";
+import { DataViewer } from "../../react-query/components/shared/DataViewer";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };

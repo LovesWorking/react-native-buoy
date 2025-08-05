@@ -20,9 +20,9 @@ import {
   User,
 } from "lucide-react-native";
 
-import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_components/floating-bubble/admin/logger/types";
+import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_shared/logger/types";
 
-import { getLevelCount, getTypeCount } from "../../../_components/floating-bubble/admin/sections/log-dump/utils";
+import { getLevelCount, getTypeCount } from "../../log-dump/utils";
 
 interface SentryEventLogFiltersProps {
   entries: ConsoleTransportEntry[];

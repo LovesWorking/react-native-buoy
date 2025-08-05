@@ -12,7 +12,7 @@ import { StorageKeyStats } from "../types";
 import {
   getStorageTypeHexColor,
   StorageType,
-} from "../../../../../../_sections/react-query/utils/storageQueryUtils";
+} from "../../react-query/utils/storageQueryUtils";
 
 interface StorageKeyStatsProps {
   stats: StorageKeyStats;

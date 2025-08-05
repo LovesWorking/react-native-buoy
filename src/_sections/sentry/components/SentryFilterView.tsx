@@ -24,7 +24,7 @@ import {
   LogLevel,
   LogType,
   ConsoleTransportEntry,
-} from "../../../_components/floating-bubble/admin/logger/types";
+} from "../../../_shared/logger/types";
 import { useSentryEventCounts } from "../hooks/useSentryEvents";
 
 interface SentryFilterViewProps {

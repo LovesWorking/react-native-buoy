@@ -13,11 +13,11 @@ import {
   ConsoleTransportEntry,
   LogLevel,
   LogType,
-} from "../../../_components/floating-bubble/admin/logger/types";
+} from "../../../_shared/logger/types";
 import {
   EmptyFilterState,
   EmptyState,
-} from "../../../_components/floating-bubble/admin/sections/log-dump/EmptyStates";
+} from "../../log-dump/EmptyStates";
 import { SentryEventLogEntryItem } from "./SentryEventLogEntryItemCompact";
 import { SentryFilterView } from "./SentryFilterView";
 import {

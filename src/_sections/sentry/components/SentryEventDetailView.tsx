@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
+import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 import { DataViewer } from "../../react-query/components/shared/DataViewer";
 import {
   formatTimestamp,
@@ -16,7 +16,7 @@ import {
   getLevelTextColor,
   getTypeColor,
   getTypeIcon,
-} from "../../../_components/floating-bubble/admin/sections/log-dump/utils";
+} from "../../log-dump/utils";
 
 // Stable constants [[memory:4875251]]
 const MAX_EXPLORER_DEPTH = 15;

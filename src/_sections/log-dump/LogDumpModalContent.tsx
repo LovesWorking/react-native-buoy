@@ -16,8 +16,8 @@ import {
   X,
 } from "lucide-react-native";
 
-import { clearEntries, getEntries, testLogger } from "../../logger";
-import { ConsoleTransportEntry, LogLevel, LogType } from "../../logger/types";
+import { clearEntries, getEntries, testLogger } from "../../_shared/logger";
+import { ConsoleTransportEntry, LogLevel, LogType } from "../../_shared/logger/types";
 
 import { EmptyFilterState, EmptyState } from "./EmptyStates";
 import { LogDetailView } from "./LogDetailView";

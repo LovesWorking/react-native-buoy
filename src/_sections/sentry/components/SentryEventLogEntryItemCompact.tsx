@@ -2,13 +2,13 @@ import React from "react";
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
+import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 import {
   formatTimestamp,
   getLevelBorderColor,
   getTypeIcon,
   getTypeColor,
-} from "../../../_components/floating-bubble/admin/sections/log-dump/utils";
+} from "../../log-dump/utils";
 
 interface SentryEventLogEntryItemProps {
   entry: ConsoleTransportEntry;

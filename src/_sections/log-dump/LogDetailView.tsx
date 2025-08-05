@@ -1,12 +1,12 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "lucide-react-native";
-import { BackButton } from "../../components/BackButton";
+import { BackButton } from "../../_components/floating-bubble/admin/components/BackButton";
 import { FlashList } from "@shopify/flash-list";
 import { useState } from "react";
 
-import { ConsoleTransportEntry } from "../../logger/types";
-import { VirtualizedDataExplorer } from "../../../../../_sections/react-query/components/shared/VirtualizedDataExplorer";
+import { ConsoleTransportEntry } from "../../_shared/logger/types";
+import { VirtualizedDataExplorer } from "../../_sections/react-query/components/shared/VirtualizedDataExplorer";
 
 import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 

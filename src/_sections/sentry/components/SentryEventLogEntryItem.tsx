@@ -1,10 +1,10 @@
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
-import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
+import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 
-import { LogEntryHeader } from "../../../_components/floating-bubble/admin/sections/log-dump/components/LogEntryHeader";
-import { LogEntryMessage } from "../../../_components/floating-bubble/admin/sections/log-dump/components/LogEntryMessage";
+import { LogEntryHeader } from "../../log-dump/components/LogEntryHeader";
+import { LogEntryMessage } from "../../log-dump/components/LogEntryMessage";
 import { LogEntrySentryBadge } from "./LogEntrySentryBadge";
 
 interface SentryEventLogEntryItemProps {

@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react-native";
 
-import { ConsoleTransportEntry, LogLevel, LogType } from "../../logger/types";
+import { ConsoleTransportEntry, LogLevel, LogType } from "../../_shared/logger/types";
 
 // Helper functions - moved outside component to be stable
 export const formatTimestamp = (timestamp: number) => {

@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 
-import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
+import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 
-import { DetailHeader } from "../../../_components/floating-bubble/admin/sections/log-dump/components/DetailHeader";
+import { DetailHeader } from "../../log-dump/components/DetailHeader";
 import { DataViewer } from "../../react-query/components/shared/DataViewer";
 
 // Stable constants to prevent re-creation [[memory:4875251]] [[memory:4875251]]

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { ConsoleTransportEntry } from "../../logger/types";
+import { ConsoleTransportEntry } from "../../_shared/logger/types";
 
 import { formatTimestamp, getTypeColor, getTypeIcon } from "./utils";
 

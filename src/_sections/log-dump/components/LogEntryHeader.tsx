@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { ConsoleTransportEntry } from "../../../logger/types";
+import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 import { formatTimestamp } from "../utils";
 
 import { LogEntryLevelIndicator } from "./LogEntryLevelIndicator";

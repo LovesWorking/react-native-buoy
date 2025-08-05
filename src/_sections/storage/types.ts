@@ -1,4 +1,4 @@
-import { StorageType } from "../../../../../_sections/react-query/utils/storageQueryUtils";
+import { StorageType } from "../react-query/utils/storageQueryUtils";
 
 export interface StorageKeyInfo {
   key: string;

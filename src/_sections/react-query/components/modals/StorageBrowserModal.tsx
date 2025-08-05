@@ -10,7 +10,7 @@ import { View } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 import { SwipeIndicator } from "./SwipeIndicator";
 
-import { RequiredStorageKey } from "../../../../_components/floating-bubble/admin/sections/storage/types";
+import { RequiredStorageKey } from "../../../../_sections/storage/types";
 
 interface StorageBrowserModalProps {
   visible: boolean;

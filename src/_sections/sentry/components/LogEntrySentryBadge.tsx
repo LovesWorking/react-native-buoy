@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { Metadata } from "../../../_components/floating-bubble/admin/logger/types";
+import { Metadata } from "../../../_shared/logger/types";
 
 interface LogEntrySentryBadgeProps {
   metadata: Metadata;

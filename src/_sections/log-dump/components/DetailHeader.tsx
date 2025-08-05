@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { BackButton } from "../../../components/BackButton";
+import { BackButton } from "../../../_components/floating-bubble/admin/components/BackButton";
 
-import { ConsoleTransportEntry } from "../../../logger/types";
+import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 import {
   formatTimestamp,
   getLevelDotStyle,

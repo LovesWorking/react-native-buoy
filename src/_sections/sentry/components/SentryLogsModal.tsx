@@ -3,7 +3,7 @@ import { BaseFloatingModal } from "../../../_components/floating-bubble/floating
 import { SentryLogsContent } from "./SentryLogsSection";
 import { View, Text } from "react-native";
 import { BackButton } from "../../../_components/floating-bubble/admin/components/BackButton";
-import { ConsoleTransportEntry } from "../../../_components/floating-bubble/admin/logger/types";
+import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 
 interface SentryLogsModalProps {
   visible: boolean;

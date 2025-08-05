@@ -6,7 +6,7 @@ import { useDynamicEnv } from "../hooks";
 import { RequiredEnvVar } from "../types";
 import { processEnvVars, calculateStats, getSubtitle } from "../utils";
 import { EnvVarStatsSection, EnvVarSection } from "./";
-import { ExpandableSection } from "../../../_components/floating-bubble/admin/sections/ExpandableSection";
+import { ExpandableSection } from "../../../_components/floating-bubble/admin/components/ExpandableSection";
 
 interface EnvVarsSectionProps {
   requiredEnvVars?: RequiredEnvVar[]; // Can be strings or objects with expected values

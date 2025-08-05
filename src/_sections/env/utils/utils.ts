@@ -128,7 +128,6 @@ export const getSubtitle = (stats: EnvVarStats) => {
     wrongValueCount,
     wrongTypeCount,
     optionalCount,
-    presentRequiredCount,
   } = stats;
   const issueCount = missingCount + wrongValueCount + wrongTypeCount;
 

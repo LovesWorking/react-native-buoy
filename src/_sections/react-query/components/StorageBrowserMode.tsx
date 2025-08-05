@@ -7,13 +7,13 @@ import {
   getStorageType,
   isStorageQuery,
 } from "../utils/storageQueryUtils";
-import { StorageKeyStatsSection } from "../../../_components/floating-bubble/admin/sections/storage/components/StorageKeyStats";
-import { StorageKeySection } from "../../../_components/floating-bubble/admin/sections/storage/components/StorageKeySection";
+import { StorageKeyStatsSection } from "../../../_sections/storage/components/StorageKeyStats";
+import { StorageKeySection } from "../../../_sections/storage/components/StorageKeySection";
 import {
   StorageKeyInfo,
   RequiredStorageKey,
   StorageKeyStats,
-} from "../../../_components/floating-bubble/admin/sections/storage/types";
+} from "../../../_sections/storage/types";
 import { getEnvVarType } from "../../env/utils/envTypeDetector";
 
 interface StorageBrowserModeProps {
