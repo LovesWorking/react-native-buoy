@@ -28,8 +28,10 @@ const loadAsyncStorage = async () => {
   return asyncStorageLoadPromise;
 };
 
-const STORAGE_KEY = "@dev_tools_bubble_settings";
-const USER_PREFERENCES_KEY = "@dev_tools_user_has_set_preferences";
+import { devToolsStorageKeys } from "../../../_shared/storage/devToolsStorageKeys";
+
+const STORAGE_KEY = devToolsStorageKeys.bubble.settings();
+const USER_PREFERENCES_KEY = devToolsStorageKeys.bubble.userPreferences();
 
 export interface BubbleVisibilitySettings {
   showEnvironment: boolean;

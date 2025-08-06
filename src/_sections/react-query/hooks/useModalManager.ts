@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Mutation, Query, QueryKey } from "@tanstack/react-query";
 import { useModalPersistence } from "./useModalPersistence";
+import { devToolsStorageKeys } from "../../../_shared/storage/devToolsStorageKeys";
 
 /**
  * Custom hook for managing modal states and related query selection
@@ -25,7 +26,7 @@ export function useModalManager() {
 
   // Persistence hook for saving/loading modal state
   const { loadSavedState } = useModalPersistence({
-    storagePrefix: "@dev_tools_modal_state",
+    storagePrefix: devToolsStorageKeys.modal.state(),
     isModalOpen,
     isDebugModalOpen,
     selectedQueryKey,

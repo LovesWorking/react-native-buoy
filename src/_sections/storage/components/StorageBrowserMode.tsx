@@ -16,6 +16,7 @@ import {
 } from "../types";
 import { getEnvVarType } from "../../env/utils/envTypeDetector";
 import { getEnvValue } from "../utils/getEnvValue";
+import { isDevToolsStorageKey } from "../../../_shared/storage/devToolsStorageKeys";
 
 interface StorageBrowserModeProps {
   selectedQuery: Query | undefined;
@@ -52,6 +53,11 @@ export function StorageBrowserMode({
       if (!storageType) return;
 
       const cleanKey = getCleanStorageKey(query.queryKey);
+      
+      // Filter out dev tool keys from the storage browser
+      if (isDevToolsStorageKey(cleanKey)) {
+        return; // Skip dev tool keys
+      }
       const value = query.state.data;
 
       // Check if this is a required key

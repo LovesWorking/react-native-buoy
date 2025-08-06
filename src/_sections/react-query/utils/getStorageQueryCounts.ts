@@ -2,7 +2,9 @@ import { Query } from "@tanstack/react-query";
 import {
   isStorageQuery,
   getStorageType,
+  getCleanStorageKey,
 } from "./storageQueryUtils";
+import { isDevToolsStorageKey } from "../../../_shared/storage/devToolsStorageKeys";
 
 export interface StorageTypeCounts {
   mmkv: number;
@@ -31,8 +33,12 @@ export function getStorageQueryCounts(queries: Query[]): StorageTypeCounts {
   storageQueries.forEach((query) => {
     const storageType = getStorageType(query.queryKey);
     if (storageType) {
-      counts[storageType]++;
-      counts.total++;
+      // Filter out dev tool keys from the counts
+      const cleanKey = getCleanStorageKey(query.queryKey);
+      if (!isDevToolsStorageKey(cleanKey)) {
+        counts[storageType]++;
+        counts.total++;
+      }
     }
   });
 

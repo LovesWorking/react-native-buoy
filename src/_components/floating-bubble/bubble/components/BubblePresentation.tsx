@@ -10,6 +10,7 @@ import { type UserRole } from "./UserStatus";
 import { useDynamicBubbleWidth } from "../hooks/useDynamicBubbleWidth";
 import { useDragGesture } from "../hooks/useDragGesture";
 import { useState } from "react";
+import { devToolsStorageKeys } from "../../../../_shared/storage/devToolsStorageKeys";
 
 interface BubblePresentationProps {
   environment?: Environment;
@@ -47,7 +48,7 @@ export function BubblePresentation({
   const { panGesture, translateX, translateY } = useDragGesture({
     bubbleWidth,
     onDraggingChange: setIsDragging,
-    storageKey: "rn_better_dev_tools_bubble",
+    storageKey: devToolsStorageKeys.bubble.position(),
   });
   // Animated styles - matching FloatingStatusBubble exactly
   const animatedStyle = useAnimatedStyle(() => ({
