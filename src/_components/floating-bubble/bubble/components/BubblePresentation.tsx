@@ -16,6 +16,9 @@ interface BubblePresentationProps {
   userRole?: UserRole;
   onStatusPress?: () => void;
   onQueryPress?: () => void;
+  onEnvPress?: () => void;
+  onSentryPress?: () => void;
+  onStoragePress?: () => void;
   config?: BubbleConfig;
 }
 
@@ -29,6 +32,9 @@ export function BubblePresentation({
   userRole,
   onStatusPress,
   onQueryPress,
+  onEnvPress,
+  onSentryPress,
+  onStoragePress,
   config,
 }: BubblePresentationProps) {
   // Internal state for drag interaction
@@ -112,6 +118,9 @@ export function BubblePresentation({
             isDragging={isDragging}
             onStatusPress={() => !isDragging && onStatusPress?.()}
             onQueryPress={() => !isDragging && onQueryPress?.()}
+            onEnvPress={() => !isDragging && onEnvPress?.()}
+            onSentryPress={() => !isDragging && onSentryPress?.()}
+            onStoragePress={() => !isDragging && onStoragePress?.()}
             config={config}
           />
         </Animated.View>

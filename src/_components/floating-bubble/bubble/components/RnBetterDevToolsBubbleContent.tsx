@@ -1,6 +1,10 @@
 import { Pressable, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { TanstackLogo } from "../../../../_sections/react-query/components/query-browser/svgs";
+import {
+  TanstackLogo,
+  SentryLogo,
+} from "../../../../_sections/react-query/components/query-browser/svgs";
+import { Settings, Database } from "lucide-react-native";
 
 import { Divider } from "../../../../_shared/ui/components/Divider";
 import { WifiToggle } from "../../../../_sections/react-query/components/WifiToggle";
@@ -15,6 +19,9 @@ export interface BubbleConfig {
   showUserStatus?: boolean;
   showQueryButton?: boolean;
   showWifiToggle?: boolean;
+  showEnvButton?: boolean;
+  showSentryButton?: boolean;
+  showStorageButton?: boolean;
 }
 
 interface RnBetterDevToolsBubbleContentProps {
@@ -23,6 +30,9 @@ interface RnBetterDevToolsBubbleContentProps {
   isDragging: boolean;
   onStatusPress?: () => void;
   onQueryPress?: () => void;
+  onEnvPress?: () => void;
+  onSentryPress?: () => void;
+  onStoragePress?: () => void;
   config?: BubbleConfig;
 }
 
@@ -32,22 +42,35 @@ export function RnBetterDevToolsBubbleContent({
   isDragging,
   onStatusPress,
   onQueryPress,
+  onEnvPress,
+  onSentryPress,
+  onStoragePress,
   config = {},
 }: RnBetterDevToolsBubbleContentProps) {
   // Determine which components should be shown based on props and config
+  // Treat config values as truthy/falsy - true shows, false/undefined hides
   const shouldShowEnvironment =
-    config.showEnvironment !== false && environment !== undefined;
+    !!config.showEnvironment && environment !== undefined;
   const shouldShowUserStatus =
-    config.showUserStatus !== false && userRole !== undefined;
+    !!config.showUserStatus && userRole !== undefined;
   const shouldShowQueryButton =
-    config.showQueryButton !== false && onQueryPress !== undefined;
-  const shouldShowWifiToggle = config.showWifiToggle !== false;
+    !!config.showQueryButton && onQueryPress !== undefined;
+  const shouldShowWifiToggle = !!config.showWifiToggle;
+  const shouldShowEnvButton =
+    !!config.showEnvButton && onEnvPress !== undefined;
+  const shouldShowSentryButton =
+    !!config.showSentryButton && onSentryPress !== undefined;
+  const shouldShowStorageButton =
+    !!config.showStorageButton && onStoragePress !== undefined;
 
   // Create array of visible components for smart divider logic
   const visibleComponents = [
     shouldShowEnvironment && "environment",
     shouldShowUserStatus && "userStatus",
     shouldShowQueryButton && "queryButton",
+    shouldShowEnvButton && "envButton",
+    shouldShowSentryButton && "sentryButton",
+    shouldShowStorageButton && "storageButton",
     shouldShowWifiToggle && "wifiToggle",
   ].filter(Boolean);
 
@@ -108,6 +131,57 @@ export function RnBetterDevToolsBubbleContent({
         </>
       )}
 
+      {/* Environment Button */}
+      {shouldShowEnvButton && (
+        <>
+          <Pressable
+            accessibilityLabel="Environment Variables"
+            accessibilityHint="View Environment Variables"
+            sentry-label="ignore user interaction"
+            onPress={onEnvPress}
+            style={styles.iconButton}
+            hitSlop={8}
+          >
+            <Settings size={16} color="#10B981" />
+          </Pressable>
+          {renderDividerAfter("envButton")}
+        </>
+      )}
+
+      {/* Sentry Button */}
+      {shouldShowSentryButton && (
+        <>
+          <Pressable
+            accessibilityLabel="Sentry Events"
+            accessibilityHint="View Sentry Events"
+            sentry-label="ignore user interaction"
+            onPress={onSentryPress}
+            style={styles.iconButton}
+            hitSlop={8}
+          >
+            <SentryLogo />
+          </Pressable>
+          {renderDividerAfter("sentryButton")}
+        </>
+      )}
+
+      {/* Storage Button */}
+      {shouldShowStorageButton && (
+        <>
+          <Pressable
+            accessibilityLabel="Storage Browser"
+            accessibilityHint="Browse AsyncStorage data"
+            sentry-label="ignore user interaction"
+            onPress={onStoragePress}
+            style={styles.iconButton}
+            hitSlop={8}
+          >
+            <Database size={16} color="#3B82F6" />
+          </Pressable>
+          {renderDividerAfter("storageButton")}
+        </>
+      )}
+
       {/* WiFi Toggle */}
       {shouldShowWifiToggle && (
         <>
@@ -121,6 +195,16 @@ export function RnBetterDevToolsBubbleContent({
 
 const styles = StyleSheet.create({
   queryButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconButton: {
     width: 24,
     height: 24,
     borderRadius: 4,

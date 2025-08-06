@@ -126,10 +126,10 @@ export class ReactiveSentryEventStore {
 
     if (!isFromDevToolsLogging) {
       // Log all incoming events with safeguard marker
-      console.log("[RN-DevTools] Sentry Event Received:", {
-        ...event,
-        __rn_dev_tools_internal_log: true, // Safeguard marker
-      });
+      // console.log("[RN-DevTools] Sentry Event Received:", {
+      //   ...event,
+      //   __rn_dev_tools_internal_log: true, // Safeguard marker
+      // });
     }
     //temp
 

@@ -14,6 +14,7 @@ interface DevToolsConsoleProps {
   setSelectedSection?: (section: string | null) => void;
   enableSharedModalDimensions?: boolean;
   onReactQueryPress?: () => void;
+  onSettingsChange?: () => void | Promise<void>;
 }
 
 /**
@@ -36,6 +37,7 @@ export function DevToolsConsole({
   setSelectedSection: externalSetSelectedSection,
   enableSharedModalDimensions = false,
   onReactQueryPress,
+  onSettingsChange,
 }: DevToolsConsoleProps) {
   // Use external state if provided (for persistence), otherwise use internal state
   const [internalSelectedSection, setInternalSelectedSection] =
@@ -96,6 +98,7 @@ export function DevToolsConsole({
         envVarsSubtitle={envVarsSubtitle}
         onBack={handleBack}
         enableSharedModalDimensions={enableSharedModalDimensions}
+        onSettingsChange={onSettingsChange}
       />
     </>
   );
