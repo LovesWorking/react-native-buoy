@@ -1,10 +1,12 @@
 import { serialize, deserialize } from 'superjson';
 
 /**
- * Displays a string regardless the type of the data
+ * Converts any value to a display-friendly string representation.
  * Uses SuperJSON to properly serialize complex objects, avoiding [object Object].
- * @param {unknown} value Value to be stringified
- * @param {boolean} beautify Formats json to multiline
+ * 
+ * @param value - The value to display
+ * @param beautify - Whether to format the output with indentation
+ * @returns JSON string representation of the value
  */
 export const displayValue = (value: unknown, beautify: boolean = false) => {
   const { json } = serialize(value);

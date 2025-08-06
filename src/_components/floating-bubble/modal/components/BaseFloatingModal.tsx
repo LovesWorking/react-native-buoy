@@ -12,6 +12,7 @@ interface BaseFloatingModalProps {
   showToggleButton?: boolean; // Whether to show the floating mode toggle
   customHeaderContent?: ReactNode; // Custom content to render in header
   headerSubtitle?: string; // Optional subtitle to show below the main header content
+  hideCloseButton?: boolean; // Whether to hide the close button
 }
 
 export function BaseFloatingModal({
@@ -22,6 +23,7 @@ export function BaseFloatingModal({
   showToggleButton = true,
   customHeaderContent,
   headerSubtitle,
+  hideCloseButton,
 }: BaseFloatingModalProps) {
   // Extract all state management to custom hook
   const modalState = useModalState({ storagePrefix });
@@ -100,6 +102,7 @@ export function BaseFloatingModal({
       onResizeStart={handleResizeStart}
       onResizeEnd={handleResizeEnd}
       onContainerLayout={modalState.setContainerBounds}
+      hideCloseButton={hideCloseButton}
     >
       {children}
     </FloatingModalContent>

@@ -1,3 +1,11 @@
+import type {
+  Breadcrumb,
+  SentryEvent,
+  SpanJSON,
+  FetchBreadcrumbHint,
+  XhrBreadcrumbHint,
+} from "../types";
+
 interface SentryClient extends Record<string, unknown> {
   on?: (event: string, callback: (arg: unknown) => unknown) => void;
 }
@@ -105,14 +113,6 @@ type SentryEnvelopeItemHeader = {
   filename?: string;
 };
 
-interface SentryBreadcrumb {
-  category?: string;
-  message?: string;
-  level?: string;
-  type?: string;
-  data?: Record<string, unknown>;
-}
-
 type SentryEnvelopeItem = [SentryEnvelopeItemHeader, unknown];
 type SentryEnvelope = [SentryEnvelopeHeader, SentryEnvelopeItem[]];
 
@@ -171,37 +171,6 @@ const mapLevelToEventLevel = (level?: string): SentryEventLevel => {
   }
 };
 
-export const getEventEmoji = (eventType: SentryEventType): string => {
-  switch (eventType) {
-    case SentryEventType.Error:
-      return "🚨";
-    case SentryEventType.Transaction:
-      return "📊";
-    case SentryEventType.Span:
-      return "⚡";
-    case SentryEventType.Session:
-      return "👤";
-    case SentryEventType.UserFeedback:
-      return "💬";
-    case SentryEventType.Profile:
-      return "📈";
-    case SentryEventType.Replay:
-      return "🎬";
-    case SentryEventType.Attachment:
-      return "📎";
-    case SentryEventType.ClientReport:
-      return "📋";
-    case SentryEventType.Log:
-      return "📝";
-    case SentryEventType.Breadcrumb:
-      return "🍞";
-    case SentryEventType.Native:
-      return "🌉";
-    default:
-      return "📄";
-  }
-};
-
 const parseEnvelope = (envelope: SentryEnvelope): SentryEventEntry[] => {
   const [header, items] = envelope;
   const results: SentryEventEntry[] = [];
@@ -220,6 +189,11 @@ const parseEnvelope = (envelope: SentryEnvelope): SentryEventEntry[] => {
       );
     }
 
+    // Check if this envelope contains our own dev tools logging
+    const isDevToolsLog =
+      message.includes("[RN-DevTools]") ||
+      message.includes("__rn_dev_tools_internal_log");
+
     const event: SentryEventEntry = {
       id: generateId(),
       timestamp: Date.now(),
@@ -233,6 +207,8 @@ const parseEnvelope = (envelope: SentryEnvelope): SentryEventEntry[] => {
         sdk: header.sdk,
         itemType: itemHeader.type,
         header: itemHeader,
+        // Add safeguard marker if this is from our dev tools logging
+        ...(isDevToolsLog && { __rn_dev_tools_internal_log: true }),
       },
       rawData: payload,
     };
@@ -377,7 +353,28 @@ export class SentryEventLogger {
   private setupSpanListeners(client: Record<string, unknown>): void {
     try {
       (client as SentryClient).on?.("spanEnd", (span: unknown) => {
-        const spanData = span as Record<string, unknown>;
+        const spanData = span as SpanJSON;
+
+        // Extract HTTP-specific information if this is an HTTP span
+        let httpInfo = {};
+        if (
+          spanData.op === "http.client" ||
+          spanData.op === "http" ||
+          spanData.op?.startsWith("http.")
+        ) {
+          const attrs = spanData.data;
+          httpInfo = {
+            method: attrs["http.request.method"] || attrs["http.method"],
+            url: attrs["url.full"] || attrs["http.url"],
+            statusCode:
+              attrs["http.response.status_code"] || attrs["http.status_code"],
+            requestSize: attrs["http.request_content_length"],
+            responseSize: attrs["http.response_content_length"],
+            query: attrs["http.query"],
+            fragment: attrs["http.fragment"],
+          };
+        }
+
         const event: SentryEventEntry = {
           id: generateId(),
           timestamp: Date.now(),
@@ -388,9 +385,14 @@ export class SentryEventLogger {
           data: {
             spanId: spanData.span_id,
             traceId: spanData.trace_id,
-            operation: spanData.op || spanData.operation,
+            operation: spanData.op,
             description: spanData.description,
             status: spanData.status,
+            duration:
+              spanData.timestamp && spanData.start_timestamp
+                ? (spanData.timestamp - spanData.start_timestamp) * 1000
+                : undefined,
+            ...httpInfo,
           },
           rawData: spanData,
         };
@@ -398,7 +400,7 @@ export class SentryEventLogger {
       });
 
       (client as SentryClient).on?.("spanStart", (span: unknown) => {
-        const spanData = span as Record<string, unknown>;
+        const spanData = span as SpanJSON;
         const event: SentryEventEntry = {
           id: generateId(),
           timestamp: Date.now(),
@@ -409,7 +411,7 @@ export class SentryEventLogger {
           data: {
             spanId: spanData.span_id,
             traceId: spanData.trace_id,
-            operation: spanData.op || spanData.operation,
+            operation: spanData.op,
             description: spanData.description,
           },
           rawData: spanData,
@@ -451,11 +453,11 @@ export class SentryEventLogger {
       (client as SentryClient).on?.(
         "transactionFinish",
         (transaction: unknown) => {
-          const transactionData = transaction as Record<string, unknown>;
+          const transactionData = transaction as SentryEvent;
           const duration =
-            typeof transactionData.endTimestamp === "number" &&
-            typeof transactionData.startTimestamp === "number"
-              ? transactionData.endTimestamp - transactionData.startTimestamp
+            transactionData.timestamp && transactionData.start_timestamp
+              ? (transactionData.timestamp - transactionData.start_timestamp) *
+                1000
               : null;
 
           const event: SentryEventEntry = {
@@ -464,15 +466,16 @@ export class SentryEventLogger {
             source: "transaction",
             eventType: SentryEventType.Transaction,
             level: SentryEventLevel.Info,
-            message: `Transaction finished: ${transactionData.name || "Unknown"}${
-              duration ? ` (${duration}ms)` : ""
+            message: `Transaction finished: ${transactionData.transaction || "Unknown"}${
+              duration ? ` (${Math.round(duration)}ms)` : ""
             }`,
             data: {
-              transactionName: transactionData.name,
-              operation: transactionData.op,
-              traceId: transactionData.traceId,
-              status: transactionData.status,
+              transactionName: transactionData.transaction,
+              operation: transactionData.contexts?.trace?.op,
+              traceId: transactionData.contexts?.trace?.trace_id,
+              status: transactionData.contexts?.trace?.status,
               duration,
+              spans: transactionData.spans?.length || 0,
             },
             rawData: transactionData,
           };
@@ -485,14 +488,18 @@ export class SentryEventLogger {
   }
 
   /**
-   * Setup breadcrumb event listeners
+   * Setup breadcrumb event listeners with enhanced HTTP data capture
    */
   private setupBreadcrumbListeners(client: Record<string, unknown>): void {
     try {
       (client as SentryClient).on?.(
         "beforeAddBreadcrumb",
-        (breadcrumb: unknown) => {
-          const breadcrumbData = breadcrumb as SentryBreadcrumb;
+        (breadcrumb: unknown, hint?: unknown) => {
+          const breadcrumbData = breadcrumb as Breadcrumb;
+          const breadcrumbHint = hint as
+            | FetchBreadcrumbHint
+            | XhrBreadcrumbHint
+            | undefined;
           const category = String(breadcrumbData.category || "unknown");
           const message = String(breadcrumbData.message || "no message");
 
@@ -501,6 +508,8 @@ export class SentryEventLogger {
             category === "console" &&
             (message.includes("Sentry") ||
               message.includes("event logger") ||
+              message.includes("[RN-DevTools]") ||
+              message.includes("__rn_dev_tools_internal_log") ||
               message.includes("✅") ||
               message.includes("📦") ||
               message.includes("⚡") ||
@@ -514,6 +523,53 @@ export class SentryEventLogger {
             return null;
           }
 
+          // Enhanced HTTP breadcrumb processing
+          const enhancedData = { ...breadcrumbData.data };
+          if (
+            category === "xhr" ||
+            category === "fetch" ||
+            category === "http"
+          ) {
+            // Extract timing information from hint
+            if (
+              breadcrumbHint &&
+              "startTimestamp" in breadcrumbHint &&
+              "endTimestamp" in breadcrumbHint
+            ) {
+              const duration = breadcrumbHint.endTimestamp
+                ? (breadcrumbHint.endTimestamp -
+                    breadcrumbHint.startTimestamp) *
+                  1000
+                : undefined;
+              enhancedData.duration = duration;
+              enhancedData.startTimestamp = breadcrumbHint.startTimestamp;
+              enhancedData.endTimestamp = breadcrumbHint.endTimestamp;
+            }
+
+            // For fetch breadcrumbs, extract response information
+            if (
+              category === "fetch" &&
+              breadcrumbHint &&
+              "response" in breadcrumbHint
+            ) {
+              const response = breadcrumbHint.response as Response | undefined;
+              if (
+                response &&
+                typeof response === "object" &&
+                "status" in response
+              ) {
+                enhancedData.status_code =
+                  enhancedData.status_code || response.status;
+
+                // Try to extract response size from headers
+                const contentLength = response.headers?.get?.("content-length");
+                if (contentLength) {
+                  enhancedData.response_body_size = parseInt(contentLength, 10);
+                }
+              }
+            }
+          }
+
           const event: SentryEventEntry = {
             id: generateId(),
             timestamp: Date.now(),
@@ -524,9 +580,9 @@ export class SentryEventLogger {
             data: {
               category,
               type: breadcrumbData.type,
-              data: breadcrumbData.data,
+              data: enhancedData,
             },
-            rawData: breadcrumbData,
+            rawData: { breadcrumb: breadcrumbData, hint: breadcrumbHint },
           };
           eventStore.add(event);
 
@@ -593,695 +649,305 @@ export function generateTestSentryEvents(): void {
 
   // Create comprehensive sample events to test all possible types and mappings
   const testEvents: SentryEventEntry[] = [
-    // Error events (maps to LogType.Error)
+    // HTTP Request Test Events - These will show insights
     {
       id: generateId(),
       timestamp: now,
-      source: "envelope",
-      eventType: SentryEventType.Error,
-      level: SentryEventLevel.Error,
-      message: "Network request failed",
+      source: "breadcrumb",
+      eventType: SentryEventType.Breadcrumb,
+      level: SentryEventLevel.Info,
+      message: "HTTP GET /api/users",
       data: {
-        category: "error",
-        endpoint: "/api/users",
-        statusCode: 500,
+        category: "xhr",
+        method: "GET",
+        url: "/api/users",
+        status_code: 200,
+        duration: 1250,
+        request_body_size: 0,
+        response_body_size: 4567,
         test: true,
       },
       rawData: {
-        message: "Network request failed",
+        category: "xhr",
+        message: "HTTP GET /api/users",
+        data: {
+          method: "GET",
+          url: "/api/users",
+          status_code: 200,
+        },
+      },
+    },
+    {
+      id: generateId(),
+      timestamp: now - 100,
+      source: "breadcrumb",
+      eventType: SentryEventType.Breadcrumb,
+      level: SentryEventLevel.Error,
+      message: "HTTP POST /api/auth/login failed",
+      data: {
+        category: "fetch",
+        method: "POST",
+        url: "/api/auth/login",
+        status_code: 401,
+        duration: 350,
+        request_body_size: 125,
+        response_body_size: 89,
+        test: true,
+      },
+      rawData: {
+        category: "fetch",
+        message: "HTTP POST /api/auth/login failed",
+        data: {
+          method: "POST",
+          url: "/api/auth/login",
+          status_code: 401,
+        },
+      },
+    },
+    {
+      id: generateId(),
+      timestamp: now - 200,
+      source: "span",
+      eventType: SentryEventType.Span,
+      level: SentryEventLevel.Info,
+      message: "Span ended: HTTP GET /api/data/large",
+      data: {
+        spanId: "span123",
+        traceId: "trace456",
+        operation: "http.client",
+        description: "GET /api/data/large",
+        status: "ok",
+        duration: 4500,
+        method: "GET",
+        url: "/api/data/large",
+        statusCode: 200,
+        responseSize: 2048000,
+        test: true,
+      },
+      rawData: {
+        span_id: "span123",
+        trace_id: "trace456",
+        op: "http.client",
+        description: "GET /api/data/large",
+        start_timestamp: (now - 4700) / 1000,
+        timestamp: (now - 200) / 1000,
+        data: {
+          "http.request.method": "GET",
+          "url.full": "/api/data/large",
+          "http.response.status_code": 200,
+          "http.response_content_length": 2048000,
+        },
+      } as SpanJSON,
+    },
+    {
+      id: generateId(),
+      timestamp: now - 300,
+      source: "breadcrumb",
+      eventType: SentryEventType.Breadcrumb,
+      level: SentryEventLevel.Error,
+      message: "HTTP POST /api/process failed",
+      data: {
+        category: "http",
+        method: "POST",
+        url: "/api/process",
+        status_code: 500,
+        duration: 892,
+        test: true,
+      },
+      rawData: {
+        category: "http",
+        message: "HTTP POST /api/process failed",
+        data: {
+          method: "POST",
+          url: "/api/process",
+          status_code: 500,
+        },
+      },
+    },
+    {
+      id: generateId(),
+      timestamp: now - 400,
+      source: "breadcrumb",
+      eventType: SentryEventType.Breadcrumb,
+      level: SentryEventLevel.Warning,
+      message: "HTTP GET /api/slow-endpoint",
+      data: {
+        category: "xhr",
+        method: "GET",
+        url: "/api/slow-endpoint",
+        status_code: 200,
+        duration: 3567,
+        response_body_size: 12345,
+        test: true,
+      },
+      rawData: {
+        category: "xhr",
+        message: "HTTP GET /api/slow-endpoint",
+        data: {
+          method: "GET",
+          url: "/api/slow-endpoint",
+          status_code: 200,
+        },
+      },
+    },
+    {
+      id: generateId(),
+      timestamp: now - 500,
+      source: "breadcrumb",
+      eventType: SentryEventType.Breadcrumb,
+      level: SentryEventLevel.Error,
+      message: "HTTP POST /api/upload rate limited",
+      data: {
+        category: "fetch",
+        method: "POST",
+        url: "/api/upload",
+        status_code: 429,
+        duration: 125,
+        response_body_size: 234,
+        test: true,
+      },
+      rawData: {
+        category: "fetch",
+        message: "HTTP POST /api/upload rate limited",
+        data: {
+          method: "POST",
+          url: "/api/upload",
+          status_code: 429,
+        },
+      },
+    },
+    // Error events with insights
+    {
+      id: generateId(),
+      timestamp: now - 600,
+      source: "envelope",
+      eventType: SentryEventType.Error,
+      level: SentryEventLevel.Error,
+      message: "Network request failed: timeout",
+      data: {
+        category: "error",
+        errorType: "NetworkError",
+        errorMessage: "Network request failed",
+        test: true,
+      },
+      rawData: {
+        message: "Network request failed: timeout",
         level: "error",
         exception: { type: "NetworkError" },
       },
     },
     {
       id: generateId(),
-      timestamp: now - 500,
+      timestamp: now - 700,
       source: "envelope",
       eventType: SentryEventType.Error,
-      level: SentryEventLevel.Fatal,
-      message: "Critical application crash",
+      level: SentryEventLevel.Error,
+      message: "AsyncStorage.getItem failed: null reference",
       data: {
         category: "error",
-        component: "App",
-        crashType: "fatal",
+        errorType: "TypeError",
+        errorMessage: "Cannot read property 'data' of undefined",
+        stackTrace:
+          "at AsyncStorage.getItem (/node_modules/@react-native-async-storage/async-storage/lib/AsyncStorage.js:123:15)",
         test: true,
       },
-      rawData: { message: "Critical application crash", level: "fatal" },
+      rawData: {
+        message: "AsyncStorage.getItem failed: null reference",
+        level: "error",
+        exception: { type: "TypeError" },
+      },
     },
-
-    // Auth events (maps to LogType.Auth)
+    // Transaction with HTTP spans
+    {
+      id: generateId(),
+      timestamp: now - 800,
+      source: "transaction",
+      eventType: SentryEventType.Transaction,
+      level: SentryEventLevel.Info,
+      message: "Transaction finished: /api/checkout (2345ms)",
+      data: {
+        transactionName: "/api/checkout",
+        operation: "http.server",
+        traceId: "trace789",
+        status: "ok",
+        duration: 2345,
+        spans: 5,
+        test: true,
+      },
+      rawData: {
+        transaction: "/api/checkout",
+        start_timestamp: (now - 3145) / 1000,
+        timestamp: (now - 800) / 1000,
+        contexts: {
+          trace: {
+            trace_id: "trace789",
+            op: "http.server",
+            status: "ok",
+          },
+        },
+        spans: [
+          {
+            op: "http.client",
+            description: "POST /api/payment",
+            span_id: "span123",
+            trace_id: "trace789",
+            start_timestamp: (now - 2900) / 1000,
+            timestamp: (now - 1400) / 1000,
+            data: {
+              "http.request.method": "POST",
+              "url.full": "/api/payment",
+              "http.response.status_code": 200,
+            },
+          },
+          {
+            op: "http.client",
+            description: "GET /api/inventory",
+            span_id: "span124",
+            trace_id: "trace789",
+            start_timestamp: (now - 2800) / 1000,
+            timestamp: (now - 1900) / 1000,
+            data: {
+              "http.request.method": "GET",
+              "url.full": "/api/inventory",
+              "http.response.status_code": 200,
+            },
+          },
+        ] as SpanJSON[],
+      } as SentryEvent,
+    },
+    // Additional event types
     {
       id: generateId(),
       timestamp: now - 1000,
       source: "breadcrumb",
       eventType: SentryEventType.Breadcrumb,
       level: SentryEventLevel.Info,
-      message: "User logged in successfully",
-      data: {
-        category: "auth",
-        action: "login",
-        userId: "user123",
-        test: true,
-      },
-      rawData: { category: "auth", message: "User logged in successfully" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 1200,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Warning,
-      message: "Authentication token expired",
-      data: { category: "auth", action: "token_expire", test: true },
-      rawData: { category: "auth", message: "Authentication token expired" },
-    },
-
-    // Custom events (maps to LogType.Custom)
-    {
-      id: generateId(),
-      timestamp: now - 1500,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "Payment processing initiated",
-      data: { category: "payment", amount: 99.99, currency: "USD", test: true },
-      rawData: { category: "payment", message: "Payment processing initiated" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 1700,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "Analytics event tracked",
-      data: {
-        category: "analytics",
-        event: "page_view",
-        page: "/dashboard",
-        test: true,
-      },
-      rawData: { category: "analytics", message: "Analytics event tracked" },
-    },
-
-    // Debug events (maps to LogType.Debug)
-    {
-      id: generateId(),
-      timestamp: now - 2000,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Debug,
-      message: "Debug checkpoint reached",
-      data: { category: "debug", checkpoint: "user_validation", test: true },
-      rawData: { category: "debug", message: "Debug checkpoint reached" },
-    },
-
-    // Generic/Log events (maps to LogType.Generic)
-    {
-      id: generateId(),
-      timestamp: now - 2500,
-      source: "envelope",
-      eventType: SentryEventType.Log,
-      level: SentryEventLevel.Info,
-      message: "Application log entry",
-      data: { category: "log", module: "core", test: true },
-      rawData: { message: "Application log entry", level: "info" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 2700,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "Generic system message",
-      data: { category: "generic", test: true },
-      rawData: { category: "generic", message: "Generic system message" },
-    },
-
-    // HTTP Request events (maps to LogType.HTTPRequest)
-    {
-      id: generateId(),
-      timestamp: now - 3000,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "HTTP GET /api/messages",
-      data: {
-        category: "xhr",
-        method: "GET",
-        url: "/api/messages",
-        status: 200,
-        test: true,
-      },
-      rawData: { category: "xhr", message: "HTTP GET /api/messages" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 3200,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Warning,
-      message: "HTTP POST /api/broadcasts failed",
-      data: {
-        category: "fetch",
-        method: "POST",
-        url: "/api/broadcasts",
-        status: 429,
-        test: true,
-      },
-      rawData: {
-        category: "fetch",
-        message: "HTTP POST /api/broadcasts failed",
-      },
-    },
-
-    // Navigation events (maps to LogType.Navigation)
-    {
-      id: generateId(),
-      timestamp: now - 3500,
-      source: "transaction",
-      eventType: SentryEventType.Transaction,
-      level: SentryEventLevel.Info,
-      message: "Screen navigation to Messages",
-      data: { transactionName: "MessagesScreen", op: "navigation", test: true },
-      rawData: { name: "MessagesScreen", op: "navigation" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 3700,
-      source: "span",
-      eventType: SentryEventType.Span,
-      level: SentryEventLevel.Info,
-      message: "Navigation transition completed",
-      data: {
-        operation: "navigation",
-        description: "screen_transition",
-        test: true,
-      },
-      rawData: { op: "navigation", description: "screen_transition" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 3900,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "Route changed to /inbox",
+      message: "User navigated to Messages",
       data: {
         category: "navigation",
         from: "/dashboard",
-        to: "/inbox",
+        to: "/messages",
         test: true,
       },
-      rawData: { category: "navigation", message: "Route changed to /inbox" },
-    },
-
-    // Replay events (maps to LogType.Replay)
-    {
-      id: generateId(),
-      timestamp: now - 4000,
-      source: "envelope",
-      eventType: SentryEventType.Replay,
-      level: SentryEventLevel.Info,
-      message: "Session replay started",
-      data: { replayId: "replay123", duration: 0, test: true },
-      rawData: { type: "replay_event", replay_id: "replay123" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 4200,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "Replay segment captured",
-      data: { category: "replay.segment", segmentId: "seg456", test: true },
       rawData: {
-        category: "replay.segment",
-        message: "Replay segment captured",
+        category: "navigation",
+        message: "User navigated to Messages",
       },
-    },
-
-    // State events (maps to LogType.State)
-    {
-      id: generateId(),
-      timestamp: now - 4500,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "Redux state updated",
-      data: {
-        category: "redux",
-        action: "USER_LOGIN",
-        state: "authenticated",
-        test: true,
-      },
-      rawData: { category: "redux", message: "Redux state updated" },
     },
     {
       id: generateId(),
-      timestamp: now - 4700,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Debug,
-      message: "Component state changed",
-      data: {
-        category: "state",
-        component: "MessagesList",
-        property: "loading",
-        test: true,
-      },
-      rawData: { category: "state", message: "Component state changed" },
-    },
-
-    // System events (maps to LogType.System)
-    {
-      id: generateId(),
-      timestamp: now - 5000,
+      timestamp: now - 1100,
       source: "envelope",
       eventType: SentryEventType.Session,
       level: SentryEventLevel.Info,
       message: "User session started",
       data: { sessionId: "sess789", platform: "ios", test: true },
-      rawData: { status: "ok", started: now - 5000 },
+      rawData: { status: "ok", started: now - 1100 },
     },
-    {
-      id: generateId(),
-      timestamp: now - 5200,
-      source: "envelope",
-      eventType: SentryEventType.Profile,
-      level: SentryEventLevel.Info,
-      message: "Performance profile collected",
-      data: { profileId: "prof456", duration: 150, test: true },
-      rawData: { type: "profile", duration: 150 },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 5400,
-      source: "envelope",
-      eventType: SentryEventType.Attachment,
-      level: SentryEventLevel.Info,
-      message: "Debug attachment uploaded",
-      data: { filename: "crash_log.txt", size: 2048, test: true },
-      rawData: { filename: "crash_log.txt", content_type: "text/plain" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 5600,
-      source: "envelope",
-      eventType: SentryEventType.ClientReport,
-      level: SentryEventLevel.Info,
-      message: "SDK health report",
-      data: { discardedEvents: 5, reason: "rate_limit", test: true },
-      rawData: {
-        timestamp: now - 5600,
-        discarded_events: [{ reason: "rate_limit", quantity: 5 }],
-      },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 5800,
-      source: "native",
-      eventType: SentryEventType.Native,
-      level: SentryEventLevel.Info,
-      message: "Native bridge event",
-      data: { bridge: "iOS", method: "sendEnvelope", test: true },
-      rawData: { platform: "ios", method: "sendEnvelope" },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 6000,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "Console log captured",
-      data: { category: "console", level: "info", test: true },
-      rawData: { category: "console", message: "Console log captured" },
-    },
-
-    // Touch events (maps to LogType.Touch)
-    {
-      id: generateId(),
-      timestamp: now - 6500,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "User tapped send button",
-      data: {
-        category: "touch",
-        element: "send_button",
-        coordinates: { x: 150, y: 300 },
-        test: true,
-      },
-      rawData: { category: "touch", message: "User tapped send button" },
-    },
-
-    // User Action events (maps to LogType.UserAction)
-    {
-      id: generateId(),
-      timestamp: now - 7000,
-      source: "envelope",
-      eventType: SentryEventType.UserFeedback,
-      level: SentryEventLevel.Info,
-      message: "User submitted feedback",
-      data: { feedbackId: "fb123", rating: 5, test: true },
-      rawData: {
-        name: "John Doe",
-        email: "john@example.com",
-        comments: "Great app!",
-      },
-    },
-    {
-      id: generateId(),
-      timestamp: now - 7200,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Info,
-      message: "User created new broadcast",
-      data: { category: "ui.action", action: "create_broadcast", test: true },
-      rawData: { category: "ui.action", message: "User created new broadcast" },
-    },
-
-    // Unknown/Unhandled event type
-    {
-      id: generateId(),
-      timestamp: now - 7500,
-      source: "envelope",
-      eventType: SentryEventType.Unknown,
-      level: SentryEventLevel.Warning,
-      message: "Unknown event type received",
-      data: { unknownField: "mysterious_value", test: true },
-      rawData: { type: "unknown", data: "mysterious_value" },
-    },
-
-    // Additional breadcrumb variations with different levels
-    {
-      id: generateId(),
-      timestamp: now - 8000,
-      source: "breadcrumb",
-      eventType: SentryEventType.Breadcrumb,
-      level: SentryEventLevel.Warning,
-      message: "API rate limit approaching",
-      data: { category: "http", remaining: 10, limit: 1000, test: true },
-      rawData: { category: "http", message: "API rate limit approaching" },
-    },
-
-    // COMPREHENSIVE DATA EXPLORER TEST EVENT - Shows ALL supported data types
-    (() => {
-      const testEventData: SentryEventEntry = {
-        id: generateId(),
-        timestamp: now - 100,
-        source: "envelope",
-        eventType: SentryEventType.Error,
-        level: SentryEventLevel.Error,
-        message: "🔍 DataExplorer Test Event - All Data Types Showcase",
-        data: {
-          category: "dataexplorer_test",
-          test: true,
-          // All primitive types
-          stringValue: "Hello DataExplorer! 🚀",
-          numberValue: 42.125,
-          booleanTrue: true,
-          booleanFalse: false,
-          nullValue: null,
-          undefinedValue: undefined,
-          bigintValue: BigInt(9007199254740991),
-          symbolValue: Symbol("dataexplorer_test"),
-
-          // Date objects
-          dateISO: new Date("2023-12-25T10:30:00Z"),
-          dateNow: new Date(),
-
-          // Function
-          exampleFunction: function testFunction(x: number) {
-            return x * 2;
-          },
-          arrowFunction: (x: string) => `processed: ${x}`,
-
-          // RegExp
-          emailRegex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-          phoneRegex: /^\+?[\d\s-()]+$/,
-
-          // Error objects
-          networkError: new Error("Network connection failed"),
-          validationError: new TypeError("Invalid parameter type"),
-          customError: (() => {
-            const err = new Error("Custom validation failed");
-            const extendedErr = err as unknown as Record<string, unknown>;
-            extendedErr.code = "VALIDATION_ERROR";
-            extendedErr.statusCode = 400;
-            extendedErr.details = { field: "email", reason: "invalid_format" };
-            return err;
-          })(),
-
-          // Arrays with mixed types
-          mixedArray: [
-            "string",
-            123,
-            true,
-            null,
-            { nested: "object" },
-            [1, 2, 3],
-            new Date(),
-            /regex/,
-          ],
-
-          // Large array for range testing
-          largeDataSet: Array.from({ length: 150 }, (_, i) => ({
-            id: i,
-            name: `Item ${i}`,
-            category:
-              i % 3 === 0 ? "primary" : i % 3 === 1 ? "secondary" : "tertiary",
-            active: i % 2 === 0,
-            metadata: {
-              created: new Date(now - i * 1000 * 60),
-              tags: [`tag${i % 5}`, `category${i % 3}`],
-              score: Math.round(Math.random() * 100),
-            },
-          })),
-
-          // Maps
-          userPermissions: (() => {
-            const map = new Map();
-            map.set("read", true);
-            map.set("write", false);
-            map.set("admin", true);
-            map.set(Symbol("special"), "secret_access");
-            map.set(123, "numeric_key");
-            return map;
-          })(),
-
-          // Sets
-          uniqueCategories: new Set([
-            "error",
-            "warning",
-            "info",
-            "debug",
-            "trace",
-          ]),
-
-          // Nested objects with various depths
-          deeplyNested: {
-            level1: {
-              level2: {
-                level3: {
-                  level4: {
-                    level5: {
-                      treasure: "Found at level 5! 💎",
-                      coordinates: { x: 42, y: 128, z: -15 },
-                      timestamp: Date.now(),
-                    },
-                  },
-                },
-              },
-            },
-            metadata: {
-              version: "1.0.0",
-              author: "DataExplorer Team",
-              features: [
-                "circular_detection",
-                "smart_ranges",
-                "custom_renderers",
-              ],
-              stats: {
-                totalTypes: 15,
-                edgeCases: 8,
-                performance: "excellent",
-              },
-            },
-          },
-
-          // Object with various property types
-          complexObject: {
-            "string-key": "value1",
-            123: "numeric-key-value",
-            [Symbol("symbol-key")]: "symbol-value",
-            "special chars!@#$%": "special-key-value",
-            "unicode-🌟": "unicode-value",
-            very_long_property_name_that_should_test_wrapping: "long-key-value",
-          },
-
-          // Iterable objects
-          iterableObject: {
-            *[Symbol.iterator]() {
-              yield "first";
-              yield "second";
-              yield "third";
-            },
-          },
-
-          // Custom objects with prototypes
-          customInstance: (() => {
-            class CustomClass {
-              public name: string = "CustomInstance";
-              public type: string = "test";
-              public getValue() {
-                return 42;
-              }
-            }
-            return new CustomClass();
-          })(),
-
-          // Performance test data
-          performanceMetrics: {
-            renderTime: 16.7,
-            memoryUsage: "45.2 MB",
-            fps: 60,
-            bundleSize: "2.4 MB",
-            loadTime: new Date(now - 1500),
-            benchmarks: Array.from({ length: 50 }, (_, i) => ({
-              test: `performance_test_${i}`,
-              duration: Math.random() * 1000,
-              passed: Math.random() > 0.1,
-              metrics: {
-                cpu: Math.random() * 100,
-                memory: Math.random() * 512,
-                network: Math.random() * 1024,
-              },
-            })),
-          },
-
-          // Edge cases
-          edgeCases: {
-            emptyString: "",
-            emptyArray: [],
-            emptyObject: {},
-            emptyMap: new Map(),
-            emptySet: new Set(),
-            zeroNumber: 0,
-            negativeNumber: -42,
-            infinityValue: Infinity,
-            negativeInfinity: -Infinity,
-            nanValue: NaN,
-            veryLongString:
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ".repeat(
-                10
-              ),
-            specialCharacters:
-              "Special chars: \n\t\r\\ \"'`~!@#$%^&*()_+-={}[]|;:,.<>?",
-          },
-        },
-        rawData: (() => {
-          interface TestRawData extends Record<string, unknown> {
-            extra?: {
-              circular_test?: unknown;
-              [key: string]: unknown;
-            };
-          }
-
-          // Create circular reference for testing circular detection
-          const rawData: TestRawData = {
-            message: "🔍 DataExplorer Test Event - All Data Types Showcase",
-            level: "error",
-            environment: "development",
-            platform: "react-native",
-            sdk: {
-              name: "sentry.javascript.react-native",
-              version: "5.0.0",
-            },
-            user: {
-              id: "dataexplorer_tester",
-              username: "test_user",
-              email: "test@dataexplorer.com",
-              ip_address: "127.0.0.1",
-            },
-            tags: {
-              component: "DataExplorer",
-              test_type: "comprehensive",
-              data_types: "all",
-            },
-            extra: {
-              test_metadata: {
-                created_at: new Date(now),
-                purpose: "Showcase all DataExplorer capabilities",
-                coverage: "100%",
-                features_tested: [
-                  "Type detection",
-                  "Circular reference handling",
-                  "Large array ranges",
-                  "Custom renderers",
-                  "Object key sorting",
-                  "Deep nesting",
-                  "Edge cases",
-                ],
-              },
-            },
-            breadcrumbs: Array.from({ length: 25 }, (_, i) => ({
-              timestamp: now - i * 1000,
-              level: ["info", "warning", "error", "debug"][i % 4],
-              category: ["navigation", "xhr", "user", "system"][i % 4],
-              message: `Breadcrumb ${i + 1}: Testing data explorer`,
-              data: {
-                index: i,
-                type: "test_breadcrumb",
-                metadata: { step: `step_${i}` },
-              },
-            })),
-            contexts: {
-              app: {
-                app_name: "DataExplorer Test App",
-                app_version: "1.0.0",
-                app_build: "123",
-              },
-              device: {
-                model: "iPhone 15 Pro",
-                orientation: "portrait",
-                memory_size: 8589934592,
-                battery_level: 85,
-              },
-              os: {
-                name: "iOS",
-                version: "17.0",
-                build: "21A329",
-              },
-            },
-          };
-
-          // Add circular reference to test circular detection
-          rawData.circularRef = rawData;
-          if (!rawData.extra) {
-            rawData.extra = {};
-          }
-          rawData.extra.circular_test = rawData;
-
-          return rawData;
-        })(),
-      };
-
-      // Add circular references to test circular detection in main data
-      testEventData.data.circularSelf = testEventData.data;
-      testEventData.data.circularParent = testEventData;
-      (
-        (testEventData.data as Record<string, unknown>).deeplyNested as Record<
-          string,
-          unknown
-        >
-      ).circularRef = testEventData.data;
-
-      return testEventData;
-    })(),
   ];
 
   testEvents.forEach((event) => eventStore.add(event));
   console.log(
-    `Generated ${testEvents.length} comprehensive test Sentry events covering all event types and log categories, including a COMPREHENSIVE DataExplorer showcase event with ALL supported data types!`
+    `Generated ${testEvents.length} test Sentry events with enhanced HTTP data and insights`
   );
 }

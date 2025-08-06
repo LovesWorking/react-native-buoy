@@ -11,7 +11,6 @@ import {
   GestureDetector,
   ScrollView,
 } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
 import {
   FileText,
@@ -25,10 +24,10 @@ import { ConsoleTransportEntry, LogLevel, LogType } from "../../../_shared/logge
 
 import { EmptyFilterState, EmptyState } from "../../log-dump/EmptyStates";
 import { adaptSentryEventsToConsoleEntries } from "../utils/SentryEventAdapter";
-import { SentryEventLogDetailView } from "./SentryEventLogDetailView";
 import { SentryEventLogEntryItem } from "./SentryEventLogEntryItem";
 import { SentryEventLogFilters } from "./SentryEventLogFilters";
-import { getDefaultTypeFilters, getDefaultLevelFilters } from "../utils/defaultFilters";
+import { TickProvider } from "../hooks/useTickEveryMinute";
+import { SentryDetailModal } from "./SentryDetailModal";
 import {
   clearSentryEvents,
   generateTestSentryEvents,
@@ -71,7 +70,7 @@ interface SentryEventLogDumpModalContentProps {
   onClose: () => void;
 }
 
-export function SentryEventLogDumpModalContent({
+function SentryEventLogDumpModalContentInner({
   onClose,
 }: SentryEventLogDumpModalContentProps) {
   // Create pan gesture using modern Gesture.Pan() API to fix Android FlashList integration with modal
@@ -82,13 +81,12 @@ export function SentryEventLogDumpModalContent({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [entries, setEntries] = useState<ConsoleTransportEntry[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(
-    () => getDefaultTypeFilters()
+    new Set()
   );
   const [selectedLevels, setSelectedLevels] = useState<Set<LogLevel>>(
-    () => getDefaultLevelFilters()
+    new Set()
   );
   const flatListRef = useRef<FlashList<ConsoleTransportEntry>>(null);
-  const insets = useSafeAreaInsets();
   // Function to calculate entries
   const calculateEntries = () => {
     const rawSentryEvents = getSentryEvents();
@@ -186,6 +184,9 @@ export function SentryEventLogDumpModalContent({
     });
   };
 
+  // Note: Store filter synchronization removed to prevent circular updates
+  // Filtering is handled locally in the memoized filteredEntries
+
   // Memoized filtering to prevent expensive recalculation on every render [[memory:4875251]]
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
@@ -231,15 +232,18 @@ export function SentryEventLogDumpModalContent({
     setEntries([]);
   };
 
-  // Show detail view or list view
-  if (selectedEntry) {
-    return (
-      <SentryEventLogDetailView entry={selectedEntry} onBack={goBackToList} />
-    );
-  }
-
   return (
     <View style={styles.container} sentry-label="ignore devtools sentry dump container">
+      {/* Detail Modal - returns null when not visible */}
+      <SentryDetailModal
+        visible={!!selectedEntry}
+        entry={selectedEntry}
+        onBack={goBackToList}
+      />
+
+      {/* Main content - always visible when detail modal is not shown */}
+      {!selectedEntry && (
+        <>
       {/* Enhanced Header */}
       <View style={styles.headerContainer} sentry-label="ignore devtools sentry dump header container">
         {/* Main header */}
@@ -343,8 +347,9 @@ export function SentryEventLogDumpModalContent({
               renderScrollComponent={ScrollView}
             />
           </GestureDetector>
-          <View style={[styles.bottomInset, { height: insets.bottom }]} sentry-label="ignore devtools sentry dump bottom inset" />
         </View>
+      )}
+        </>
       )}
     </View>
   );
@@ -421,7 +426,13 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: 16,
   },
-  bottomInset: {
-    // Empty style for safe area bottom spacing
-  },
 });
+
+// Export wrapper component with TickProvider
+export function SentryEventLogDumpModalContent(props: SentryEventLogDumpModalContentProps) {
+  return (
+    <TickProvider>
+      <SentryEventLogDumpModalContentInner {...props} />
+    </TickProvider>
+  );
+}

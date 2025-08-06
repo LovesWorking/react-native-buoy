@@ -128,6 +128,9 @@ export function StorageKeyCard({
           </View>
           <View style={styles.cardHeaderInfo}>
             <Text style={styles.storageKeyText}>{storageKey.key}</Text>
+            {storageKey.description && (
+              <Text style={styles.descriptionText}>{storageKey.description}</Text>
+            )}
             <View style={styles.cardHeaderMeta}>
               <View
                 style={[
@@ -178,12 +181,29 @@ export function StorageKeyCard({
       {isExpanded && hasValue && (
         <View style={styles.cardBody}>
           <View style={styles.dataViewerContainer}>
-            <DataViewer
-              title="Current Value"
-              data={storageKey.value}
-              showTypeFilter={true}
-              rawMode={true}
-            />
+            {/* Show simple values directly for better visibility */}
+            {(typeof storageKey.value === 'string' || 
+              typeof storageKey.value === 'number' || 
+              typeof storageKey.value === 'boolean') ? (
+              <View style={styles.simpleValueContainer}>
+                <Text style={styles.simpleValueLabel}>Current Value:</Text>
+                <View style={styles.simpleValueBox}>
+                  <Text style={styles.simpleValueContent} selectable>
+                    {String(storageKey.value)}
+                  </Text>
+                </View>
+                <Text style={styles.valueTypeText}>
+                  Type: {getEnvVarType(storageKey.value)}
+                </Text>
+              </View>
+            ) : (
+              <DataViewer
+                title="Current Value"
+                data={storageKey.value}
+                showTypeFilter={false}
+                rawMode={true}
+              />
+            )}
           </View>
 
           {hasExpectedValue && (
@@ -282,6 +302,12 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     flex: 1,
   },
+  descriptionText: {
+    color: "#9CA3AF",
+    fontSize: 10,
+    marginTop: 2,
+    flexWrap: "wrap",
+  },
   cardHeaderMeta: {
     flexDirection: "row",
     alignItems: "center",
@@ -337,6 +363,34 @@ const styles = StyleSheet.create({
   },
   dataViewerContainer: {
     marginTop: 8,
+  },
+  simpleValueContainer: {
+    gap: 8,
+  },
+  simpleValueLabel: {
+    color: "#9CA3AF",
+    fontSize: 10,
+    fontWeight: "500",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  simpleValueBox: {
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    borderRadius: 4,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  simpleValueContent: {
+    color: "#10B981",
+    fontSize: 12,
+    fontFamily: "monospace",
+    lineHeight: 16,
+  },
+  valueTypeText: {
+    color: "#6B7280",
+    fontSize: 9,
+    fontStyle: "italic",
   },
   valueContainer: {
     gap: 6,

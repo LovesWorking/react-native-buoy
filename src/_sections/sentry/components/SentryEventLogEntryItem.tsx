@@ -4,8 +4,8 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 
 import { LogEntryHeader } from "../../log-dump/components/LogEntryHeader";
-import { LogEntryMessage } from "../../log-dump/components/LogEntryMessage";
 import { LogEntrySentryBadge } from "./LogEntrySentryBadge";
+import { SentryEventMessage } from "./SentryEventMessage";
 
 interface SentryEventLogEntryItemProps {
   entry: ConsoleTransportEntry;
@@ -27,7 +27,7 @@ export const SentryEventLogEntryItem = React.memo<SentryEventLogEntryItemProps>(
         >
           <LogEntryHeader entry={entry} />
           <LogEntrySentryBadge metadata={entry.metadata} />
-          <LogEntryMessage message={entry.message} />
+          <SentryEventMessage entry={entry} />
         </TouchableOpacity>
       </View>
     );

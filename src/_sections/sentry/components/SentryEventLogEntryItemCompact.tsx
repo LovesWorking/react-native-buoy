@@ -4,11 +4,13 @@ import { ChevronRight } from "lucide-react-native";
 
 import { ConsoleTransportEntry } from "../../../_shared/logger/types";
 import {
-  formatTimestamp,
   getLevelBorderColor,
   getTypeIcon,
   getTypeColor,
 } from "../../log-dump/utils";
+import { formatRelativeTime } from "../utils/formatRelativeTime";
+import { useTickEveryMinute } from "../hooks/useTickEveryMinute";
+import { formatEventMessage } from "../utils/eventParsers";
 
 interface SentryEventLogEntryItemProps {
   entry: ConsoleTransportEntry;
@@ -18,6 +20,7 @@ interface SentryEventLogEntryItemProps {
 // Compact version of the event card - single line layout [[memory:4875251]]
 export const SentryEventLogEntryItem = React.memo<SentryEventLogEntryItemProps>(
   ({ entry, onSelectEntry }) => {
+    const tick = useTickEveryMinute();
     const IconComponent = getTypeIcon(entry.type);
     const typeColor = getTypeColor(entry.type);
     const levelColor = getLevelBorderColor(entry.level);
@@ -41,25 +44,25 @@ export const SentryEventLogEntryItem = React.memo<SentryEventLogEntryItemProps>(
           </View>
         </View>
 
-        {/* Middle section: Message and badge */}
+        {/* Middle section: Message only */}
         <View style={styles.middleSection} sentry-label="ignore devtools sentry entry middle section">
-          <View style={styles.messageRow} sentry-label="ignore devtools sentry entry message row">
+          <Text style={styles.message} numberOfLines={2} sentry-label="ignore devtools sentry entry message">
+            {formatEventMessage(entry)}
+          </Text>
+        </View>
+
+        {/* Right section: Badge, timestamp and chevron */}
+        <View style={styles.rightSection} sentry-label="ignore devtools sentry entry right section">
+          <View style={styles.rightContent}>
             {entry.metadata.sentryEventType ? (
               <Text style={styles.badge} sentry-label="ignore devtools sentry entry badge">
                 {String(entry.metadata.sentryEventType)}
               </Text>
             ) : null}
-            <Text style={styles.message} numberOfLines={1} sentry-label="ignore devtools sentry entry message">
-              {String(entry.message)}
+            <Text style={styles.timestamp} sentry-label="ignore devtools sentry entry timestamp">
+              {formatRelativeTime(entry.timestamp, tick)}
             </Text>
           </View>
-        </View>
-
-        {/* Right section: Timestamp and chevron */}
-        <View style={styles.rightSection} sentry-label="ignore devtools sentry entry right section">
-          <Text style={styles.timestamp} sentry-label="ignore devtools sentry entry timestamp">
-            {formatTimestamp(entry.timestamp)}
-          </Text>
           <ChevronRight size={14} color="#6B7280" />
         </View>
       </TouchableOpacity>
@@ -73,7 +76,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.03)",
     borderRadius: 6,
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     paddingLeft: 8,
     marginBottom: 4,
@@ -84,46 +87,49 @@ const styles = StyleSheet.create({
   },
   leftSection: {
     alignItems: "center",
-    marginRight: 10,
+    marginRight: 8,
   },
   typeIcon: {
-    padding: 4,
+    padding: 3,
     borderRadius: 4,
   },
 
   middleSection: {
     flex: 1,
     justifyContent: "center",
-  },
-  messageRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+    paddingRight: 8,
+    paddingVertical: 2,
   },
   badge: {
     color: "#A78BFA",
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "600",
     backgroundColor: "rgba(139, 92, 246, 0.15)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
     overflow: "hidden",
+    marginBottom: 2,
+    alignSelf: "flex-end",
   },
   message: {
     color: "#E5E7EB",
-    fontSize: 13,
+    fontSize: 12,
     flex: 1,
+    lineHeight: 16,
   },
   rightSection: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginLeft: 10,
+    gap: 4,
+  },
+  rightContent: {
+    alignItems: "flex-end",
+    justifyContent: "center",
   },
   timestamp: {
     color: "#6B7280",
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: "monospace",
   },
 });

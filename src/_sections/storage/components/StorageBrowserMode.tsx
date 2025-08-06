@@ -15,6 +15,7 @@ import {
   StorageKeyStats,
 } from "../types";
 import { getEnvVarType } from "../../env/utils/envTypeDetector";
+import { getEnvValue } from "../utils/getEnvValue";
 
 interface StorageBrowserModeProps {
   selectedQuery: Query | undefined;
@@ -101,25 +102,54 @@ export function StorageBrowserMode({
           "expectedType" in requiredConfig && {
             expectedType: requiredConfig.expectedType,
           }),
+        ...(typeof requiredConfig === "object" &&
+          "description" in requiredConfig && {
+            description: requiredConfig.description,
+          }),
       };
 
       keyInfoMap.set(cleanKey, keyInfo);
     });
 
-    // Add missing required keys
+    // Process required keys (including env vars that might not be in storage)
     requiredStorageKeys.forEach((req) => {
       const key = typeof req === "string" ? req : req.key;
+      
+      // If not already in map, check if it's an environment variable
       if (!keyInfoMap.has(key)) {
+        // Use robust env value getter that handles multiple environments
+        const value = getEnvValue(key);
+        
+        let status: StorageKeyInfo["status"] = "required_missing";
         let storageType: StorageType = "async"; // Default
+        
         if (typeof req === "object" && "storageType" in req) {
           storageType = req.storageType;
+        }
+        
+        // Determine status based on value and requirements
+        // Important: Check if value exists (including empty string, 0, false, etc.)
+        if (value !== undefined && value !== null) {
+          if (typeof req === "object" && "expectedValue" in req) {
+            // For expected value, do exact comparison
+            status = String(value) === String(req.expectedValue) ? "required_present" : "required_wrong_value";
+          } else if (typeof req === "object" && "expectedType" in req) {
+            // For expected type, check the actual type
+            const actualType = getEnvVarType(value);
+            status = actualType.toLowerCase() === req.expectedType.toLowerCase() 
+              ? "required_present" 
+              : "required_wrong_type";
+          } else {
+            // Just checking existence
+            status = "required_present";
+          }
         }
 
         const keyInfo: StorageKeyInfo = {
           key,
-          value: undefined,
+          value,
           storageType,
-          status: "required_missing",
+          status,
           category: "required",
           ...(typeof req === "object" &&
             "expectedValue" in req && {
@@ -128,6 +158,10 @@ export function StorageBrowserMode({
           ...(typeof req === "object" &&
             "expectedType" in req && {
               expectedType: req.expectedType,
+            }),
+          ...(typeof req === "object" &&
+            "description" in req && {
+              description: req.description,
             }),
         };
 

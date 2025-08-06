@@ -1,7 +1,11 @@
 import { FileText } from "lucide-react-native";
 import { ConsoleSection } from "../../../_components/floating-bubble/console/ConsoleSection";
 import { SentryLogsDetailContent } from "./SentryLogsDetailContent";
-import { ConsoleTransportEntry } from "../../../_shared/logger/types";
+import {
+  ConsoleTransportEntry,
+  LogType,
+  LogLevel,
+} from "../../../_shared/logger/types";
 
 interface SentryLogsSectionProps {
   onPress: () => void;
@@ -19,7 +23,7 @@ export function SentryLogsSection({
   return (
     <ConsoleSection
       id="sentry-logs"
-      title="Sentry Logs"
+      title="Sentry Events"
       subtitle={getSentrySubtitle()}
       icon={FileText}
       iconColor="#8B5CF6"
@@ -38,11 +42,21 @@ export function SentryLogsContent({
   onSelectEntry,
   showFilterView,
   onShowFilterView,
+  selectedTypes,
+  selectedLevels,
+  onToggleTypeFilter,
+  onToggleLevelFilter,
+  isLoggingEnabled,
 }: {
   selectedEntry: ConsoleTransportEntry | null;
   onSelectEntry: (entry: ConsoleTransportEntry | null) => void;
   showFilterView: boolean;
   onShowFilterView: (show: boolean) => void;
+  selectedTypes?: Set<LogType>;
+  selectedLevels?: Set<LogLevel>;
+  onToggleTypeFilter?: (type: LogType) => void;
+  onToggleLevelFilter?: (level: LogLevel) => void;
+  isLoggingEnabled?: boolean;
 }) {
   return (
     <SentryLogsDetailContent
@@ -50,6 +64,11 @@ export function SentryLogsContent({
       onSelectEntry={onSelectEntry}
       showFilterView={showFilterView}
       onShowFilterView={onShowFilterView}
+      selectedTypes={selectedTypes}
+      selectedLevels={selectedLevels}
+      onToggleTypeFilter={onToggleTypeFilter}
+      onToggleLevelFilter={onToggleLevelFilter}
+      isLoggingEnabled={isLoggingEnabled}
     />
   );
 }

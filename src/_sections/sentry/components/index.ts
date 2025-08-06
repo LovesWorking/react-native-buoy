@@ -2,6 +2,8 @@ export { SentryLogsSection, SentryLogsContent } from './SentryLogsSection';
 export { SentryLogsModal } from './SentryLogsModal';
 export { SentryEventDetailView } from './SentryEventDetailView';
 export { SentryFilterView } from './SentryFilterView';
+export { SentryDetailModal } from './SentryDetailModal';
+export { SentryFilterModal } from './SentryFilterModal';
 export { SentryLogsDetailContent } from './SentryLogsDetailContent';
 export { SentryEventLogDetailView } from './SentryEventLogDetailView';
 export { SentryEventLogDumpModalContent } from './SentryEventLogDumpModalContent';

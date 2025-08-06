@@ -17,6 +17,7 @@ import {
 } from "lucide-react-native";
 
 import { useDynamicEnv } from "../hooks";
+import { displayValue } from "../../../_shared/utils/displayValue";
 
 interface EnvVarsModalContentProps {
   onClose: () => void;
@@ -49,7 +50,7 @@ export function EnvVarsModalContent({
       // Include all available env vars
       if (data !== undefined && data !== null) {
         // Convert data to string for transmission
-        envVars[key] = typeof data === "string" ? data : JSON.stringify(data);
+        envVars[key] = typeof data === "string" ? data : displayValue(data);
       }
     });
 
@@ -142,7 +143,7 @@ export function EnvVarsModalContent({
     if (typeof value === "string") {
       return value;
     }
-    return JSON.stringify(value, null, 2);
+    return displayValue(value, true);
   };
 
   const missingCount = processedEnvVars.filter(

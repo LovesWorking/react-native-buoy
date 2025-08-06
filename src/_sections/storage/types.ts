@@ -5,6 +5,7 @@ export interface StorageKeyInfo {
   value: unknown;
   expectedValue?: string;
   expectedType?: string;
+  description?: string;
   storageType: StorageType;
   status:
     | "required_present"
@@ -18,9 +19,9 @@ export interface StorageKeyInfo {
 
 export type RequiredStorageKey =
   | string
-  | { key: string; expectedValue: string }
-  | { key: string; expectedType: string }
-  | { key: string; storageType: StorageType };
+  | { key: string; expectedValue: string; description?: string }
+  | { key: string; expectedType: string; description?: string }
+  | { key: string; storageType: StorageType; description?: string };
 
 export interface StorageKeyStats {
   totalCount: number;

@@ -9,6 +9,7 @@ import {
   getSubtitle,
 } from "../utils";
 import { EnvVarStatsSection, EnvVarSection } from "./";
+import { displayValue } from "../../../_shared/utils/displayValue";
 
 interface EnvVarsContentProps {
   requiredEnvVars?: RequiredEnvVar[];
@@ -28,7 +29,7 @@ export function EnvVarsContent({ requiredEnvVars }: EnvVarsContentProps) {
       // Include all available env vars
       if (data !== undefined && data !== null) {
         // Convert data to string for transmission
-        envVars[key] = typeof data === "string" ? data : JSON.stringify(data);
+        envVars[key] = typeof data === "string" ? data : displayValue(data);
       }
     });
 
@@ -82,7 +83,7 @@ export function useEnvVarsSubtitle(requiredEnvVars?: RequiredEnvVar[]) {
     const envVars: Record<string, string> = {};
     envResults.forEach(({ key, data }) => {
       if (data !== undefined && data !== null) {
-        envVars[key] = typeof data === "string" ? data : JSON.stringify(data);
+        envVars[key] = typeof data === "string" ? data : displayValue(data);
       }
     });
     return envVars;

@@ -1,32 +1,23 @@
 import { useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   Gesture,
   GestureDetector,
   ScrollView,
 } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlashList } from "@shopify/flash-list";
-import { FlaskConical, Trash, Pause, Play, Filter } from "lucide-react-native";
 
 import {
   ConsoleTransportEntry,
   LogLevel,
   LogType,
 } from "../../../_shared/logger/types";
-import {
-  EmptyFilterState,
-  EmptyState,
-} from "../../log-dump/EmptyStates";
+import { EmptyFilterState, EmptyState } from "../../log-dump/EmptyStates";
 import { SentryEventLogEntryItem } from "./SentryEventLogEntryItemCompact";
-import { SentryFilterView } from "./SentryFilterView";
-import {
-  clearSentryEvents,
-  generateTestSentryEvents,
-} from "../utils/sentryEventListeners";
 import { useSentryEvents } from "../hooks/useSentryEvents";
-import { SentryEventDetailView } from "./SentryEventDetailView";
-import { getDefaultTypeFilters, getDefaultLevelFilters } from "../utils/defaultFilters";
+import { TickProvider } from "../hooks/useTickEveryMinute";
+import { SentryDetailModal } from "./SentryDetailModal";
+import { SentryFilterModal } from "./SentryFilterModal";
 
 // Stable constants to prevent re-creation on every render [[memory:4875251]]
 const ESTIMATED_ITEM_SIZE = 44; // Reduced for compact cards
@@ -64,34 +55,53 @@ interface SentryLogsDetailContentProps {
   onSelectEntry: (entry: ConsoleTransportEntry | null) => void;
   showFilterView: boolean;
   onShowFilterView: (show: boolean) => void;
+  selectedTypes?: Set<LogType>;
+  selectedLevels?: Set<LogLevel>;
+  onToggleTypeFilter?: (type: LogType) => void;
+  onToggleLevelFilter?: (level: LogLevel) => void;
+  isLoggingEnabled?: boolean;
 }
 
 /**
  * Sentry logs detail content following component composition principles.
  * Single responsibility: Display and manage sentry event logs without modal chrome.
  */
-export function SentryLogsDetailContent({
+function SentryLogsDetailContentInner({
   selectedEntry: externalSelectedEntry,
   onSelectEntry,
   showFilterView,
   onShowFilterView,
+  selectedTypes: externalSelectedTypes,
+  selectedLevels: externalSelectedLevels,
+  onToggleTypeFilter: externalToggleTypeFilter,
+  onToggleLevelFilter: externalToggleLevelFilter,
+  isLoggingEnabled: externalIsLoggingEnabled,
 }: SentryLogsDetailContentProps) {
   const panGesture = Gesture.Pan().runOnJS(true);
-  const [selectedTypes, setSelectedTypes] = useState<Set<LogType>>(
-    () => getDefaultTypeFilters()
+
+  // Use props if provided, otherwise use local state
+  const [localSelectedTypes, setLocalSelectedTypes] = useState<Set<LogType>>(
+    new Set()
   );
-  const [selectedLevels, setSelectedLevels] = useState<Set<LogLevel>>(
-    () => getDefaultLevelFilters()
+  const [localSelectedLevels, setLocalSelectedLevels] = useState<Set<LogLevel>>(
+    new Set()
   );
-  const [isLoggingEnabled, setIsLoggingEnabled] = useState(true);
+  const [_localIsLoggingEnabled, _setLocalIsLoggingEnabled] = useState(true);
+
+  const selectedTypes = externalSelectedTypes ?? localSelectedTypes;
+  const selectedLevels = externalSelectedLevels ?? localSelectedLevels;
+  const _isLoggingEnabled = externalIsLoggingEnabled ?? _localIsLoggingEnabled;
+
   const flatListRef = useRef<FlashList<ConsoleTransportEntry>>(null);
-  const insets = useSafeAreaInsets();
 
   // Use reactive hook for automatic updates [[memory:4875074]]
   const { entries: filteredEntries, totalCount } = useSentryEvents({
     selectedTypes,
     selectedLevels,
   });
+
+  // Note: Store filter synchronization removed to prevent circular updates
+  // The useSentryEvents hook already handles filtering internally
 
   // Use "Latest Ref" pattern [[memory:4875251]]
   const selectEntryRef = useRef<(entry: ConsoleTransportEntry) => void>(
@@ -114,160 +124,99 @@ export function SentryLogsDetailContent({
   };
 
   const toggleTypeFilter = (type: LogType) => {
-    setSelectedTypes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(type)) {
-        newSet.delete(type);
-      } else {
-        newSet.add(type);
-      }
-      return newSet;
-    });
+    if (externalToggleTypeFilter) {
+      externalToggleTypeFilter(type);
+    } else {
+      setLocalSelectedTypes((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(type)) {
+          newSet.delete(type);
+        } else {
+          newSet.add(type);
+        }
+        return newSet;
+      });
+    }
   };
 
   const toggleLevelFilter = (level: LogLevel) => {
-    setSelectedLevels((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(level)) {
-        newSet.delete(level);
-      } else {
-        newSet.add(level);
-      }
-      return newSet;
-    });
+    if (externalToggleLevelFilter) {
+      externalToggleLevelFilter(level);
+    } else {
+      setLocalSelectedLevels((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(level)) {
+          newSet.delete(level);
+        } else {
+          newSet.add(level);
+        }
+        return newSet;
+      });
+    }
   };
 
-  const generateTestLogs = () => {
-    clearSentryEvents();
-    // Small delay to ensure clear completes
-    setTimeout(() => {
-      generateTestSentryEvents();
-    }, 50);
-  };
-
-  const clearLogs = () => {
-    clearSentryEvents();
-  };
-
-  // Show detail view with composition pattern
-  if (externalSelectedEntry) {
-    return (
-      <SentryEventDetailView
+  // Stable component tree with modal pattern
+  return (
+    <View
+      style={styles.container}
+      sentry-label="ignore devtools sentry container"
+    >
+      {/* Modal components that return null when not visible */}
+      <SentryDetailModal
+        visible={!!externalSelectedEntry}
         entry={externalSelectedEntry}
-        _onBack={goBackToList}
+        onBack={goBackToList}
       />
-    );
-  }
 
-  // Show filter view if selected
-  if (showFilterView) {
-    return (
-      <SentryFilterView
-        _entries={filteredEntries}
+      <SentryFilterModal
+        visible={showFilterView && !externalSelectedEntry}
+        entries={filteredEntries}
         selectedTypes={selectedTypes}
         selectedLevels={selectedLevels}
         onToggleTypeFilter={toggleTypeFilter}
         onToggleLevelFilter={toggleLevelFilter}
-        _onBack={() => onShowFilterView(false)}
+        onBack={() => onShowFilterView(false)}
       />
-    );
-  }
 
-  return (
-    <View style={styles.container} sentry-label="ignore devtools sentry container">
-      {/* Minimal Stats Section */}
-      <View style={styles.statsSection} sentry-label="ignore devtools sentry stats section">
-        <View style={styles.statsLeft} sentry-label="ignore devtools sentry stats left">
-          <Text style={styles.statText} sentry-label="ignore devtools sentry stats text">
-            {filteredEntries.length} of {totalCount} events
-            {(selectedTypes.size > 0 || selectedLevels.size > 0) &&
-              " (filtered)"}
-          </Text>
-        </View>
-        <View style={styles.statsRight} sentry-label="ignore devtools sentry stats right">
-          <TouchableOpacity
-            sentry-label="ignore devtools sentry filter open"
-            onPress={() => onShowFilterView(true)}
-            style={[
-              styles.iconButton,
-              (selectedTypes.size > 0 || selectedLevels.size > 0) &&
-                styles.activeFilterButton,
-            ]}
-            accessibilityLabel="Open filters"
-          >
-            <Filter
-              size={16}
-              color={
-                selectedTypes.size > 0 || selectedLevels.size > 0
-                  ? "#8B5CF6"
-                  : "#9CA3AF"
-              }
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityHint="View pause logging"
-            sentry-label="ignore devtools sentry pause logging"
-            onPress={() => setIsLoggingEnabled(!isLoggingEnabled)}
-            style={[styles.iconButton, isLoggingEnabled && styles.activeButton]}
-            accessibilityLabel={
-              isLoggingEnabled ? "Pause logging" : "Resume logging"
-            }
-          >
-            {isLoggingEnabled ? (
-              <Pause size={16} color="#10B981" />
-            ) : (
-              <Play size={16} color="#10B981" />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityLabel="Generate test Sentry events"
-            accessibilityHint="View generate test Sentry events"
-            sentry-label="ignore devtools sentry generate test events"
-            onPress={generateTestLogs}
-            style={styles.iconButton}
-          >
-            <FlaskConical size={16} color="#818CF8" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityLabel="Clear Sentry events"
-            accessibilityHint="View clear Sentry events"
-            sentry-label="ignore devtools sentry clear events"
-            onPress={clearLogs}
-            style={styles.iconButton}
-          >
-            <Trash size={16} color="#F87171" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Event Entries */}
-      {filteredEntries.length === 0 ? (
-        <View style={styles.emptyContainer} sentry-label="ignore devtools sentry empty container">
-          {totalCount === 0 ? <EmptyState /> : <EmptyFilterState />}
-        </View>
-      ) : (
-        <View style={styles.listContainer} sentry-label="ignore devtools sentry list container">
-          <GestureDetector gesture={panGesture}>
-            <FlashList
-              accessibilityLabel="Sentry logs detail content"
-              accessibilityHint="View sentry logs detail content"
-              sentry-label="ignore devtools sentry logs detail list"
-              ref={flatListRef}
-              data={filteredEntries}
-              renderItem={renderSentryEventItem}
-              keyExtractor={keyExtractor}
-              getItemType={getItemType}
-              estimatedItemSize={ESTIMATED_ITEM_SIZE}
-              inverted
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator
-              removeClippedSubviews
-              onEndReachedThreshold={END_REACHED_THRESHOLD}
-              maintainVisibleContentPosition={MAINTAIN_VISIBLE_CONTENT_POSITION}
-              renderScrollComponent={ScrollView}
-            />
-          </GestureDetector>
-          <View style={[styles.bottomInset, { height: insets.bottom }]} sentry-label="ignore devtools sentry bottom inset" />
+      {/* List View - always visible when modals are not shown */}
+      {!externalSelectedEntry && !showFilterView && (
+        <View style={styles.listWrapper}>
+          {filteredEntries.length === 0 ? (
+            <View
+              style={styles.emptyContainer}
+              sentry-label="ignore devtools sentry empty container"
+            >
+              {totalCount === 0 ? <EmptyState /> : <EmptyFilterState />}
+            </View>
+          ) : (
+            <View
+              style={styles.listContainer}
+              sentry-label="ignore devtools sentry list container"
+            >
+              <GestureDetector gesture={panGesture}>
+                <FlashList
+                  accessibilityLabel="Sentry logs detail content"
+                  accessibilityHint="View sentry logs detail content"
+                  sentry-label="ignore devtools sentry logs detail list"
+                  ref={flatListRef}
+                  data={filteredEntries}
+                  renderItem={renderSentryEventItem}
+                  keyExtractor={keyExtractor}
+                  getItemType={getItemType}
+                  estimatedItemSize={ESTIMATED_ITEM_SIZE}
+                  inverted
+                  contentContainerStyle={styles.listContent}
+                  showsVerticalScrollIndicator
+                  removeClippedSubviews
+                  onEndReachedThreshold={END_REACHED_THRESHOLD}
+                  maintainVisibleContentPosition={
+                    MAINTAIN_VISIBLE_CONTENT_POSITION
+                  }
+                  renderScrollComponent={ScrollView}
+                />
+              </GestureDetector>
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -279,38 +228,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#1F1F1F",
   },
-  statsSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#2A2A2A",
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.06)",
-  },
-  statsLeft: {
+  listWrapper: {
     flex: 1,
-  },
-  statsRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  statText: {
-    color: "#9CA3AF",
-    fontSize: 12,
-  },
-  iconButton: {
-    padding: 6,
-    borderRadius: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-  },
-  activeButton: {
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
-  },
-  activeFilterButton: {
-    backgroundColor: "rgba(139, 92, 246, 0.15)",
   },
   emptyContainer: {
     flex: 1,
@@ -321,7 +240,13 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: 8,
   },
-  bottomInset: {
-    // Empty style for safe area bottom spacing
-  },
 });
+
+// Export wrapper component with TickProvider
+export function SentryLogsDetailContent(props: SentryLogsDetailContentProps) {
+  return (
+    <TickProvider>
+      <SentryLogsDetailContentInner {...props} />
+    </TickProvider>
+  );
+}

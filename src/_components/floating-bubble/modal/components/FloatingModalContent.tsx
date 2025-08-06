@@ -35,6 +35,7 @@ interface FloatingModalContentProps {
   onResizeStart: () => void;
   onResizeEnd: (dimensions: PanelDimensions) => void;
   onContainerLayout: (bounds: { width: number; height: number }) => void;
+  hideCloseButton?: boolean;
 }
 
 export const FloatingModalContent = ({
@@ -57,6 +58,7 @@ export const FloatingModalContent = ({
   onResizeStart,
   onResizeEnd,
   onContainerLayout,
+  hideCloseButton,
 }: FloatingModalContentProps) => {
   const insets = useSafeAreaInsets();
 
@@ -86,6 +88,7 @@ export const FloatingModalContent = ({
         resizeGesture={resizeGesture}
         onToggleFloatingMode={onToggleFloatingMode}
         onClose={onClose}
+        hideCloseButton={hideCloseButton}
       />
       <View style={styles.content}>{children}</View>
     </>
@@ -107,6 +110,7 @@ export const FloatingModalContent = ({
           widthBound={containerBounds.width}
           left={panelDimensions.left}
           top={panelDimensions.top}
+          topInset={insets.top}
           width={panelDimensions.width}
           height={panelDimensions.height}
           minWidth={MIN_WIDTH}

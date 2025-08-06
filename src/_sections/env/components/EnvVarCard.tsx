@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AlertCircle, CheckCircle2, Eye, XCircle } from "lucide-react-native";
 import { EnvVarInfo } from "../types";
 import { getEnvVarType } from "../utils/envTypeDetector";
+import { displayValue } from "../../../_shared/utils/displayValue";
 
 // Stable constants moved to module scope to prevent re-renders
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
@@ -70,7 +71,7 @@ const formatValue = (value: unknown, isExpanded: boolean = false): string => {
     if (isExpanded) return value;
     return value.length > 40 ? `${value.substring(0, 40)}...` : value;
   }
-  const stringified = JSON.stringify(value, null, isExpanded ? 2 : 0);
+  const stringified = displayValue(value, isExpanded);
   if (isExpanded) return stringified;
   return stringified.length > 40
     ? `${stringified.substring(0, 40)}...`

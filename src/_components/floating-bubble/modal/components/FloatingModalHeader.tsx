@@ -14,6 +14,7 @@ interface FloatingModalHeaderProps {
   resizeGesture?: GestureType;
   onToggleFloatingMode: () => void;
   onClose: () => void;
+  hideCloseButton?: boolean;
 }
 
 // Single-purpose component: Handles drag indicator visualization and resize state feedback
@@ -34,11 +35,13 @@ const HeaderControls = ({
   isFloatingMode,
   onToggleFloatingMode,
   onClose,
+  hideCloseButton,
 }: {
   showToggleButton: boolean;
   isFloatingMode: boolean;
   onToggleFloatingMode: () => void;
   onClose: () => void;
+  hideCloseButton?: boolean;
 }) => (
   <View style={styles.headerControls}>
     {showToggleButton && (
@@ -57,16 +60,18 @@ const HeaderControls = ({
         )}
       </Pressable>
     )}
-    <Pressable
-      accessibilityLabel="Close"
-      accessibilityHint="Close floating modal"
-      sentry-label="ignore user interaction"
-      onPress={onClose}
-      style={[styles.controlButton, styles.controlButtonDanger]}
-      hitSlop={HIT_SLOP}
-    >
-      <X color="#FFFFFF" size={16} />
-    </Pressable>
+    {!hideCloseButton && (
+      <Pressable
+        accessibilityLabel="Close"
+        accessibilityHint="Close floating modal"
+        sentry-label="ignore user interaction"
+        onPress={onClose}
+        style={[styles.controlButton, styles.controlButtonDanger]}
+        hitSlop={HIT_SLOP}
+      >
+        <X color="#FFFFFF" size={16} />
+      </Pressable>
+    )}
   </View>
 );
 
@@ -103,6 +108,7 @@ export const FloatingModalHeader = ({
   resizeGesture,
   onToggleFloatingMode,
   onClose,
+  hideCloseButton,
 }: FloatingModalHeaderProps) => {
   const headerContent = (
     <View style={styles.header}>
@@ -117,6 +123,7 @@ export const FloatingModalHeader = ({
             isFloatingMode={isFloatingMode}
             onToggleFloatingMode={onToggleFloatingMode}
             onClose={onClose}
+            hideCloseButton={hideCloseButton}
           />
         </View>
         {headerSubtitle && <SubtitleSection subtitle={headerSubtitle} />}
@@ -193,6 +200,7 @@ const styles = StyleSheet.create({
     gap: 6,
     zIndex: 1001, // Higher than corner handles (1000) to ensure button clicks work
     paddingRight: 4, // Add some padding to move buttons away from edge
+    marginLeft: 12, // Add space between custom content and controls
   },
 
   // Control buttons matching DevToolsHeader exactly

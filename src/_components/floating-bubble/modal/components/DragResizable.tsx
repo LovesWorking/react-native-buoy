@@ -38,6 +38,7 @@ type Props = {
   width?: number;
   left: number;
   top: number;
+  topInset?: number; // Add safe area top inset
   isDraggable?: boolean;
   isResizable?: boolean;
   onDragStart?: () => void;
@@ -55,6 +56,7 @@ export function DragResizable(props: PropsWithChildren<Props>) {
   const {
     left,
     top,
+    topInset = 0,
     heightBound,
     widthBound,
     height = 50,
@@ -103,7 +105,7 @@ export function DragResizable(props: PropsWithChildren<Props>) {
       );
       boxY.value = clamp(
         offsetY.value + ev.translationY / scale,
-        0,
+        topInset,
         heightBound - boxHeight.value
       );
     })
@@ -168,7 +170,7 @@ export function DragResizable(props: PropsWithChildren<Props>) {
               if (updatedHeight !== sHeight.value) {
                 updatedY = clamp(
                   offsetY.value + ev.translationY / scale,
-                  0,
+                  topInset,
                   heightBound - updatedHeight
                 );
               }
@@ -188,7 +190,7 @@ export function DragResizable(props: PropsWithChildren<Props>) {
               if (updatedHeight !== sHeight.value) {
                 updatedY = clamp(
                   offsetY.value + ev.translationY / scale,
-                  0,
+                  topInset,
                   heightBound - updatedHeight
                 );
               }

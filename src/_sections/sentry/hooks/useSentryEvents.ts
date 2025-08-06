@@ -17,26 +17,47 @@ interface UseSentryEventsOptions {
 export function useSentryEvents(options: UseSentryEventsOptions = {}) {
   const { selectedTypes = new Set(), selectedLevels = new Set() } = options;
 
-  // State for the adapted entries
-  const [entries, setEntries] = useState<ConsoleTransportEntry[]>([]);
+  // Initialize state with a function to avoid running during every render
+  const [entries, setEntries] = useState<ConsoleTransportEntry[]>(() => {
+    const rawSentryEvents = reactiveSentryEventStore.getEvents();
+    const adaptedEntries = adaptSentryEventsToConsoleEntries(rawSentryEvents);
+    
+    // Remove duplicates based on ID
+    const uniqueEntries = adaptedEntries.reduce(
+      (acc: ConsoleTransportEntry[], entry: ConsoleTransportEntry) => {
+        if (!acc.some((existing: ConsoleTransportEntry) => existing.id === entry.id)) {
+          acc.push(entry);
+        }
+        return acc;
+      },
+      [] as ConsoleTransportEntry[]
+    );
+
+    return uniqueEntries.sort(
+      (a: ConsoleTransportEntry, b: ConsoleTransportEntry) =>
+        b.timestamp - a.timestamp
+    );
+  });
 
   // Ref to track previous state for comparison
   const entriesRef = useRef<unknown[]>([]);
+  // Ref to track if component is mounted
+  const isMountedRef = useRef(true);
 
-  // Calculate and filter entries - memoized to avoid recreation
-  const calculateEntries = useMemo(
-    () => () => {
+  // Subscribe to store changes
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    const updateEntries = () => {
+      if (!isMountedRef.current) return;
+
       const rawSentryEvents = reactiveSentryEventStore.getEvents();
       const adaptedEntries = adaptSentryEventsToConsoleEntries(rawSentryEvents);
 
       // Remove duplicates based on ID
       const uniqueEntries = adaptedEntries.reduce(
         (acc: ConsoleTransportEntry[], entry: ConsoleTransportEntry) => {
-          if (
-            !acc.some(
-              (existing: ConsoleTransportEntry) => existing.id === entry.id
-            )
-          ) {
+          if (!acc.some((existing: ConsoleTransportEntry) => existing.id === entry.id)) {
             acc.push(entry);
           }
           return acc;
@@ -44,18 +65,11 @@ export function useSentryEvents(options: UseSentryEventsOptions = {}) {
         [] as ConsoleTransportEntry[]
       );
 
-      return uniqueEntries.sort(
+      const newEntries = uniqueEntries.sort(
         (a: ConsoleTransportEntry, b: ConsoleTransportEntry) =>
           b.timestamp - a.timestamp
       );
-    },
-    []
-  );
 
-  // Subscribe to store changes
-  useEffect(() => {
-    const updateEntries = () => {
-      const newEntries = calculateEntries();
       const newStates = newEntries.map((e) => ({
         id: e.id,
         timestamp: e.timestamp,
@@ -68,14 +82,14 @@ export function useSentryEvents(options: UseSentryEventsOptions = {}) {
       }
     };
 
-    // Initial update - deferred to avoid render phase updates
-    setTimeout(updateEntries, 0);
-
     // Subscribe to reactive store - will auto-update when new events arrive
     const unsubscribe = reactiveSentryEventStore.subscribe(updateEntries);
 
-    return () => unsubscribe();
-  }, [calculateEntries]); // Add calculateEntries as dependency since it's used in the effect
+    return () => {
+      isMountedRef.current = false;
+      unsubscribe();
+    };
+  }, []); // Remove dependencies to prevent re-subscription
 
   // Memoized filtering to prevent expensive recalculation [[memory:4875251]]
   const filteredEntries = useMemo(() => {
@@ -110,13 +124,41 @@ export function useSentryEvents(options: UseSentryEventsOptions = {}) {
  * Reactive updates when events change
  */
 export function useSentryEventCounts() {
-  const [counts, setCounts] = useState({
-    byType: {} as Record<LogType, number>,
-    byLevel: {} as Record<LogLevel, number>,
+  // Initialize with lazy state to avoid calculation during render
+  const [counts, setCounts] = useState(() => {
+    const events = reactiveSentryEventStore.getEvents();
+    const adaptedEntries = adaptSentryEventsToConsoleEntries(events);
+
+    // Count by type
+    const byType = adaptedEntries.reduce(
+      (acc, entry) => {
+        acc[entry.type] = (acc[entry.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<LogType, number>
+    );
+
+    // Count by level
+    const byLevel = adaptedEntries.reduce(
+      (acc, entry) => {
+        acc[entry.level] = (acc[entry.level] || 0) + 1;
+        return acc;
+      },
+      {} as Record<LogLevel, number>
+    );
+
+    return { byType, byLevel };
   });
 
+  // Ref to track if component is mounted
+  const isMountedRef = useRef(true);
+
   useEffect(() => {
+    isMountedRef.current = true;
+
     const updateCounts = () => {
+      if (!isMountedRef.current) return;
+
       const events = reactiveSentryEventStore.getEvents();
       const adaptedEntries = adaptSentryEventsToConsoleEntries(events);
 
@@ -141,13 +183,13 @@ export function useSentryEventCounts() {
       setCounts({ byType, byLevel });
     };
 
-    // Initial update - deferred to avoid render phase updates
-    setTimeout(updateCounts, 0);
-
     // Subscribe to reactive store
     const unsubscribe = reactiveSentryEventStore.subscribe(updateCounts);
 
-    return () => unsubscribe();
+    return () => {
+      isMountedRef.current = false;
+      unsubscribe();
+    };
   }, []);
 
   return counts;

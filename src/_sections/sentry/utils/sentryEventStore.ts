@@ -3,9 +3,16 @@
 // =============================================================================
 
 import { SentryEventEntry } from "./sentryEventListeners";
+import { LogType, LogLevel } from "../../../_shared/logger/types";
+import { adaptSentryEventsToConsoleEntries } from "./SentryEventAdapter";
 
 type Listener = () => void;
 type Unsubscribe = () => void;
+
+interface FilterConfig {
+  selectedTypes: Set<LogType>;
+  selectedLevels: Set<LogLevel>;
+}
 
 /**
  * Enhanced reactive event store with subscription support
@@ -15,6 +22,7 @@ export class ReactiveSentryEventStore {
   private events: SentryEventEntry[] = [];
   private maxEvents: number = 100; // Default to 100 as mentioned by user
   private listeners = new Set<Listener>();
+  private filterConfig: FilterConfig | null = null;
 
   /**
    * Subscribe to store changes
@@ -56,10 +64,80 @@ export class ReactiveSentryEventStore {
   }
 
   /**
+   * Set active filters for the store
+   * Only events matching these filters will be stored
+   */
+  setFilters(filters: FilterConfig | null): void {
+    this.filterConfig = filters;
+    // Don't clear existing events - let the UI handle filtering for display
+    // Only new incoming events will be filtered
+    this.notify();
+  }
+
+  /**
+   * Check if an event matches the current filters
+   */
+  private matchesFilters(event: SentryEventEntry): boolean {
+    // If no filters are set, accept all events
+    if (!this.filterConfig) {
+      return true;
+    }
+
+    // Convert to console entry to check type and level
+    const [consoleEntry] = adaptSentryEventsToConsoleEntries([event]);
+
+    // Check if both filter sets are empty (no filtering)
+    if (
+      this.filterConfig.selectedTypes.size === 0 &&
+      this.filterConfig.selectedLevels.size === 0
+    ) {
+      return true;
+    }
+
+    // Check type filter
+    const typeMatch =
+      this.filterConfig.selectedTypes.size === 0 ||
+      this.filterConfig.selectedTypes.has(consoleEntry.type);
+
+    // Check level filter
+    const levelMatch =
+      this.filterConfig.selectedLevels.size === 0 ||
+      this.filterConfig.selectedLevels.has(consoleEntry.level);
+
+    // Special handling for spans - they are filtered out unless Navigation is explicitly selected
+    if (consoleEntry.metadata?._isSpan) {
+      return (
+        this.filterConfig.selectedTypes.size === 1 &&
+        this.filterConfig.selectedTypes.has(LogType.Navigation)
+      );
+    }
+
+    return typeMatch && levelMatch;
+  }
+
+  /**
    * Add a new event to storage
    * This will notify all subscribers automatically
    */
   add(event: SentryEventEntry): void {
+    // Safeguard: Check if this event is from our own console logging to prevent infinite loops
+    const isFromDevToolsLogging =
+      event.data?.__rn_dev_tools_internal_log === true;
+
+    if (!isFromDevToolsLogging) {
+      // Log all incoming events with safeguard marker
+      console.log("[RN-DevTools] Sentry Event Received:", {
+        ...event,
+        __rn_dev_tools_internal_log: true, // Safeguard marker
+      });
+    }
+    //temp
+
+    // Only add events that match current filters
+    if (!this.matchesFilters(event)) {
+      return;
+    }
+
     // Add to beginning for newest first
     this.events.unshift(event);
     this.trimEvents();

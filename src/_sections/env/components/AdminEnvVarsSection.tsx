@@ -7,6 +7,7 @@ import { RequiredEnvVar } from "../types";
 import { processEnvVars, calculateStats, getSubtitle } from "../utils";
 import { EnvVarStatsSection, EnvVarSection } from "./";
 import { ExpandableSection } from "../../../_shared/ui/components/ExpandableSection";
+import { displayValue } from "../../../_shared/utils/displayValue";
 
 interface EnvVarsSectionProps {
   requiredEnvVars?: RequiredEnvVar[]; // Can be strings or objects with expected values
@@ -26,7 +27,7 @@ export function EnvVarsSection({ requiredEnvVars }: EnvVarsSectionProps) {
       // Include all available env vars
       if (data !== undefined && data !== null) {
         // Convert data to string for transmission
-        envVars[key] = typeof data === "string" ? data : JSON.stringify(data);
+        envVars[key] = typeof data === "string" ? data : displayValue(data);
       }
     });
 
