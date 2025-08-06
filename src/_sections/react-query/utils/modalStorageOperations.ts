@@ -50,12 +50,14 @@ export interface PanelState {
 export interface ModalVisibilityState {
   isModalOpen: boolean;
   isDebugModalOpen: boolean;
+  isEnvModalOpen?: boolean;
+  isSentryModalOpen?: boolean;
+  isStorageModalOpen?: boolean;
   selectedQueryKey?: string; // JSON stringified QueryKey
   selectedSection?: string; // For DevTools sections
   activeFilter?: string | null; // React Query filter state: "fresh", "stale", "fetching", "paused", "inactive"
   activeTab?: "queries" | "mutations";
   selectedMutationId?: string;
-  activeStorageTypes?: string; // JSON stringified Set<StorageType> as Array - kept for backward compatibility
 }
 
 // Storage operations
@@ -123,12 +125,11 @@ export const saveModalVisibilityState = async (
 ) => {
   try {
     const stateJson = JSON.stringify(state);
-    await setItem(`${storagePrefix}_modal_state`, stateJson);
-  } catch (error) {
-    console.error(
-      "❌ [MODAL PERSIST] Failed to save modal visibility state:",
-      error
-    );
+    // storagePrefix already contains the full key, don't append _modal_state
+    const key = storagePrefix;
+    await setItem(key, stateJson);
+  } catch {
+    // Silently fail - persistence is a nice-to-have feature
   }
 };
 
@@ -136,29 +137,26 @@ export const loadModalVisibilityState = async (
   storagePrefix: string
 ): Promise<ModalVisibilityState | null> => {
   try {
-    const key = `${storagePrefix}_modal_state`;
+    // storagePrefix already contains the full key, don't append _modal_state
+    const key = storagePrefix;
     const stateStr = await getItem(key);
-    if (stateStr) {
-      return JSON.parse(stateStr);
+    if (stateStr && stateStr !== "") {
+      const parsed = JSON.parse(stateStr);
+      return parsed;
     }
     return null;
-  } catch (error) {
-    console.error(
-      "❌ [MODAL PERSIST] Failed to load modal visibility state:",
-      error
-    );
+  } catch {
+    // Silently fail - persistence is a nice-to-have feature
     return null;
   }
 };
 
 export const clearModalVisibilityState = async (storagePrefix: string) => {
   try {
-    const key = `${storagePrefix}_modal_state`;
+    // storagePrefix already contains the full key, don't append _modal_state
+    const key = storagePrefix;
     await setItem(key, "");
-  } catch (error) {
-    console.error(
-      "❌ [MODAL PERSIST] Failed to clear modal visibility state:",
-      error
-    );
+  } catch {
+    // Silently fail - persistence is a nice-to-have feature
   }
 };

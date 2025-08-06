@@ -11,12 +11,15 @@ import { devToolsStorageKeys } from "../../../_shared/storage/devToolsStorageKey
 export function useModalManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+  const [isEnvModalOpen, setIsEnvModalOpen] = useState(false);
+  const [isSentryModalOpen, setIsSentryModalOpen] = useState(false);
+  const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
   const [selectedQueryKey, setSelectedQueryKey] = useState<
     QueryKey | undefined
   >(undefined);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [isStateRestored, setIsStateRestored] = useState(true); // Default to true to show bubble immediately
+  const [isStateRestored, setIsStateRestored] = useState(false); // Default to false to prevent clearing state before restoration
   const [activeTab, setActiveTab] = useState<
     "queries" | "mutations"
   >("queries");
@@ -29,6 +32,9 @@ export function useModalManager() {
     storagePrefix: devToolsStorageKeys.modal.state(),
     isModalOpen,
     isDebugModalOpen,
+    isEnvModalOpen,
+    isSentryModalOpen,
+    isStorageModalOpen,
     selectedQueryKey,
     selectedSection,
     activeFilter,
@@ -40,13 +46,18 @@ export function useModalManager() {
   // Restore saved modal state on component mount
   useEffect(() => {
     const restoreState = async () => {
-      setIsStateRestored(false); // Set to false while loading
+      // Don't set to false again if already restoring
+      if (isStateRestored) return;
+      
       try {
         const savedState = await loadSavedState();
 
         if (savedState) {
           setIsModalOpen(savedState.isModalOpen);
           setIsDebugModalOpen(savedState.isDebugModalOpen);
+          setIsEnvModalOpen(savedState.isEnvModalOpen || false);
+          setIsSentryModalOpen(savedState.isSentryModalOpen || false);
+          setIsStorageModalOpen(savedState.isStorageModalOpen || false);
 
           if (savedState.selectedQueryKey) {
             try {
@@ -71,17 +82,18 @@ export function useModalManager() {
           if (savedState.selectedMutationId) {
             setSelectedMutationId(Number(savedState.selectedMutationId));
           }
-          // Note: activeStorageTypes removed - no longer filtering storage types
         }
       } catch {
         // Silently fail if state can't be restored
       } finally {
+        // Mark restoration as complete
         setIsStateRestored(true);
       }
     };
 
     restoreState();
-  }, [loadSavedState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const handleModalDismiss = () => {
     setIsModalOpen(false);
@@ -106,6 +118,30 @@ export function useModalManager() {
     setIsDebugModalOpen(true);
   };
 
+  const handleEnvPress = () => {
+    setIsEnvModalOpen(true);
+  };
+
+  const handleSentryPress = () => {
+    setIsSentryModalOpen(true);
+  };
+
+  const handleStoragePress = () => {
+    setIsStorageModalOpen(true);
+  };
+
+  const handleEnvModalDismiss = () => {
+    setIsEnvModalOpen(false);
+  };
+
+  const handleSentryModalDismiss = () => {
+    setIsSentryModalOpen(false);
+  };
+
+  const handleStorageModalDismiss = () => {
+    setIsStorageModalOpen(false);
+  };
+
   const handleMutationSelect = (mutation: Mutation | undefined) => {
     setSelectedMutationId(mutation?.mutationId);
   };
@@ -123,6 +159,9 @@ export function useModalManager() {
   return {
     isModalOpen,
     isDebugModalOpen,
+    isEnvModalOpen,
+    isSentryModalOpen,
+    isStorageModalOpen,
     selectedQueryKey,
     selectedSection,
     activeFilter,
@@ -134,9 +173,15 @@ export function useModalManager() {
     setActiveTab,
     handleModalDismiss,
     handleDebugModalDismiss,
+    handleEnvModalDismiss,
+    handleSentryModalDismiss,
+    handleStorageModalDismiss,
     handleQuerySelect,
     handleQueryPress,
     handleStatusPress,
+    handleEnvPress,
+    handleSentryPress,
+    handleStoragePress,
     handleTabChange,
     handleMutationSelect,
   };

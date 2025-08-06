@@ -14,6 +14,7 @@ import {
   clearSentryEvents,
   generateTestSentryEvents,
 } from "../utils/sentryEventListeners";
+import { devToolsStorageKeys } from "../../../_shared/storage/devToolsStorageKeys";
 
 interface SentryLogsModalProps {
   visible: boolean;
@@ -174,8 +175,8 @@ export function SentryLogsModal({
   };
 
   const storagePrefix = enableSharedModalDimensions
-    ? "@dev_tools_console_modal"
-    : "@sentry_logs_modal";
+    ? devToolsStorageKeys.modal.root()
+    : devToolsStorageKeys.sentry.modal();
 
   return (
     <BaseFloatingModal

@@ -4,6 +4,7 @@ import { StorageBrowserMode } from "./StorageBrowserMode";
 import { RequiredStorageKey } from "../types";
 import { Text, View } from "react-native";
 import { HardDrive } from "lucide-react-native";
+import { devToolsStorageKeys } from "../../../_shared/storage/devToolsStorageKeys";
 
 interface StorageModalProps {
   visible: boolean;
@@ -23,8 +24,8 @@ export function StorageModal({
   if (!visible) return null;
 
   const storagePrefix = enableSharedModalDimensions
-    ? "@dev_tools_console_modal"
-    : "@devtools_storage_modal";
+    ? devToolsStorageKeys.modal.root()
+    : devToolsStorageKeys.storage.modal();
 
   const renderHeaderContent = () => (
     <View

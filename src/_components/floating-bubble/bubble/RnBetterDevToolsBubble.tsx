@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSentrySubtitle, SentryLogsModal } from "../../../_sections/sentry";
 import { RequiredEnvVar, useEnvVarsSubtitle, EnvVarsModal } from "../../../_sections/env";
-import { StorageModal } from "../../../_sections/storage";
+import { StorageModal, RequiredStorageKey } from "../../../_sections/storage";
 import { BubblePresentation } from "./components/BubblePresentation";
 import type { UserRole } from "./components/UserStatus";
 import type { Environment } from "../../../_sections/env";
@@ -18,6 +18,7 @@ import { useBubbleVisibilitySettings } from "./hooks/useBubbleVisibilitySettings
 // Re-export types that developers will need
 export type { UserRole } from "./components/UserStatus";
 export type { Environment, RequiredEnvVar } from "../../../_sections/env";
+export type { RequiredStorageKey } from "../../../_sections/storage";
 
 /**
  * Props for the RnBetterDevToolsBubble component
@@ -45,10 +46,17 @@ interface RnBetterDevToolsBubbleProps {
 
   /**
    * Array of required environment variables to check
-   * These will be displayed in the DevTools console with their status
+   * These will be displayed in the Environment Variables modal with their status
    * @example [{ name: "API_URL", description: "Backend API endpoint" }]
    */
   requiredEnvVars?: RequiredEnvVar[];
+
+  /**
+   * Array of required storage keys to check
+   * These will be displayed in the Storage Browser modal with their status
+   * @example ["user_token", { key: "app_config", expectedType: "object" }]
+   */
+  requiredStorageKeys?: RequiredStorageKey[];
 
   /**
    * Enable shared modal dimensions across all modals
@@ -149,6 +157,7 @@ export function RnBetterDevToolsBubble({
   userRole,
   environment,
   requiredEnvVars = [],
+  requiredStorageKeys = [],
   enableSharedModalDimensions = false,
   hideEnvironment,
   hideUserStatus,
@@ -194,15 +203,13 @@ export function RnBetterDevToolsBubble({
   const { getRnBetterDevToolsSubtitle } = useReactQueryState(queryClient);
   const envVarsSubtitle = useEnvVarsSubtitle(requiredEnvVars);
 
-  // State for additional modals
-  const [isEnvModalOpen, setIsEnvModalOpen] = useState(false);
-  const [isSentryModalOpen, setIsSentryModalOpen] = useState(false);
-  const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
-
   // Modal management hook with persistence - extracted from main component logic
   const {
     isModalOpen,
     isDebugModalOpen,
+    isEnvModalOpen,
+    isSentryModalOpen,
+    isStorageModalOpen,
     selectedQueryKey,
     selectedSection,
     activeFilter,
@@ -212,17 +219,18 @@ export function RnBetterDevToolsBubble({
     setActiveFilter,
     handleModalDismiss,
     handleDebugModalDismiss,
+    handleEnvModalDismiss,
+    handleSentryModalDismiss,
+    handleStorageModalDismiss,
     handleQuerySelect,
     handleQueryPress,
     handleStatusPress,
+    handleEnvPress,
+    handleSentryPress,
+    handleStoragePress,
     handleTabChange,
     handleMutationSelect,
   } = useModalManager();
-
-  // Handlers for new modals
-  const handleEnvPress = () => setIsEnvModalOpen(true);
-  const handleSentryPress = () => setIsSentryModalOpen(true);
-  const handleStoragePress = () => setIsStorageModalOpen(true);
 
   // Hide bubble when any modal is open to prevent visual overlap
   const isAnyModalOpen = isModalOpen || isDebugModalOpen || isEnvModalOpen || isSentryModalOpen || isStorageModalOpen;
@@ -280,6 +288,7 @@ export function RnBetterDevToolsBubble({
           visible={isDebugModalOpen}
           onClose={handleDebugModalDismiss}
           requiredEnvVars={requiredEnvVars}
+          requiredStorageKeys={requiredStorageKeys}
           getSentrySubtitle={getSentrySubtitle}
           getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
           envVarsSubtitle={envVarsSubtitle}
@@ -296,30 +305,30 @@ export function RnBetterDevToolsBubble({
           }}
         />
 
-        {/* Environment Variables Modal */}
+        {/* Environment Variables Modal - Auto-opens if restored state indicates it was open */}
         <EnvVarsModal
           key="env-vars-modal"
           visible={isEnvModalOpen}
-          onClose={() => setIsEnvModalOpen(false)}
+          onClose={handleEnvModalDismiss}
           requiredEnvVars={requiredEnvVars}
           _envVarsSubtitle={envVarsSubtitle}
           enableSharedModalDimensions={enableSharedModalDimensions}
         />
 
-        {/* Sentry Events Modal */}
+        {/* Sentry Events Modal - Auto-opens if restored state indicates it was open */}
         <SentryLogsModal
           key="sentry-logs-modal"
           visible={isSentryModalOpen}
-          onClose={() => setIsSentryModalOpen(false)}
+          onClose={handleSentryModalDismiss}
           getSentrySubtitle={getSentrySubtitle}
           enableSharedModalDimensions={enableSharedModalDimensions}
         />
 
-        {/* Storage Browser Modal */}
+        {/* Storage Browser Modal - Auto-opens if restored state indicates it was open */}
         <StorageModal
           key="storage-modal"
           visible={isStorageModalOpen}
-          onClose={() => setIsStorageModalOpen(false)}
+          onClose={handleStorageModalDismiss}
           enableSharedModalDimensions={enableSharedModalDimensions}
           requiredStorageKeys={requiredEnvVars}
         />

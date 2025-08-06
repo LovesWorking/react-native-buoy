@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { RequiredEnvVar } from "../../../_sections/env/types";
+import { RequiredStorageKey } from "../../../_sections/storage/types";
 import { DevToolsModalRouter, SectionType } from "./DevToolsModalRouter";
 import { DevToolsSectionListModal } from "./DevToolsSectionListModal";
 
@@ -7,6 +8,7 @@ interface DevToolsConsoleProps {
   visible: boolean;
   onClose: () => void;
   requiredEnvVars: RequiredEnvVar[];
+  requiredStorageKeys?: RequiredStorageKey[];
   getSentrySubtitle: () => string;
   getRnBetterDevToolsSubtitle: () => string;
   envVarsSubtitle: string;
@@ -30,6 +32,7 @@ export function DevToolsConsole({
   visible,
   onClose,
   requiredEnvVars,
+  requiredStorageKeys = [],
   getSentrySubtitle,
   getRnBetterDevToolsSubtitle,
   envVarsSubtitle,
@@ -94,6 +97,7 @@ export function DevToolsConsole({
         selectedSection={selectedSection}
         onClose={handleModalClose}
         requiredEnvVars={requiredEnvVars}
+        requiredStorageKeys={requiredStorageKeys}
         _getSentrySubtitle={getSentrySubtitle}
         envVarsSubtitle={envVarsSubtitle}
         onBack={handleBack}

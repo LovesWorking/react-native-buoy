@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { StyleSheet, ScrollView } from "react-native";
 import { Query, useQueryClient } from "@tanstack/react-query";
 import {
@@ -9,14 +9,14 @@ import {
 } from "../../react-query/utils/storageQueryUtils";
 import { StorageKeyStatsSection } from "./StorageKeyStats";
 import { StorageKeySection } from "./StorageKeySection";
+import { StorageActions } from "./StorageActions";
 import {
   StorageKeyInfo,
   RequiredStorageKey,
   StorageKeyStats,
 } from "../types";
-import { getEnvVarType } from "../../env/utils/envTypeDetector";
-import { getEnvValue } from "../utils/getEnvValue";
 import { isDevToolsStorageKey } from "../../../_shared/storage/devToolsStorageKeys";
+import { clearAllAppStorage } from "../utils/clearAllStorage";
 
 interface StorageBrowserModeProps {
   selectedQuery: Query | undefined;
@@ -44,8 +44,9 @@ export function StorageBrowserMode({
   );
 
   // Process storage keys into StorageKeyInfo format
-  const { storageKeys, stats } = useMemo(() => {
+  const { storageKeys, devToolKeys, stats } = useMemo(() => {
     const keyInfoMap = new Map<string, StorageKeyInfo>();
+    const devToolKeyInfoMap = new Map<string, StorageKeyInfo>();
 
     // Process all storage queries (no filtering by storage type)
     storageQueriesData.forEach((query) => {
@@ -53,12 +54,22 @@ export function StorageBrowserMode({
       if (!storageType) return;
 
       const cleanKey = getCleanStorageKey(query.queryKey);
-      
-      // Filter out dev tool keys from the storage browser
-      if (isDevToolsStorageKey(cleanKey)) {
-        return; // Skip dev tool keys
-      }
       const value = query.state.data;
+      
+      // Check if this is a dev tool key
+      if (isDevToolsStorageKey(cleanKey)) {
+        // Add to dev tool keys map instead
+        const devKeyInfo: StorageKeyInfo = {
+          key: cleanKey,
+          value,
+          storageType,
+          status: "optional_present",
+          category: "optional",
+          description: "Dev Tools internal storage key"
+        };
+        devToolKeyInfoMap.set(cleanKey, devKeyInfo);
+        return; // Skip adding to regular storage keys
+      }
 
       // Check if this is a required key
       const requiredConfig = requiredStorageKeys.find((req) => {
@@ -83,7 +94,8 @@ export function StorageBrowserMode({
           typeof requiredConfig === "object" &&
           "expectedType" in requiredConfig
         ) {
-          const actualType = getEnvVarType(value);
+          // Simple type detection for storage values
+          const actualType = value === null ? "null" : typeof value;
           status =
             actualType.toLowerCase() ===
             requiredConfig.expectedType.toLowerCase()
@@ -117,45 +129,25 @@ export function StorageBrowserMode({
       keyInfoMap.set(cleanKey, keyInfo);
     });
 
-    // Process required keys (including env vars that might not be in storage)
+    // Process required storage keys that weren't found in actual storage
+    // NOTE: We only track storage keys here, not environment variables
     requiredStorageKeys.forEach((req) => {
       const key = typeof req === "string" ? req : req.key;
       
-      // If not already in map, check if it's an environment variable
+      // If not already in map, it means the required key is missing from storage
       if (!keyInfoMap.has(key)) {
-        // Use robust env value getter that handles multiple environments
-        const value = getEnvValue(key);
-        
-        let status: StorageKeyInfo["status"] = "required_missing";
         let storageType: StorageType = "async"; // Default
         
         if (typeof req === "object" && "storageType" in req) {
           storageType = req.storageType;
         }
-        
-        // Determine status based on value and requirements
-        // Important: Check if value exists (including empty string, 0, false, etc.)
-        if (value !== undefined && value !== null) {
-          if (typeof req === "object" && "expectedValue" in req) {
-            // For expected value, do exact comparison
-            status = String(value) === String(req.expectedValue) ? "required_present" : "required_wrong_value";
-          } else if (typeof req === "object" && "expectedType" in req) {
-            // For expected type, check the actual type
-            const actualType = getEnvVarType(value);
-            status = actualType.toLowerCase() === req.expectedType.toLowerCase() 
-              ? "required_present" 
-              : "required_wrong_type";
-          } else {
-            // Just checking existence
-            status = "required_present";
-          }
-        }
 
+        // Mark as missing since it's not in storage
         const keyInfo: StorageKeyInfo = {
           key,
-          value,
+          value: undefined, // Not in storage
           storageType,
-          status,
+          status: "required_missing",
           category: "required",
           ...(typeof req === "object" &&
             "expectedValue" in req && {
@@ -193,14 +185,41 @@ export function StorageBrowserMode({
       secureCount: keys.filter((k) => k.storageType === "secure").length,
     };
 
-    return { storageKeys: keys, stats: storageStats };
-  }, [storageQueriesData, requiredStorageKeys]);
+    // Get dev tool keys array
+    const devKeys = Array.from(devToolKeyInfoMap.values());
 
-  // Note: Storage counts removed as filtering is no longer needed
+    return { storageKeys: keys, devToolKeys: devKeys, stats: storageStats };
+  }, [storageQueriesData, requiredStorageKeys]);
 
   // Group storage keys by status
   const requiredKeys = storageKeys.filter((k) => k.category === "required");
   const optionalKeys = storageKeys.filter((k) => k.category === "optional");
+
+  // Handle clear all storage
+  const handleClearAll = useCallback(async () => {
+    try {
+      await clearAllAppStorage();
+      // Invalidate all storage queries to refresh the UI
+      queryClient.invalidateQueries({
+        predicate: (query) => isStorageQuery(query.queryKey),
+      });
+    } catch (error) {
+      console.error('Failed to clear storage:', error);
+      throw error;
+    }
+  }, [queryClient]);
+
+  // Handle refresh
+  const handleRefresh = useCallback(async () => {
+    // Invalidate all storage queries to force refetch
+    await queryClient.invalidateQueries({
+      predicate: (query) => isStorageQuery(query.queryKey),
+    });
+    // Also refetch to ensure immediate update
+    await queryClient.refetchQueries({
+      predicate: (query) => isStorageQuery(query.queryKey),
+    });
+  }, [queryClient]);
 
   return (
     <ScrollView
@@ -210,6 +229,13 @@ export function StorageBrowserMode({
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
     >
+      <StorageActions 
+        storageKeys={storageKeys}
+        onClearAll={handleClearAll}
+        onRefresh={handleRefresh}
+        totalCount={storageKeys.length}
+      />
+      
       <StorageKeyStatsSection stats={stats} />
 
       <StorageKeySection
@@ -224,6 +250,14 @@ export function StorageBrowserMode({
         count={optionalKeys.length}
         keys={optionalKeys}
         emptyMessage="No optional storage keys found"
+      />
+
+      <StorageKeySection
+        title="Dev Tools Keys"
+        count={devToolKeys.length}
+        keys={devToolKeys}
+        emptyMessage="No dev tool keys found"
+        headerColor="#8B5CF6"
       />
     </ScrollView>
   );

@@ -1,4 +1,5 @@
 import { RequiredEnvVar } from "../../../_sections/env/types";
+import { RequiredStorageKey } from "../../../_sections/storage/types";
 import { SentryLogsModal } from "../../../_sections/sentry";
 import { EnvVarsModal } from "../../../_sections/env/components/EnvVarsModal";
 import { StorageModal } from "../../../_sections/storage/components/StorageModal";
@@ -16,6 +17,7 @@ interface DevToolsModalRouterProps {
   selectedSection: SectionType | null;
   onClose: () => void;
   requiredEnvVars: RequiredEnvVar[];
+  requiredStorageKeys?: RequiredStorageKey[];
   _getSentrySubtitle: () => string;
   envVarsSubtitle: string;
   onBack?: () => void;
@@ -32,6 +34,7 @@ export function DevToolsModalRouter({
   selectedSection,
   onClose,
   requiredEnvVars,
+  requiredStorageKeys = [],
   _getSentrySubtitle,
   envVarsSubtitle,
   onBack,
@@ -62,7 +65,7 @@ export function DevToolsModalRouter({
         onClose={onClose}
         onBack={onBack}
         enableSharedModalDimensions={enableSharedModalDimensions}
-        requiredStorageKeys={requiredEnvVars}
+        requiredStorageKeys={requiredStorageKeys}
       />
 
       <BubbleSettingsModal

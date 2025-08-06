@@ -10,6 +10,7 @@ import { View } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 import { SwipeIndicator } from "./SwipeIndicator";
 import { useModalState } from "../../../../_components/floating-bubble/modal/hooks/useModalState";
+import { devToolsStorageKeys } from "../../../../_shared/storage/devToolsStorageKeys";
 
 interface MutationBrowserModalProps {
   visible: boolean;
@@ -41,8 +42,8 @@ export function MutationBrowserModal({
 
   // Get floating mode state for conditional styling
   const storagePrefix = enableSharedModalDimensions
-    ? "@react_query_modal"
-    : "@react_query_browser_modal";
+    ? devToolsStorageKeys.reactQuery.modal()
+    : devToolsStorageKeys.reactQuery.mutationModal();
   const modalState = useModalState({ storagePrefix });
 
   // Shared values for gesture tracking [[memory:4875251]]

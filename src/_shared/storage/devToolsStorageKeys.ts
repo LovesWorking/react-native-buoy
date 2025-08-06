@@ -45,6 +45,7 @@ export const devToolsStorageKeys = {
    */
   env: {
     root: () => `${devToolsStorageKeys.base}_env` as const,
+    modal: () => `${devToolsStorageKeys.env.root()}_modal` as const,
     currentEnv: () => `${devToolsStorageKeys.env.root()}_current` as const,
     overrides: () => `${devToolsStorageKeys.env.root()}_overrides` as const,
   },
@@ -54,6 +55,7 @@ export const devToolsStorageKeys = {
    */
   sentry: {
     root: () => `${devToolsStorageKeys.base}_sentry` as const,
+    modal: () => `${devToolsStorageKeys.sentry.root()}_modal` as const,
     filters: () => `${devToolsStorageKeys.sentry.root()}_filters` as const,
     preferences: () => `${devToolsStorageKeys.sentry.root()}_preferences` as const,
   },
@@ -63,6 +65,7 @@ export const devToolsStorageKeys = {
    */
   storage: {
     root: () => `${devToolsStorageKeys.base}_storage` as const,
+    modal: () => `${devToolsStorageKeys.storage.root()}_modal` as const,
     filters: () => `${devToolsStorageKeys.storage.root()}_filters` as const,
     preferences: () => `${devToolsStorageKeys.storage.root()}_preferences` as const,
   },
@@ -72,10 +75,31 @@ export const devToolsStorageKeys = {
    */
   reactQuery: {
     root: () => `${devToolsStorageKeys.base}_rq` as const,
+    modal: () => `${devToolsStorageKeys.reactQuery.root()}_modal` as const,
+    browserModal: () => `${devToolsStorageKeys.reactQuery.root()}_browser_modal` as const,
+    mutationModal: () => `${devToolsStorageKeys.reactQuery.root()}_mutation_modal` as const,
     filters: () => `${devToolsStorageKeys.reactQuery.root()}_filters` as const,
     preferences: () => `${devToolsStorageKeys.reactQuery.root()}_preferences` as const,
   },
 } as const;
+
+/**
+ * Legacy dev tool key patterns that should be cleaned up
+ * These are old keys from before we standardized on @devtools prefix
+ */
+const LEGACY_DEV_TOOL_PATTERNS = [
+  '@dev_tools_',
+  '@react_query_browser_modal',
+  '@react_query_modal',
+  '@react_query_mutation_modal',
+  '@sentry_logs_modal',
+  '@floating_rn_better_dev_tools_',
+  '@bubble_settings_',
+  '@env_vars_modal',
+  '@storage_modal',
+  '@floating_@devtools_', // Double @ migration issue
+  'dev_last_route', // Old key without @ prefix
+];
 
 /**
  * Check if a storage key belongs to dev tools
@@ -86,7 +110,18 @@ export function isDevToolsStorageKey(key: string): boolean {
   if (!key) return false;
   
   // Check if it starts with our base prefix
-  return key.startsWith(devToolsStorageKeys.base);
+  if (key.startsWith(devToolsStorageKeys.base)) {
+    return true;
+  }
+  
+  // Check for legacy dev tool keys that need cleanup
+  for (const pattern of LEGACY_DEV_TOOL_PATTERNS) {
+    if (key.startsWith(pattern)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**

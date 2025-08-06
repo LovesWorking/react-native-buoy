@@ -8,6 +8,7 @@ interface StorageKeySectionProps {
   count: number;
   keys: StorageKeyInfo[];
   emptyMessage: string;
+  headerColor?: string;
 }
 
 /**
@@ -23,6 +24,7 @@ export function StorageKeySection({
   count,
   keys,
   emptyMessage,
+  headerColor,
 }: StorageKeySectionProps) {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
@@ -42,8 +44,8 @@ export function StorageKeySection({
     return (
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{title}</Text>
-          <Text style={styles.sectionCount}>0</Text>
+          <Text style={[styles.sectionTitle, headerColor && { color: headerColor }]}>{title}</Text>
+          <Text style={[styles.sectionCount, headerColor && { color: headerColor, opacity: 0.8 }]}>0</Text>
         </View>
         <View style={styles.emptySection}>
           <Text style={styles.emptySectionText}>{emptyMessage}</Text>
@@ -57,8 +59,8 @@ export function StorageKeySection({
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={styles.sectionCount}>{count}</Text>
+        <Text style={[styles.sectionTitle, headerColor && { color: headerColor }]}>{title}</Text>
+        <Text style={[styles.sectionCount, headerColor && { color: headerColor, opacity: 0.8 }]}>{count}</Text>
       </View>
       <View style={styles.sectionContent}>
         {keys.map((storageKey) => (

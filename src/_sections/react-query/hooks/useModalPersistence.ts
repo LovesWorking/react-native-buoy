@@ -11,6 +11,9 @@ interface UseModalPersistenceProps {
   storagePrefix: string;
   isModalOpen: boolean;
   isDebugModalOpen: boolean;
+  isEnvModalOpen?: boolean;
+  isSentryModalOpen?: boolean;
+  isStorageModalOpen?: boolean;
   selectedQueryKey?: QueryKey;
   selectedSection?: string | null;
   activeFilter?: string | null; // React Query filter state
@@ -33,6 +36,9 @@ export function useModalPersistence({
   storagePrefix,
   isModalOpen,
   isDebugModalOpen,
+  isEnvModalOpen = false,
+  isSentryModalOpen = false,
+  isStorageModalOpen = false,
   selectedQueryKey,
   selectedSection,
   activeFilter,
@@ -44,6 +50,9 @@ export function useModalPersistence({
     const state: ModalVisibilityState = {
       isModalOpen,
       isDebugModalOpen,
+      isEnvModalOpen,
+      isSentryModalOpen,
+      isStorageModalOpen,
       selectedQueryKey: selectedQueryKey
         ? JSON.stringify(selectedQueryKey)
         : undefined,
@@ -58,6 +67,9 @@ export function useModalPersistence({
     storagePrefix,
     isModalOpen,
     isDebugModalOpen,
+    isEnvModalOpen,
+    isSentryModalOpen,
+    isStorageModalOpen,
     selectedQueryKey,
     selectedSection,
     activeFilter,
@@ -82,7 +94,7 @@ export function useModalPersistence({
     }
 
     // Only save if a modal is actually open to avoid saving closed state
-    if (isModalOpen || isDebugModalOpen) {
+    if (isModalOpen || isDebugModalOpen || isEnvModalOpen || isSentryModalOpen || isStorageModalOpen) {
       saveCurrentState();
     } else {
       // Clear saved state when all modals are closed
@@ -91,6 +103,9 @@ export function useModalPersistence({
   }, [
     isModalOpen,
     isDebugModalOpen,
+    isEnvModalOpen,
+    isSentryModalOpen,
+    isStorageModalOpen,
     selectedQueryKey,
     selectedSection,
     activeFilter,

@@ -3,6 +3,7 @@ import { EnvVarsDetailContent } from "./EnvVarsSection";
 import { RequiredEnvVar } from "../types";
 import { View, Text } from "react-native";
 import { BackButton } from "../../../_shared/ui/components/BackButton";
+import { devToolsStorageKeys } from "../../../_shared/storage/devToolsStorageKeys";
 
 interface EnvVarsModalProps {
   visible: boolean;
@@ -49,8 +50,8 @@ export function EnvVarsModal({
   );
 
   const storagePrefix = enableSharedModalDimensions
-    ? "@dev_tools_console_modal"
-    : "@env_vars_modal";
+    ? devToolsStorageKeys.modal.root()
+    : devToolsStorageKeys.env.modal();
 
   return (
     <BaseFloatingModal
