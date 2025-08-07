@@ -5,6 +5,11 @@ export { StorageKeyCard } from './components/StorageKeyCard';
 export { StorageKeyStatsSection as StorageKeyStats } from './components/StorageKeyStats';
 export { StorageKeySection } from './components/StorageKeySection';
 export { StorageBrowserMode } from './components/StorageBrowserMode';
+export { StorageEventsSection } from './components/StorageEventsSection';
+export { StorageEventsModal } from './components/StorageEventsModal';
 
 // Storage types
 export * from './types';
+
+// Storage utilities
+export * from './utils';

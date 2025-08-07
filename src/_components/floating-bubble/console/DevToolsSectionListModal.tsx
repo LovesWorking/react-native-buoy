@@ -4,6 +4,8 @@ import { ConsoleSectionList } from "./ConsoleSectionList";
 import { SentryLogsSection, ReactQuerySection } from "./sections";
 import { EnvVarsSection } from "../../../_sections/env";
 import { StorageSection } from "../../../_sections/storage/components/StorageSection";
+import { StorageEventsSection } from "../../../_sections/storage";
+import { NetworkSection } from "../../../_sections/network";
 import { BubbleSettingsSection } from "../../../_sections/settings";
 import { SectionType } from "./DevToolsModalRouter";
 import { Text, View } from "react-native";
@@ -83,6 +85,8 @@ export function DevToolsSectionListModal({
           getRnBetterDevToolsSubtitle={getRnBetterDevToolsSubtitle}
         />
         <StorageSection onPress={() => onSectionSelect("storage")} />
+        <StorageEventsSection onPress={() => onSectionSelect("storage-events")} />
+        <NetworkSection onPress={() => onSectionSelect("network")} />
         <BubbleSettingsSection onPress={() => onSectionSelect("bubble-settings")} />
       </ConsoleSectionList>
     </BaseFloatingModal>

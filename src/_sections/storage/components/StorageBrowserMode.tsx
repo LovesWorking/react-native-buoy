@@ -10,11 +10,7 @@ import {
 import { StorageKeyStatsSection } from "./StorageKeyStats";
 import { StorageKeySection } from "./StorageKeySection";
 import { StorageActions } from "./StorageActions";
-import {
-  StorageKeyInfo,
-  RequiredStorageKey,
-  StorageKeyStats,
-} from "../types";
+import { StorageKeyInfo, RequiredStorageKey, StorageKeyStats } from "../types";
 import { isDevToolsStorageKey } from "../../../_shared/storage/devToolsStorageKeys";
 import { clearAllAppStorage } from "../utils/clearAllStorage";
 
@@ -55,7 +51,7 @@ export function StorageBrowserMode({
 
       const cleanKey = getCleanStorageKey(query.queryKey);
       const value = query.state.data;
-      
+
       // Check if this is a dev tool key
       if (isDevToolsStorageKey(cleanKey)) {
         // Add to dev tool keys map instead
@@ -65,7 +61,7 @@ export function StorageBrowserMode({
           storageType,
           status: "optional_present",
           category: "optional",
-          description: "Dev Tools internal storage key"
+          description: "Dev Tools internal storage key",
         };
         devToolKeyInfoMap.set(cleanKey, devKeyInfo);
         return; // Skip adding to regular storage keys
@@ -133,11 +129,11 @@ export function StorageBrowserMode({
     // NOTE: We only track storage keys here, not environment variables
     requiredStorageKeys.forEach((req) => {
       const key = typeof req === "string" ? req : req.key;
-      
+
       // If not already in map, it means the required key is missing from storage
       if (!keyInfoMap.has(key)) {
         let storageType: StorageType = "async"; // Default
-        
+
         if (typeof req === "object" && "storageType" in req) {
           storageType = req.storageType;
         }
@@ -204,7 +200,7 @@ export function StorageBrowserMode({
         predicate: (query) => isStorageQuery(query.queryKey),
       });
     } catch (error) {
-      console.error('Failed to clear storage:', error);
+      console.error("Failed to clear storage:", error);
       throw error;
     }
   }, [queryClient]);
@@ -229,13 +225,13 @@ export function StorageBrowserMode({
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
     >
-      <StorageActions 
+      <StorageActions
         storageKeys={storageKeys}
         onClearAll={handleClearAll}
         onRefresh={handleRefresh}
         totalCount={storageKeys.length}
       />
-      
+
       <StorageKeyStatsSection stats={stats} />
 
       <StorageKeySection

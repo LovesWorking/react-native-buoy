@@ -66,6 +66,7 @@ export const devToolsStorageKeys = {
   storage: {
     root: () => `${devToolsStorageKeys.base}_storage` as const,
     modal: () => `${devToolsStorageKeys.storage.root()}_modal` as const,
+    eventsModal: () => `${devToolsStorageKeys.storage.root()}_events_modal` as const,
     filters: () => `${devToolsStorageKeys.storage.root()}_filters` as const,
     preferences: () => `${devToolsStorageKeys.storage.root()}_preferences` as const,
   },
@@ -80,6 +81,16 @@ export const devToolsStorageKeys = {
     mutationModal: () => `${devToolsStorageKeys.reactQuery.root()}_mutation_modal` as const,
     filters: () => `${devToolsStorageKeys.reactQuery.root()}_filters` as const,
     preferences: () => `${devToolsStorageKeys.reactQuery.root()}_preferences` as const,
+  },
+
+  /**
+   * Network-related storage keys
+   */
+  network: {
+    root: () => `${devToolsStorageKeys.base}_network` as const,
+    modal: () => `${devToolsStorageKeys.network.root()}_modal` as const,
+    filters: () => `${devToolsStorageKeys.network.root()}_filters` as const,
+    preferences: () => `${devToolsStorageKeys.network.root()}_preferences` as const,
   },
 } as const;
 

@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Platform } from "react-native";
-import { RefreshCw, Download, Trash2 } from "lucide-react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { RefreshCw, Copy, Trash2 } from "lucide-react-native";
 import { useState, useCallback } from "react";
 import superjson from "superjson";
 import { StorageKeyInfo } from "../types";
@@ -139,35 +139,23 @@ export function StorageActions({
   };
 
   const handleClearEverything = async () => {
-    // Extra confirmation for clearing everything
-    Alert.alert(
-      '⚠️ Confirm Clear Everything',
-      'This will clear ALL storage including dev tools settings. You will need to restart the app.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Clear Everything', 
-          style: 'destructive', 
-          onPress: async () => {
-            try {
-              await clearAllStorageIncludingDevTools();
-              if (typeof window !== 'undefined' && window.location) {
-                window.location.reload();
-              } else {
-                Alert.alert(
-                  'Success', 
-                  'All storage cleared. Please restart the app.',
-                  [{ text: 'OK' }]
-                );
-              }
-            } catch (error) {
-              console.error('Failed to clear all storage:', error);
-              Alert.alert('Error', `Failed to clear all storage: ${error}`);
-            }
-          }
-        },
-      ],
-    );
+    // Clear everything directly without extra confirmation
+    try {
+      await clearAllStorageIncludingDevTools();
+      await onRefresh(); // Auto-refresh after clearing
+      console.log('[Storage] All storage cleared including dev tools');
+      
+      // Show success message briefly
+      Alert.alert(
+        'Success', 
+        'All storage cleared including dev tools settings.',
+        [{ text: 'OK' }],
+        { cancelable: true }
+      );
+    } catch (error) {
+      console.error('Failed to clear all storage:', error);
+      Alert.alert('Error', `Failed to clear all storage: ${error}`);
+    }
   };
 
   return (
@@ -200,9 +188,9 @@ export function StorageActions({
           sentry-label="ignore storage export button"
           onPress={handleExport}
           style={styles.iconButton}
-          accessibilityLabel="Export storage data"
+          accessibilityLabel="Copy storage data"
         >
-          <Download size={16} color="#3B82F6" />
+          <Copy size={16} color="#3B82F6" />
         </TouchableOpacity>
         
         <TouchableOpacity

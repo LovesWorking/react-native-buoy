@@ -2,7 +2,8 @@ import { RequiredEnvVar } from "../../../_sections/env/types";
 import { RequiredStorageKey } from "../../../_sections/storage/types";
 import { SentryLogsModal } from "../../../_sections/sentry";
 import { EnvVarsModal } from "../../../_sections/env/components/EnvVarsModal";
-import { StorageModal } from "../../../_sections/storage/components/StorageModal";
+import { StorageModal, StorageEventsModal } from "../../../_sections/storage";
+import { NetworkModal } from "../../../_sections/network";
 import { BubbleSettingsModal } from "./BubbleSettingsModal";
 
 // Available section types for navigation
@@ -11,6 +12,8 @@ export type SectionType =
   | "env-vars"
   | "rn-better-dev-tools"
   | "storage"
+  | "storage-events"
+  | "network"
   | "bubble-settings";
 
 interface DevToolsModalRouterProps {
@@ -66,6 +69,20 @@ export function DevToolsModalRouter({
         onBack={onBack}
         enableSharedModalDimensions={enableSharedModalDimensions}
         requiredStorageKeys={requiredStorageKeys}
+      />
+
+      <StorageEventsModal
+        visible={selectedSection === "storage-events"}
+        onClose={onClose}
+        onBack={onBack}
+        enableSharedModalDimensions={enableSharedModalDimensions}
+      />
+
+      <NetworkModal
+        visible={selectedSection === "network"}
+        onClose={onClose}
+        onBack={onBack}
+        enableSharedModalDimensions={enableSharedModalDimensions}
       />
 
       <BubbleSettingsModal

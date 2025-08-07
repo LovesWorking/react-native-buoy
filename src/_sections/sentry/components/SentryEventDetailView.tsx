@@ -475,7 +475,6 @@ export function SentryEventDetailView({
   entry,
   _onBack: _unusedOnBack,
 }: SentryEventDetailViewProps) {
-  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>("details");
 
   // Filter out Sentry-specific metadata (eventData currently unused but may be used in future)
