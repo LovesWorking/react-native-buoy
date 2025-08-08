@@ -11,10 +11,15 @@ export function NetworkSection({ onPress }: NetworkSectionProps) {
 
   const getNetworkSubtitle = () => {
     if (stats.totalRequests === 0) {
-      return isEnabled ? "Capturing..." : "Not capturing";
+      return isEnabled ? "Recording • No requests yet" : "Not recording";
     }
     
     const parts = [];
+    
+    if (isEnabled) {
+      parts.push("Recording");
+    }
+    
     parts.push(`${stats.totalRequests} requests`);
     
     if (stats.failedRequests > 0) {
@@ -25,7 +30,7 @@ export function NetworkSection({ onPress }: NetworkSectionProps) {
       parts.push(`${stats.pendingRequests} pending`);
     }
     
-    return parts.join(", ");
+    return parts.join(" • ");
   };
 
   return (
@@ -37,7 +42,6 @@ export function NetworkSection({ onPress }: NetworkSectionProps) {
       iconColor="#8B5CF6"
       iconBackgroundColor="rgba(139, 92, 246, 0.1)"
       onPress={onPress}
-      badge={isEnabled ? { text: "REC", color: "#EF4444" } : undefined}
     />
   );
 }

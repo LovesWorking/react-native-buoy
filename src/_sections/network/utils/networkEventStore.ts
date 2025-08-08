@@ -1,36 +1,133 @@
 /**
  * Network event store for managing captured network requests
+ * Works with the Reactotron-style network listener
  */
 
 import type { NetworkEvent } from '../types';
+import type { NetworkingEvent } from './networkListener';
 
 class NetworkEventStore {
   private events: NetworkEvent[] = [];
+  private pendingRequests: Map<string, NetworkEvent> = new Map();
   private listeners: Set<(events: NetworkEvent[]) => void> = new Set();
   private maxEvents = 500; // Configurable max events to prevent memory issues
-  private eventCounter = 0;
+  private recentRequests: Map<string, number> = new Map(); // Track recent requests to detect duplicates
 
   /**
-   * Add a new network event to the store
+   * Process a network listener event
    */
-  addEvent(event: Omit<NetworkEvent, 'id'>): void {
-    const newEvent: NetworkEvent = {
-      ...event,
-      id: `net_${++this.eventCounter}_${Date.now()}`,
-    };
-
-    this.events = [newEvent, ...this.events].slice(0, this.maxEvents);
-    this.notifyListeners();
+  processNetworkEvent(event: NetworkingEvent): void {
+    const { request } = event;
+    
+    if (event.type === 'request') {
+      // Check for duplicate request based on URL, method, and timing
+      const requestKey = `${request.method}:${request.url}`;
+      const now = Date.now();
+      const lastRequestTime = this.recentRequests.get(requestKey);
+      
+      // If same request within 50ms, likely a duplicate from XHR/fetch dual interception
+      if (lastRequestTime && (now - lastRequestTime) < 50) {
+        return; // Skip duplicate
+      }
+      
+      this.recentRequests.set(requestKey, now);
+      
+      // Clean up old entries to prevent memory leak
+      if (this.recentRequests.size > 100) {
+        const cutoff = now - 5000; // Remove entries older than 5 seconds
+        for (const [key, time] of this.recentRequests.entries()) {
+          if (time < cutoff) {
+            this.recentRequests.delete(key);
+          }
+        }
+      }
+      
+      // Create new network event for request
+      const networkEvent: NetworkEvent = {
+        id: request.id,
+        method: request.method,
+        url: request.url,
+        host: this.extractHost(request.url),
+        path: this.extractPath(request.url),
+        query: request.params ? `?${new URLSearchParams(request.params).toString()}` : '',
+        timestamp: event.timestamp.getTime(),
+        requestHeaders: request.headers || {},
+        requestData: request.data,
+        requestSize: this.getDataSize(request.data),
+        responseHeaders: {},
+      };
+      
+      // Store as pending
+      this.pendingRequests.set(request.id, networkEvent);
+      
+      // Add to events list
+      this.events = [networkEvent, ...this.events].slice(0, this.maxEvents);
+      this.notifyListeners();
+      
+    } else if (event.type === 'response' || event.type === 'error') {
+      // Find and update the pending request
+      const index = this.events.findIndex(e => e.id === request.id);
+      if (index !== -1) {
+        const updatedEvent: NetworkEvent = {
+          ...this.events[index],
+          duration: event.duration,
+        };
+        
+        if (event.response) {
+          updatedEvent.status = event.response.status;
+          updatedEvent.statusText = event.response.statusText;
+          updatedEvent.responseHeaders = event.response.headers || {};
+          updatedEvent.responseData = event.response.body;
+          updatedEvent.responseSize = event.response.size || 0;
+          updatedEvent.responseType = event.response.headers?.['content-type'];
+        }
+        
+        if (event.error) {
+          updatedEvent.error = event.error.message;
+          updatedEvent.status = updatedEvent.status || 0;
+        }
+        
+        this.events[index] = updatedEvent;
+        this.pendingRequests.delete(request.id);
+        this.notifyListeners();
+      }
+    }
   }
 
   /**
-   * Update an existing event (e.g., when response arrives)
+   * Extract host from URL
    */
-  updateEvent(id: string, updates: Partial<NetworkEvent>): void {
-    const index = this.events.findIndex(e => e.id === id);
-    if (index !== -1) {
-      this.events[index] = { ...this.events[index], ...updates };
-      this.notifyListeners();
+  private extractHost(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname;
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Extract path from URL
+   */
+  private extractPath(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.pathname;
+    } catch {
+      return url;
+    }
+  }
+
+  /**
+   * Get size of data
+   */
+  private getDataSize(data: unknown): number {
+    if (!data) return 0;
+    if (typeof data === 'string') return data.length;
+    try {
+      return JSON.stringify(data).length;
+    } catch {
+      return 0;
     }
   }
 
@@ -53,6 +150,8 @@ class NetworkEventStore {
    */
   clearEvents(): void {
     this.events = [];
+    this.pendingRequests.clear();
+    this.recentRequests.clear();
     this.notifyListeners();
   }
 

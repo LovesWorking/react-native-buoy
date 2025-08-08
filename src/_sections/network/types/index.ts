@@ -10,8 +10,8 @@ export interface NetworkEvent {
   statusText?: string;
   requestHeaders: Record<string, string>;
   responseHeaders: Record<string, string>;
-  requestData?: any;
-  responseData?: any;
+  requestData?: unknown;
+  responseData?: unknown;
   responseSize?: number;
   requestSize?: number;
   timestamp: number;
@@ -38,6 +38,7 @@ export interface NetworkStats {
 export interface NetworkFilter {
   method?: string[];
   status?: 'success' | 'error' | 'pending' | 'all';
+  contentType?: string[];
   searchText?: string;
   host?: string;
 }

@@ -3,6 +3,15 @@
  * Simple and reliable network interception for React Native
  */
 
+// Extended XMLHttpRequest interface for monkey-patching
+interface ExtendedXMLHttpRequest extends XMLHttpRequest {
+  _requestId?: string;
+  _method?: string;
+  _url?: string;
+  _startTime?: number;
+  _requestHeaders?: Record<string, string>;
+  _requestData?: unknown;
+}
 
 // Event types for network operations
 export interface NetworkingEvent {
@@ -14,14 +23,14 @@ export interface NetworkingEvent {
     url: string;
     method: string;
     headers?: Record<string, string>;
-    data?: any;
+    data?: unknown;
     params?: Record<string, string>;
   };
   response?: {
     status: number;
     statusText?: string;
     headers?: Record<string, string>;
-    body?: any;
+    body?: unknown;
     size?: number;
   };
   error?: {
@@ -104,7 +113,7 @@ class NetworkListener {
   }
 
   // Get response body size
-  private getResponseSize(body: any): number {
+  private getResponseSize(body: unknown): number {
     if (!body) return 0;
     if (typeof body === 'string') return body.length;
     if (typeof body === 'object') {
@@ -176,7 +185,7 @@ class NetworkListener {
         type: 'request',
         timestamp: new Date(),
         request: {
-          id: requestId,
+          id: requestId || 'unknown',
           url: cleanUrl,
           method,
           headers: requestHeaders,
@@ -218,7 +227,7 @@ class NetworkListener {
           timestamp: new Date(),
           duration,
           request: {
-            id: requestId,
+            id: requestId || 'unknown',
             url: cleanUrl,
             method,
             headers: requestHeaders,
@@ -244,7 +253,7 @@ class NetworkListener {
           timestamp: new Date(),
           duration,
           request: {
-            id: requestId,
+            id: requestId || 'unknown',
             url: cleanUrl,
             method,
             headers: requestHeaders,
@@ -270,31 +279,33 @@ class NetworkListener {
       password?: string
     ) {
       // Store request info on the xhr instance
-      (this as any)._requestId = `xhr_${++self.requestCounter}`;
-      (this as any)._method = method;
-      (this as any)._url = url;
-      (this as any)._startTime = Date.now();
-      (this as any)._requestHeaders = {};
+      const xhr = this as ExtendedXMLHttpRequest;
+      xhr._requestId = `xhr_${++self.requestCounter}`;
+      xhr._method = method;
+      xhr._url = url;
+      xhr._startTime = Date.now();
+      xhr._requestHeaders = {};
 
       return self.originalXHROpen.call(this, method, url, async, user, password) as void;
     };
 
     // Track request headers
     XMLHttpRequest.prototype.setRequestHeader = function(header: string, value: string) {
-      const headers = (this as any)._requestHeaders;
-      if (headers) {
-        headers[header] = value;
+      const xhr = this as ExtendedXMLHttpRequest;
+      if (xhr._requestHeaders) {
+        xhr._requestHeaders[header] = value;
       }
       
       return self.originalXHRSetRequestHeader.call(this, header, value);
     };
 
-    XMLHttpRequest.prototype.send = function(data?: any) {
-      const requestId = (this as any)._requestId;
-      const method = (this as any)._method || 'GET';
-      const url = (this as any)._url || '';
-      const startTime = (this as any)._startTime;
-      const requestHeaders = (this as any)._requestHeaders || {};
+    XMLHttpRequest.prototype.send = function(data?: Document | XMLHttpRequestBodyInit | null) {
+      const xhr = this as ExtendedXMLHttpRequest;
+      const requestId = xhr._requestId;
+      const method = xhr._method || 'GET';
+      const url = xhr._url || '';
+      const startTime = xhr._startTime;
+      const requestHeaders = xhr._requestHeaders || {};
       
       // Skip ignored URLs
       if (self.shouldIgnoreUrl(url)) {
@@ -304,7 +315,7 @@ class NetworkListener {
       const { url: cleanUrl, params } = self.parseUrl(url);
 
       // Parse request data
-      let requestData: any;
+      let requestData: unknown;
       if (data) {
         if (typeof data === 'string') {
           try {
@@ -322,7 +333,7 @@ class NetworkListener {
         type: 'request',
         timestamp: new Date(),
         request: {
-          id: requestId,
+          id: requestId || 'unknown',
           url: cleanUrl,
           method,
           headers: requestHeaders,
@@ -336,7 +347,7 @@ class NetworkListener {
 
       this.onreadystatechange = function(this: XMLHttpRequest, ev: Event) {
         if (this.readyState === 4) { // DONE
-          const duration = Date.now() - startTime;
+          const duration = startTime ? Date.now() - startTime : 0;
 
           if (this.status === 0) {
             // Network error
@@ -345,7 +356,7 @@ class NetworkListener {
               timestamp: new Date(),
               duration,
               request: {
-                id: requestId,
+                id: requestId || 'unknown',
                 url: cleanUrl,
                 method,
                 headers: requestHeaders,
@@ -366,13 +377,20 @@ class NetworkListener {
               if (this.responseType === 'json' && this.response) {
                 body = this.response;
                 responseSize = JSON.stringify(this.response).length;
-              } else if (this.responseText) {
-                responseSize = this.responseText.length;
-                try {
-                  body = JSON.parse(this.responseText);
-                } catch {
-                  body = this.responseText;
+              } else if (this.responseType === '' || this.responseType === 'text') {
+                // Only access responseText when responseType allows it
+                if (this.responseText) {
+                  responseSize = this.responseText.length;
+                  try {
+                    body = JSON.parse(this.responseText);
+                  } catch {
+                    body = this.responseText;
+                  }
                 }
+              } else if (this.responseType === 'blob' || this.responseType === 'arraybuffer') {
+                // For blob/arraybuffer responses, just note the type
+                body = `[${this.responseType} response]`;
+                responseSize = this.response?.size || this.response?.byteLength || 0;
               } else if (this.response) {
                 if (typeof this.response === 'string') {
                   body = this.response;
@@ -414,7 +432,7 @@ class NetworkListener {
                 timestamp: new Date(),
                 duration,
                 request: {
-                  id: requestId,
+                  id: requestId || 'unknown',
                   url: cleanUrl,
                   method,
                   headers: requestHeaders,
@@ -435,7 +453,7 @@ class NetworkListener {
                 timestamp: new Date(),
                 duration,
                 request: {
-                  id: requestId,
+                  id: requestId || 'unknown',
                   url: cleanUrl,
                   method,
                   headers: requestHeaders,

@@ -377,11 +377,27 @@ const TypeLegend = React.memo(
 );
 
 // Optimized data flattening with chunked processing to prevent UI blocking [[memory:4875251]]
-const useDataFlattening = (data: JsonValue, maxDepth = 10) => {
+const useDataFlattening = (data: JsonValue, maxDepth = 10, autoExpandFirstLevel = false) => {
   const [flatData, setFlatData] = useState<FlatDataItem[]>([]);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set(["root"])
-  );
+  
+  // Initialize with root expanded and optionally first level
+  const getInitialExpanded = useCallback(() => {
+    const initial = new Set(["root"]);
+    if (autoExpandFirstLevel && data && typeof data === 'object') {
+      if (Array.isArray(data)) {
+        data.forEach((_, index) => {
+          initial.add(`root.${index}`);
+        });
+      } else {
+        Object.keys(data).forEach(key => {
+          initial.add(`root.${key}`);
+        });
+      }
+    }
+    return initial;
+  }, [autoExpandFirstLevel, data]);
+  
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => getInitialExpanded());
   const [isProcessing, setIsProcessing] = useState(false);
   const circularCache = useRef(new WeakSet());
 
@@ -534,6 +550,9 @@ const useDataFlattening = (data: JsonValue, maxDepth = 10) => {
         try {
           // Reset circular cache for fresh processing
           circularCache.current = new WeakSet();
+          
+          // No need to reset here as initial state handles it
+          
           const newFlatData = flattenData(data);
 
           if (!isCancelled) {
@@ -720,15 +739,17 @@ interface VirtualizedDataExplorerProps {
   data: JsonValue;
   maxDepth?: number;
   rawMode?: boolean; // When true, shows data directly without container/header/badges
+  initialExpanded?: boolean; // When true, auto-expands the first level of data
 }
 
 export const VirtualizedDataExplorer: React.FC<
   VirtualizedDataExplorerProps
-> = ({ title, description, data, maxDepth = 10, rawMode = false }) => {
+> = ({ title, description, data, maxDepth = 10, rawMode = false, initialExpanded = false }) => {
   const [isExpanded, setIsExpanded] = useState(rawMode); // Auto-expand in raw mode
   const { flatData, isProcessing, toggleExpanded } = useDataFlattening(
     data,
-    maxDepth
+    maxDepth,
+    initialExpanded
   );
 
   // Calculate visible types for the legend
@@ -854,7 +875,7 @@ export const VirtualizedDataExplorer: React.FC<
           </TouchableOpacity>
         </View>
 
-        {isExpanded && visibleTypes.length > 0 && (
+        {isExpanded && visibleTypes.length > 0 && !rawMode && (
           <TypeLegend visibleTypes={visibleTypes} />
         )}
       </View>

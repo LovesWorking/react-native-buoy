@@ -1,13 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
-  ScrollView, 
   TouchableOpacity,
-  TextInput,
-  Switch
+  TextInput
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { ScrollView } from 'react-native-gesture-handler';
 import { 
   Globe, 
   Trash2, 
@@ -15,12 +15,17 @@ import {
   Search,
   X,
   Filter,
-  ChevronLeft
+  CheckCircle,
+  XCircle,
+  Clock
 } from 'lucide-react-native';
 import { BaseFloatingModal } from '../../../_components/floating-bubble/modal/components/BaseFloatingModal';
-import { NetworkEventItem } from './NetworkEventItem';
+import { BackButton } from '../../../_shared/ui/components/BackButton';
+import { devToolsStorageKeys } from '../../../_shared/storage/devToolsStorageKeys';
+import { NetworkEventItemCompact } from './NetworkEventItemCompact';
+import { NetworkFilterView } from './NetworkFilterView';
+import { TickProvider } from '../../sentry/hooks/useTickEveryMinute';
 import { NetworkEventDetailView } from './NetworkEventDetailView';
-import { NetworkStatsSection } from './NetworkStats';
 import { useNetworkEvents } from '../hooks/useNetworkEvents';
 import type { NetworkEvent } from '../types';
 
@@ -31,7 +36,24 @@ interface NetworkModalProps {
   enableSharedModalDimensions?: boolean;
 }
 
-export function NetworkModal({
+
+// Decompose by Responsibility: Extract empty state component
+function EmptyState({ isEnabled }: { isEnabled: boolean }) {
+  return (
+    <View style={styles.emptyState}>
+      <Globe size={32} color="#374151" />
+      <Text style={styles.emptyTitle}>No network events</Text>
+      <Text style={styles.emptyText}>
+        {isEnabled 
+          ? 'Network requests will appear here'
+          : 'Enable interception to start capturing'
+        }
+      </Text>
+    </View>
+  );
+}
+
+function NetworkModalInner({
   visible,
   onClose,
   onBack,
@@ -44,243 +66,223 @@ export function NetworkModal({
     setFilter,
     clearEvents,
     isEnabled,
-    toggleInterception,
-    methods,
+    toggleInterception
   } = useNetworkEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<NetworkEvent | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilterView, setShowFilterView] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const flatListRef = useRef<FlashList<NetworkEvent>>(null);
 
-  const handleEventPress = useCallback((event: NetworkEvent) => {
+  // Simple handlers - no useCallback needed per rule2
+  const handleEventPress = (event: NetworkEvent) => {
     setSelectedEvent(event);
-  }, []);
+  };
 
-  const handleBack = useCallback(() => {
-    if (selectedEvent) {
-      setSelectedEvent(null);
-    } else if (onBack) {
-      onBack();
-    }
-  }, [selectedEvent, onBack]);
+  const handleBack = () => {
+    setSelectedEvent(null);
+  };
 
-  const handleSearch = useCallback((text: string) => {
+  const handleSearch = (text: string) => {
     setSearchText(text);
     setFilter(prev => ({ ...prev, searchText: text }));
-  }, [setFilter]);
+  };
 
-  const handleStatusFilter = useCallback((status: 'all' | 'success' | 'error' | 'pending') => {
-    setFilter(prev => ({ ...prev, status }));
-  }, [setFilter]);
+  // FlashList optimization - only keep what's needed for FlashList performance
+  const ESTIMATED_ITEM_SIZE = 52;
+  const keyExtractor = (item: NetworkEvent) => item.id;
+  const getItemType = () => 'network-event';
+  
+  // Keep renderItem memoized for FlashList performance (justified by FlashList docs)
+  const renderItem = useMemo(() => {
+    return ({ item }: { item: NetworkEvent }) => (
+      <NetworkEventItemCompact
+        event={item}
+        onPress={handleEventPress}
+      />
+    );
+  }, []);  // Empty deps OK - handleEventPress defined inline
 
-  const handleMethodFilter = useCallback((method: string) => {
-    setFilter(prev => {
-      const currentMethods = prev.method || [];
-      const newMethods = currentMethods.includes(method)
-        ? currentMethods.filter(m => m !== method)
-        : [...currentMethods, method];
-      return { ...prev, method: newMethods.length > 0 ? newMethods : undefined };
-    });
-  }, [setFilter]);
-
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.headerLeft}>
-        {(selectedEvent || onBack) && (
-          <TouchableOpacity
-            sentry-label="ignore back button"
-            onPress={handleBack}
-            style={styles.backButton}
-          >
-            <ChevronLeft size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        )}
-        <Globe size={20} color="#8B5CF6" />
-        <Text style={styles.title}>
-          {selectedEvent ? 'Request Details' : 'Network Monitor'}
-        </Text>
-      </View>
-      
-      {!selectedEvent && (
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            sentry-label="ignore toggle interception"
-            onPress={toggleInterception}
-            style={[styles.actionButton, isEnabled && styles.activeButton]}
-          >
-            <Power size={16} color={isEnabled ? '#10B981' : '#6B7280'} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            sentry-label="ignore clear events"
-            onPress={clearEvents}
-            style={styles.actionButton}
-          >
-            <Trash2 size={16} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-
-  const renderFilters = () => (
-    <View style={styles.filtersContainer}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Search size={16} color="#9CA3AF" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search URL, method, error..."
-          placeholderTextColor="#6B7280"
-          value={searchText}
-          onChangeText={handleSearch}
-        />
-        {searchText.length > 0 && (
-          <TouchableOpacity
-            sentry-label="ignore clear search"
-            onPress={() => handleSearch('')}
-          >
-            <X size={16} color="#9CA3AF" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Filter Toggle */}
-      <TouchableOpacity
-        sentry-label="ignore toggle filters"
-        onPress={() => setShowFilters(!showFilters)}
-        style={styles.filterToggle}
-      >
-        <Filter size={14} color="#9CA3AF" />
-        <Text style={styles.filterToggleText}>Filters</Text>
-      </TouchableOpacity>
-
-      {/* Filter Options */}
-      {showFilters && (
-        <View style={styles.filterOptions}>
-          {/* Status Filters */}
-          <View style={styles.filterRow}>
-            <Text style={styles.filterLabel}>Status:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.filterChips}>
-                {(['all', 'success', 'error', 'pending'] as const).map(status => (
-                  <TouchableOpacity
-                    key={status}
-                    sentry-label={`ignore ${status} filter`}
-                    onPress={() => handleStatusFilter(status)}
-                    style={[
-                      styles.filterChip,
-                      filter.status === status && styles.activeFilterChip
-                    ]}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      filter.status === status && styles.activeFilterChipText
-                    ]}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-
-          {/* Method Filters */}
-          {methods.length > 0 && (
-            <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Method:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.filterChips}>
-                  {methods.map(method => (
-                    <TouchableOpacity
-                      key={method}
-                      sentry-label={`ignore ${method} filter`}
-                      onPress={() => handleMethodFilter(method)}
-                      style={[
-                        styles.filterChip,
-                        filter.method?.includes(method) && styles.activeFilterChip
-                      ]}
-                    >
-                      <Text style={[
-                        styles.filterChipText,
-                        filter.method?.includes(method) && styles.activeFilterChipText
-                      ]}>
-                        {method}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-          )}
-        </View>
-      )}
-    </View>
-  );
-
-  const renderContent = () => {
-    if (selectedEvent) {
+  // Compact header with actions (like Sentry/Storage modals)
+  const renderHeaderContent = () => {
+    if (showFilterView) {
       return (
-        <NetworkEventDetailView
-          event={selectedEvent}
-          onBack={() => setSelectedEvent(null)}
-        />
+        <View style={styles.headerContainer}>
+          <BackButton onPress={() => setShowFilterView(false)} />
+          <Text style={styles.headerTitle}>Filters</Text>
+        </View>
       );
     }
 
     return (
-      <>
-        {renderFilters()}
+      <View style={styles.headerContainer}>
+        {(selectedEvent || onBack) ? (
+          <BackButton onPress={selectedEvent ? handleBack : onBack!} />
+        ) : null}
         
-        <NetworkStatsSection stats={stats} />
+        <View style={styles.headerStats}>
+          <Text style={styles.headerStatsText}>{events.length}</Text>
+          {isEnabled ? <View style={styles.listeningIndicator} /> : null}
+        </View>
         
-        {!isEnabled && (
-          <View style={styles.disabledBanner}>
-            <Power size={16} color="#F59E0B" />
-            <Text style={styles.disabledText}>
-              Network interception is disabled. Tap the power button to start capturing.
-            </Text>
-          </View>
-        )}
-        
-        <ScrollView
-          style={styles.eventsList}
-          contentContainerStyle={styles.eventsListContent}
-        >
-          {events.length > 0 ? (
-            events.map(event => (
-              <NetworkEventItem
-                key={event.id}
-                event={event}
-                onPress={handleEventPress}
-              />
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Globe size={48} color="#6B7280" />
-              <Text style={styles.emptyTitle}>No network events</Text>
-              <Text style={styles.emptyText}>
-                {isEnabled 
-                  ? 'Network requests will appear here'
-                  : 'Enable interception to start capturing'
-                }
-              </Text>
-            </View>
-          )}
-        </ScrollView>
-      </>
+        {/* Action buttons in header */}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            sentry-label="ignore filter"
+            onPress={() => setShowFilterView(true)}
+            style={[
+              styles.headerActionButton,
+              (filter.status || filter.method || filter.contentType) && styles.activeFilterButton
+            ]}
+          >
+            <Filter size={14} color={
+              (filter.status || filter.method || filter.contentType) ? "#8B5CF6" : "#6B7280"
+            } />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            sentry-label="ignore toggle interception"
+            onPress={toggleInterception}
+            style={[
+              styles.headerActionButton,
+              isEnabled ? styles.startButton : styles.stopButton
+            ]}
+          >
+            <Power size={14} color={isEnabled ? "#10B981" : "#EF4444"} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            sentry-label="ignore clear events"
+            onPress={clearEvents}
+            style={styles.headerActionButton}
+            disabled={events.length === 0}
+          >
+            <Trash2 size={14} color={events.length > 0 ? "#6B7280" : "#374151"} />
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   };
+
+  const renderSearchBar = () => (
+    <View style={styles.searchContainer}>
+      <Search size={14} color="#9CA3AF" />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search URL, method, error..."
+        placeholderTextColor="#6B7280"
+        value={searchText}
+        onChangeText={handleSearch}
+        sentry-label="ignore network search"
+        accessibilityLabel="Search network requests"
+      />
+      {searchText.length > 0 ? (
+        <TouchableOpacity onPress={() => handleSearch('')} sentry-label="ignore clear search">
+          <X size={16} color="#9CA3AF" />
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+
+  const storagePrefix = enableSharedModalDimensions
+    ? devToolsStorageKeys.modal.root()
+    : devToolsStorageKeys.network.modal();
+
+  if (!visible) return null;
+
+  // Show detail view if an event is selected
+  if (selectedEvent) {
+    return (
+      <BaseFloatingModal
+        visible={visible}
+        onClose={onClose}
+        storagePrefix={storagePrefix}
+        showToggleButton={true}
+        customHeaderContent={renderHeaderContent()}
+        headerSubtitle={undefined}
+      >
+        <View style={styles.container}>
+          <NetworkEventDetailView
+            event={selectedEvent}
+            onBack={handleBack}
+          />
+        </View>
+      </BaseFloatingModal>
+    );
+  }
 
   return (
     <BaseFloatingModal
       visible={visible}
       onClose={onClose}
-      enableSharedModalDimensions={enableSharedModalDimensions}
+      storagePrefix={storagePrefix}
+      showToggleButton={true}
+      customHeaderContent={renderHeaderContent()}
+      headerSubtitle={undefined}
     >
       <View style={styles.container}>
-        {renderHeader()}
-        {renderContent()}
+        {/* Show filter view if active */}
+        {showFilterView ? (
+          <NetworkFilterView
+            events={events}
+            filter={filter}
+            onFilterChange={setFilter}
+            onClose={() => setShowFilterView(false)}
+          />
+        ) : (
+          <>
+            {renderSearchBar()}
+        
+        {/* Compact stats bar */}
+        <View style={styles.statsBar}>
+          <View style={styles.statChip}>
+            <CheckCircle size={12} color="#10B981" />
+            <Text style={styles.statValue}>{stats.successfulRequests}</Text>
+            <Text style={styles.statLabel}>OK</Text>
+          </View>
+          <View style={styles.statChip}>
+            <XCircle size={12} color="#EF4444" />
+            <Text style={[styles.statValue, styles.errorText]}>{stats.failedRequests}</Text>
+            <Text style={styles.statLabel}>ERR</Text>
+          </View>
+          <View style={styles.statChip}>
+            <Clock size={12} color="#F59E0B" />
+            <Text style={[styles.statValue, styles.pendingText]}>{stats.pendingRequests}</Text>
+            <Text style={styles.statLabel}>WAIT</Text>
+          </View>
+            </View>
+            
+            {!isEnabled ? (
+              <View style={styles.disabledBanner}>
+                <Power size={14} color="#F59E0B" />
+                <Text style={styles.disabledText}>
+                  Network interception is disabled
+                </Text>
+              </View>
+            ) : null}
+            
+            {/* Use FlashList for performance */}
+            {events.length > 0 ? (
+              <FlashList
+                ref={flatListRef}
+                data={events}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                getItemType={getItemType}
+                estimatedItemSize={ESTIMATED_ITEM_SIZE}
+                inverted
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator
+                removeClippedSubviews
+                onEndReachedThreshold={0.8}
+                renderScrollComponent={ScrollView}
+                sentry-label="ignore network events list"
+              />
+            ) : (
+              <EmptyState isEnabled={isEnabled} />
+            )}
+          </>
+        )}
       </View>
     </BaseFloatingModal>
   );
@@ -289,148 +291,168 @@ export function NetworkModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1F1F1F',
+    backgroundColor: '#171717',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#2A2A2A',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  headerLeft: {
+  // Compact header styles matching Sentry/Storage modals
+  headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
     gap: 8,
+    minHeight: 32,
+    paddingLeft: 4,
   },
-  backButton: {
-    padding: 4,
+  headerTitle: {
+    color: '#E5E7EB',
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+    marginLeft: 8,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+  headerStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  headerStatsText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  listeningIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
+    marginLeft: 'auto',
   },
-  actionButton: {
-    padding: 8,
+  headerActionButton: {
+    width: 28,
+    height: 28,
     borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  activeButton: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  startButton: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderColor: 'rgba(16, 185, 129, 0.2)',
   },
-  filtersContainer: {
-    padding: 12,
-    backgroundColor: '#2A2A2A',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  stopButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
+  activeFilterButton: {
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderColor: 'rgba(139, 92, 246, 0.2)',
+  },
+  // Search bar
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginHorizontal: 12,
+    marginTop: 8,
     marginBottom: 8,
   },
   searchInput: {
     flex: 1,
     color: '#FFFFFF',
-    fontSize: 14,
-    marginLeft: 8,
+    fontSize: 13,
+    marginLeft: 6,
   },
-  filterToggle: {
+  // Stats bar
+  statsBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  statChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    paddingHorizontal: 8,
     paddingVertical: 4,
-  },
-  filterToggleText: {
-    color: '#9CA3AF',
-    fontSize: 12,
-  },
-  filterOptions: {
-    marginTop: 8,
-    gap: 8,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  filterLabel: {
-    color: '#9CA3AF',
-    fontSize: 12,
-    width: 60,
-  },
-  filterChips: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  activeFilterChip: {
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
-    borderColor: '#8B5CF6',
+  statValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
-  filterChipText: {
-    color: '#9CA3AF',
-    fontSize: 11,
+  statLabel: {
+    fontSize: 10,
+    color: '#6B7280',
     fontWeight: '500',
+    textTransform: 'uppercase',
   },
-  activeFilterChipText: {
-    color: '#8B5CF6',
+  errorText: {
+    color: '#EF4444',
+  },
+  pendingText: {
+    color: '#F59E0B',
   },
   disabledBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    padding: 12,
-    margin: 12,
+    gap: 6,
+    padding: 8,
+    marginHorizontal: 12,
+    marginTop: 8,
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderRadius: 8,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.2)',
   },
   disabledText: {
     color: '#F59E0B',
-    fontSize: 12,
+    fontSize: 11,
     flex: 1,
   },
-  eventsList: {
-    flex: 1,
-  },
-  eventsListContent: {
-    padding: 12,
+  listContent: {
+    paddingTop: 8,
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: 40,
   },
   emptyTitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 12,
+    marginBottom: 6,
   },
   emptyText: {
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 12,
     textAlign: 'center',
   },
 });
+
+// Export with TickProvider wrapper
+export function NetworkModal(props: NetworkModalProps) {
+  return (
+    <TickProvider>
+      <NetworkModalInner {...props} />
+    </TickProvider>
+  );
+}

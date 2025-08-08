@@ -1,10 +1,16 @@
 /**
  * Hook for accessing network events and controls
+ * Uses Reactotron-style listener pattern
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { networkEventStore } from '../utils/networkEventStore';
-import { networkInterceptor } from '../utils/networkInterceptor';
+import { 
+  networkListener, 
+  startNetworkListener, 
+  stopNetworkListener,
+  addNetworkListener 
+} from '../utils/networkListener';
 import type { NetworkEvent, NetworkStats, NetworkFilter } from '../types';
 
 export function useNetworkEvents() {
@@ -14,23 +20,36 @@ export function useNetworkEvents() {
 
   // Subscribe to event store changes
   useEffect(() => {
-    const unsubscribe = networkEventStore.subscribe(setEvents);
-    setEvents(networkEventStore.getEvents());
-    return unsubscribe;
-  }, []);
-
-  // Enable/disable interceptor
-  useEffect(() => {
-    if (isEnabled) {
-      networkInterceptor.enable();
-    } else {
-      networkInterceptor.disable();
-    }
+    // Subscribe to store changes
+    const unsubscribeStore = networkEventStore.subscribe(setEvents);
     
+    // Add listener to network events
+    const unsubscribeListener = addNetworkListener((event) => {
+      // Only log in development and for non-ignored URLs
+      if (__DEV__ && !event.request.url.includes('symbolicate') && !event.request.url.includes(':8081')) {
+        // Uncomment for debugging
+        // console.log('[Network Event]', event.type, event.request.method, event.request.url);
+      }
+      networkEventStore.processNetworkEvent(event);
+    });
+
+    // Check if already listening
+    setIsEnabled(networkListener.isActive);
+
+    // Start listening if not already
+    if (!networkListener.isActive) {
+      startNetworkListener();
+      setIsEnabled(true);
+    }
+
+    // Load initial events
+    setEvents(networkEventStore.getEvents());
+
     return () => {
-      networkInterceptor.disable();
+      unsubscribeStore();
+      unsubscribeListener();
     };
-  }, [isEnabled]);
+  }, []);
 
   // Clear all events
   const clearEvents = useCallback(() => {
@@ -39,8 +58,14 @@ export function useNetworkEvents() {
 
   // Toggle interception
   const toggleInterception = useCallback(() => {
-    setIsEnabled(prev => !prev);
-  }, []);
+    if (isEnabled) {
+      stopNetworkListener();
+      setIsEnabled(false);
+    } else {
+      startNetworkListener();
+      setIsEnabled(true);
+    }
+  }, [isEnabled]);
 
   // Filter events
   const filteredEvents = useMemo(() => {
@@ -77,6 +102,32 @@ export function useNetworkEvents() {
 
     if (filter.host) {
       filtered = filtered.filter(e => e.host === filter.host);
+    }
+
+    if (filter.contentType && filter.contentType.length > 0) {
+      filtered = filtered.filter(e => {
+        const headers = e.responseHeaders || e.requestHeaders;
+        const contentType = headers?.['content-type'] || headers?.['Content-Type'] || '';
+        
+        return filter.contentType!.some(type => {
+          switch (type) {
+            case 'JSON': return contentType.includes('json');
+            case 'XML': return contentType.includes('xml');
+            case 'HTML': return contentType.includes('html');
+            case 'TEXT': return contentType.includes('text');
+            case 'IMAGE': return contentType.includes('image');
+            case 'VIDEO': return contentType.includes('video');
+            case 'AUDIO': return contentType.includes('audio');
+            case 'FORM': return contentType.includes('form');
+            case 'OTHER': return !contentType || 
+              (!contentType.includes('json') && !contentType.includes('xml') && 
+               !contentType.includes('html') && !contentType.includes('text') &&
+               !contentType.includes('image') && !contentType.includes('video') &&
+               !contentType.includes('audio') && !contentType.includes('form'));
+            default: return false;
+          }
+        });
+      });
     }
 
     return filtered;

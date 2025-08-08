@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -7,505 +7,517 @@ import {
   TouchableOpacity 
 } from 'react-native';
 import { 
-  Globe, 
   Clock, 
   Upload, 
   Download,
   AlertCircle,
-  CheckCircle,
   ChevronDown,
   ChevronUp,
-  Copy
+  Lock,
+  Unlock,
+  Copy,
+  FileJson
 } from 'lucide-react-native';
 import { DataViewer } from '../../react-query/components/shared/DataViewer';
 import type { NetworkEvent } from '../types';
 import { formatBytes, formatDuration, formatHttpStatus } from '../utils/formatting';
+import { formatRelativeTime } from '../../sentry/utils/formatRelativeTime';
 
 interface NetworkEventDetailViewProps {
   event: NetworkEvent;
   onBack: () => void;
 }
 
-type TabType = 'general' | 'headers' | 'request' | 'response';
+// Component for collapsible sections matching Sentry style
+const CollapsibleSection: React.FC<{
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}> = ({ title, icon, children, defaultOpen = false }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  return (
+    <View style={styles.collapsibleSection}>
+      <TouchableOpacity
+        sentry-label="ignore collapsible section"
+        style={styles.collapsibleHeader}
+        onPress={() => setIsOpen(!isOpen)}
+      >
+        <View style={styles.collapsibleTitle}>
+          {icon}
+          <Text style={styles.collapsibleTitleText}>{title}</Text>
+        </View>
+        {isOpen ? (
+          <ChevronUp size={16} color="#9CA3AF" />
+        ) : (
+          <ChevronDown size={16} color="#9CA3AF" />
+        )}
+      </TouchableOpacity>
+      {isOpen ? <View style={styles.collapsibleContent}>{children}</View> : null}
+    </View>
+  );
+};
 
-export function NetworkEventDetailView({ event }: NetworkEventDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('general');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['general']));
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(section)) {
-        newSet.delete(section);
-      } else {
-        newSet.add(section);
-      }
-      return newSet;
-    });
+// URL breakdown component matching Sentry style
+const UrlBreakdown: React.FC<{ url: string }> = ({ url }) => {
+  const handleCopy = (text: string) => {
+    // Clipboard functionality temporarily disabled due to deprecated API
+    console.log('Copy to clipboard:', text);
   };
-
-  const status = event.status ? formatHttpStatus(event.status) : null;
-
-  const renderGeneralTab = () => (
-    <ScrollView style={styles.tabContent}>
-      {/* URL Section */}
-      <View style={styles.section}>
-        <TouchableOpacity
-          sentry-label="ignore url section"
-          style={styles.sectionHeader}
-          onPress={() => toggleSection('url')}
-        >
-          <Globe size={14} color="#8B5CF6" />
-          <Text style={styles.sectionTitle}>URL</Text>
-          {expandedSections.has('url') ? (
-            <ChevronUp size={16} color="#9CA3AF" />
-          ) : (
-            <ChevronDown size={16} color="#9CA3AF" />
-          )}
-        </TouchableOpacity>
-        
-        {expandedSections.has('url') && (
-          <View style={styles.sectionContent}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Method:</Text>
-              <Text style={styles.infoValue}>{event.method}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Full URL:</Text>
-              <Text style={styles.infoValueMono} selectable>{event.url}</Text>
-            </View>
-            {event.host && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Host:</Text>
-                <Text style={styles.infoValue}>{event.host}</Text>
-              </View>
-            )}
-            {event.path && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Path:</Text>
-                <Text style={styles.infoValueMono}>{event.path}</Text>
-              </View>
-            )}
-            {event.query && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Query:</Text>
-                <Text style={styles.infoValueMono}>{event.query}</Text>
-              </View>
-            )}
-          </View>
-        )}
-      </View>
-
-      {/* Status Section */}
-      <View style={styles.section}>
-        <TouchableOpacity
-          sentry-label="ignore status section"
-          style={styles.sectionHeader}
-          onPress={() => toggleSection('status')}
-        >
-          {event.error ? (
-            <AlertCircle size={14} color="#EF4444" />
-          ) : event.status ? (
-            <CheckCircle size={14} color={status?.color || '#10B981'} />
-          ) : (
-            <Clock size={14} color="#F59E0B" />
-          )}
-          <Text style={styles.sectionTitle}>Status</Text>
-          {expandedSections.has('status') ? (
-            <ChevronUp size={16} color="#9CA3AF" />
-          ) : (
-            <ChevronDown size={16} color="#9CA3AF" />
-          )}
-        </TouchableOpacity>
-        
-        {expandedSections.has('status') && (
-          <View style={styles.sectionContent}>
-            {event.status && (
-              <>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Status Code:</Text>
-                  <View style={styles.statusBadge}>
-                    <Text style={[styles.statusCode, { color: status?.color }]}>
-                      {event.status}
-                    </Text>
-                    <Text style={styles.statusMeaning}>{status?.meaning}</Text>
-                  </View>
-                </View>
-                {event.statusText && (
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Status Text:</Text>
-                    <Text style={styles.infoValue}>{event.statusText}</Text>
-                  </View>
-                )}
-              </>
-            )}
-            {event.error && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{event.error}</Text>
-              </View>
-            )}
-            {!event.status && !event.error && (
-              <Text style={styles.pendingText}>Request is pending...</Text>
-            )}
-          </View>
-        )}
-      </View>
-
-      {/* Timing Section */}
-      <View style={styles.section}>
-        <TouchableOpacity
-          sentry-label="ignore timing section"
-          style={styles.sectionHeader}
-          onPress={() => toggleSection('timing')}
-        >
-          <Clock size={14} color="#3B82F6" />
-          <Text style={styles.sectionTitle}>Timing</Text>
-          {expandedSections.has('timing') ? (
-            <ChevronUp size={16} color="#9CA3AF" />
-          ) : (
-            <ChevronDown size={16} color="#9CA3AF" />
-          )}
-        </TouchableOpacity>
-        
-        {expandedSections.has('timing') && (
-          <View style={styles.sectionContent}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Started At:</Text>
-              <Text style={styles.infoValue}>
-                {new Date(event.timestamp).toLocaleString()}
-              </Text>
-            </View>
-            {event.duration && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Duration:</Text>
-                <Text style={styles.infoValue}>{formatDuration(event.duration)}</Text>
-              </View>
-            )}
-          </View>
-        )}
-      </View>
-
-      {/* Data Size Section */}
-      {(event.requestSize || event.responseSize) && (
-        <View style={styles.section}>
-          <TouchableOpacity
-            sentry-label="ignore size section"
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('size')}
-          >
-            <Upload size={14} color="#9CA3AF" />
-            <Text style={styles.sectionTitle}>Data Transfer</Text>
-            {expandedSections.has('size') ? (
-              <ChevronUp size={16} color="#9CA3AF" />
-            ) : (
-              <ChevronDown size={16} color="#9CA3AF" />
-            )}
-          </TouchableOpacity>
-          
-          {expandedSections.has('size') && (
-            <View style={styles.sectionContent}>
-              {event.requestSize && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Request Size:</Text>
-                  <View style={styles.sizeInfo}>
-                    <Upload size={12} color="#3B82F6" />
-                    <Text style={styles.infoValue}>{formatBytes(event.requestSize)}</Text>
-                  </View>
-                </View>
-              )}
-              {event.responseSize && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Response Size:</Text>
-                  <View style={styles.sizeInfo}>
-                    <Download size={12} color="#10B981" />
-                    <Text style={styles.infoValue}>{formatBytes(event.responseSize)}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-      )}
-    </ScrollView>
-  );
-
-  const renderHeadersTab = () => (
-    <ScrollView style={styles.tabContent}>
-      {/* Request Headers */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Upload size={14} color="#3B82F6" />
-          <Text style={styles.sectionTitle}>Request Headers</Text>
-        </View>
-        <View style={styles.sectionContent}>
-          {Object.keys(event.requestHeaders).length > 0 ? (
-            Object.entries(event.requestHeaders).map(([key, value]) => (
-              <View key={key} style={styles.headerRow}>
-                <Text style={styles.headerKey}>{key}:</Text>
-                <Text style={styles.headerValue} selectable>{value}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No request headers</Text>
-          )}
-        </View>
-      </View>
-
-      {/* Response Headers */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Download size={14} color="#10B981" />
-          <Text style={styles.sectionTitle}>Response Headers</Text>
-        </View>
-        <View style={styles.sectionContent}>
-          {Object.keys(event.responseHeaders).length > 0 ? (
-            Object.entries(event.responseHeaders).map(([key, value]) => (
-              <View key={key} style={styles.headerRow}>
-                <Text style={styles.headerKey}>{key}:</Text>
-                <Text style={styles.headerValue} selectable>{value}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No response headers yet</Text>
-          )}
-        </View>
-      </View>
-    </ScrollView>
-  );
-
-  const renderRequestTab = () => (
-    <View style={styles.tabContent}>
-      {event.requestData ? (
-        <DataViewer
-          title="Request Body"
-          data={event.requestData}
-          showTypeFilter={false}
-          rawMode={true}
-        />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No request body</Text>
-        </View>
-      )}
-    </View>
-  );
-
-  const renderResponseTab = () => (
-    <View style={styles.tabContent}>
-      {event.responseData ? (
-        <DataViewer
-          title="Response Body"
-          data={event.responseData}
-          showTypeFilter={false}
-          rawMode={true}
-        />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            {event.status ? 'No response body' : 'Waiting for response...'}
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'general':
-        return renderGeneralTab();
-      case 'headers':
-        return renderHeadersTab();
-      case 'request':
-        return renderRequestTab();
-      case 'response':
-        return renderResponseTab();
-      default:
-        return null;
+  
+  const parseUrl = (urlString: string) => {
+    try {
+      const urlObj = new URL(urlString);
+      const isSecure = urlObj.protocol === 'https:';
+      
+      // Parse query parameters
+      const params: Record<string, string> = {};
+      urlObj.searchParams.forEach((value, key) => {
+        params[key] = value;
+      });
+      
+      return {
+        protocol: urlObj.protocol.replace(':', ''),
+        host: urlObj.host,
+        pathname: urlObj.pathname,
+        params: Object.keys(params).length > 0 ? params : null,
+        isSecure
+      };
+    } catch {
+      return {
+        protocol: '',
+        host: url,
+        pathname: '',
+        params: null,
+        isSecure: false
+      };
     }
   };
-
+  
+  const urlParts = parseUrl(url);
+  
   return (
-    <View style={styles.container}>
-      {/* Tab navigation */}
-      <View style={styles.tabsContainer}>
+    <View style={styles.urlBreakdown}>
+      <View style={styles.urlRow}>
+        {urlParts.isSecure ? (
+          <Lock size={12} color="#10B981" />
+        ) : (
+          <Unlock size={12} color="#F59E0B" />
+        )}
+        <Text style={styles.urlDomain}>{urlParts.host}</Text>
+        <Text style={styles.urlProtocol}>({urlParts.protocol.toUpperCase()})</Text>
         <TouchableOpacity
-          sentry-label="ignore general tab"
-          onPress={() => setActiveTab('general')}
-          style={[styles.tab, activeTab === 'general' && styles.activeTab]}
+          sentry-label="ignore url copy button"
+          onPress={() => handleCopy(url)}
+          style={styles.copyButton}
         >
-          <Text style={[styles.tabText, activeTab === 'general' && styles.activeTabText]}>
-            General
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          sentry-label="ignore headers tab"
-          onPress={() => setActiveTab('headers')}
-          style={[styles.tab, activeTab === 'headers' && styles.activeTab]}
-        >
-          <Text style={[styles.tabText, activeTab === 'headers' && styles.activeTabText]}>
-            Headers
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          sentry-label="ignore request tab"
-          onPress={() => setActiveTab('request')}
-          style={[styles.tab, activeTab === 'request' && styles.activeTab]}
-        >
-          <Text style={[styles.tabText, activeTab === 'request' && styles.activeTabText]}>
-            Request
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          sentry-label="ignore response tab"
-          onPress={() => setActiveTab('response')}
-          style={[styles.tab, activeTab === 'response' && styles.activeTab]}
-        >
-          <Text style={[styles.tabText, activeTab === 'response' && styles.activeTabText]}>
-            Response
-          </Text>
+          <Copy size={12} color="#6B7280" />
         </TouchableOpacity>
       </View>
-
-      {/* Tab content */}
-      {renderTabContent()}
+      <View style={styles.urlPathRow}>
+        <Text style={styles.urlPath}>{urlParts.pathname}</Text>
+      </View>
+      {urlParts.params ? (
+        <View style={styles.urlParams}>
+          <Text style={styles.urlParamsTitle}>Query Parameters:</Text>
+          {Object.entries(urlParts.params).map(([key, value]) => (
+            <Text key={key} style={styles.urlParam}>
+              {key}: {value}
+            </Text>
+          ))}
+        </View>
+      ) : null}
     </View>
+  );
+};
+
+export function NetworkEventDetailView({ event }: NetworkEventDetailViewProps) {
+  const status = event.status ? formatHttpStatus(event.status) : null;
+  const isPending = !event.status && !event.error;
+
+  return (
+    <ScrollView style={styles.container} sentry-label="ignore network detail scroll">
+      {/* Request Details - Always visible */}
+      <View style={styles.requestDetailsSection}>
+        <View style={styles.httpHeader}>
+          <View style={styles.httpMethodBadge}>
+            <Text style={styles.httpMethod}>{event.method}</Text>
+          </View>
+          {event.status ? (
+            <View style={[styles.httpStatusBadge, { backgroundColor: `${status?.color}20` }]}>
+              <Text style={[styles.httpStatusText, { color: status?.color }]}>
+                {status?.text} {status?.meaning}
+              </Text>
+            </View>
+          ) : isPending ? (
+            <View style={styles.pendingBadge}>
+              <Clock size={10} color="#F59E0B" />
+              <Text style={styles.pendingBadgeText}>Pending</Text>
+            </View>
+          ) : null}
+          {event.duration ? (
+            <View style={styles.httpDuration}>
+              <Clock size={10} color="#6B7280" />
+              <Text style={styles.httpDurationText}>{formatDuration(event.duration)}</Text>
+            </View>
+          ) : null}
+        </View>
+        
+        <UrlBreakdown url={event.url} />
+        
+        {event.error ? (
+          <View style={styles.errorBox}>
+            <AlertCircle size={12} color="#EF4444" />
+            <Text style={styles.errorText}>{event.error}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      {/* Timing Information - Always visible */}
+      <View style={styles.timingSection}>
+        <View style={styles.timingRow}>
+          <Clock size={12} color="#9CA3AF" />
+          <Text style={styles.timingLabel}>Started:</Text>
+          <Text style={styles.timingValue}>
+            {formatRelativeTime(event.timestamp)}
+          </Text>
+          <Text style={styles.timingExact}>
+            ({new Date(event.timestamp).toLocaleTimeString()})
+          </Text>
+        </View>
+        
+        {(event.requestSize || event.responseSize) ? (
+          <View style={styles.sizeRow}>
+            {event.requestSize !== undefined ? (
+              <View style={styles.sizeItem}>
+                <Upload size={10} color="#3B82F6" />
+                <Text style={styles.sizeLabel}>Sent:</Text>
+                <Text style={styles.sizeValue}>{formatBytes(event.requestSize)}</Text>
+              </View>
+            ) : null}
+            {event.responseSize !== undefined ? (
+              <View style={styles.sizeItem}>
+                <Download size={10} color="#10B981" />
+                <Text style={styles.sizeLabel}>Received:</Text>
+                <Text style={styles.sizeValue}>{formatBytes(event.responseSize)}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+
+      {/* Request Headers - Collapsible */}
+      <CollapsibleSection
+        title="Request Headers"
+        icon={<Upload size={14} color="#3B82F6" />}
+        defaultOpen={false}
+      >
+        {Object.keys(event.requestHeaders).length > 0 ? (
+          <View style={styles.dataViewerContainer}>
+            <DataViewer
+              title=""
+              data={event.requestHeaders}
+              showTypeFilter={true}
+              rawMode={true}
+              initialExpanded={true}
+            />
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>No request headers</Text>
+        )}
+      </CollapsibleSection>
+
+      {/* Response Headers - Collapsible */}
+      <CollapsibleSection
+        title="Response Headers"
+        icon={<Download size={14} color="#10B981" />}
+        defaultOpen={false}
+      >
+        {Object.keys(event.responseHeaders).length > 0 ? (
+          <View style={styles.dataViewerContainer}>
+            <DataViewer
+              title=""
+              data={event.responseHeaders}
+              showTypeFilter={true}
+              rawMode={true}
+              initialExpanded={true}
+            />
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>No response headers yet</Text>
+        )}
+      </CollapsibleSection>
+
+      {/* Request Body - Collapsible */}
+      {event.requestData ? (
+        <CollapsibleSection
+          title="Request Body"
+          icon={<FileJson size={14} color="#8B5CF6" />}
+          defaultOpen={false}
+        >
+          <View style={styles.dataViewerContainer}>
+            <DataViewer
+              title=""
+              data={event.requestData}
+              showTypeFilter={true}
+              rawMode={true}
+              initialExpanded={true}
+            />
+          </View>
+        </CollapsibleSection>
+      ) : null}
+
+      {/* Response Body - Collapsible */}
+      {event.responseData ? (
+        <CollapsibleSection
+          title="Response Body"
+          icon={<FileJson size={14} color="#10B981" />}
+          defaultOpen={false}
+        >
+          <View style={styles.dataViewerContainer}>
+            <DataViewer
+              title=""
+              data={event.responseData}
+              showTypeFilter={true}
+              rawMode={true}
+              initialExpanded={true}
+            />
+          </View>
+        </CollapsibleSection>
+      ) : null}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1F1F1F',
+    backgroundColor: '#171717',
   },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#2A2A2A',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    gap: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  tab: {
-    paddingVertical: 6,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTab: {
-    borderBottomColor: '#8B5CF6',
-  },
-  tabText: {
-    color: '#9CA3AF',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  activeTabText: {
-    color: '#FFFFFF',
-  },
-  tabContent: {
-    flex: 1,
-  },
-  section: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: '#2A2A2A',
+  // Request details section - always visible
+  requestDetailsSection: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: 8,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 12,
-    gap: 8,
   },
-  sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
-  },
-  sectionContent: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  infoLabel: {
-    color: '#9CA3AF',
-    fontSize: 12,
-    width: 100,
-  },
-  infoValue: {
-    color: '#E5E7EB',
-    fontSize: 12,
-    flex: 1,
-  },
-  infoValueMono: {
-    color: '#E5E7EB',
-    fontSize: 12,
-    flex: 1,
-    fontFamily: 'monospace',
-  },
-  statusBadge: {
+  httpHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 12,
   },
-  statusCode: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statusMeaning: {
-    color: '#9CA3AF',
-    fontSize: 12,
-  },
-  errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    padding: 8,
+  httpMethodBadge: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 4,
   },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 12,
+  httpMethod: {
+    color: '#8B5CF6',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
-  pendingText: {
+  httpStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  httpStatusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  pendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  pendingBadgeText: {
     color: '#F59E0B',
-    fontSize: 12,
-    fontStyle: 'italic',
+    fontSize: 11,
+    fontWeight: '600',
   },
-  sizeInfo: {
+  httpDuration: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 'auto',
+  },
+  httpDurationText: {
+    color: '#9CA3AF',
+    fontSize: 11,
+  },
+  // URL breakdown styles
+  urlBreakdown: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 4,
+    padding: 8,
+  },
+  urlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  urlDomain: {
+    color: '#E5E7EB',
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
+  urlProtocol: {
+    color: '#6B7280',
+    fontSize: 10,
+  },
+  copyButton: {
+    padding: 4,
+  },
+  urlPathRow: {
+    paddingLeft: 18,
+  },
+  urlPath: {
+    color: '#9CA3AF',
+    fontSize: 11,
+    fontFamily: 'monospace',
+  },
+  urlParams: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  urlParamsTitle: {
+    color: '#9CA3AF',
+    fontSize: 10,
+    fontWeight: '600',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  urlParam: {
+    color: '#3B82F6',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    marginLeft: 8,
+    marginTop: 2,
+  },
+  // Timing section - always visible
+  timingSection: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+  },
+  timingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  timingLabel: {
+    color: '#9CA3AF',
+    fontSize: 11,
+  },
+  timingValue: {
+    color: '#E5E7EB',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  timingExact: {
+    color: '#6B7280',
+    fontSize: 10,
+    marginLeft: 4,
+  },
+  sizeRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  sizeItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  headerRow: {
-    marginBottom: 6,
+  sizeLabel: {
+    color: '#6B7280',
+    fontSize: 10,
   },
-  headerKey: {
-    color: '#9CA3AF',
-    fontSize: 11,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  headerValue: {
-    color: '#E5E7EB',
-    fontSize: 11,
+  sizeValue: {
+    color: '#3B82F6',
+    fontSize: 10,
     fontFamily: 'monospace',
+    fontWeight: '600',
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  // Collapsible section styles
+  collapsibleSection: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  collapsibleHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 32,
+    justifyContent: 'space-between',
+    padding: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
+  collapsibleTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  collapsibleTitleText: {
+    color: '#E5E7EB',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  collapsibleContent: {
+    padding: 12,
+  },
+  // Data viewer container
+  dataViewerContainer: {
+    marginTop: -12,
+    marginHorizontal: -12,
+    marginBottom: -12,
+  },
+  // Error box
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    padding: 8,
+    borderRadius: 4,
+    marginTop: 8,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    flex: 1,
+  },
+  // Empty state
   emptyText: {
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 12,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
 });

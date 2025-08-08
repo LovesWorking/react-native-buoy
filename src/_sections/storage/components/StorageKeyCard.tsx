@@ -129,7 +129,9 @@ export function StorageKeyCard({
           <View style={styles.cardHeaderInfo}>
             <Text style={styles.storageKeyText}>{storageKey.key}</Text>
             {storageKey.description && (
-              <Text style={styles.descriptionText}>{storageKey.description}</Text>
+              <Text style={styles.descriptionText}>
+                {storageKey.description}
+              </Text>
             )}
             <View style={styles.cardHeaderMeta}>
               <View
@@ -182,9 +184,9 @@ export function StorageKeyCard({
         <View style={styles.cardBody}>
           <View style={styles.dataViewerContainer}>
             {/* Show simple values directly for better visibility */}
-            {(typeof storageKey.value === 'string' || 
-              typeof storageKey.value === 'number' || 
-              typeof storageKey.value === 'boolean') ? (
+            {typeof storageKey.value === "string" ||
+            typeof storageKey.value === "number" ||
+            typeof storageKey.value === "boolean" ? (
               <View style={styles.simpleValueContainer}>
                 <Text style={styles.simpleValueLabel}>Current Value:</Text>
                 <View style={styles.simpleValueBox}>
@@ -234,7 +236,7 @@ export function StorageKeyCard({
           {storageKey.lastUpdated && (
             <View style={styles.metaInfo}>
               <Text style={styles.metaLabel}>
-                Last updated: {storageKey.lastUpdated.toLocaleString()}
+                Last updated123: {storageKey.lastUpdated.toLocaleString()}
               </Text>
             </View>
           )}

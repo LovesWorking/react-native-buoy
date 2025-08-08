@@ -10,6 +10,7 @@ interface DataViewerProps {
   maxDepth?: number;
   rawMode?: boolean;
   showTypeFilter?: boolean;
+  initialExpanded?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export const DataViewer: React.FC<DataViewerProps> = ({
   maxDepth = 10,
   rawMode = true,
   showTypeFilter = true,
+  initialExpanded = false,
 }) => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
@@ -126,6 +128,7 @@ export const DataViewer: React.FC<DataViewerProps> = ({
           data={getFilteredData.filteredObject}
           maxDepth={maxDepth}
           rawMode={rawMode}
+          initialExpanded={initialExpanded}
         />
       );
     }
@@ -137,6 +140,7 @@ export const DataViewer: React.FC<DataViewerProps> = ({
         data={data}
         maxDepth={maxDepth}
         rawMode={rawMode}
+        initialExpanded={initialExpanded}
       />
     );
   };

@@ -7,6 +7,7 @@ export { StorageKeySection } from './components/StorageKeySection';
 export { StorageBrowserMode } from './components/StorageBrowserMode';
 export { StorageEventsSection } from './components/StorageEventsSection';
 export { StorageEventsModal } from './components/StorageEventsModal';
+export { StorageEventDetailModal } from './components/StorageEventDetailModal';
 
 // Storage types
 export * from './types';
