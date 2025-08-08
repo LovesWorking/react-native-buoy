@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   TextInput,
 } from "react-native";
 import { Filter, X, Plus, Check } from "lucide-react-native";
@@ -47,6 +46,7 @@ export function StorageFilterView({
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        sentry-label="ignore-scrollview"
       >
         {/* Default Filters Section */}
         <View style={styles.section}>
@@ -54,24 +54,28 @@ export function StorageFilterView({
           <Text style={styles.sectionDescription}>
             These patterns are filtered by default but can be disabled
           </Text>
-          
+
           <TouchableOpacity
             onPress={() => onTogglePattern(defaultFilter)}
             style={[
               styles.filterItem,
               ignoredPatterns.has(defaultFilter) && styles.filterItemActive,
             ]}
+            sentry-label="ignore-touchable-opacity"
           >
             <View style={styles.filterItemLeft}>
               <Text
                 style={[
                   styles.filterItemText,
-                  ignoredPatterns.has(defaultFilter) && styles.filterItemTextActive,
+                  ignoredPatterns.has(defaultFilter) &&
+                    styles.filterItemTextActive,
                 ]}
               >
                 {defaultFilter}
               </Text>
-              <Text style={styles.filterItemHint}>Dev tools internal storage</Text>
+              <Text style={styles.filterItemHint}>
+                Dev tools internal storage
+              </Text>
             </View>
             <View style={styles.filterItemRight}>
               {ignoredPatterns.has(defaultFilter) && (
@@ -94,6 +98,7 @@ export function StorageFilterView({
               <TouchableOpacity
                 onPress={handleShowAddInput}
                 style={styles.addButton}
+                sentry-label="ignore-touchable-opacity"
               >
                 <Plus size={16} color="#3B82F6" />
               </TouchableOpacity>
@@ -103,6 +108,7 @@ export function StorageFilterView({
           {showAddInput && (
             <View style={styles.addInputContainer}>
               <TextInput
+                sentry-label="ignore-textinput"
                 style={styles.addInput}
                 value={newPattern}
                 onChangeText={setNewPattern}
@@ -110,10 +116,12 @@ export function StorageFilterView({
                 placeholderTextColor="#6B7280"
                 autoFocus
                 onSubmitEditing={handleAddPattern}
+                accessibilityLabel="ignore-textinput"
               />
               <TouchableOpacity
                 onPress={handleAddPattern}
                 style={styles.addInputButton}
+                sentry-label="ignore-touchable-opacity"
               >
                 <Check size={16} color="#10B981" />
               </TouchableOpacity>
@@ -123,6 +131,7 @@ export function StorageFilterView({
                   setNewPattern("");
                 }}
                 style={styles.cancelInputButton}
+                sentry-label="ignore-touchable-opacity"
               >
                 <X size={16} color="#EF4444" />
               </TouchableOpacity>
@@ -137,6 +146,7 @@ export function StorageFilterView({
                   key={pattern}
                   onPress={() => onTogglePattern(pattern)}
                   style={styles.filterBadge}
+                  sentry-label="ignore-touchable-opacity"
                 >
                   <Text style={styles.filterBadgeText}>{pattern}</Text>
                   <X size={12} color="#EF4444" />
