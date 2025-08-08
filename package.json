@@ -2,21 +2,35 @@
   "name": "react-native-react-query-devtools",
   "version": "1.5.1",
   "description": "React Query Dev Tools for React Native",
-  "main": "dist/bundle.cjs.js",
-  "module": "dist/bundle.esm.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "@tanstack/react-native-dev": "./src/index.ts",
+      "react-native": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
-  "types": "dist/types/index.d.ts",
+  "sideEffects": false,
   "scripts": {
-    "build": "node build.js",
-    "build:yalc": "npm run build && yalc push",
-    "dev": "nodemon --watch src --ext ts,tsx,js,jsx --exec \"npm run build:yalc\"",
-    "yalc:publish": "yalc publish",
-    "yalc:push": "yalc push",
-    "check:jsx": "node check-jsx-transform.js --check",
-    "fix:jsx": "node check-jsx-transform.js --fix",
-    "check:jsx-simple": "./check-jsx-transform.sh",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "watch": "tsup --watch",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
     "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint src --ext .ts,.tsx,.js,.jsx --fix",
     "type-check": "tsc --noEmit",
@@ -65,6 +79,7 @@
     "@types/react": "^19.0.1",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
+    "chokidar": "^4.0.3",
     "concurrently": "^9.2.0",
     "esbuild": "^0.25.4",
     "esbuild-node-externals": "^1.18.0",
@@ -87,6 +102,7 @@
     "react-native-safe-area-context": "^5.5.2",
     "react-native-svg": "^15.12.0",
     "ts-prune": "^0.10.3",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
