@@ -22,7 +22,9 @@
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "check": "npm run type-check && npm run lint",
-    "check:fix": "npm run type-check && npm run lint:fix"
+    "check:fix": "npm run type-check && npm run lint:fix",
+    "icons": "node scripts/lucide-to-rn.js",
+    "icons:update": "node scripts/lucide-to-rn.js --from-imports ./src --output ./src/_shared/icons/lucide-icons.tsx"
   },
   "repository": {
     "type": "git",
@@ -39,14 +41,13 @@
   ],
   "author": "LovesWorking (https://github.com/LovesWorking)",
   "peerDependencies": {
-    "@shopify/flash-list": ">=1.6.0",
+    "@shopify/flash-list": "*",
     "@tanstack/react-query": ">=5.0.0",
-    "react": ">=16.8.0",
-    "react-native": ">=0.64.0",
+    "react": "*",
+    "react-native": "*",
     "react-native-gesture-handler": ">=2.0.0",
-    "react-native-reanimated": ">=3.0.0",
-    "react-native-safe-area-context": ">=4.0.0",
-    "react-native-svg": ">=12.0.0"
+    "react-native-reanimated": ">=2.3.0",
+    "react-native-svg": "*"
   },
   "peerDependenciesMeta": {
     "@react-native-async-storage/async-storage": {

@@ -8,9 +8,20 @@ const build = async (options) => {
     await esbuild.build({
       ...options,
       bundle: true,
-      minify: true,
+      minify: false, // Don't minify to preserve worklet directives
       platform: "neutral",
-      plugins: [nodeExternalsPlugin()],
+      plugins: [
+        nodeExternalsPlugin({
+          // Mark superjson as external to avoid bundling issues
+          allowList: [],
+        }),
+      ],
+      // Keep worklet strings intact
+      keepNames: true,
+      // Preserve string literals including 'worklet'
+      legalComments: "inline",
+      // Don't transform async/await which might break worklets
+      target: "es2020",
     });
     console.log(`Build successful: ${options.outfile}`);
   } catch {
@@ -36,7 +47,7 @@ const buildOptions = [
 buildOptions.forEach(build);
 
 // Generate type declarations
-exec("tsc --emitDeclarationOnly --outDir dist", (error, stdout, stderr) => {
+exec("tsc --emitDeclarationOnly --outDir dist/types", (error, stdout, stderr) => {
   if (error) {
     console.error(`exec error: ${error}`);
     return;
