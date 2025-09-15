@@ -1,0 +1,39 @@
+{
+  "name": "rn-monorepo-clean",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "example"
+  ],
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "build": "pnpm run build:packages",
+    "build:packages": "lerna run build --stream",
+    "build:all": "pnpm run clean && pnpm install && pnpm run build:packages",
+    "clean": "lerna run clean && rimraf node_modules packages/*/node_modules example/node_modules",
+    "clean:packages": "lerna run clean",
+    "dev": "pnpm start",
+    "start": "pnpm --filter example start",
+    "ios": "pnpm --filter example ios",
+    "android": "pnpm --filter example android",
+    "typecheck": "lerna run typecheck --stream",
+    "typecheck:all": "pnpm run typecheck && tsc --noEmit",
+    "lint": "eslint \"packages/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
+    "test": "pnpm run build && pnpm run typecheck && pnpm run lint",
+    "test:packages": "lerna run test --stream",
+    "fresh": "pnpm run clean && pnpm install && pnpm run build"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@lerna-lite/cli": "^4.1.2",
+    "@lerna-lite/publish": "^4.1.2",
+    "@lerna-lite/run": "^4.1.2",
+    "@types/react": "~19.0.14",
+    "concurrently": "^7.2.2",
+    "eslint": "^9.33.0",
+    "react-native-builder-bob": "^0.40.13",
+    "rimraf": "^5.0.10",
+    "typescript": "~5.8.3"
+  }
+}
