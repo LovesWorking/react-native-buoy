@@ -1,0 +1,56 @@
+{
+  "name": "@monorepo/shared",
+  "version": "0.1.0",
+  "description": "Shared UI components, hooks, and utilities",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": "./lib/module/index.js",
+      "require": "./lib/commonjs/index.js",
+      "types": "./lib/typescript/index.d.ts"
+    },
+    "./ui": {
+      "source": "./src/ui/index.ts",
+      "import": "./lib/module/ui/index.js",
+      "require": "./lib/commonjs/ui/index.js",
+      "types": "./lib/typescript/ui/index.d.ts"
+    },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "import": "./lib/module/hooks/index.js",
+      "require": "./lib/commonjs/hooks/index.js",
+      "types": "./lib/typescript/hooks/index.d.ts"
+    },
+    "./utils": {
+      "source": "./src/utils/index.ts",
+      "import": "./lib/module/utils/index.js",
+      "require": "./lib/commonjs/utils/index.js",
+      "types": "./lib/typescript/utils/index.d.ts"
+    }
+  },
+  "files": ["src", "lib"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "bob build",
+    "typecheck": "tsc --noEmit",
+    "prepare": "bob build",
+    "clean": "rimraf lib",
+    "test": "pnpm run typecheck"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.14",
+    "@types/react-native": "^0.73.0"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": ["commonjs", "module", "typescript"]
+  }
+}

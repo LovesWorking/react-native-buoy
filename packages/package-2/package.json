@@ -1,0 +1,47 @@
+{
+  "name": "@monorepo/package-2",
+  "version": "0.1.0",
+  "description": "Test package 2",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.tsx",
+      "import": "./lib/module/index.js",
+      "require": "./lib/commonjs/index.js",
+      "types": "./lib/typescript/index.d.ts"
+    }
+  },
+  "files": [
+    "src",
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "bob build",
+    "typecheck": "tsc --noEmit",
+    "prepare": "bob build",
+    "clean": "rimraf lib",
+    "test": "pnpm run typecheck"
+  },
+  "dependencies": {
+    "@monorepo/shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module"
+    ]
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.14",
+    "@types/react-native": "^0.73.0"
+  }
+}
