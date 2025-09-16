@@ -29,6 +29,7 @@ export const DraggableHeader = memo(function DraggableHeader({
   const isDraggingRef = useRef(false);
   const dragDistanceRef = useRef(0);
   const touchOffsetRef = useRef({ x: 0, y: 0 });
+  const startPositionRef = useRef({ x: 0, y: 0 });
 
   const panResponder = useMemo(
     () =>
@@ -41,22 +42,22 @@ export const DraggableHeader = memo(function DraggableHeader({
           isDraggingRef.current = false;
           dragDistanceRef.current = 0;
           touchOffsetRef.current = { x: evt.nativeEvent.locationX, y: evt.nativeEvent.locationY };
+          // Capture starting position in parent coords; avoid relying on window pageX/pageY
           position.stopAnimation(({ x, y }) => {
-            position.setOffset({ x, y });
-            position.setValue({ x: 0, y: 0 });
+            startPositionRef.current = { x, y };
           });
         },
 
-        onPanResponderMove: (evt, gestureState) => {
+        onPanResponderMove: (_evt, gestureState) => {
           const totalDistance = Math.abs(gestureState.dx) + Math.abs(gestureState.dy);
           dragDistanceRef.current = totalDistance;
           if (totalDistance > 5 && !isDraggingRef.current) {
             isDraggingRef.current = true;
             onDragStart?.();
           }
-          const x = evt.nativeEvent.pageX - touchOffsetRef.current.x;
-          const y = evt.nativeEvent.pageY - touchOffsetRef.current.y;
-          position.setOffset({ x: 0, y: 0 });
+          // Use dx/dy relative movement so parent padding/margins don't affect dragging
+          const x = startPositionRef.current.x + gestureState.dx;
+          const y = startPositionRef.current.y + gestureState.dy;
           position.setValue({ x, y });
         },
 
@@ -89,4 +90,3 @@ export const DraggableHeader = memo(function DraggableHeader({
     </View>
   );
 });
-
