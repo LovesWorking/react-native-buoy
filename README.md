@@ -1,20 +1,39 @@
-# React Native Monorepo Clean
+# React Native Monorepo
 
-A clean monorepo setup for React Native/Expo using pnpm workspaces, Lerna, and React Native Builder Bob.
+A production-ready React Native monorepo with automated package creation, hot reload, and a shared component library.
 
-## Structure
+## 🚀 Features
+
+- **Automated Package Creation** - Create new packages with one command
+- **Shared Component Library** - Common UI, hooks, and utilities
+- **Hot Reload** - Changes reflect instantly without rebuilding
+- **TypeScript** - Full type safety across all packages
+- **pnpm Workspaces** - Efficient dependency management
+- **React Native Builder Bob** - Professional package building
+- **Lerna-lite** - Streamlined package orchestration
+
+## 📁 Structure
 
 ```
-├── packages/          # All shared packages
-│   ├── package-1/    # Example package 1
-│   └── package-2/    # Example package 2
-├── example/          # Expo app that uses the packages
+├── packages/              # All packages
+│   ├── shared/           # Shared UI, hooks, utilities
+│   ├── package-1/        # Counter demo package
+│   ├── package-2/        # Toggle demo package
+│   ├── ui-kit/           # UI library example
+│   └── [your-packages]/  # Your custom packages
+├── example/              # Expo test app
+├── scripts/              # Automation scripts
+│   └── create-package.js # Package creation script
+├── docs/                 # Documentation
+│   ├── CREATE_PACKAGE_GUIDE.md
+│   ├── MONOREPO_COMPLETE_GUIDE.md
+│   └── SHARED_PACKAGE_PLAN.md
 ├── pnpm-workspace.yaml
 ├── lerna.json
 └── package.json
 ```
 
-## Setup
+## 🏁 Quick Start
 
 1. Install dependencies:
 ```bash
@@ -29,70 +48,165 @@ pnpm build
 3. Start the example app:
 ```bash
 pnpm start
-# or
-pnpm dev
 ```
 
-## Testing Hot Reload
+## ✨ Create New Packages
 
-1. Start the app with `pnpm start`
-2. Open the app in Expo Go
-3. Edit any package source file (e.g., `packages/package-2/src/index.tsx`)
-4. Rebuild that package:
-   ```bash
-   cd packages/package-2 && pnpm build
-   ```
-5. Refresh the app to see changes
+Use the automated package creation script:
 
-## Available Scripts
+```bash
+# Standard React Native package
+pnpm create:package my-feature
 
-### Root Level
-- `pnpm build` - Build all packages
-- `pnpm watch` - Build all packages in watch mode
-- `pnpm clean` - Clean all build outputs
-- `pnpm start` - Start the example app
-- `pnpm ios` - Run example on iOS
-- `pnpm android` - Run example on Android
+# UI component library
+pnpm create:package design-system ui
 
-### Per Package
-- `pnpm build` - Build the package
-- `pnpm clean` - Clean build output
+# Custom hooks package
+pnpm create:package auth-hooks hook
 
-## Adding New Packages
+# Utility functions package
+pnpm create:package validators util
+```
 
-1. Create directory in `packages/`
-2. Add package.json with Bob configuration
-3. Add source files in `src/`
-4. Run `pnpm install` at root
-5. Import in example app using `@monorepo/your-package`
+Each package is automatically configured with:
+- TypeScript setup
+- Bob build configuration
+- Shared package dependency
+- Hot reload support
+- Proper exports and documentation
 
-## Key Features
+[📖 Full Package Creation Guide →](./CREATE_PACKAGE_GUIDE.md)
 
-✅ **Workspace Protocol** - Packages linked via `workspace:*`
-✅ **Automatic Builds** - Bob builds on install
-✅ **Hot Reload** - Changes reflect after rebuild
-✅ **Lerna Publishing** - Ready for npm publishing
-✅ **TypeScript Support** - Full TS support (currently disabled due to React 19 types issue)
+## 🔥 Hot Reload
 
-## Troubleshooting
+Hot reload works automatically! Edit any file in any package and see changes instantly:
+
+1. Edit source files (e.g., `packages/shared/src/ui/Button.tsx`)
+2. Metro detects changes via source watching
+3. App updates immediately - no rebuild needed!
+
+This works because Metro watches the "source" field in package.json exports.
+
+## 📦 Shared Package
+
+The `@monorepo/shared` package provides:
+
+### UI Components
+- `Button` - Customizable button with variants (primary, secondary, danger)
+- `Card` - Container with padding and shadow
+
+### Hooks
+- `useCounter` - Counter state with increment/decrement/reset
+- `useToggle` - Boolean state with toggle functions
+
+### Utilities
+- `formatNumber` - Number formatting with commas
+- `formatCurrency` - Currency formatting
+- `debounce` - Debounce function
+- `throttle` - Throttle function
+
+```typescript
+import { Button, Card, useCounter, formatNumber } from '@monorepo/shared';
+```
+
+## 📜 Available Scripts
+
+### Root Commands
+| Command | Description |
+|---------|-------------|
+| `pnpm create:package <name> [type]` | Create a new package |
+| `pnpm build` | Build all packages |
+| `pnpm fresh` | Clean install and build |
+| `pnpm clean` | Remove all build artifacts |
+| `pnpm start` | Start the example app |
+| `pnpm ios` | Run on iOS simulator |
+| `pnpm android` | Run on Android emulator |
+| `pnpm typecheck` | Type check all packages |
+| `pnpm lint` | Lint all packages |
+| `pnpm test` | Run full test suite |
+
+### Package-Specific Commands
+```bash
+# Build specific package
+pnpm --filter @monorepo/package-name build
+
+# Add dependency to package
+pnpm --filter @monorepo/package-name add axios
+
+# Clean specific package
+pnpm --filter @monorepo/package-name clean
+```
+
+## 📚 Documentation
+
+- [**Complete Monorepo Guide**](./MONOREPO_COMPLETE_GUIDE.md) - Full reference and architecture
+- [**Package Creation Guide**](./CREATE_PACKAGE_GUIDE.md) - Detailed package creation instructions
+- [**Shared Package Plan**](./SHARED_PACKAGE_PLAN.md) - Shared package architecture
+
+## 🚨 Troubleshooting
+
+### Module Not Found
+```bash
+pnpm install
+pnpm --filter @monorepo/package-name build
+```
 
 ### TypeScript Errors
-If you see TypeScript errors with React types, you can:
-1. Skip TypeScript builds (as configured)
-2. Or downgrade React types to match React Native's version
+```bash
+pnpm typecheck
+pnpm build
+```
 
-### Metro Issues
-The example uses Expo SDK 54 which includes Metro. No need to install separately.
+### Hot Reload Not Working
+```bash
+pnpm start --reset-cache
+```
 
-### Package Not Found
-After adding a new package:
-1. Run `pnpm install` at root
-2. Make sure package is built (`pnpm build`)
-3. Restart Metro bundler
+### Build Failures
+```bash
+pnpm fresh
+```
 
-## Based On
+## 🎯 Example Packages
 
-This setup follows patterns from:
-- [React Native Builder Bob](https://github.com/callstack/react-native-builder-bob)
-- pnpm workspaces
-- Lerna for monorepo management
+### package-1 (Counter Demo)
+- Uses `Button`, `Card` from shared
+- Implements `useCounter` hook
+- Demonstrates number formatting
+
+### package-2 (Toggle Demo)
+- Uses `Card`, `Button` from shared
+- Implements `useToggle` hook
+- Demonstrates debounce utility
+
+### ui-kit (Component Library)
+- Custom UI components
+- Re-exports shared components
+- TypeScript interfaces
+
+## 🛠️ Technology Stack
+
+- **React Native 0.81** - Mobile framework
+- **Expo SDK 54** - Development platform
+- **TypeScript 5.8** - Type safety
+- **pnpm 10.10** - Package manager
+- **React Native Builder Bob** - Package builder
+- **Lerna-lite 4.7** - Monorepo tools
+- **React 19** - UI library
+
+## 🤝 Contributing
+
+1. Create new package: `pnpm create:package <name>`
+2. Implement your feature
+3. Test in example app
+4. Build: `pnpm build`
+5. Type check: `pnpm typecheck`
+6. Submit PR
+
+## 📄 License
+
+MIT
+
+---
+
+Built with ❤️ for the React Native community
