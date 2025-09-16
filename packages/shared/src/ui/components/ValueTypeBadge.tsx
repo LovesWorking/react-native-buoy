@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { CheckCircle, XCircle } from "rn-better-dev-tools/icons";
+import { CheckCircle, XCircle } from "../../icons";
 import { gameUIColors } from "../gameUI/constants/gameUIColors";
 
 type ValueType =

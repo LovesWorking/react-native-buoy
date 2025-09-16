@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { ReactNode } from "react";
-import { ChevronLeft, X } from "rn-better-dev-tools/icons";
+import { ChevronLeft, X } from "../../icons";
 import { gameUIColors } from "../gameUI";
 
 // Base ModalHeader container component

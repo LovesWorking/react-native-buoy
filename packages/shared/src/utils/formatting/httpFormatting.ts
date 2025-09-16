@@ -140,12 +140,19 @@ export interface UrlComponents {
 export function parseUrl(url: string): UrlComponents | null {
   try {
     const parsed = new URL(url);
+
     return {
+      //@ts-expect-error - URL is not typed
       protocol: parsed.protocol.replace(":", ""),
+      //@ts-expect-error - URL is not typed
       host: parsed.hostname,
+      //@ts-expect-error - URL is not typed
       port: parsed.port || undefined,
+      //@ts-expect-error - URL is not typed
       pathname: parsed.pathname,
+      //@ts-expect-error - URL is not typed
       search: parsed.search || undefined,
+      //@ts-expect-error - URL is not typed
       hash: parsed.hash || undefined,
     };
   } catch {

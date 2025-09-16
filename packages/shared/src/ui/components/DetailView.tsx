@@ -8,7 +8,7 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
-import { LucideIcon } from "rn-better-dev-tools/icons";
+import { LucideIcon } from "../../icons";
 import { gameUIColors } from "../gameUI";
 import { ModalHeader } from "./ModalHeader";
 import { CopyButton } from "./CopyButton";

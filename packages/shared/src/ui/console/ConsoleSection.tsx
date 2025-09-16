@@ -1,6 +1,7 @@
 import { View, StyleSheet } from "react-native";
-import type { LucideIcon } from "rn-better-dev-tools/icons";
-import { ExpandableSectionHeader } from "@/rn-better-dev-tools/src/shared/ui/components/ExpandableSectionHeader";
+import type { ReactNode } from "react";
+import type { LucideIcon } from "../../icons";
+import { ExpandableSectionHeader } from "../components/ExpandableSectionHeader";
 import { GalaxyButton } from "./GalaxyButton";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]

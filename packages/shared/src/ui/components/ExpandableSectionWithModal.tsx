@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "@/rn-better-dev-tools/src/shared/hooks/useSafeAreaInsets";
-import type { LucideIcon } from "rn-better-dev-tools/icons";
-import { X } from "rn-better-dev-tools/icons";
+import { useSafeAreaInsets } from "../../hooks/useSafeAreaInsets";
+import type { LucideIcon } from "../../icons";
+import { X } from "../../icons";
 
 import { ExpandableSection } from "./ExpandableSection";
 
@@ -107,8 +107,8 @@ export function ExpandableSectionWithModal({
                   paddingTop: fullScreen
                     ? insets.top
                     : showModalHeader
-                      ? insets.top
-                      : 0,
+                    ? insets.top
+                    : 0,
                 },
               ]}
             >

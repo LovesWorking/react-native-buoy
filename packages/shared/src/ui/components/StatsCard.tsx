@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
-import { LucideIcon } from "rn-better-dev-tools/icons";
+import { ReactNode } from "react";
+import { LucideIcon } from "../../icons";
 import { gameUIColors } from "../gameUI";
 
 interface StatsCardProps {

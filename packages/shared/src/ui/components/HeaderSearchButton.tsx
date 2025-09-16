@@ -1,5 +1,5 @@
 import { TouchableOpacity, StyleSheet } from "react-native";
-import { Search } from "rn-better-dev-tools/icons";
+import { Search } from "../../icons";
 import { gameUIColors } from "../gameUI";
 
 interface HeaderSearchButtonProps {

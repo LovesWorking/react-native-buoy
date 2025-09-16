@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-} from "rn-better-dev-tools/icons";
+} from "../../../icons";
 import { gameUIColors } from "../constants/gameUIColors";
 
 export interface IssueItem {
@@ -76,7 +76,7 @@ export function GameUIIssuesList({
         return newSet;
       });
     },
-    [expandable],
+    [expandable]
   );
 
   const getStatusColor = (status: IssueItem["status"]) => {

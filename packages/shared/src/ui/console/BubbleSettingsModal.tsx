@@ -1,13 +1,7 @@
 import { useCallback } from "react";
-import {
-  JsModal,
-  type ModalMode,
-} from "@/rn-better-dev-tools/src/components/modals/jsModal/JsModal";
-import {
-  BubbleSettingsDetail,
-  type BubbleVisibilitySettings,
-} from "@/rn-better-dev-tools/src/features/settings";
-import { ModalHeader } from "@/rn-better-dev-tools/src/shared/ui/components/ModalHeader";
+import { ModalHeader } from "../components/ModalHeader";
+import { JsModal, ModalMode } from "../../JsModal";
+import { BubbleVisibilitySettings, BubbleSettingsDetail } from "../../settings";
 
 interface BubbleSettingsModalProps {
   visible: boolean;

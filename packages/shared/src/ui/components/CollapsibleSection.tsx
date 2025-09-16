@@ -8,7 +8,7 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
-import { ChevronDown, LucideIcon } from "rn-better-dev-tools/icons";
+import { ChevronDown, LucideIcon } from "../../icons";
 import { gameUIColors } from "../gameUI";
 
 interface CollapsibleSectionProps {

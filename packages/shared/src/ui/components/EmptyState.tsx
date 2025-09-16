@@ -1,5 +1,11 @@
-import { StyleSheet, Text, View, TouchableOpacity, ViewStyle } from "react-native";
-import { LucideIcon } from "rn-better-dev-tools/icons";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ViewStyle,
+} from "react-native";
+import { LucideIcon } from "../../icons";
 
 interface EmptyStateProps {
   /** Primary message to display */

@@ -8,8 +8,8 @@ import {
   ScrollView,
 } from "react-native";
 import type { ReactNode } from "react";
-import { X, Plus } from "rn-better-dev-tools/icons";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { X, Plus } from "../../icons";
+import { macOSColors } from "../gameUI/constants/macOSDesignSystemColors";
 
 // Container for filter section
 interface FilterSectionProps {
@@ -93,9 +93,12 @@ export function AddFilterInput({
       />
       <View style={styles.inputButtons}>
         {value.trim() && (
-          <TouchableOpacity 
-            onPress={onSubmit} 
-            style={[styles.inlineAddButton, { backgroundColor: `${color}15`, borderColor: `${color}40` }]}
+          <TouchableOpacity
+            onPress={onSubmit}
+            style={[
+              styles.inlineAddButton,
+              { backgroundColor: `${color}15`, borderColor: `${color}40` },
+            ]}
           >
             <Text style={[styles.inlineAddButtonText, { color }]}>Add</Text>
           </TouchableOpacity>
@@ -154,10 +157,7 @@ export function FilterList({
           onPress={() => onRemoveFilter?.(filter)}
           activeOpacity={0.8}
         >
-          <Text 
-            style={[styles.filterItemText, { color }]} 
-            numberOfLines={1}
-          >
+          <Text style={[styles.filterItemText, { color }]} numberOfLines={1}>
             {filter}
           </Text>
           <X size={12} color={`${color}80`} />

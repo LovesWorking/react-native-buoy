@@ -1,6 +1,6 @@
 import { Component, ReactNode, ErrorInfo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { AlertTriangle, RefreshCw } from "rn-better-dev-tools/icons";
+import { AlertTriangle, RefreshCw } from "../../icons";
 
 interface Props {
   children: ReactNode;

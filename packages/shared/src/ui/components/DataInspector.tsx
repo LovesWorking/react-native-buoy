@@ -8,7 +8,7 @@ import {
   TextInput,
   ViewStyle,
 } from "react-native";
-import { Search, Edit3, Check, X } from "rn-better-dev-tools/icons";
+import { Search, Edit3, Check, X } from "../../icons";
 import { gameUIColors } from "../gameUI";
 import { CopyButton } from "./CopyButton";
 

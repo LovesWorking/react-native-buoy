@@ -5,8 +5,8 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
-import type { LucideIcon } from "rn-better-dev-tools/icons";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import type { LucideIcon } from "../../icons";
+import { macOSColors } from "../gameUI/constants/macOSDesignSystemColors";
 
 export interface FilterChip {
   id: string;
@@ -30,14 +30,17 @@ interface CompactFilterChipsProps {
   onChipPress: (groupId: string, chipId: string, value: any) => void;
 }
 
-export function CompactFilterChips({ groups, onChipPress }: CompactFilterChipsProps) {
+export function CompactFilterChips({
+  groups,
+  onChipPress,
+}: CompactFilterChipsProps) {
   return (
     <View style={styles.container}>
       {groups.map((group) => (
         <View key={group.id} style={styles.group}>
           <Text style={styles.groupTitle}>{group.title}</Text>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.chipsScroll}
           >
@@ -48,20 +51,25 @@ export function CompactFilterChips({ groups, onChipPress }: CompactFilterChipsPr
                   style={[
                     styles.chip,
                     chip.isActive && styles.chipActive,
-                    chip.isActive && chip.color && {
-                      backgroundColor: chip.color + "15",
-                      borderColor: chip.color + "40",
-                    },
+                    chip.isActive &&
+                      chip.color && {
+                        backgroundColor: chip.color + "15",
+                        borderColor: chip.color + "40",
+                      },
                   ]}
                   onPress={() => onChipPress(group.id, chip.id, chip.value)}
                 >
                   {chip.icon && (
-                    <chip.icon 
-                      size={10} 
-                      color={chip.isActive ? (chip.color || macOSColors.semantic.info) : macOSColors.text.muted} 
+                    <chip.icon
+                      size={10}
+                      color={
+                        chip.isActive
+                          ? chip.color || macOSColors.semantic.info
+                          : macOSColors.text.muted
+                      }
                     />
                   )}
-                  <Text 
+                  <Text
                     style={[
                       styles.chipLabel,
                       chip.isActive && styles.chipLabelActive,
@@ -71,7 +79,7 @@ export function CompactFilterChips({ groups, onChipPress }: CompactFilterChipsPr
                     {chip.label}
                   </Text>
                   {chip.count !== undefined && (
-                    <Text 
+                    <Text
                       style={[
                         styles.chipCount,
                         chip.isActive && styles.chipCountActive,

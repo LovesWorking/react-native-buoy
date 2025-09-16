@@ -66,7 +66,7 @@ export function truncateMiddle(
   str: string,
   maxLength: number = 50,
   startChars: number = 20,
-  endChars: number = 20,
+  endChars: number = 20
 ): string {
   if (str.length <= maxLength) return str;
 

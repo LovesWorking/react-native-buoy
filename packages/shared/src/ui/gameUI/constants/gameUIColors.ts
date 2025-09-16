@@ -7,7 +7,7 @@
  * 3. Save and refresh
  */
 
-import { macOSGameUIColors } from './macOSDesignSystemColors';
+import { macOSGameUIColors } from "./macOSDesignSystemColors";
 
 // ============================================
 // THEME DEFINITIONS
@@ -107,6 +107,7 @@ const activeTheme = macOSTheme; // macOS - Apple HIG design system
 // ============================================
 
 export const gameUIColors = {
+  ...activeTheme,
   // Defaults (dark-ish) which can be overridden by theme spreads
   background: "rgba(8, 12, 21, 0.98)",
   panel: "rgba(16, 22, 35, 0.98)",
@@ -119,7 +120,6 @@ export const gameUIColors = {
   primaryLight: "#F1F5F9",
 
   // Theme-specific colors (later spread overrides defaults when present)
-  ...activeTheme,
 } as const;
 
 export type GameUIColorKey = keyof typeof gameUIColors;

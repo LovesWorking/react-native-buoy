@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet } from "react-native";
-import type { LucideIcon } from "rn-better-dev-tools/icons";
-import { ChevronRight } from "rn-better-dev-tools/icons";
+import type { LucideIcon } from "../../icons";
+import { ChevronRight } from "../../icons";
 import { CyberpunkButtonOutline } from "./CyberpunkButtonOutline";
 import { CyberpunkIconContainer } from "./CyberpunkIconContainer";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { gameUIColors } from "../gameUI";
 
 interface CyberpunkSectionButtonProps {
   id: string;

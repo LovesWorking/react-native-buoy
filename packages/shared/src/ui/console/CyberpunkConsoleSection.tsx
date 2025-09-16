@@ -8,9 +8,9 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import type { LucideIcon } from "rn-better-dev-tools/icons";
-import { ChevronRight } from "rn-better-dev-tools/icons";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import type { LucideIcon } from "../../icons";
+import { ChevronRight } from "../../icons";
+import { gameUIColors } from "../gameUI";
 
 // CONFIGURABLE: Change this value to adjust glitch duration (in milliseconds)
 // Examples: 100 for very quick, 500 for half second, 1000 for 1 second, 2000 for 2 seconds

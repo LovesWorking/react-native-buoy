@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
-import { X } from "rn-better-dev-tools/icons";
+import { X } from "../../icons";
 import { gameUIColors } from "../gameUI/constants/gameUIColors";
 
 interface CloseButtonProps {

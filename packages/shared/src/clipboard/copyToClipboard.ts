@@ -17,31 +17,33 @@ export async function copyToClipboard(value: unknown): Promise<boolean> {
       typeof value === "string"
         ? value
         : // Use displayValue for simple values, safeStringify for complex ones
-          typeof value === "object" && value !== null
-          ? (() => {
-              // Create a defensive copy to prevent any modifications to the original object
-              // This is important when used with virtualized lists or React state
-              try {
-                // For simple objects, use structured clone if available
-                if (typeof structuredClone === "function") {
-                  const cloned = structuredClone(value);
-                  return safeStringify(cloned as Record<string, unknown>, 2, {
-                    depthLimit: 100,
-                    edgesLimit: 1000,
-                  });
-                }
-              } catch {
-                // structuredClone might fail for certain objects
+        typeof value === "object" && value !== null
+        ? (() => {
+            // Create a defensive copy to prevent any modifications to the original object
+            // This is important when used with virtualized lists or React state
+            try {
+              // For simple objects, use structured clone if available
+              // @ts-expect-error structuredClone is not defined in the browser
+              if (typeof structuredClone === "function") {
+                // @ts-expect-error structuredClone is not defined in the browser
+                const cloned = structuredClone(value);
+                return safeStringify(cloned as Record<string, unknown>, 2, {
+                  depthLimit: 100,
+                  edgesLimit: 1000,
+                });
               }
+            } catch {
+              // structuredClone might fail for certain objects
+            }
 
-              // Fall back to safeStringify with the original value
-              // The safeStringify function should handle this safely
-              return safeStringify(value as Record<string, unknown>, 2, {
-                depthLimit: 100,
-                edgesLimit: 1000,
-              });
-            })()
-          : displayValue(value);
+            // Fall back to safeStringify with the original value
+            // The safeStringify function should handle this safely
+            return safeStringify(value as Record<string, unknown>, 2, {
+              depthLimit: 100,
+              edgesLimit: 1000,
+            });
+          })()
+        : displayValue(value);
 
     return await clipboardFunction(textToCopy);
   } catch (error) {

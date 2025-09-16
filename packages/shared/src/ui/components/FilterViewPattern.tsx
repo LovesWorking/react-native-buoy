@@ -7,9 +7,9 @@ import {
   ViewStyle,
 } from "react-native";
 import { useState } from "react";
-import { Plus } from "rn-better-dev-tools/icons";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors";
-import { useFilterManager } from "@/rn-better-dev-tools/src/shared/hooks/useFilterManager";
+import { Plus } from "../../icons";
+import { gameUIColors } from "../gameUI/constants/gameUIColors";
+import { useFilterManager } from "../../hooks/useFilterManager";
 import {
   FilterSection,
   AddFilterInput,
@@ -17,7 +17,7 @@ import {
   FilterList,
 } from "./FilterComponents";
 import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react-native";
+import type { LucideIcon } from "../../icons";
 
 export interface FilterViewPatternProps {
   patterns: Set<string>;
@@ -46,9 +46,7 @@ export function FilterViewPattern({
 }: FilterViewPatternProps) {
   const filterManager = useFilterManager(patterns);
 
-  const suggestedItems = availableItems.filter(
-    (item) => !patterns.has(item)
-  );
+  const suggestedItems = availableItems.filter((item) => !patterns.has(item));
 
   const handleAddPattern = () => {
     if (filterManager.newFilter.trim()) {
@@ -127,7 +125,9 @@ export function FilterViewPattern({
         ) : (
           availableItems.length === 0 && (
             <View style={[styles.suggestedContainer, { marginTop: 12 }]}>
-              <Text style={styles.suggestedTitle}>NO {type.toUpperCase()} AVAILABLE</Text>
+              <Text style={styles.suggestedTitle}>
+                NO {type.toUpperCase()} AVAILABLE
+              </Text>
               <Text style={styles.emptyText}>
                 Make some requests to see {type} here
               </Text>

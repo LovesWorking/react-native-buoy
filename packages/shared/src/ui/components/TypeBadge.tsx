@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { gameUIColors } from "../gameUI";
 
 interface TypeBadgeProps {
   type: string;
@@ -7,7 +7,7 @@ interface TypeBadgeProps {
 
 const getTypeConfig = (type: string) => {
   const normalizedType = type.toLowerCase();
-  
+
   switch (normalizedType) {
     case "string":
       return {
@@ -63,9 +63,9 @@ const getTypeConfig = (type: string) => {
 
 export function TypeBadge({ type }: TypeBadgeProps) {
   if (!type) return null;
-  
+
   const config = getTypeConfig(type);
-  
+
   return (
     <View
       style={[

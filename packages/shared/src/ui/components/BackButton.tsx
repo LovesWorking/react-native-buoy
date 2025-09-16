@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
-import { ChevronLeft } from "rn-better-dev-tools/icons";
+import { ChevronLeft } from "../../icons";
 import { gameUIColors } from "../gameUI/constants/gameUIColors";
 
 interface BackButtonProps {

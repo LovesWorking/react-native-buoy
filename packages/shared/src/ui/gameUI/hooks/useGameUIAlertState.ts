@@ -7,7 +7,7 @@ import {
   AlertOctagon,
   Activity,
   HelpCircle,
-} from "rn-better-dev-tools/icons";
+} from "../../../icons";
 import { gameUIColors } from "../constants/gameUIColors";
 
 export type AlertStateType =
@@ -85,12 +85,12 @@ export interface GameUIStats {
  */
 export function useGameUIAlertState(
   stats: GameUIStats,
-  customStates?: Partial<Record<AlertStateType, AlertStateConfig>>,
+  customStates?: Partial<Record<AlertStateType, AlertStateConfig>>
 ) {
   // Merge custom states with defaults
   const alertStates = useMemo(
     () => ({ ...GAME_UI_ALERT_STATES, ...customStates }),
-    [customStates],
+    [customStates]
   );
 
   // Determine alert state based on stats

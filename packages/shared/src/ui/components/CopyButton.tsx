@@ -6,7 +6,7 @@ import {
   ViewStyle,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { copyToClipboard } from "@/rn-better-dev-tools/src/shared/clipboard/copyToClipboard";
+import { copyToClipboard } from "../../clipboard/copyToClipboard";
 import { gameUIColors } from "../gameUI/constants/gameUIColors";
 
 type CopyState = "idle" | "success" | "error";
@@ -123,8 +123,8 @@ export const CopyButton = memo(function CopyButton({
         copyState === "idle"
           ? "Copy to clipboard"
           : copyState === "success"
-            ? "Copied to clipboard"
-            : "Failed to copy"
+          ? "Copied to clipboard"
+          : "Failed to copy"
       }
       accessibilityRole="button"
     >
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
  * Preset copy button for inline use (smaller size)
  */
 export const InlineCopyButton = memo(function InlineCopyButton(
-  props: Omit<CopyButtonProps, "size">,
+  props: Omit<CopyButtonProps, "size">
 ) {
   return <CopyButton size={12} {...props} />;
 });
@@ -193,7 +193,7 @@ export const InlineCopyButton = memo(function InlineCopyButton(
  * Preset copy button for header/toolbar use (medium size)
  */
 export const ToolbarCopyButton = memo(function ToolbarCopyButton(
-  props: Omit<CopyButtonProps, "size">,
+  props: Omit<CopyButtonProps, "size">
 ) {
   return <CopyButton size={14} {...props} />;
 });
@@ -202,7 +202,7 @@ export const ToolbarCopyButton = memo(function ToolbarCopyButton(
  * Preset copy button for main actions (larger size)
  */
 export const ActionCopyButton = memo(function ActionCopyButton(
-  props: Omit<CopyButtonProps, "size">,
+  props: Omit<CopyButtonProps, "size">
 ) {
   return <CopyButton size={18} {...props} />;
 });

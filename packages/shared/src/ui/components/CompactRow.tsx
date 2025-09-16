@@ -1,26 +1,26 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ReactNode } from "react";
-import { ChevronDown, ChevronRight } from "rn-better-dev-tools/icons";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { ChevronDown, ChevronRight } from "../../icons";
+import { gameUIColors } from "../gameUI";
 
 export interface CompactRowProps {
   // Status section
   statusDotColor: string;
   statusLabel: string;
   statusSublabel?: string;
-  
+
   // Content section
   primaryText: string;
   secondaryText?: string;
   expandedContent?: ReactNode;
   isExpanded?: boolean;
-  
+
   // Badge section (right side) - can be text or custom component
   badgeText?: string | number;
   badgeColor?: string;
   customBadge?: ReactNode;
   showChevron?: boolean;
-  
+
   // Interaction
   isSelected?: boolean;
   onPress?: () => void;
@@ -50,81 +50,89 @@ export function CompactRow({
       {/* Actual card content */}
       <TouchableOpacity
         style={[
-          styles.row, 
+          styles.row,
           isSelected && styles.selectedRow,
           isExpanded && [
             styles.expandedRowActive,
             {
               borderColor: expandedGlowColor || gameUIColors.info,
               shadowColor: expandedGlowColor || gameUIColors.info,
-            }
-          ]
+            },
+          ],
         ]}
         onPress={onPress}
         activeOpacity={0.8}
         disabled={disabled || !onPress}
       >
-      <View style={styles.rowContent}>
-        {/* Status Section */}
-        <View style={styles.statusSection}>
-          <View style={[styles.statusDot, { backgroundColor: statusDotColor }]} />
-          <View style={styles.statusInfo}>
-            <Text style={[styles.statusLabel, { color: statusDotColor }]} numberOfLines={1}>
-              {statusLabel}
+        <View style={styles.rowContent}>
+          {/* Status Section */}
+          <View style={styles.statusSection}>
+            <View
+              style={[styles.statusDot, { backgroundColor: statusDotColor }]}
+            />
+            <View style={styles.statusInfo}>
+              <Text
+                style={[styles.statusLabel, { color: statusDotColor }]}
+                numberOfLines={1}
+              >
+                {statusLabel}
+              </Text>
+              {statusSublabel && (
+                <Text style={styles.observerText} numberOfLines={1}>
+                  {statusSublabel}
+                </Text>
+              )}
+            </View>
+          </View>
+
+          {/* Content Section */}
+          <View style={styles.querySection}>
+            <Text
+              style={styles.queryHash}
+              numberOfLines={isExpanded ? undefined : 2}
+            >
+              {primaryText}
             </Text>
-            {statusSublabel && (
-              <Text style={styles.observerText} numberOfLines={1}>{statusSublabel}</Text>
+            {!isExpanded && secondaryText && (
+              <Text style={styles.secondaryText} numberOfLines={1}>
+                {secondaryText}
+              </Text>
+            )}
+          </View>
+
+          {/* Badge and Chevron Section */}
+          <View style={styles.rightSection}>
+            {(customBadge || badgeText !== undefined) && (
+              <View style={styles.badgeContainer}>
+                {customBadge ? (
+                  customBadge
+                ) : (
+                  <Text
+                    style={[
+                      styles.statusBadge,
+                      { color: badgeColor || statusDotColor },
+                    ]}
+                  >
+                    {badgeText}
+                  </Text>
+                )}
+              </View>
+            )}
+            {showChevron && (
+              <View style={styles.chevronContainer}>
+                {isExpanded ? (
+                  <ChevronDown size={14} color={gameUIColors.muted} />
+                ) : (
+                  <ChevronRight size={14} color={gameUIColors.muted} />
+                )}
+              </View>
             )}
           </View>
         </View>
 
-        {/* Content Section */}
-        <View style={styles.querySection}>
-          <Text style={styles.queryHash} numberOfLines={isExpanded ? undefined : 2}>
-            {primaryText}
-          </Text>
-          {!isExpanded && secondaryText && (
-            <Text style={styles.secondaryText} numberOfLines={1}>
-              {secondaryText}
-            </Text>
-          )}
-        </View>
-
-        {/* Badge and Chevron Section */}
-        <View style={styles.rightSection}>
-          {(customBadge || badgeText !== undefined) && (
-            <View style={styles.badgeContainer}>
-              {customBadge ? (
-                customBadge
-              ) : (
-                <Text
-                  style={[
-                    styles.statusBadge,
-                    { color: badgeColor || statusDotColor },
-                  ]}
-                >
-                  {badgeText}
-                </Text>
-              )}
-            </View>
-          )}
-          {showChevron && (
-            <View style={styles.chevronContainer}>
-              {isExpanded ? (
-                <ChevronDown size={14} color={gameUIColors.muted} />
-              ) : (
-                <ChevronRight size={14} color={gameUIColors.muted} />
-              )}
-            </View>
-          )}
-        </View>
-      </View>
-      
         {/* Expanded Content */}
         {isExpanded && expandedContent && (
-          <View style={styles.expandedContent}>
-            {expandedContent}
-          </View>
+          <View style={styles.expandedContent}>{expandedContent}</View>
         )}
       </TouchableOpacity>
     </View>

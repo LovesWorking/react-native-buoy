@@ -8,7 +8,7 @@ import {
   TextStyle,
   Animated,
 } from "react-native";
-import { ChevronDown, ChevronUp } from "rn-better-dev-tools/icons";
+import { ChevronDown, ChevronUp } from "../../../icons";
 import { gameUIColors } from "../constants/gameUIColors";
 
 export interface GameUICollapsibleSectionProps {

@@ -14,7 +14,7 @@ import {
   Clock,
   Info,
   LucideIcon,
-} from "rn-better-dev-tools/icons";
+} from "../../icons";
 import { gameUIColors } from "../gameUI";
 
 export type StatusType = "success" | "error" | "warning" | "pending" | "info";
@@ -110,7 +110,7 @@ export function StatusIndicator({
             duration: 600,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       );
       animation.start();
       return () => animation.stop();

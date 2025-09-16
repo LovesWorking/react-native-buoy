@@ -8,7 +8,7 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
-import { Search, X, Filter, Clock } from "rn-better-dev-tools/icons";
+import { Search, X, Filter, Clock } from "../../icons";
 import { gameUIColors } from "../gameUI";
 
 interface SearchBarProps {

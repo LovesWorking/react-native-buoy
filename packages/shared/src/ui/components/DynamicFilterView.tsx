@@ -6,16 +6,16 @@ import {
   ScrollView,
 } from "react-native";
 import { useEffect, useState } from "react";
-import type { LucideIcon } from "rn-better-dev-tools/icons";
-import { Filter, Plus } from "rn-better-dev-tools/icons";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
-import { SectionHeader } from "@/rn-better-dev-tools/src/shared/ui/components/SectionHeader";
+import type { LucideIcon } from "../../icons";
+import { Filter, Plus } from "../../icons";
+import { macOSColors } from "../gameUI/constants/macOSDesignSystemColors";
+import { SectionHeader } from "./SectionHeader";
 import {
   FilterList,
   AddFilterInput,
   AddFilterButton,
-} from "@/rn-better-dev-tools/src/shared/ui/components/FilterComponents";
-import { useFilterManager } from "@/rn-better-dev-tools/src/shared/hooks/useFilterManager";
+} from "./FilterComponents";
+import { useFilterManager } from "../../hooks/useFilterManager";
 
 export interface FilterSection {
   id: string;
@@ -94,7 +94,9 @@ export function DynamicFilterView({
   onTabChange,
 }: DynamicFilterViewProps) {
   const filterManager = useFilterManager(activePatterns);
-  const [internalActiveTab, setInternalActiveTab] = useState(tabs?.[0]?.id || "");
+  const [internalActiveTab, setInternalActiveTab] = useState(
+    tabs?.[0]?.id || ""
+  );
   const currentActiveTab = activeTab || internalActiveTab;
 
   useEffect(() => {
@@ -113,12 +115,12 @@ export function DynamicFilterView({
     }
   };
 
-
-  const suggestedItems = availableItemsSection?.items?.filter((item) => {
-    return !Array.from(activePatterns).some((pattern) =>
-      item.includes(pattern)
-    );
-  }) || [];
+  const suggestedItems =
+    availableItemsSection?.items?.filter((item) => {
+      return !Array.from(activePatterns).some((pattern) =>
+        item.includes(pattern)
+      );
+    }) || [];
 
   const renderTabs = () => {
     if (!tabs || tabs.length === 0) return null;
@@ -208,7 +210,8 @@ export function DynamicFilterView({
                   style={[
                     styles.filterIconContainer,
                     {
-                      backgroundColor: option.backgroundColor || `${option.color}12`,
+                      backgroundColor:
+                        option.backgroundColor || `${option.color}12`,
                       borderColor: option.borderColor || `${option.color}20`,
                     },
                   ]}
@@ -238,7 +241,7 @@ export function DynamicFilterView({
                 <Text
                   style={[
                     styles.filterCount,
-                    option.isActive && { 
+                    option.isActive && {
                       backgroundColor: macOSColors.semantic.info + "20",
                       color: macOSColors.semantic.info,
                     },
@@ -281,7 +284,9 @@ export function DynamicFilterView({
                     filterManager.setShowAddInput(false);
                     filterManager.setNewFilter("");
                   }}
-                  placeholder={addFilterSection.placeholder || "Enter pattern..."}
+                  placeholder={
+                    addFilterSection.placeholder || "Enter pattern..."
+                  }
                   color={macOSColors.text.primary}
                 />
               </View>
@@ -357,10 +362,7 @@ export function DynamicFilterView({
                     style={styles.availableKeyItem}
                     sentry-label="ignore-touchable-opacity"
                   >
-                    <Text
-                      style={styles.availableKeyText}
-                      numberOfLines={1}
-                    >
+                    <Text style={styles.availableKeyText} numberOfLines={1}>
                       {item}
                     </Text>
                     <Plus size={12} color={macOSColors.semantic.info} />
@@ -391,16 +393,17 @@ export function DynamicFilterView({
               {howItWorksSection.description ||
                 "Filters help you focus on relevant data by hiding unwanted items."}
             </Text>
-            {howItWorksSection.examples && howItWorksSection.examples.length > 0 && (
-              <View style={styles.examplesContainer}>
-                <Text style={styles.examplesTitle}>EXAMPLES:</Text>
-                {howItWorksSection.examples.map((example, index) => (
-                  <Text key={index} style={styles.exampleItem}>
-                    {example}
-                  </Text>
-                ))}
-              </View>
-            )}
+            {howItWorksSection.examples &&
+              howItWorksSection.examples.length > 0 && (
+                <View style={styles.examplesContainer}>
+                  <Text style={styles.examplesTitle}>EXAMPLES:</Text>
+                  {howItWorksSection.examples.map((example, index) => (
+                    <Text key={index} style={styles.exampleItem}>
+                      {example}
+                    </Text>
+                  ))}
+                </View>
+              )}
           </View>
         )}
       </>
