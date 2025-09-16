@@ -5,9 +5,9 @@ import {
   TouchableOpacityProps,
   ViewStyle,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { copyToClipboard } from "../../clipboard/copyToClipboard";
 import { gameUIColors } from "../gameUI/constants/gameUIColors";
+import { Copy, CheckCircle2, AlertTriangle } from "../../icons/lucide-icons";
 
 type CopyState = "idle" | "success" | "error";
 
@@ -129,44 +129,13 @@ export const CopyButton = memo(function CopyButton({
       accessibilityRole="button"
     >
       {copyState === "idle" && (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-            stroke={getColor()}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <Copy size={size} color={getColor()} strokeWidth={2} />
       )}
       {copyState === "success" && (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M9 11l3 3 8-8"
-            stroke={getColor()}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <Path
-            d="M20 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h9"
-            stroke={getColor()}
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <CheckCircle2 size={size} color={getColor()} strokeWidth={2} />
       )}
       {copyState === "error" && (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01"
-            stroke={getColor()}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <AlertTriangle size={size} color={getColor()} strokeWidth={2} />
       )}
     </TouchableOpacity>
   );

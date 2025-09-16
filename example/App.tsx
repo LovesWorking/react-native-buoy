@@ -1,7 +1,7 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Package1Component } from '@monorepo/package-1';
-import { Package2Component } from '@monorepo/package-2';
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { Package1Component } from "@monorepo/package-1";
+import { Package2Component } from "@monorepo/package-2";
 
 export default function App() {
   return (
@@ -20,20 +20,20 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingTop: 50,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 10,
-    color: '#666',
+    color: "#666",
   },
   scrollView: {
     flex: 1,

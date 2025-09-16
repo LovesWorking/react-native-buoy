@@ -1,17 +1,5 @@
 import { ReactNode, useState, useRef } from "react";
-import { View, ViewStyle, Pressable, Animated } from "react-native";
-import Svg, {
-  Defs,
-  Filter,
-  FeGaussianBlur,
-  FeMerge,
-  FeMergeNode,
-  Path,
-  G,
-  Line,
-  LinearGradient,
-  Stop,
-} from "react-native-svg";
+import { View, ViewStyle, Pressable, Animated, StyleSheet } from "react-native";
 
 interface CyberpunkButtonOutlineProps {
   children: ReactNode;
@@ -25,20 +13,11 @@ export function CyberpunkButtonOutline({
   children,
   onPress,
   style,
-  accentColor,
-  index = 0,
+  accentColor = "#00ffff",
 }: CyberpunkButtonOutlineProps) {
   const [isPressed, setIsPressed] = useState(false);
   const animatedScale = useRef(new Animated.Value(1)).current;
   const animatedOpacity = useRef(new Animated.Value(1)).current;
-
-  // Use a slightly lighter/adjusted version of the accent color for secondary elements
-  const getSecondaryColor = () => {
-    // Return a slightly adjusted version of the accent color
-    return accentColor;
-  };
-
-  const secondaryColor = getSecondaryColor();
 
   const handlePressIn = () => {
     setIsPressed(true);
@@ -74,6 +53,9 @@ export function CyberpunkButtonOutline({
     ]).start();
   };
 
+  const cornerCutSize = 15;
+  const borderWidth = isPressed ? 3 : 2.5;
+
   return (
     <Pressable
       onPress={onPress}
@@ -90,132 +72,233 @@ export function CyberpunkButtonOutline({
           opacity: animatedOpacity,
         }}
       >
-        <View style={{ position: "absolute", width: "100%", height: "100%" }}>
-          <Svg viewBox="0 0 280 80" style={{ width: "100%", height: "100%" }}>
-            <Defs>
-              <LinearGradient
-                id={`cyberGradient${index}`}
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="0%"
-              >
-                <Stop offset="0%" stopColor={accentColor} stopOpacity="1" />
-                <Stop offset="50%" stopColor={accentColor} stopOpacity="0.8" />
-                <Stop offset="100%" stopColor={accentColor} stopOpacity="0.6" />
-              </LinearGradient>
+        {/* Main border frame */}
+        <View
+          style={[
+            styles.mainFrame,
+            {
+              borderColor: accentColor,
+              borderWidth: borderWidth,
+              opacity: isPressed ? 1 : 0.95,
+              shadowColor: accentColor,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 8,
+            },
+          ]}
+        >
+          {/* Cut corners overlay */}
+          {/* Top left corner cut */}
+          <View
+            style={[
+              styles.cornerCut,
+              {
+                top: -borderWidth,
+                left: -borderWidth,
+                width: cornerCutSize,
+                height: cornerCutSize,
+                borderRightWidth: borderWidth,
+                borderBottomWidth: borderWidth,
+                borderRightColor: accentColor,
+                borderBottomColor: accentColor,
+                backgroundColor: style?.backgroundColor || "transparent",
+                transform: [{ rotate: "0deg" }],
+              },
+            ]}
+          />
 
-              <LinearGradient
-                id={`secondaryGradient${index}`}
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="0%"
-              >
-                <Stop offset="0%" stopColor={secondaryColor} stopOpacity="1" />
-                <Stop
-                  offset="100%"
-                  stopColor={secondaryColor}
-                  stopOpacity="0.6"
-                />
-              </LinearGradient>
+          {/* Top right corner cut */}
+          <View
+            style={[
+              styles.cornerCut,
+              {
+                top: -borderWidth,
+                right: -borderWidth,
+                width: cornerCutSize,
+                height: cornerCutSize,
+                borderLeftWidth: borderWidth,
+                borderBottomWidth: borderWidth,
+                borderLeftColor: accentColor,
+                borderBottomColor: accentColor,
+                backgroundColor: style?.backgroundColor || "transparent",
+                transform: [{ rotate: "0deg" }],
+              },
+            ]}
+          />
 
-              <Filter
-                id={`strongGlow${index}`}
-                x="-50%"
-                y="-50%"
-                width="200%"
-                height="200%"
-              >
-                <FeGaussianBlur stdDeviation="4" result="coloredBlur" />
-                <FeMerge>
-                  <FeMergeNode in="coloredBlur" />
-                  <FeMergeNode in="coloredBlur" />
-                  <FeMergeNode in="SourceGraphic" />
-                </FeMerge>
-              </Filter>
+          {/* Bottom left corner cut */}
+          <View
+            style={[
+              styles.cornerCut,
+              {
+                bottom: -borderWidth,
+                left: -borderWidth,
+                width: cornerCutSize,
+                height: cornerCutSize,
+                borderRightWidth: borderWidth,
+                borderTopWidth: borderWidth,
+                borderRightColor: accentColor,
+                borderTopColor: accentColor,
+                backgroundColor: style?.backgroundColor || "transparent",
+                transform: [{ rotate: "0deg" }],
+              },
+            ]}
+          />
 
-              <Filter
-                id={`electricGlow${index}`}
-                x="-50%"
-                y="-50%"
-                width="200%"
-                height="200%"
-              >
-                <FeGaussianBlur stdDeviation="3" result="coloredBlur" />
-                <FeMerge>
-                  <FeMergeNode in="coloredBlur" />
-                  <FeMergeNode in="SourceGraphic" />
-                </FeMerge>
-              </Filter>
-            </Defs>
-            <Path
-              d="M 15 5 L 250 5 L 270 25 L 270 55 L 255 70 L 25 70 L 10 55 L 10 25 Z"
-              fill="none"
-              stroke={`url(#cyberGradient${index})`}
-              strokeWidth={isPressed ? 3 : 2.5}
-              filter={`url(#strongGlow${index})`}
-              opacity={isPressed ? 1 : 0.95}
-            />
-            <Path
-              d="M 18 8 L 247 8 L 267 28 L 267 52 L 252 67 L 28 67 L 13 52 L 13 28 Z"
-              fill="none"
-              stroke={accentColor}
-              strokeWidth={1.5}
-              opacity={0.8}
-              filter={`url(#electricGlow${index})`}
-            />
-            <G
-              stroke={accentColor}
-              strokeWidth={1}
-              fill="none"
-              opacity={0.6}
-              filter={`url(#electricGlow${index})`}
-            >
-              <Line x1={250} y1={5} x2={245} y2={10} />
-              <Line x1={250} y1={5} x2={255} y2={10} />
-              <Line x1={270} y1={25} x2={265} y2={20} />
-              <Line x1={270} y1={25} x2={265} y2={30} />
-            </G>
-            <G
-              stroke={accentColor}
-              strokeWidth={1}
-              fill="none"
-              opacity={0.6}
-              filter={`url(#electricGlow${index})`}
-            >
-              <Line x1={270} y1={55} x2={265} y2={50} />
-              <Line x1={270} y1={55} x2={265} y2={60} />
-              <Line x1={255} y1={70} x2={260} y2={65} />
-              <Line x1={255} y1={70} x2={250} y2={65} />
-            </G>
-            <G
-              stroke={accentColor}
-              strokeWidth={1}
-              fill="none"
-              opacity={0.6}
-              filter={`url(#electricGlow${index})`}
-            >
-              <Line x1={25} y1={70} x2={30} y2={65} />
-              <Line x1={25} y1={70} x2={20} y2={65} />
-              <Line x1={10} y1={55} x2={15} y2={60} />
-              <Line x1={10} y1={55} x2={15} y2={50} />
-            </G>
-            <G
-              stroke={accentColor}
-              strokeWidth={1}
-              fill="none"
-              opacity={0.6}
-              filter={`url(#electricGlow${index})`}
-            >
-              <Line x1={10} y1={25} x2={15} y2={30} />
-              <Line x1={10} y1={25} x2={15} y2={20} />
-              <Line x1={15} y1={5} x2={20} y2={10} />
-              <Line x1={15} y1={5} x2={25} y2={10} />
-            </G>
-          </Svg>
+          {/* Bottom right corner cut */}
+          <View
+            style={[
+              styles.cornerCut,
+              {
+                bottom: -borderWidth,
+                right: -borderWidth,
+                width: cornerCutSize,
+                height: cornerCutSize,
+                borderLeftWidth: borderWidth,
+                borderTopWidth: borderWidth,
+                borderLeftColor: accentColor,
+                borderTopColor: accentColor,
+                backgroundColor: style?.backgroundColor || "transparent",
+                transform: [{ rotate: "0deg" }],
+              },
+            ]}
+          />
         </View>
 
+        {/* Inner border for double-line effect */}
+        <View
+          style={[
+            styles.innerFrame,
+            {
+              top: 3,
+              left: 3,
+              right: 3,
+              bottom: 3,
+              borderColor: accentColor,
+              borderWidth: 1.5,
+              opacity: 0.6,
+              shadowColor: accentColor,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.4,
+              shadowRadius: 4,
+            },
+          ]}
+        />
+
+        {/* Corner accent lines */}
+        {/* Top left */}
+        <View
+          style={[
+            styles.accentLine,
+            {
+              top: 5,
+              left: cornerCutSize,
+              width: 10,
+              height: 1,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.accentLine,
+            {
+              top: cornerCutSize,
+              left: 5,
+              width: 1,
+              height: 10,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+
+        {/* Top right */}
+        <View
+          style={[
+            styles.accentLine,
+            {
+              top: 5,
+              right: cornerCutSize,
+              width: 10,
+              height: 1,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.accentLine,
+            {
+              top: cornerCutSize,
+              right: 5,
+              width: 1,
+              height: 10,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+
+        {/* Bottom left */}
+        <View
+          style={[
+            styles.accentLine,
+            {
+              bottom: 5,
+              left: cornerCutSize,
+              width: 10,
+              height: 1,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.accentLine,
+            {
+              bottom: cornerCutSize,
+              left: 5,
+              width: 1,
+              height: 10,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+
+        {/* Bottom right */}
+        <View
+          style={[
+            styles.accentLine,
+            {
+              bottom: 5,
+              right: cornerCutSize,
+              width: 10,
+              height: 1,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.accentLine,
+            {
+              bottom: cornerCutSize,
+              right: 5,
+              width: 1,
+              height: 10,
+              backgroundColor: accentColor,
+              opacity: 0.6,
+            },
+          ]}
+        />
+
+        {/* Content container */}
         <View
           style={{
             position: "absolute",
@@ -235,3 +318,24 @@ export function CyberpunkButtonOutline({
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  mainFrame: {
+    position: "absolute",
+    top: 0,
+    left: 10,
+    right: 10,
+    bottom: 0,
+    borderRadius: 2,
+  },
+  innerFrame: {
+    position: "absolute",
+    borderRadius: 2,
+  },
+  cornerCut: {
+    position: "absolute",
+  },
+  accentLine: {
+    position: "absolute",
+  },
+});
