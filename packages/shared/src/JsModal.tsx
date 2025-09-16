@@ -20,6 +20,8 @@ import {
   isValidElement,
   cloneElement,
   ReactElement,
+  ReactNode,
+  FC,
 } from "react";
 import {
   View,
@@ -36,7 +38,7 @@ import {
 import { useSafeAreaInsets } from "./hooks/useSafeAreaInsets";
 import { gameUIColors } from "./ui/gameUI";
 import { DraggableHeader } from "./ui/components";
-
+import { safeGetItem, safeSetItem } from "./utils/safeAsyncStorage";
 // ============================================================================
 // CONSTANTS - Modal dimensions and configuration
 // ============================================================================
@@ -81,10 +83,7 @@ class ModalStorage {
   static async save(key: string, value: PersistedModalState): Promise<void> {
     try {
       this.memoryCache[key] = value;
-      const { default: AsyncStorage } = await import(
-        "@react-native-async-storage/async-storage"
-      );
-      await AsyncStorage.setItem(`@modal_state_${key}`, JSON.stringify(value));
+      await safeSetItem(`@modal_state_${key}`, JSON.stringify(value));
     } catch (error) {
       console.warn("Failed to save modal state:", error);
     }
@@ -103,8 +102,8 @@ class ModalStorage {
         return this.memoryCache[key];
       }
 
-      // Load from AsyncStorage
-      const stored = await AsyncStorage.getItem(`@modal_state_${key}`);
+      // Load from storage (AsyncStorage or memory fallback)
+      const stored = await safeGetItem(`@modal_state_${key}`);
       if (stored) {
         const parsed = JSON.parse(stored);
         this.memoryCache[key] = parsed;
