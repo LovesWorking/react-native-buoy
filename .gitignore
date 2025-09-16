@@ -50,6 +50,9 @@ lerna-debug.log
 # TypeScript
 *.tsbuildinfo
 .tsc-cache/
+# Don't commit TypeScript declaration files in src directories
+**/src/**/*.d.ts
+**/src/**/*.d.ts.map
 
 # React Native / Expo
 .expo/

@@ -31,7 +31,10 @@
       "types": "./lib/typescript/utils/index.d.ts"
     }
   },
-  "files": ["src", "lib"],
+  "files": [
+    "src",
+    "lib"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "bob build",
@@ -39,6 +42,9 @@
     "prepare": "bob build",
     "clean": "rimraf lib",
     "test": "pnpm run typecheck"
+  },
+  "dependencies": {
+    "superjson": "^2.2.2"
   },
   "peerDependencies": {
     "react": "*",
@@ -51,6 +57,10 @@
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
-    "targets": ["commonjs", "module", "typescript"]
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
   }
 }
