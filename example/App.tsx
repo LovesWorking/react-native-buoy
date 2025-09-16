@@ -94,7 +94,6 @@ export default function App() {
           setEnvCloseResolver(null);
         }}
         requiredEnvVars={requiredEnvVars}
-        onBack={() => {}}
         enableSharedModalDimensions={true}
       />
       <Text style={styles.title}>Monorepo Test App</Text>
