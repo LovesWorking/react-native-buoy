@@ -18,47 +18,11 @@ import {
   type ViewStyle,
   type TextStyle,
 } from "react-native";
-import {
-  useSafeAreaInsets as usePureJSSafeAreaInsets,
-  getSafeAreaInsets as getPureJSSafeAreaInsets,
-} from "./useSafeAreaInsets";
-import { gameUIColors } from "./colors";
+import { gameUIColors, getSafeAreaInsets } from "@monorepo/shared";
 import { DraggableHeader } from "./DraggableHeader";
+import { useSafeAreaInsets } from "@monorepo/shared/src/hooks/useSafeAreaInsets";
 
 // Using Views to render grip dots; no react-native-svg dependency
-
-// =============================
-// Safe Area Helper using our pure JS implementation
-// =============================
-
-// Hook to get safe area insets
-/**
- * Hook to get safe area insets for floating tools positioning
- *
- * @returns Safe area insets object with top, bottom, left, right values
- */
-function useFloatingToolsSafeArea(): {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-} {
-  return usePureJSSafeAreaInsets();
-}
-
-/**
- * Non-hook version for use outside of components
- *
- * @returns Safe area insets object with top, bottom, left, right values
- */
-function getSafeAreaInsets(): {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-} {
-  return getPureJSSafeAreaInsets();
-}
 
 // =============================
 // Local Types (self-contained)
@@ -513,7 +477,7 @@ export function FloatingTools({
   // Store the position before hiding to restore when showing
   const savedPositionRef = useRef<{ x: number; y: number } | null>(null);
 
-  const safeAreaInsets = useFloatingToolsSafeArea();
+  const safeAreaInsets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
   // Position persistence (state/IO extracted to hook)

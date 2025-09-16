@@ -1,10 +1,5 @@
-// Display utilities
 export { displayValue, parseDisplayValue } from "./displayValue";
-
-// Safe area utilities
 export { getSafeAreaInsets } from "./getSafeAreaInsets";
-
-// Async storage utilities
 export {
   safeGetItem,
   safeSetItem,
@@ -12,11 +7,7 @@ export {
   isPersistentStorageAvailable,
   useSafeAsyncStorage,
 } from "./safeAsyncStorage";
-
-// String utilities
 export { safeStringify } from "./safeStringify";
-
-// Type helper utilities
 export {
   getValueType,
   isPrimitive,
@@ -25,10 +16,7 @@ export {
   getConstructorName,
   isEmpty,
   getValueSize,
-  isPlainObject,
 } from "./typeHelpers";
-
-// Value formatting utilities
 export {
   parseValue,
   formatValue,
@@ -38,5 +26,3 @@ export {
   formatPath,
 } from "./valueFormatting";
 
-// Re-export formatting utils
-export * from "./formatting";

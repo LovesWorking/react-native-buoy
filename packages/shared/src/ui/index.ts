@@ -1,7 +1,10 @@
-// Shared UI components
-export { BackButton } from "./components/BackButton";
-export { Divider } from "./components/Divider";
-export { ErrorBoundary } from "./components/ErrorBoundary";
-export { ExpandableSection } from "./components/ExpandableSection";
-export { ExpandableSectionHeader } from "./components/ExpandableSectionHeader";
-export { ExpandableSectionWithModal } from "./components/ExpandableSectionWithModal";
+// Re-export UI surface: components, console, gameUI
+
+// Components
+export * from "./components";
+
+// Console UI bits
+export { CyberpunkSectionButton } from "./console/CyberpunkSectionButton";
+
+// Game UI (colors, hooks, components)
+export * from "./gameUI";

@@ -8,80 +8,30 @@ import {
   Dimensions,
 } from "react-native";
 import { settingsBus } from "./settingsBus";
-import { SimpleBottomSheet } from "./ui/SimpleBottomSheet";
-import { gameUIColors } from "./colors";
-import { useSafeAreaInsets } from "./useSafeAreaInsets";
-import { ModalHeader } from "./ui/ModalHeader";
-import { TabSelector } from "./ui/TabSelector";
 import {
-  EnvLaptopIcon,
-  GlobeIcon,
-  InfoIcon,
   ReactQueryIcon,
+  EnvLaptopIcon,
+  SentryBugIcon,
+  StorageStackIcon,
+  WifiCircuitIcon,
+  Globe,
+  Info,
+  ChevronRightIcon,
+  safeGetItem,
+  safeSetItem,
 } from "@monorepo/shared";
-import { SentryBugIcon } from "@monorepo/shared";
-import { StorageStackIcon } from "@monorepo/shared";
-import { WifiCircuitIcon } from "@monorepo/shared";
-
-const ChevronRightIcon = ({
-  size = 16,
-  color = "#8CA2C8",
-}: {
-  size?: number;
-  color?: string;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: 2,
-      borderWidth: 2,
-      borderColor: color,
-    }}
-  />
-);
-// Optional AsyncStorage dependency (fallback to no-op/memory)
-async function storageGetItem(key: string): Promise<string | null> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require("@react-native-async-storage/async-storage");
-    const S = mod.default || mod;
-    return await S.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-async function storageSetItem(key: string, value: string): Promise<void> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require("@react-native-async-storage/async-storage");
-    const S = mod.default || mod;
-    await S.setItem(key, value);
-  } catch {
-    // ignore
-  }
-}
+import { JsModal, type ModalMode } from "@monorepo/shared";
+import { gameUIColors } from "@monorepo/shared";
+import { useSafeAreaInsets } from "@monorepo/shared/src/hooks/useSafeAreaInsets";
+import { ModalHeader } from "@monorepo/shared";
+import { TabSelector } from "@monorepo/shared";
 
 const STORAGE_KEY = "@rn_better_dev_tools_settings";
 
 export interface DevToolsSettings {
-  dialTools: {
-    query: boolean;
-    env: boolean;
-    sentry: boolean;
-    storage: boolean;
-    wifi: boolean;
-    network: boolean;
-  };
-  floatingTools: {
-    query: boolean;
-    env: boolean;
-    sentry: boolean;
-    storage: boolean;
-    wifi: boolean;
-    network: boolean;
-    environment: boolean;
+  dialTools: Record<string, boolean>;
+  floatingTools: Record<string, boolean> & {
+    environment: boolean; // Special setting for environment indicator
   };
 }
 
@@ -90,26 +40,66 @@ interface DevToolsSettingsModalProps {
   onClose: () => void;
   onSettingsChange?: (settings: DevToolsSettings) => void;
   initialSettings?: DevToolsSettings;
+  availableApps?: {
+    id: string;
+    name: string;
+    slot?: "dial" | "row" | "both";
+  }[];
 }
 
-const defaultSettings: DevToolsSettings = {
-  dialTools: {
-    query: true,
-    env: true,
-    sentry: true,
-    storage: true,
-    wifi: true,
-    network: true,
-  },
-  floatingTools: {
-    query: false,
-    env: true,
-    sentry: false,
-    storage: false,
-    wifi: false,
-    network: false,
-    environment: true,
-  },
+// Generate default settings based on available apps
+const generateDefaultSettings = (
+  availableApps: {
+    id: string;
+    name: string;
+    slot?: "dial" | "row" | "both";
+  }[] = []
+): DevToolsSettings => {
+  const dialDefaults: Record<string, boolean> = {};
+  const floatingDefaults: Record<string, boolean> = {};
+
+  // Default enabled states for known tools
+  const knownDefaults = {
+    dial: {
+      query: true,
+      env: true,
+      sentry: true,
+      storage: true,
+      wifi: true,
+      network: true,
+    },
+    floating: {
+      query: false,
+      env: true,
+      sentry: false,
+      storage: false,
+      wifi: false,
+      network: false,
+    },
+  };
+
+  for (const app of availableApps) {
+    const { id, slot = "both" } = app;
+
+    if (slot === "dial" || slot === "both") {
+      dialDefaults[id] =
+        knownDefaults.dial[id as keyof typeof knownDefaults.dial] ?? true;
+    }
+
+    if (slot === "row" || slot === "both") {
+      floatingDefaults[id] =
+        knownDefaults.floating[id as keyof typeof knownDefaults.floating] ??
+        false;
+    }
+  }
+
+  return {
+    dialTools: dialDefaults,
+    floatingTools: {
+      ...floatingDefaults,
+      environment: true, // Special setting for environment indicator
+    },
+  };
 };
 
 export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
@@ -117,7 +107,9 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   onClose,
   onSettingsChange,
   initialSettings,
+  availableApps = [],
 }) => {
+  const defaultSettings = generateDefaultSettings(availableApps);
   const [settings, setSettings] = useState<DevToolsSettings>(
     initialSettings || defaultSettings
   );
@@ -134,18 +126,22 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
 
   const loadSettings = async () => {
     try {
-      const savedSettings = await storageGetItem(STORAGE_KEY);
+      const savedSettings = await safeGetItem(STORAGE_KEY);
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        // Migrate old settings format to new format
-        if (parsed.floatingTools && !("query" in parsed.floatingTools)) {
-          parsed.floatingTools = {
-            ...defaultSettings.floatingTools,
-            environment: parsed.floatingTools.environment ?? true,
-          };
-          // Remove userStatus if it exists
-          delete parsed.floatingTools.userStatus;
-        }
+        // Merge saved settings with defaults for any new tools
+        parsed.dialTools = {
+          ...basicDefaultSettings.dialTools,
+          ...parsed.dialTools,
+        };
+        parsed.floatingTools = {
+          ...basicDefaultSettings.floatingTools,
+          ...parsed.floatingTools,
+          environment: parsed.floatingTools.environment ?? true,
+        };
+
+        // Remove userStatus if it exists (legacy cleanup)
+        delete parsed.floatingTools.userStatus;
         setSettings(parsed);
       }
     } catch (error) {
@@ -155,7 +151,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
 
   const saveSettings = async (newSettings: DevToolsSettings) => {
     try {
-      await storageSetItem(STORAGE_KEY, JSON.stringify(newSettings));
+      await safeSetItem(STORAGE_KEY, JSON.stringify(newSettings));
       setSettings(newSettings);
       onSettingsChange?.(newSettings);
       // Notify listeners (e.g., floating bubble) to refresh immediately
@@ -200,25 +196,18 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   };
 
   // Modal is fixed to bottom sheet mode
-  const handleModeChange = useCallback((_mode: any) => {
-    // No-op for simple sheet
+  const handleModeChange = useCallback((_mode: ModalMode) => {
+    // Mode changes handled by JsModal
   }, []);
 
   const getToolColor = (tool: string): string => {
     const colors: Record<string, string> = {
-      // @ts-ignore thhis does exist
       query: gameUIColors.query,
-      // @ts-ignore thhis does exist
       env: gameUIColors.env,
-      // @ts-ignore thhis does exist
       sentry: gameUIColors.debug,
-      // @ts-ignore thhis does exist
       storage: gameUIColors.storage,
-      // @ts-ignore thhis does exist
       wifi: gameUIColors.network,
-      // @ts-ignore thhis does exist
       network: gameUIColors.network,
-      // @ts-ignore thhis does exist
       environment: gameUIColors.env,
     };
     return colors[tool] || gameUIColors.info;
@@ -294,11 +283,11 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
             />
           );
         case "network":
-          return <GlobeIcon size={16} color={color} />;
+          return <Globe size={16} color={color} />;
         case "environment":
-          return <InfoIcon size={16} color={color} />;
+          return <Info size={16} color={color} />;
         default:
-          return <InfoIcon size={16} color={color} />;
+          return <Info size={16} color={color} />;
       }
     };
 
@@ -422,57 +411,95 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   );
 
   return (
-    <SimpleBottomSheet
+    <JsModal
       visible={visible}
       onClose={onClose}
+      header={{
+        showToggleButton: false,
+        customContent: (
+          <ModalHeader>
+            <ModalHeader.Content title="" noMargin>
+              <TabSelector
+                tabs={[
+                  { key: "dial", label: "DIAL MENU" },
+                  { key: "floating", label: "FLOATING" },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(tab) => setActiveTab(tab as "dial" | "floating")}
+              />
+            </ModalHeader.Content>
+            <ModalHeader.Actions onClose={onClose} />
+          </ModalHeader>
+        ),
+      }}
+      initialMode="bottomSheet"
+      onModeChange={handleModeChange}
+      persistenceKey="devtools_settings"
+      enablePersistence={false}
       maxHeight={screenHeight - insets.top}
       initialHeight={modalHeight}
-      header={
-        <ModalHeader>
-          <ModalHeader.Content title="" noMargin>
-            <TabSelector
-              tabs={[
-                { key: "dial", label: "DIAL MENU" },
-                { key: "floating", label: "FLOATING" },
-              ]}
-              activeTab={activeTab}
-              onTabChange={(tab) => setActiveTab(tab as "dial" | "floating")}
-            />
-          </ModalHeader.Content>
-          <ModalHeader.Actions onClose={onClose} />
-        </ModalHeader>
-      }
+      initialFloatingPosition={{
+        x: (screenWidth - modalWidth) / 2,
+        y: insets.top + 20,
+      }}
+      enableGlitchEffects={true}
     >
       {renderContent()}
-    </SimpleBottomSheet>
+    </JsModal>
   );
+};
+
+// Basic default settings for the hook (when apps are not available)
+const basicDefaultSettings: DevToolsSettings = {
+  dialTools: {
+    query: true,
+    env: true,
+    sentry: true,
+    storage: true,
+    wifi: true,
+    network: true,
+  },
+  floatingTools: {
+    query: false,
+    env: true,
+    sentry: false,
+    storage: false,
+    wifi: false,
+    network: false,
+    environment: true,
+  },
 };
 
 // Hook to use settings
 export const useDevToolsSettings = () => {
-  const [settings, setSettings] = useState<DevToolsSettings>(defaultSettings);
+  const [settings, setSettings] =
+    useState<DevToolsSettings>(basicDefaultSettings);
 
   const loadSettings = useCallback(async () => {
     try {
-      const savedSettings = await storageGetItem(STORAGE_KEY);
+      const savedSettings = await safeGetItem(STORAGE_KEY);
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        // Migrate old settings format to new format
-        if (parsed.floatingTools && !("query" in parsed.floatingTools)) {
-          parsed.floatingTools = {
-            ...defaultSettings.floatingTools,
-            environment: parsed.floatingTools.environment ?? true,
-          };
-          // Remove userStatus if it exists
-          delete parsed.floatingTools.userStatus;
-        }
+        // Merge saved settings with defaults for any new tools
+        parsed.dialTools = {
+          ...basicDefaultSettings.dialTools,
+          ...parsed.dialTools,
+        };
+        parsed.floatingTools = {
+          ...basicDefaultSettings.floatingTools,
+          ...parsed.floatingTools,
+          environment: parsed.floatingTools.environment ?? true,
+        };
+
+        // Remove userStatus if it exists (legacy cleanup)
+        delete parsed.floatingTools.userStatus;
         setSettings(parsed);
       } else {
-        setSettings(defaultSettings);
+        setSettings(basicDefaultSettings);
       }
     } catch (error) {
       console.error("Failed to load dev tools settings:", error);
-      setSettings(defaultSettings);
+      setSettings(basicDefaultSettings);
     }
   }, []);
 
@@ -502,7 +529,6 @@ export const useDevToolsSettings = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // @ts-ignore thhis does exist
     backgroundColor: gameUIColors.background,
   },
 
@@ -521,7 +547,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 2,
     borderWidth: 1,
-    // @ts-ignore thhis does exist
     borderColor: gameUIColors.border + "40",
     justifyContent: "space-evenly",
   },

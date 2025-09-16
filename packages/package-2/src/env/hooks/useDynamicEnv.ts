@@ -44,6 +44,7 @@ export function useDynamicEnv({
   // Helper function to get a single environment variable value
   const getEnvValue = useMemo(() => {
     return (key: string): unknown => {
+      // @ts-ignore thhis does exist
       const value = process.env[key];
 
       if (value === undefined) {
@@ -81,8 +82,10 @@ export function useDynamicEnv({
 
   // Get all environment variables and process them
   const envResults = useMemo(() => {
+    // @ts-ignore thhis does exist
     const allEnvKeys = Object.keys(process.env);
     const filteredKeys = allEnvKeys.filter((key) => {
+      // @ts-ignore thhis does exist
       const value = process.env[key];
       return envFilter(key, value);
     });
@@ -95,4 +98,3 @@ export function useDynamicEnv({
 
   return envResults;
 }
- 

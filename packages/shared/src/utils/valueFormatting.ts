@@ -28,7 +28,8 @@ export const formatValue = (value: unknown): string => {
   if (typeof value === "string") return `"${value}"`;
   if (typeof value === "boolean") return value ? "true" : "false";
   if (typeof value === "number") return String(value);
-  if (typeof value === "function") return `[Function: ${value.name || "anonymous"}]`;
+  if (typeof value === "function")
+    return `[Function: ${value.name || "anonymous"}]`;
   if (typeof value === "object") {
     if (Array.isArray(value)) {
       return `[Array: ${value.length} items]`;
@@ -46,7 +47,7 @@ export const formatValue = (value: unknown): string => {
 export const getTypeColor = (value: unknown): string => {
   if (value === null) return gameUIColors.dataTypes.null;
   if (value === undefined) return gameUIColors.dataTypes.undefined;
-  
+
   const type = typeof value;
   switch (type) {
     case "string":
@@ -129,7 +130,7 @@ export const flattenObject = (
  */
 export const formatPath = (pathSegments: (string | number)[]): string => {
   if (pathSegments.length === 0) return "root";
-  
+
   return pathSegments
     .map((segment, index) => {
       if (typeof segment === "number") {

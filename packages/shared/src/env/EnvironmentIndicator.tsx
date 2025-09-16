@@ -1,9 +1,14 @@
 import { LayoutChangeEvent, Text, View } from "react-native";
-import { FlaskConical, TestTube2, Bug, Zap, type LucideIcon } from "rn-better-dev-tools/icons";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import {
+  FlaskConical,
+  TestTube2,
+  Bug,
+  Zap,
+  type LucideIcon,
+  gameUIColors,
+} from "../index";
 
-export type Environment = "local" | "dev" | "qa" | "staging" | "prod";
-
+import { Environment } from "../types/types";
 interface EnvironmentIndicatorProps {
   environment: Environment;
   onLayout?: (event: LayoutChangeEvent) => void;

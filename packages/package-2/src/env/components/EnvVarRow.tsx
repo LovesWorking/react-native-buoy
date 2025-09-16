@@ -1,9 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { EnvVarInfo } from "../types";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
-import { CompactRow } from "@/rn-better-dev-tools/src/shared/ui/components/CompactRow";
-import { TypeBadge } from "@/rn-better-dev-tools/src/shared/ui/components/TypeBadge";
+import { gameUIColors, macOSColors, CompactRow, TypeBadge } from "@monorepo/shared";
 import { getEnvVarType } from "../utils/envTypeDetector";
 
 interface EnvVarRowProps {

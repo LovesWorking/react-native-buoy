@@ -1,7 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
-import { CompactRow } from "@/rn-better-dev-tools/src/shared/ui/components/CompactRow";
+import { gameUIColors, macOSColors, CompactRow } from "@monorepo/shared";
 
 export type EnvFilterType = "all" | "missing" | "issues";
 
@@ -30,8 +28,9 @@ export function EnvStatsOverview({
   activeFilter = "all",
   onFilterChange,
 }: EnvStatsOverviewProps) {
-  const issuesCount = stats.missingCount + stats.wrongValueCount + stats.wrongTypeCount;
-  
+  const issuesCount =
+    stats.missingCount + stats.wrongValueCount + stats.wrongTypeCount;
+
   return (
     <View style={styles.container}>
       {/* System Status Card */}
@@ -42,19 +41,27 @@ export function EnvStatsOverview({
         primaryText="Environment Configuration"
         secondaryText={`${healthPercentage}% healthy`}
         customBadge={
-          <View style={[styles.percentBadge, { borderColor: healthColor + "40", backgroundColor: healthColor + "10" }]}>
+          <View
+            style={[
+              styles.percentBadge,
+              {
+                borderColor: healthColor + "40",
+                backgroundColor: healthColor + "10",
+              },
+            ]}
+          >
             <Text style={[styles.percentText, { color: healthColor }]}>
               {healthPercentage}%
             </Text>
           </View>
         }
       />
-      
+
       {/* Stats Grid - Simplified filter cards */}
       <View style={styles.statsGrid}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-            styles.statCard, 
+            styles.statCard,
             { borderColor: macOSColors.border.default },
             activeFilter === "all" && [
               styles.activeCard,
@@ -62,22 +69,29 @@ export function EnvStatsOverview({
                 backgroundColor: macOSColors.semantic.infoBackground,
                 borderColor: macOSColors.semantic.info,
                 shadowColor: macOSColors.semantic.info,
-              }
-            ]
+              },
+            ],
           ]}
           onPress={() => onFilterChange?.("all")}
           activeOpacity={0.8}
         >
-          <View style={[styles.statDot, { backgroundColor: macOSColors.semantic.info }]} />
-          <Text style={[styles.statValue, { color: macOSColors.semantic.info }]}>
+          <View
+            style={[
+              styles.statDot,
+              { backgroundColor: macOSColors.semantic.info },
+            ]}
+          />
+          <Text
+            style={[styles.statValue, { color: macOSColors.semantic.info }]}
+          >
             {stats.requiredCount + stats.optionalCount}
           </Text>
           <Text style={styles.statLabel}>All</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-            styles.statCard, 
+            styles.statCard,
             { borderColor: macOSColors.border.default },
             activeFilter === "missing" && [
               styles.activeCard,
@@ -85,22 +99,29 @@ export function EnvStatsOverview({
                 backgroundColor: macOSColors.semantic.errorBackground,
                 borderColor: macOSColors.semantic.error,
                 shadowColor: macOSColors.semantic.error,
-              }
-            ]
+              },
+            ],
           ]}
           onPress={() => onFilterChange?.("missing")}
           activeOpacity={0.8}
         >
-          <View style={[styles.statDot, { backgroundColor: macOSColors.semantic.error }]} />
-          <Text style={[styles.statValue, { color: macOSColors.semantic.error }]}>
+          <View
+            style={[
+              styles.statDot,
+              { backgroundColor: macOSColors.semantic.error },
+            ]}
+          />
+          <Text
+            style={[styles.statValue, { color: macOSColors.semantic.error }]}
+          >
             {stats.missingCount}
           </Text>
           <Text style={styles.statLabel}>Missing</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-            styles.statCard, 
+            styles.statCard,
             { borderColor: macOSColors.border.default },
             activeFilter === "issues" && [
               styles.activeCard,
@@ -108,14 +129,21 @@ export function EnvStatsOverview({
                 backgroundColor: macOSColors.semantic.warningBackground,
                 borderColor: macOSColors.semantic.warning,
                 shadowColor: macOSColors.semantic.warning,
-              }
-            ]
+              },
+            ],
           ]}
           onPress={() => onFilterChange?.("issues")}
           activeOpacity={0.8}
         >
-          <View style={[styles.statDot, { backgroundColor: macOSColors.semantic.warning }]} />
-          <Text style={[styles.statValue, { color: macOSColors.semantic.warning }]}>
+          <View
+            style={[
+              styles.statDot,
+              { backgroundColor: macOSColors.semantic.warning },
+            ]}
+          />
+          <Text
+            style={[styles.statValue, { color: macOSColors.semantic.warning }]}
+          >
             {issuesCount}
           </Text>
           <Text style={styles.statLabel}>Issues</Text>

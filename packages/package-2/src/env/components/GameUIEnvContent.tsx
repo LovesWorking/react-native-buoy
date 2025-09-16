@@ -1,12 +1,9 @@
 import { useMemo } from "react";
 import { StyleSheet, Text, View, ScrollView } from "react-native";
-import { CheckCircle2, Search } from "rn-better-dev-tools/icons";
+import { CheckCircle2, Search, gameUIColors, displayValue, type IssueItem } from "@monorepo/shared";
 
 // Import shared Game UI components
-import {
-  gameUIColors,
-  type IssueItem,
-} from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+ 
 
 // Local imports
 import { useDynamicEnv } from "../hooks/useDynamicEnv";
@@ -14,7 +11,7 @@ import { RequiredEnvVar } from "../types";
 import { processEnvVars, calculateStats } from "../utils";
 import { EnvVarSection } from "./EnvVarSection";
 import { EnvStatsOverview } from "./EnvStatsOverview";
-import { displayValue } from "@/rn-better-dev-tools/src/shared/utils/displayValue";
+ 
 
 interface GameUIEnvContentProps {
   requiredEnvVars?: RequiredEnvVar[];
@@ -68,23 +65,25 @@ export function GameUIEnvContent({
   const filteredRequiredVars = useMemo(() => {
     if (!searchQuery) return requiredVars;
     const query = searchQuery.toLowerCase();
-    return requiredVars.filter((v) => 
-      v.key.toLowerCase().includes(query) ||
-      v.description?.toLowerCase().includes(query) ||
-      (typeof v.value === 'string' && v.value.toLowerCase().includes(query))
+    return requiredVars.filter(
+      (v) =>
+        v.key.toLowerCase().includes(query) ||
+        v.description?.toLowerCase().includes(query) ||
+        (typeof v.value === "string" && v.value.toLowerCase().includes(query))
     );
   }, [requiredVars, searchQuery]);
-  
+
   const filteredOptionalVars = useMemo(() => {
     if (!searchQuery) return optionalVars;
     const query = searchQuery.toLowerCase();
-    return optionalVars.filter((v) => 
-      v.key.toLowerCase().includes(query) ||
-      v.description?.toLowerCase().includes(query) ||
-      (typeof v.value === 'string' && v.value.toLowerCase().includes(query))
+    return optionalVars.filter(
+      (v) =>
+        v.key.toLowerCase().includes(query) ||
+        v.description?.toLowerCase().includes(query) ||
+        (typeof v.value === "string" && v.value.toLowerCase().includes(query))
     );
   }, [optionalVars, searchQuery]);
-  
+
   // Get vars with issues for the issues section (from filtered vars)
   const issueVars = useMemo(() => {
     return filteredRequiredVars.filter((v) => v.status !== "required_present");
@@ -164,9 +163,11 @@ export function GameUIEnvContent({
                   title=""
                   count={0}
                   vars={issueVars}
-                  emptyMessage={searchQuery
-                    ? `No issues matching "${searchQuery}"`
-                    : "All issues resolved"}
+                  emptyMessage={
+                    searchQuery
+                      ? `No issues matching "${searchQuery}"`
+                      : "All issues resolved"
+                  }
                 />
               </View>
             ) : searchQuery ? (
@@ -195,9 +196,11 @@ export function GameUIEnvContent({
             title=""
             count={0}
             vars={filteredRequiredVars}
-            emptyMessage={searchQuery 
-              ? `No required variables matching "${searchQuery}"`
-              : "No required variables configured"}
+            emptyMessage={
+              searchQuery
+                ? `No required variables matching "${searchQuery}"`
+                : "No required variables configured"
+            }
           />
         );
 
@@ -207,9 +210,11 @@ export function GameUIEnvContent({
             title=""
             count={0}
             vars={filteredOptionalVars}
-            emptyMessage={searchQuery
-              ? `No optional variables matching "${searchQuery}"`
-              : "No optional variables detected"}
+            emptyMessage={
+              searchQuery
+                ? `No optional variables matching "${searchQuery}"`
+                : "No optional variables detected"
+            }
           />
         );
 

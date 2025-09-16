@@ -26,6 +26,8 @@ export {
 export { TabSelector } from "./TabSelector";
 export { EventListItem } from "./EventListItem";
 export { StatsCard } from "./StatsCard";
+export { CompactRow } from "./CompactRow";
+export { HeaderSearchButton } from "./HeaderSearchButton";
 export {
   EmptyState,
   NoDataEmptyState,

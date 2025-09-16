@@ -2,7 +2,6 @@
  * Game UI Design System Components
  * Reusable components following cyberpunk/sci-fi aesthetic
  */
-
 // Components
 export { GameUICollapsibleSection } from "./components/GameUICollapsibleSection";
 export type { GameUICollapsibleSectionProps } from "./components/GameUICollapsibleSection";
@@ -36,8 +35,8 @@ export type {
 } from "./hooks/useGameUIAlertState";
 
 // Constants
-export {
-  gameUIColors,
-  dialColors,
-} from "./constants/gameUIColors";
+export { gameUIColors, dialColors } from "./constants/gameUIColors";
 export type { GameUIColorKey } from "./constants/gameUIColors";
+
+// Also re-export macOS design system colors for apps that want the raw palette
+export { macOSColors } from "./constants/macOSDesignSystemColors";

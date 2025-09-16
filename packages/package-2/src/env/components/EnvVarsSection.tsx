@@ -1,9 +1,8 @@
 import { ScrollView } from "react-native";
-import { Settings } from "rn-better-dev-tools/icons";
-import { CyberpunkSectionButton } from "@/rn-better-dev-tools/src/shared/ui/console/CyberpunkSectionButton";
+import { Settings, CyberpunkSectionButton } from "@monorepo/shared";
 import { RequiredEnvVar } from "../types";
 import { GameUIEnvContent } from "./GameUIEnvContent";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { gameUIColors } from "@monorepo/shared";
 
 interface EnvVarsSectionProps {
   onPress: () => void;
@@ -50,10 +49,13 @@ export function EnvVarsDetailContent({
     <ScrollView
       sentry-label="ignore devtools env vars section scroll"
       style={{ flex: 1, backgroundColor: gameUIColors.background }}
-      contentContainerStyle={{ flexGrow: 1, backgroundColor: gameUIColors.background }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        backgroundColor: gameUIColors.background,
+      }}
     >
-      <GameUIEnvContent 
-        requiredEnvVars={requiredEnvVars} 
+      <GameUIEnvContent
+        requiredEnvVars={requiredEnvVars}
         activeTab={activeTab}
         searchQuery={searchQuery}
       />
