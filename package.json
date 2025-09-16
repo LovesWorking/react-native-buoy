@@ -13,6 +13,7 @@
     "build:all": "pnpm run clean && pnpm install && pnpm run build:packages",
     "clean": "lerna run clean && rimraf node_modules packages/*/node_modules example/node_modules",
     "clean:packages": "lerna run clean",
+    "create:package": "node scripts/create-package.js",
     "dev": "pnpm start",
     "start": "pnpm --filter example start",
     "ios": "pnpm --filter example ios",
