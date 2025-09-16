@@ -12,6 +12,7 @@
   "dependencies": {
     "@monorepo/package-1": "workspace:*",
     "@monorepo/package-2": "workspace:*",
+    "@monorepo/shared": "workspace:*",
     "expo": "~54.0.7",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
