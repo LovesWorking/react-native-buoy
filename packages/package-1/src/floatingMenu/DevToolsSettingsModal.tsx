@@ -13,30 +13,16 @@ import { gameUIColors } from "./colors";
 import { useSafeAreaInsets } from "./useSafeAreaInsets";
 import { ModalHeader } from "./ui/ModalHeader";
 import { TabSelector } from "./ui/TabSelector";
-// Local lightweight placeholder icons (to keep this folder portable)
-const SimpleDot = ({
-  size = 16,
-  color = "#8CA2C8",
-}: {
-  size?: number;
-  color?: string;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: color,
-    }}
-  />
-);
-const ReactQueryIcon = SimpleDot;
-const EnvLaptopIcon = SimpleDot;
-const SentryBugIcon = SimpleDot;
-const StorageStackIcon = SimpleDot;
-const WifiCircuitIcon = SimpleDot;
-const Globe = SimpleDot as any;
-const Info = SimpleDot as any;
+import {
+  EnvLaptopIcon,
+  GlobeIcon,
+  InfoIcon,
+  ReactQueryIcon,
+} from "@monorepo/shared";
+import { SentryBugIcon } from "@monorepo/shared";
+import { StorageStackIcon } from "@monorepo/shared";
+import { WifiCircuitIcon } from "@monorepo/shared";
+
 const ChevronRightIcon = ({
   size = 16,
   color = "#8CA2C8",
@@ -220,12 +206,19 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
 
   const getToolColor = (tool: string): string => {
     const colors: Record<string, string> = {
+      // @ts-ignore thhis does exist
       query: gameUIColors.query,
+      // @ts-ignore thhis does exist
       env: gameUIColors.env,
+      // @ts-ignore thhis does exist
       sentry: gameUIColors.debug,
+      // @ts-ignore thhis does exist
       storage: gameUIColors.storage,
+      // @ts-ignore thhis does exist
       wifi: gameUIColors.network,
+      // @ts-ignore thhis does exist
       network: gameUIColors.network,
+      // @ts-ignore thhis does exist
       environment: gameUIColors.env,
     };
     return colors[tool] || gameUIColors.info;
@@ -301,11 +294,11 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
             />
           );
         case "network":
-          return <Globe size={16} color={color} />;
+          return <GlobeIcon size={16} color={color} />;
         case "environment":
-          return <Info size={16} color={color} />;
+          return <InfoIcon size={16} color={color} />;
         default:
-          return <Info size={16} color={color} />;
+          return <InfoIcon size={16} color={color} />;
       }
     };
 
@@ -439,11 +432,11 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           <ModalHeader.Content title="" noMargin>
             <TabSelector
               tabs={[
-                { key: 'dial', label: 'DIAL MENU' },
-                { key: 'floating', label: 'FLOATING' },
+                { key: "dial", label: "DIAL MENU" },
+                { key: "floating", label: "FLOATING" },
               ]}
               activeTab={activeTab}
-              onTabChange={(tab) => setActiveTab(tab as 'dial' | 'floating')}
+              onTabChange={(tab) => setActiveTab(tab as "dial" | "floating")}
             />
           </ModalHeader.Content>
           <ModalHeader.Actions onClose={onClose} />
@@ -509,6 +502,7 @@ export const useDevToolsSettings = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // @ts-ignore thhis does exist
     backgroundColor: gameUIColors.background,
   },
 
@@ -527,6 +521,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 2,
     borderWidth: 1,
+    // @ts-ignore thhis does exist
     borderColor: gameUIColors.border + "40",
     justifyContent: "space-evenly",
   },

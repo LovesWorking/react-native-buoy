@@ -16,7 +16,11 @@ import {
   type DevToolsSettings,
   useDevToolsSettings,
 } from "../DevToolsSettingsModal";
-import type { InstalledApp, FloatingMenuActions, FloatingMenuState } from "../types";
+import type {
+  InstalledApp,
+  FloatingMenuActions,
+  FloatingMenuState,
+} from "../types";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CIRCLE_SIZE = Math.min(SCREEN_WIDTH * 0.75, 320); // Max 320px for better fit
@@ -100,21 +104,21 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   const pulseAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Map data-driven apps to dial icons, inserting empty slots for disabled items
-  const dialApps = apps.filter((a) => (a.slot ?? 'both') !== 'row');
+  const dialApps = apps.filter((a) => (a.slot ?? "both") !== "row");
   const isDialEnabled = (id: string) => {
     if (!settings) return true;
     switch (id) {
-      case 'query':
+      case "query":
         return settings.dialTools.query;
-      case 'env':
+      case "env":
         return settings.dialTools.env;
-      case 'sentry':
+      case "sentry":
         return settings.dialTools.sentry;
-      case 'storage':
+      case "storage":
         return settings.dialTools.storage;
-      case 'wifi':
+      case "wifi":
         return settings.dialTools.wifi;
-      case 'network':
+      case "network":
         return settings.dialTools.network;
       default:
         return true;
@@ -128,14 +132,17 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
         id: a.id,
         name: `empty-${a.id}`,
         icon: null,
-        color: 'transparent',
+        color: "transparent",
         onPress: () => {},
       };
     }
     return {
       id: a.id,
       name: a.name,
-      icon: typeof a.icon === 'function' ? a.icon({ slot: 'dial', size: 32, state, actions }) : a.icon,
+      icon:
+        typeof a.icon === "function"
+          ? a.icon({ slot: "dial", size: 32, state, actions })
+          : a.icon,
       color: a.color ?? gameUIColors.primary,
       onPress: () => a.onPress({ state, actions }),
     };
@@ -363,7 +370,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     setTimeout(() => {
       icons[index].onPress();
       // Only close if it's not the WiFi toggle (by id)
-      if (icons[index].id !== 'wifi') {
+      if (icons[index].id !== "wifi") {
         handleClose();
       }
     }, 50);
@@ -522,7 +529,6 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
