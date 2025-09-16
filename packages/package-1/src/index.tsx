@@ -1,12 +1,14 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { EnvLaptopIcon } from "@monorepo/shared";
+
+// Export FloatingMenu and its types
+export { FloatingMenu } from "./floatingMenu/FloatingMenu";
+export * from "./floatingMenu/types";
 
 export const Package1Component = () => {
   return (
     <View>
       <Text style={styles.title}>Package 1 - Counter Demo</Text>
-      <EnvLaptopIcon />
     </View>
   );
 };
