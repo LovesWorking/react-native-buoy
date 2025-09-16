@@ -23,7 +23,9 @@
     "lint": "eslint \"packages/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
     "test": "pnpm run build && pnpm run typecheck && pnpm run lint",
     "test:packages": "lerna run test --stream",
-    "fresh": "pnpm run clean && pnpm install && pnpm run build"
+    "fresh": "pnpm run clean && pnpm install && pnpm run build",
+    "zip": "bash scripts/gpt5-zip-repo.sh",
+    "zip:review": "bash scripts/gpt5-zip-repo.sh ./gpt5-review.zip"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
