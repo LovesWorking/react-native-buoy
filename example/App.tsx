@@ -1,11 +1,10 @@
 import { StatusBar } from "expo-status-bar";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useMemo, useRef } from "react";
+import { StyleSheet, View } from "react-native";
+import { useMemo, useRef, useState } from "react";
 import {
   AppHostProvider,
   AppOverlay,
   FloatingMenu,
-  Package1Component,
   type InstalledApp,
 } from "@monorepo/package-1";
 import {
@@ -15,20 +14,16 @@ import {
   type Environment,
   type UserRole,
 } from "@monorepo/package-2";
-import { EnvLaptopIcon, ReactQueryIcon, Globe } from "@monorepo/shared";
+import {
+  EnvLaptopIcon,
+  ReactQueryIcon,
+  Globe,
+  useSafeAreaInsets,
+} from "@monorepo/shared";
 import { ReactQueryDevToolsModal } from "@monorepo/react-query";
 import { NetworkModal } from "@monorepo/network";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import BankingShowcase from "./components/BankingShowcase";
-
-// Test AsyncStorage import
-let asyncStorageStatus = "❌ Module not found";
-try {
-  require("@react-native-async-storage/async-storage");
-  asyncStorageStatus = "✅ Module found and imported successfully";
-} catch (error) {
-  asyncStorageStatus = `❌ Module not found: ${error}`;
-}
+import { PokemonScreen } from "./screens/pokemon/Pokemon";
 
 export default function App() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -127,9 +122,9 @@ export default function App() {
         },
       },
     ],
-    [requiredEnvVars],
+    [requiredEnvVars]
   );
-
+  const insets = useSafeAreaInsets();
   return (
     <QueryClientProvider client={queryClientRef.current!}>
       <AppHostProvider>
@@ -140,26 +135,9 @@ export default function App() {
             environment={environment}
             userRole={userRole}
           />
-
-          {/* AppOverlay renders the currently open app */}
           <AppOverlay />
-
-          <Text style={styles.title}>Monorepo Test App</Text>
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            <BankingShowcase />
-
-            <Text style={styles.subtitle}>Packages loaded via workspace:</Text>
-            <Package1Component />
-
-            <Text style={styles.asyncStorageTest}>
-              AsyncStorage Test: {asyncStorageStatus}
-            </Text>
-          </ScrollView>
-          <StatusBar style="auto" />
+          <PokemonScreen />
+          <StatusBar style="dark" />
         </View>
       </AppHostProvider>
     </QueryClientProvider>
@@ -169,35 +147,48 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 50,
+    backgroundColor: "#F3F4F6",
+  },
+  safeArea: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 10,
-    color: "#666",
+  navBar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 16,
+    backgroundColor: "#111827",
+    borderRadius: 999,
+    padding: 4,
   },
-  asyncStorageTest: {
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
-    margin: 10,
-  },
-  scrollView: {
+  navButton: {
     flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 2,
   },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 48,
+  navButtonActive: {
+    backgroundColor: "#F9FAFB",
+  },
+  navButtonText: {
+    color: "#E5E7EB",
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  navButtonTextActive: {
+    color: "#111827",
+  },
+  screenContainer: {
+    flex: 1,
   },
 });
