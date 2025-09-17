@@ -1,6 +1,7 @@
+import { FC } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { gameUIColors } from "@monorepo/shared";
+import { macOSColors } from "@monorepo/shared";
 
 interface TypeLegendProps {
   types: string[];

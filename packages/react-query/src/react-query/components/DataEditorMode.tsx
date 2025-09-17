@@ -1,13 +1,13 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Query, useQueryClient } from "@tanstack/react-query";
-import { useSafeAreaInsets } from "@/rn-better-dev-tools/src/shared/hooks/useSafeAreaInsets";
+import { useSafeAreaInsets } from "@monorepo/shared";
 import Explorer from "./query-browser/Explorer";
 import QueryDetails from "./query-browser/QueryDetails";
 import ActionButton from "./query-browser/ActionButton";
 import { getQueryStatusLabel } from "../utils/getQueryStatusLabel";
 import { useActionButtons } from "../hooks/useActionButtons";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { gameUIColors } from "@monorepo/shared";
+import { macOSColors } from "@monorepo/shared";
 import { DataViewer } from "./shared/DataViewer";
 import { useEffect, useRef, useState } from "react";
 

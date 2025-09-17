@@ -4,7 +4,7 @@ import {
   getStorageType,
   getCleanStorageKey,
 } from "./storageQueryUtils";
-import { isDevToolsStorageKey } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
+import { isDevToolsStorageKey } from "@monorepo/shared";
 
 export interface StorageTypeCounts {
   mmkv: number;

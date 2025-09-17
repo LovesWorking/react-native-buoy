@@ -1,11 +1,11 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Mutation } from "@tanstack/react-query";
-import { useSafeAreaInsets } from "@/rn-better-dev-tools/src/shared/hooks/useSafeAreaInsets";
+import { useSafeAreaInsets } from "@monorepo/shared";
 import Explorer from "./query-browser/Explorer";
 import MutationDetails from "./query-browser/MutationDetails";
 import ActionButton from "./query-browser/ActionButton";
 import { useMutationActionButtons } from "../hooks/useMutationActionButtons";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { gameUIColors } from "@monorepo/shared";
 import { DataViewer } from "./shared/DataViewer";
 
 interface MutationEditorModeProps {

@@ -1,8 +1,8 @@
 import { Query } from "@tanstack/react-query";
 import { getQueryStatusLabel } from "../../utils/getQueryStatusLabel";
 import { Text, View, StyleSheet } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { gameUIColors } from "@monorepo/shared";
+import { macOSColors } from "@monorepo/shared";
 
 interface Props {
   query: Query;

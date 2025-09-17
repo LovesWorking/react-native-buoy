@@ -6,11 +6,11 @@ import { MutationBrowserFooter } from "./MutationBrowserFooter";
 import {
   JsModal,
   type ModalMode,
-} from "@/rn-better-dev-tools/src/components/modals/jsModal/JsModal";
+} from "@monorepo/shared";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { View, Animated, PanResponder } from "react-native";
 import { SwipeIndicator } from "./SwipeIndicator";
-import { devToolsStorageKeys } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
+import { devToolsStorageKeys } from "@monorepo/shared";
 
 interface MutationBrowserModalProps {
   visible: boolean;

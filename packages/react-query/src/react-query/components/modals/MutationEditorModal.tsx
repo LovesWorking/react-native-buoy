@@ -2,7 +2,7 @@ import { Mutation } from "@tanstack/react-query";
 import {
   JsModal,
   type ModalMode,
-} from "@/rn-better-dev-tools/src/components/modals/jsModal/JsModal";
+} from "@monorepo/shared";
 import { useGetMutationById } from "../../hooks/useSelectedMutation";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { MutationEditorMode } from "../MutationEditorMode";

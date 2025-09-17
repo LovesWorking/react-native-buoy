@@ -19,7 +19,7 @@ export * from "./modalStorageOperations";
 // Data manipulation utilities
 export * from "./updateNestedDataByPath";
 export * from "./deleteNestedDataByPath";
-export * from "@/rn-better-dev-tools/src/shared/utils/safeStringify";
+export { safeStringify } from "@monorepo/shared";
 
 // Display utilities
-export * from "@/rn-better-dev-tools/src/shared/utils/displayValue";
+export { displayValue, parseDisplayValue } from "@monorepo/shared";

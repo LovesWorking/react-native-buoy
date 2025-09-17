@@ -2,14 +2,14 @@ import { Query, QueryKey } from "@tanstack/react-query";
 import {
   JsModal,
   type ModalMode,
-} from "@/rn-better-dev-tools/src/components/modals/jsModal/JsModal";
+} from "@monorepo/shared";
 import { useGetQueryByQueryKey } from "../../hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { QueryBrowserMode } from "../QueryBrowserMode";
 import { QueryBrowserFooter } from "./QueryBrowserFooter";
 import { useState, useCallback } from "react";
 import { View } from "react-native";
-import { devToolsStorageKeys } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
+import { devToolsStorageKeys } from "@monorepo/shared";
 
 interface QueryBrowserModalProps {
   visible: boolean;

@@ -47,6 +47,7 @@ export * from "./clipboard";
 export * from "./logger";
 export * from "./settings";
 export * from "./storage";
+export { useSafeAreaInsets } from "./hooks";
 
 // JsModal
 export { JsModal } from "./JsModal";

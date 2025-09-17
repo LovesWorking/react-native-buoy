@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { onlineManager } from "@tanstack/react-query";
-import { devToolsStorageKeys } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
+import { devToolsStorageKeys, safeGetItem, safeSetItem } from "@monorepo/shared";
 
 export function useWifiState() {
   const [isOnline, setIsOnline] = useState(() => onlineManager.isOnline());
@@ -12,10 +12,7 @@ export function useWifiState() {
 
     const loadPersistedState = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
-        const savedState = await AsyncStorage.getItem(
+        const savedState = await safeGetItem(
           devToolsStorageKeys.settings.wifiEnabled(),
         );
 
@@ -37,10 +34,7 @@ export function useWifiState() {
   // Save WiFi state when it changes
   const saveWifiState = async (enabled: boolean) => {
     try {
-      const { default: AsyncStorage } = await import(
-        "@react-native-async-storage/async-storage"
-      );
-      await AsyncStorage.setItem(
+      await safeSetItem(
         devToolsStorageKeys.settings.wifiEnabled(),
         enabled.toString(),
       );

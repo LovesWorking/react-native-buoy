@@ -1,6 +1,17 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@monorepo/react-query": ["../packages/react-query/src"],
+      "@monorepo/react-query/*": ["../packages/react-query/src/*"],
+      "@monorepo/react-query/react-query": [
+        "../packages/react-query/src/react-query/index"
+      ],
+      "@monorepo/react-query/react-query/*": [
+        "../packages/react-query/src/react-query/*"
+      ]
+    }
   }
 }

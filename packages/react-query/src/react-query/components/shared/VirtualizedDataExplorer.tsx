@@ -17,11 +17,11 @@ import {
   StyleSheet,
   FlatList,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
-import { displayValue } from "@/rn-better-dev-tools/src/shared/utils/displayValue";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors";
-import { CopyButton } from "@/rn-better-dev-tools/src/shared/ui/components/CopyButton";
+import { displayValue } from "@monorepo/shared";
+import { gameUIColors } from "@monorepo/shared";
+import { CopyButton } from "@monorepo/shared";
 import { IndentGuidesOverlay } from "./IndentGuidesOverlay";
+import { ChevronRight } from "@monorepo/shared";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
@@ -334,19 +334,12 @@ const ExpanderComponent = ({
       hitSlop={HIT_SLOP_10}
     >
       <View style={STABLE_STYLES.expanderIcon}>
-        <Svg
-          width={12}
-          height={12}
-          viewBox="0 0 16 16"
+        <ChevronRight
+          size={12}
+          color={gameUIColors.secondary}
+          strokeWidth={2}
           style={{ transform: [{ rotate: expanded ? "90deg" : "0deg" }] }}
-        >
-          <Path
-            d="M6 12l4-4-4-4"
-            strokeWidth={2}
-            stroke={gameUIColors.secondary} // text-gray-400
-            fill="none"
-          />
-        </Svg>
+        />
       </View>
     </TouchableOpacity>
   );
@@ -643,7 +636,7 @@ const useDataFlattening = (
       }, 5000);
       // Small delay to debounce rapid changes
       // Small delay to batch rapid changes
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise<void>((resolve) => setTimeout(() => resolve(), 10));
 
       if (isCancelled) {
         processingRef.current = false;

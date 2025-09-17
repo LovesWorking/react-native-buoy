@@ -1,9 +1,9 @@
 import { Query } from "@tanstack/react-query";
 import QueryDetailsChip from "./QueryDetailsChip";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { displayValue } from "@/rn-better-dev-tools/src/shared/utils/displayValue";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { displayValue } from "@monorepo/shared";
+import { gameUIColors } from "@monorepo/shared";
+import { macOSColors } from "@monorepo/shared";
 
 interface Props {
   query: Query | undefined;

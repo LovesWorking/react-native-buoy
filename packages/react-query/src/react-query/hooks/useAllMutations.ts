@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Mutation, useQueryClient } from "@tanstack/react-query";
-import isEqual from "fast-deep-equal";
 
 function useAllMutations() {
   const queryClient = useQueryClient();
   const [mutations, setMutations] = useState<Mutation[]>([]);
-  const mutationsRef = useRef<Mutation["state"][]>([]);
+  const mutationsSnapshotRef = useRef<string | null>(null);
   useEffect(() => {
     const updateMutations = () => {
       const newMutations = queryClient.getMutationCache().getAll();
       const newStates = newMutations.map((m) => m.state);
-      if (!isEqual(mutationsRef.current, newStates)) {
-        mutationsRef.current = newStates;
+      const snapshot = JSON.stringify(newStates);
+      if (mutationsSnapshotRef.current !== snapshot) {
+        mutationsSnapshotRef.current = snapshot;
         setTimeout(() => setMutations(newMutations), 0);
       }
     };

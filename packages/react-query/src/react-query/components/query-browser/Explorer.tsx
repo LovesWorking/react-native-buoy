@@ -9,13 +9,13 @@ import {
 import { JsonValue } from "../../types/types";
 import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
 import { updateNestedDataByPath } from "../../utils/updateNestedDataByPath";
-import { displayValue } from "@/rn-better-dev-tools/src/shared/utils/displayValue";
+import { displayValue } from "@monorepo/shared";
 import deleteItem from "../../utils/actions/deleteItem";
-import Svg, { Path } from "react-native-svg";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
-import { CopyButton as SharedCopyButton } from "@/rn-better-dev-tools/src/shared/ui/components";
+import { CopyButton as SharedCopyButton } from "@monorepo/shared";
 import { CyberpunkInput } from "../shared/CyberpunkInput";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { gameUIColors } from "@monorepo/shared";
+import { ChevronRight, ChevronDown, Trash, Minus } from "@monorepo/shared";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
 const CHUNK_SIZE = 100;
@@ -54,15 +54,10 @@ const Expander = memo(
           expanded ? styles.expanded : styles.collapsed,
         ]}
       >
-        <Svg
-          width={isMain ? 14 : EXPANDER_SIZE}
-          height={isMain ? 14 : EXPANDER_SIZE}
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <Path
-            d={expanded ? "M6 9l6 6 6-6" : "M9 6l6 6-6 6"}
-            stroke={
+        {expanded ? (
+          <ChevronDown
+            size={isMain ? 14 : EXPANDER_SIZE}
+            color={
               isFocused
                 ? gameUIColors.info
                 : isMain
@@ -70,10 +65,20 @@ const Expander = memo(
                   : gameUIColors.secondary
             }
             strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
           />
-        </Svg>
+        ) : (
+          <ChevronRight
+            size={isMain ? 14 : EXPANDER_SIZE}
+            color={
+              isFocused
+                ? gameUIColors.info
+                : isMain
+                  ? gameUIColors.primaryLight
+                  : gameUIColors.secondary
+            }
+            strokeWidth={2.5}
+          />
+        )}
       </View>
     );
   },
@@ -130,15 +135,11 @@ const DeleteItemButton = memo(
         hitSlop={HIT_SLOP_OPTIMIZED}
         activeOpacity={0.7}
       >
-        <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M9 3h6M3 6h18m-2 0l-.701 10.52c-.105 1.578-.158 2.367-.499 2.965a3 3 0 01-1.298 1.215c-.62.3-1.41.3-2.993.3h-3.018c-1.582 0-2.373 0-2.993-.3A3 3 0 016.2 19.485c-.34-.598-.394-1.387-.499-2.966L5 6m5 4.5v5m4-5v5"
-            stroke={isFocused ? gameUIColors.error : gameUIColors.error + "CC"}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <Trash
+          size={14}
+          strokeWidth={2}
+          color={isFocused ? gameUIColors.error : gameUIColors.error + "CC"}
+        />
       </TouchableOpacity>
     );
   },
@@ -175,17 +176,13 @@ const ClearArrayButton = memo(
         hitSlop={HIT_SLOP_OPTIMIZED}
         activeOpacity={0.7}
       >
-        <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M21 10H7m14-6H7m14 12H7m14 6H7M3 10h.01M3 6h.01M3 14h.01M3 18h.01"
-            stroke={
-              isFocused ? gameUIColors.warning : gameUIColors.warning + "CC"
-            }
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <Minus
+          size={14}
+          strokeWidth={2}
+          color={
+            isFocused ? gameUIColors.warning : gameUIColors.warning + "CC"
+          }
+        />
       </TouchableOpacity>
     );
   },

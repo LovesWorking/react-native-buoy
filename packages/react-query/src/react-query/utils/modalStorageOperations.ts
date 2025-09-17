@@ -1,35 +1,12 @@
-// AsyncStorage import with fallback for when it's not available
-let AsyncStorage: {
-  getItem: (key: string) => Promise<string | null>;
-  setItem: (key: string, value: string) => Promise<void>;
-} | null = null;
-try {
-  import("@react-native-async-storage/async-storage").then((module) => {
-    AsyncStorage = module.default;
-  });
-} catch {
-  // AsyncStorage not available - will fall back to in-memory storage
-  // AsyncStorage not found - using in-memory storage
-}
+import { safeSetItem, safeGetItem } from "@monorepo/shared";
 
-// Fallback in-memory storage when AsyncStorage is not available
-const memoryStorage: Record<string, string> = {};
-
-// Helper functions for persisting panel state with AsyncStorage fallback
+// Helper functions for persisting panel state using shared storage wrapper
 const setItem = async (key: string, value: string) => {
-  if (AsyncStorage) {
-    await AsyncStorage.setItem(key, value);
-  } else {
-    memoryStorage[key] = value;
-  }
+  await safeSetItem(key, value);
 };
 
 const getItem = async (key: string): Promise<string | null> => {
-  if (AsyncStorage) {
-    return await AsyncStorage.getItem(key);
-  } else {
-    return memoryStorage[key] || null;
-  }
+  return safeGetItem(key);
 };
 
 export interface PanelDimensions {

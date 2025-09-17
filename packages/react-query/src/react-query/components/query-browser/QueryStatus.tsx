@@ -1,3 +1,4 @@
+import { FC } from "react";
 import {
   View,
   Text,
@@ -5,8 +6,8 @@ import {
   StyleSheet,
   GestureResponderEvent,
 } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { gameUIColors } from "@monorepo/shared";
+import { macOSColors } from "@monorepo/shared";
 
 interface QueryStatusProps {
   label: string;

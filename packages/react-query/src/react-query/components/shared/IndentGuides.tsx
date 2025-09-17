@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import { View, StyleSheet } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors";
+import { gameUIColors } from "@monorepo/shared";
 
 interface IndentGuideProps {
   depth: number;

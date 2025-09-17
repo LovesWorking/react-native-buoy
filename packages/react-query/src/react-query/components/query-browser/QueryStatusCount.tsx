@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { FC, useRef, useState } from "react";
 import {
   View,
   StyleSheet,

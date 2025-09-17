@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { gameUIColors } from '@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors';
+import { gameUIColors } from '@monorepo/shared';
 
 interface GuideItem {
   depth: number;

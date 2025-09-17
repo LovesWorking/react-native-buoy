@@ -1,4 +1,4 @@
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { gameUIColors } from "@monorepo/shared";
 
 /**
  * Centralized storage query keys for all storage hooks

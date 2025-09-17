@@ -11,8 +11,8 @@ import {
   NativeSyntheticEvent,
   TextInputFocusEventData,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors";
+import { gameUIColors } from "@monorepo/shared";
+import { ChevronUp, ChevronDown, Trash } from "@monorepo/shared";
 
 interface CyberpunkInputProps extends TextInputProps {
   label?: string;
@@ -209,12 +209,12 @@ export function CyberpunkInput({
     }
   }, [isFocused, borderGlow, glitchOpacity, glitchX, glitchY, glitchScale]);
 
-  const handleFocus = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleFocus: NonNullable<TextInputProps["onFocus"]> = (e) => {
     setIsFocused(true);
     props.onFocus?.(e);
   };
 
-  const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleBlur: NonNullable<TextInputProps["onBlur"]> = (e) => {
     setIsFocused(false);
     props.onBlur?.(e);
   };
@@ -279,15 +279,13 @@ export function CyberpunkInput({
                 onPress={onIncrement}
                 activeOpacity={0.7}
               >
-                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M4.5 15.75l7.5-7.5 7.5 7.5"
-                    stroke={isFocused ? gameUIColors.info : gameUIColors.muted}
-                    strokeWidth={2.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
+                <ChevronUp
+                  size={14}
+                  strokeWidth={2.5}
+                  color={
+                    isFocused ? gameUIColors.info : gameUIColors.muted
+                  }
+                />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -298,15 +296,13 @@ export function CyberpunkInput({
                 onPress={onDecrement}
                 activeOpacity={0.7}
               >
-                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                    stroke={isFocused ? gameUIColors.info : gameUIColors.muted}
-                    strokeWidth={2.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
+                <ChevronDown
+                  size={14}
+                  strokeWidth={2.5}
+                  color={
+                    isFocused ? gameUIColors.info : gameUIColors.muted
+                  }
+                />
               </TouchableOpacity>
             </View>
           )}
@@ -321,17 +317,13 @@ export function CyberpunkInput({
               onPress={onDelete}
               activeOpacity={0.7}
             >
-              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M9 3h6M3 6h18m-2 0l-.701 10.52c-.105 1.578-.158 2.367-.499 2.965a3 3 0 01-1.298 1.215c-.62.3-1.41.3-2.993.3h-3.018c-1.582 0-2.373 0-2.993-.3A3 3 0 016.2 19.485c-.34-.598-.394-1.387-.499-2.966L5 6m5 4.5v5m4-5v5"
-                  stroke={
-                    isFocused ? gameUIColors.error : gameUIColors.error + "CC"
-                  }
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
+              <Trash
+                size={14}
+                strokeWidth={2}
+                color={
+                  isFocused ? gameUIColors.error : gameUIColors.error + "CC"
+                }
+              />
             </TouchableOpacity>
           )}
 

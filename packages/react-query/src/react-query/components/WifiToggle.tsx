@@ -1,5 +1,5 @@
 import { TouchableOpacity } from "react-native";
-import { Wifi, WifiOff } from "rn-better-dev-tools/icons";
+import { Wifi, WifiOff } from "@monorepo/shared";
 import { useWifiState } from "../hooks/useWifiState";
 
 export function WifiToggle() {

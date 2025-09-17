@@ -1,1 +1,1 @@
-export { devToolsStorageKeys } from './devToolsStorageKeys';
+export { devToolsStorageKeys, isDevToolsStorageKey } from './devToolsStorageKeys';

@@ -1,6 +1,6 @@
 import { Mutation } from "@tanstack/react-query";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { displayValue } from "@/rn-better-dev-tools/src/shared/utils/displayValue";
+import { displayValue } from "@monorepo/shared";
 import MutationDetailsChips from "./MutationDetailsChips";
 
 interface Props {
