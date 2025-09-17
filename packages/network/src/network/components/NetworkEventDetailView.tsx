@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FC, type ReactNode } from "react";
 import {
   View,
   Text,
@@ -19,18 +19,17 @@ import {
   Filter,
   Globe,
   Link,
-} from "rn-better-dev-tools/icons";
-import { InlineCopyButton } from "@/rn-better-dev-tools/src/shared/ui/components";
-import { DataViewer } from "../../react-query/components/shared/DataViewer";
+  InlineCopyButton,
+  macOSColors,
+} from "@monorepo/shared";
 import type { NetworkEvent } from "../types";
 import {
   formatBytes,
   formatDuration,
   formatHttpStatus,
 } from "../utils/formatting";
-import { formatRelativeTime } from "@/rn-better-dev-tools/src/shared/utils/time/formatRelativeTime";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
-
+import { formatRelativeTime } from "@monorepo/shared";
+import { DataViewer } from "@monorepo/shared/dataViewer";
 interface NetworkEventDetailViewProps {
   event: NetworkEvent;
   ignoredPatterns?: Set<string>;
@@ -142,9 +141,7 @@ export function NetworkEventDetailView({
   const isPending = !event.status && !event.error;
 
   return (
-    <ScrollView
-      style={styles.container}
-    >
+    <ScrollView style={styles.container}>
       {/* Request Details - Always visible */}
       <View style={styles.requestDetailsSection}>
         <View style={styles.httpHeader}>
@@ -339,7 +336,11 @@ export function NetworkEventDetailView({
                   <View style={styles.filterOptionLeft}>
                     <Globe
                       size={16}
-                      color={isDomainIgnored ? macOSColors.semantic.warning : macOSColors.text.muted}
+                      color={
+                        isDomainIgnored
+                          ? macOSColors.semantic.warning
+                          : macOSColors.text.muted
+                      }
                     />
                     <View style={styles.filterOptionContent}>
                       <Text style={styles.filterOptionLabel}>
@@ -378,7 +379,11 @@ export function NetworkEventDetailView({
                   <View style={styles.filterOptionLeft}>
                     <Link
                       size={16}
-                      color={isUrlIgnored ? macOSColors.semantic.warning : macOSColors.text.muted}
+                      color={
+                        isUrlIgnored
+                          ? macOSColors.semantic.warning
+                          : macOSColors.text.muted
+                      }
                     />
                     <View style={styles.filterOptionContent}>
                       <Text style={styles.filterOptionLabel}>

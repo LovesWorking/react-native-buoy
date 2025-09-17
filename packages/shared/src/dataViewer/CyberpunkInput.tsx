@@ -8,11 +8,9 @@ import {
   Text,
   Animated,
   ViewStyle,
-  NativeSyntheticEvent,
-  TextInputFocusEventData,
 } from "react-native";
-import { gameUIColors } from "@monorepo/shared";
-import { ChevronUp, ChevronDown, Trash } from "@monorepo/shared";
+import { gameUIColors } from "../ui/gameUI";
+import { ChevronUp, ChevronDown, Trash } from "../icons";
 
 interface CyberpunkInputProps extends TextInputProps {
   label?: string;
@@ -90,7 +88,7 @@ export function CyberpunkInput({
             duration: 50,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
 
       // Glitch X displacement
@@ -121,7 +119,7 @@ export function CyberpunkInput({
             duration: 20,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
 
       // Glitch Y displacement
@@ -147,7 +145,7 @@ export function CyberpunkInput({
             duration: 30,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
 
       // Glitch scale effect
@@ -173,7 +171,7 @@ export function CyberpunkInput({
             duration: 20,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start();
     } else {
       // Reset animations when not focused
@@ -247,6 +245,7 @@ export function CyberpunkInput({
         <Animated.View style={[styles.inputContainer, containerAnimatedStyle]}>
           {/* Glitch overlay when focused */}
           <Animated.View
+            // @ts-ignore - glitchAnimatedStyle is not typed
             style={[styles.glitchOverlay, glitchAnimatedStyle]}
             pointerEvents="none"
           />
@@ -282,9 +281,7 @@ export function CyberpunkInput({
                 <ChevronUp
                   size={14}
                   strokeWidth={2.5}
-                  color={
-                    isFocused ? gameUIColors.info : gameUIColors.muted
-                  }
+                  color={isFocused ? gameUIColors.info : gameUIColors.muted}
                 />
               </TouchableOpacity>
 
@@ -299,9 +296,7 @@ export function CyberpunkInput({
                 <ChevronDown
                   size={14}
                   strokeWidth={2.5}
-                  color={
-                    isFocused ? gameUIColors.info : gameUIColors.muted
-                  }
+                  color={isFocused ? gameUIColors.info : gameUIColors.muted}
                 />
               </TouchableOpacity>
             </View>

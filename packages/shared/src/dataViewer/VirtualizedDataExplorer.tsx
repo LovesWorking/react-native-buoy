@@ -1,4 +1,4 @@
-import { JsonValue } from "../../types/types";
+import { JsonValue } from "../types/types";
 
 import {
   useState,
@@ -17,11 +17,11 @@ import {
   StyleSheet,
   FlatList,
 } from "react-native";
-import { displayValue } from "@monorepo/shared";
-import { gameUIColors } from "@monorepo/shared";
-import { CopyButton } from "@monorepo/shared";
+import { displayValue } from "../utils/displayValue";
+import { gameUIColors } from "../ui/gameUI";
+import { CopyButton } from "../ui/components/CopyButton";
+import { ChevronRight } from "../icons";
 import { IndentGuidesOverlay } from "./IndentGuidesOverlay";
-import { ChevronRight } from "@monorepo/shared";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
 const HIT_SLOP_10 = { top: 10, bottom: 10, left: 10, right: 10 };
@@ -382,7 +382,6 @@ const TypeLegendComponent = ({
 };
 TypeLegendComponent.displayName = "TypeLegend";
 const TypeLegend = memo(TypeLegendComponent);
-
 
 // Optimized data flattening with chunked processing to prevent UI blocking [[memory:4875251]]
 const useDataFlattening = (
@@ -975,7 +974,10 @@ const VirtualizedItemComponent = ({
           {item.isExpandable ? (
             <>
               <Text
-                style={[STABLE_STYLES.valueText, { color: gameUIColors.secondary }]}
+                style={[
+                  STABLE_STYLES.valueText,
+                  { color: gameUIColors.secondary },
+                ]}
                 numberOfLines={1}
               >
                 {item.valueType} ({item.childCount}{" "}
@@ -990,7 +992,10 @@ const VirtualizedItemComponent = ({
               )}
             </>
           ) : (
-            <Text style={[STABLE_STYLES.valueText, { color }]} numberOfLines={1}>
+            <Text
+              style={[STABLE_STYLES.valueText, { color }]}
+              numberOfLines={1}
+            >
               {formatValue(item.value, item.valueType)}
             </Text>
           )}
@@ -1029,16 +1034,22 @@ export const VirtualizedDataExplorer: FC<VirtualizedDataExplorerProps> = ({
 
   // Track visible range for overlay rendering
   const listRef = useRef<FlatList>(null);
-  const [visibleRange, setVisibleRange] = useState<{ start: number; end: number }>({
+  const [visibleRange, setVisibleRange] = useState<{
+    start: number;
+    end: number;
+  }>({
     start: 0,
-    end: Math.min(flatData.length - 1, Math.max(0, Math.ceil(400 / ITEM_HEIGHT) - 1)),
+    end: Math.min(
+      flatData.length - 1,
+      Math.max(0, Math.ceil(400 / ITEM_HEIGHT) - 1)
+    ),
   });
   const viewabilityConfigRef = useRef({ itemVisiblePercentThreshold: 1 });
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
       const idx = viewableItems
         .map((v) => v.index)
-        .filter((n): n is number => typeof n === 'number');
+        .filter((n): n is number => typeof n === "number");
       if (idx.length) {
         setVisibleRange({ start: Math.min(...idx), end: Math.max(...idx) });
       }
@@ -1048,10 +1059,12 @@ export const VirtualizedDataExplorer: FC<VirtualizedDataExplorerProps> = ({
     // When data changes, reset the presumed visible window
     setVisibleRange({
       start: 0,
-      end: Math.min(flatData.length - 1, Math.max(0, Math.ceil(400 / ITEM_HEIGHT) - 1)),
+      end: Math.min(
+        flatData.length - 1,
+        Math.max(0, Math.ceil(400 / ITEM_HEIGHT) - 1)
+      ),
     });
   }, [flatData.length]);
-  
 
   // Calculate visible types for the legend with single pass deduplication
   // Performance: Avoiding array.map() + Array.from(new Set()), using single loop for unique types
@@ -1072,9 +1085,16 @@ export const VirtualizedDataExplorer: FC<VirtualizedDataExplorerProps> = ({
 
   // Stable renderItem using module-scope function [[memory:4875251]]
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const activeDepth = selectedIndex != null ? flatData[selectedIndex]?.depth : undefined;
+  const activeDepth =
+    selectedIndex != null ? flatData[selectedIndex]?.depth : undefined;
 
-  const renderItem = ({ item, index }: { item: FlatDataItem; index: number }) => (
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: FlatDataItem;
+    index: number;
+  }) => (
     <VirtualizedItem
       item={item}
       index={index}
@@ -1125,7 +1145,12 @@ export const VirtualizedDataExplorer: FC<VirtualizedDataExplorerProps> = ({
             </Text>
           </View>
         ) : (
-          <View style={{ position: 'relative', height: flatData.length * ITEM_HEIGHT }}>
+          <View
+            style={{
+              position: "relative",
+              height: flatData.length * ITEM_HEIGHT,
+            }}
+          >
             <IndentGuidesOverlay
               items={flatData}
               visibleRange={{ start: 0, end: Math.max(0, flatData.length - 1) }}
@@ -1212,7 +1237,7 @@ export const VirtualizedDataExplorer: FC<VirtualizedDataExplorerProps> = ({
             <View
               style={{
                 height: Math.min(flatData.length * ITEM_HEIGHT, 400),
-                position: 'relative',
+                position: "relative",
               }}
             >
               <IndentGuidesOverlay

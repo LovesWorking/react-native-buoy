@@ -6,7 +6,7 @@ import MutationDetails from "./query-browser/MutationDetails";
 import ActionButton from "./query-browser/ActionButton";
 import { useMutationActionButtons } from "../hooks/useMutationActionButtons";
 import { gameUIColors } from "@monorepo/shared";
-import { DataViewer } from "./shared/DataViewer";
+import { DataViewer } from "@monorepo/shared/dataViewer";
 
 interface MutationEditorModeProps {
   selectedMutation: Mutation;

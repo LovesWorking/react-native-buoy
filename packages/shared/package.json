@@ -29,6 +29,18 @@
       "import": "./lib/module/utils/index.js",
       "require": "./lib/commonjs/utils/index.js",
       "types": "./lib/typescript/utils/index.d.ts"
+    },
+    "./dataViewer": {
+      "source": "./src/dataViewer/index.ts",
+      "import": "./lib/module/dataViewer/index.js",
+      "require": "./lib/commonjs/dataViewer/index.js",
+      "types": "./lib/typescript/dataViewer/index.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "dataViewer": ["lib/typescript/dataViewer/index.d.ts"],
+      "dataViewer/*": ["lib/typescript/dataViewer/*"]
     }
   },
   "files": [

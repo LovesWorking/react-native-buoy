@@ -44,9 +44,11 @@ export { NetworkToggleButton } from "./components/query-browser";
 export { StorageStatusCount } from "./components/query-browser";
 
 // Re-export shared components
-export { VirtualizedDataExplorer } from "./components/shared/VirtualizedDataExplorer";
-export { DataViewer } from "./components/shared/DataViewer";
-export { TypeLegend } from "./components/shared/TypeLegend";
+export {
+  VirtualizedDataExplorer,
+  DataViewer,
+  TypeLegend,
+} from "@monorepo/shared/dataViewer";
 
 // Re-export mode components
 export { QueryBrowserMode } from "./components/QueryBrowserMode";

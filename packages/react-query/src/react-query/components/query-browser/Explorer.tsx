@@ -1,11 +1,4 @@
-import {
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-  useEffect,
-  memo,
-} from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, memo } from "react";
 import { JsonValue } from "../../types/types";
 import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
 import { updateNestedDataByPath } from "../../utils/updateNestedDataByPath";
@@ -13,9 +6,9 @@ import { displayValue } from "@monorepo/shared";
 import deleteItem from "../../utils/actions/deleteItem";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { CopyButton as SharedCopyButton } from "@monorepo/shared";
-import { CyberpunkInput } from "../shared/CyberpunkInput";
 import { gameUIColors } from "@monorepo/shared";
 import { ChevronRight, ChevronDown, Trash, Minus } from "@monorepo/shared";
+import { CyberpunkInput } from "@monorepo/shared/dataViewer";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
 const CHUNK_SIZE = 100;
@@ -26,7 +19,7 @@ const EXPANDER_SIZE = 12;
 // Optimized chunking function moved to module scope [[memory:4875251]]
 const chunkArray = <T extends { label: string; value: JsonValue }>(
   array: T[],
-  size: number = CHUNK_SIZE,
+  size: number = CHUNK_SIZE
 ): T[][] => {
   if (size < 1 || array.length === 0) return [];
   const result: T[][] = [];
@@ -61,8 +54,8 @@ const Expander = memo(
               isFocused
                 ? gameUIColors.info
                 : isMain
-                  ? gameUIColors.primaryLight
-                  : gameUIColors.secondary
+                ? gameUIColors.primaryLight
+                : gameUIColors.secondary
             }
             strokeWidth={2.5}
           />
@@ -73,15 +66,15 @@ const Expander = memo(
               isFocused
                 ? gameUIColors.info
                 : isMain
-                  ? gameUIColors.primaryLight
-                  : gameUIColors.secondary
+                ? gameUIColors.primaryLight
+                : gameUIColors.secondary
             }
             strokeWidth={2.5}
           />
         )}
       </View>
     );
-  },
+  }
 );
 Expander.displayName = "Expander";
 // Local wrapper for the shared CopyButton to maintain backward compatibility
@@ -98,7 +91,7 @@ const CopyButton = memo(
         }
       />
     );
-  },
+  }
 );
 CopyButton.displayName = "CopyButton";
 
@@ -142,7 +135,7 @@ const DeleteItemButton = memo(
         />
       </TouchableOpacity>
     );
-  },
+  }
 );
 DeleteItemButton.displayName = "DeleteItemButton";
 // Memoized ClearArrayButton component [[memory:4875251]]
@@ -179,13 +172,11 @@ const ClearArrayButton = memo(
         <Minus
           size={14}
           strokeWidth={2}
-          color={
-            isFocused ? gameUIColors.warning : gameUIColors.warning + "CC"
-          }
+          color={isFocused ? gameUIColors.warning : gameUIColors.warning + "CC"}
         />
       </TouchableOpacity>
     );
-  },
+  }
 );
 ClearArrayButton.displayName = "ClearArrayButton";
 // Memoized ToggleValueButton with pre-computed styles [[memory:4875251]]
@@ -237,7 +228,7 @@ const ToggleValueButton = memo(
         </View>
       </TouchableOpacity>
     );
-  },
+  }
 );
 ToggleValueButton.displayName = "ToggleValueButton";
 type Props = {
@@ -298,7 +289,7 @@ export default function Explorer({
 
   // Explorer's section is expanded or collapsed
   const [isExpanded, setIsExpanded] = useState(
-    (defaultExpanded || []).includes(label),
+    (defaultExpanded || []).includes(label)
   );
   // Remove unnecessary useCallback - simple state setter [[memory:4875251]]
   const toggleExpanded = () => setIsExpanded((old) => !old);
@@ -320,7 +311,7 @@ export default function Explorer({
         (d: JsonValue, i): { label: string; value: JsonValue } => ({
           label: i.toString(),
           value: d,
-        }),
+        })
       );
     }
 
@@ -345,7 +336,7 @@ export default function Explorer({
     // Handle regular objects with key limiting
     const entries = Object.entries(value as Record<string, JsonValue>).slice(
       0,
-      1000,
+      1000
     );
     return entries.map(([key, val]): { label: string; value: JsonValue } => ({
       label: key,
@@ -390,12 +381,12 @@ export default function Explorer({
       const newData = updateNestedDataByPath(
         oldData,
         dataPathRef.current,
-        updatedValue,
+        updatedValue
       );
 
       queryClient.setQueryData(activeQueryRef.current.queryKey, newData);
     },
-    [queryClient, setLocalInputValue],
+    [queryClient, setLocalInputValue]
   );
 
   return (
@@ -497,7 +488,7 @@ export default function Explorer({
                               setExpandedPages((old) =>
                                 old.includes(index)
                                   ? old.filter((d) => d !== index)
-                                  : [...old, index],
+                                  : [...old, index]
                               )
                             }
                             style={styles.pageExpanderButton}

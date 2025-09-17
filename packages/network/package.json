@@ -26,6 +26,7 @@
     "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
+    "@monorepo/react-query": "workspace:*",
     "@monorepo/shared": "workspace:*"
   },
   "peerDependencies": {

@@ -101,6 +101,7 @@ class NetworkEventStore {
   private extractHost(url: string): string {
     try {
       const urlObj = new URL(url);
+      // @ts-ignore - this does exist on native
       return urlObj.hostname;
     } catch {
       return "";
@@ -113,6 +114,7 @@ class NetworkEventStore {
   private extractPath(url: string): string {
     try {
       const urlObj = new URL(url);
+      // @ts-ignore - this does exist on native
       return urlObj.pathname;
     } catch {
       return url;
@@ -191,10 +193,10 @@ class NetworkEventStore {
   getStats() {
     const total = this.events.length;
     const successful = this.events.filter(
-      (e) => e.status && e.status >= 200 && e.status < 300,
+      (e) => e.status && e.status >= 200 && e.status < 300
     ).length;
     const failed = this.events.filter(
-      (e) => e.error || (e.status && e.status >= 400),
+      (e) => e.error || (e.status && e.status >= 400)
     ).length;
     const pending = this.events.filter((e) => !e.status && !e.error).length;
 
@@ -209,11 +211,11 @@ class NetworkEventStore {
 
     const totalSent = this.events.reduce(
       (sum, e) => sum + (e.requestSize || 0),
-      0,
+      0
     );
     const totalReceived = this.events.reduce(
       (sum, e) => sum + (e.responseSize || 0),
-      0,
+      0
     );
 
     return {
@@ -246,12 +248,12 @@ class NetworkEventStore {
       switch (filter.status) {
         case "success":
           filtered = filtered.filter(
-            (e) => e.status && e.status >= 200 && e.status < 300,
+            (e) => e.status && e.status >= 200 && e.status < 300
           );
           break;
         case "error":
           filtered = filtered.filter(
-            (e) => e.error || (e.status && e.status >= 400),
+            (e) => e.error || (e.status && e.status >= 400)
           );
           break;
         case "pending":
@@ -266,7 +268,7 @@ class NetworkEventStore {
         (e) =>
           e.url.toLowerCase().includes(search) ||
           e.method.toLowerCase().includes(search) ||
-          (e.error && e.error.toLowerCase().includes(search)),
+          (e.error && e.error.toLowerCase().includes(search))
       );
     }
 

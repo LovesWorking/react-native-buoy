@@ -17,17 +17,16 @@ import {
   XCircle,
   Clock,
   X,
-} from "rn-better-dev-tools/icons";
-import {
   JsModal,
-  type ModalMode,
-} from "@/rn-better-dev-tools/src/components/modals/jsModal/JsModal";
-import { ModalHeader } from "@/rn-better-dev-tools/src/shared/ui/components/ModalHeader";
-import { devToolsStorageKeys } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+  ModalHeader,
+  devToolsStorageKeys,
+  macOSColors,
+  useSafeAsyncStorage,
+} from "@monorepo/shared";
+import type { ModalMode } from "@monorepo/shared";
 import { NetworkEventItemCompact } from "./NetworkEventItemCompact";
 import { NetworkFilterViewV3 } from "./NetworkFilterViewV3";
-import { TickProvider } from "../../sentry/hooks/useTickEveryMinute";
+import { TickProvider } from "../hooks/useTickEveryMinute";
 import { NetworkEventDetailView } from "./NetworkEventDetailView";
 import { useNetworkEvents } from "../hooks/useNetworkEvents";
 import type { NetworkEvent } from "../types";
@@ -79,9 +78,12 @@ function NetworkModalInner({
   const [searchText, setSearchText] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
-  const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(new Set());
+  const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(
+    new Set()
+  );
   const flatListRef = useRef<FlatList<NetworkEvent>>(null);
   const hasLoadedFilters = useRef(false);
+  const { getItem: safeGetItem, setItem: safeSetItem } = useSafeAsyncStorage();
 
   // Load persisted filters on mount
   useEffect(() => {
@@ -89,28 +91,24 @@ function NetworkModalInner({
 
     const loadFilters = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
-
         // Load ignored patterns (using domains key for now)
-        const storedPatterns = await AsyncStorage.getItem(
+        const storedPatterns = await safeGetItem(
           devToolsStorageKeys.network.ignoredDomains()
         );
         if (storedPatterns) {
           const patterns = JSON.parse(storedPatterns) as string[];
           setIgnoredPatterns(new Set(patterns));
         }
-
-        hasLoadedFilters.current = true;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_error) {
         // Silently fail - filters will use defaults
+      } finally {
+        hasLoadedFilters.current = true;
       }
     };
 
     loadFilters();
-  }, [visible]);
+  }, [visible, safeGetItem]);
 
   // Save filters when they change
   useEffect(() => {
@@ -118,13 +116,9 @@ function NetworkModalInner({
 
     const saveFilters = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
-
         // Save ignored patterns
         const patterns = Array.from(ignoredPatterns);
-        await AsyncStorage.setItem(
+        await safeSetItem(
           devToolsStorageKeys.network.ignoredDomains(),
           JSON.stringify(patterns)
         );
@@ -135,7 +129,7 @@ function NetworkModalInner({
     };
 
     saveFilters();
-  }, [ignoredPatterns]);
+  }, [ignoredPatterns, safeSetItem]);
 
   // Simple handlers - no useCallback needed per rule2
   const handleEventPress = (event: NetworkEvent) => {
@@ -357,7 +351,11 @@ function NetworkModalInner({
           >
             <Power
               size={14}
-              color={isEnabled ? macOSColors.semantic.success : macOSColors.semantic.error}
+              color={
+                isEnabled
+                  ? macOSColors.semantic.success
+                  : macOSColors.semantic.error
+              }
             />
           </TouchableOpacity>
 
@@ -370,7 +368,9 @@ function NetworkModalInner({
             <Trash2
               size={14}
               color={
-                events.length > 0 ? macOSColors.text.muted : macOSColors.background.hover
+                events.length > 0
+                  ? macOSColors.text.muted
+                  : macOSColors.background.hover
               }
             />
           </TouchableOpacity>

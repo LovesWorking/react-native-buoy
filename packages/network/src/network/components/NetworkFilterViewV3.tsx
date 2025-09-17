@@ -9,14 +9,16 @@ import {
   Film,
   Music,
   Filter,
-} from "rn-better-dev-tools/icons";
+  macOSColors,
+  CompactFilterChips,
+  SectionHeader,
+  FilterList,
+  AddFilterInput,
+  AddFilterButton,
+} from "@monorepo/shared";
 import type { NetworkEvent } from "../types";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
-import { CompactFilterChips, type FilterChipGroup } from "@/rn-better-dev-tools/src/shared/ui/components/CompactFilterChips";
 import { View, StyleSheet, ScrollView, Text } from "react-native";
-import { SectionHeader } from "@/rn-better-dev-tools/src/shared/ui/components/SectionHeader";
-import { FilterList, AddFilterInput, AddFilterButton } from "@/rn-better-dev-tools/src/shared/ui/components/FilterComponents";
-import { useFilterManager } from "@/rn-better-dev-tools/src/shared/hooks/useFilterManager";
+import { useFilterManager, type FilterChipGroup } from "@monorepo/shared";
 import { useMemo } from "react";
 
 interface NetworkFilter {
@@ -37,16 +39,25 @@ interface NetworkFilterViewV3Props {
 
 function getContentType(event: NetworkEvent): { type: string; color: string } {
   const headers = event.responseHeaders || event.requestHeaders;
-  const contentType = headers?.["content-type"] || headers?.["Content-Type"] || "";
+  const contentType =
+    headers?.["content-type"] || headers?.["Content-Type"] || "";
 
-  if (contentType.includes("json")) return { type: "JSON", color: macOSColors.semantic.info };
-  if (contentType.includes("xml")) return { type: "XML", color: macOSColors.semantic.success };
-  if (contentType.includes("html")) return { type: "HTML", color: macOSColors.semantic.warning };
-  if (contentType.includes("text")) return { type: "TEXT", color: macOSColors.semantic.success };
-  if (contentType.includes("image")) return { type: "IMAGE", color: macOSColors.semantic.error };
-  if (contentType.includes("video")) return { type: "VIDEO", color: macOSColors.semantic.error };
-  if (contentType.includes("audio")) return { type: "AUDIO", color: macOSColors.semantic.debug };
-  if (contentType.includes("form")) return { type: "FORM", color: macOSColors.semantic.info };
+  if (contentType.includes("json"))
+    return { type: "JSON", color: macOSColors.semantic.info };
+  if (contentType.includes("xml"))
+    return { type: "XML", color: macOSColors.semantic.success };
+  if (contentType.includes("html"))
+    return { type: "HTML", color: macOSColors.semantic.warning };
+  if (contentType.includes("text"))
+    return { type: "TEXT", color: macOSColors.semantic.success };
+  if (contentType.includes("image"))
+    return { type: "IMAGE", color: macOSColors.semantic.error };
+  if (contentType.includes("video"))
+    return { type: "VIDEO", color: macOSColors.semantic.error };
+  if (contentType.includes("audio"))
+    return { type: "AUDIO", color: macOSColors.semantic.debug };
+  if (contentType.includes("form"))
+    return { type: "FORM", color: macOSColors.semantic.info };
   return { type: "OTHER", color: macOSColors.text.muted };
 }
 
@@ -63,8 +74,10 @@ export function NetworkFilterViewV3({
   // Calculate counts
   const statusCounts = {
     all: events.length,
-    success: events.filter((e) => e.status && e.status >= 200 && e.status < 300).length,
-    error: events.filter((e) => e.error || (e.status && e.status >= 400)).length,
+    success: events.filter((e) => e.status && e.status >= 200 && e.status < 300)
+      .length,
+    error: events.filter((e) => e.error || (e.status && e.status >= 400))
+      .length,
     pending: events.filter((e) => !e.status && !e.error).length,
   };
 
@@ -81,34 +94,50 @@ export function NetworkFilterViewV3({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "success": return CheckCircle;
-      case "error": return XCircle;
-      case "pending": return Clock;
-      default: return Globe;
+      case "success":
+        return CheckCircle;
+      case "error":
+        return XCircle;
+      case "pending":
+        return Clock;
+      default:
+        return Globe;
     }
   };
 
   const getContentTypeIcon = (type: string) => {
     switch (type) {
-      case "JSON": return FileJson;
+      case "JSON":
+        return FileJson;
       case "HTML":
       case "XML":
-      case "TEXT": return FileText;
-      case "IMAGE": return Image;
-      case "VIDEO": return Film;
-      case "AUDIO": return Music;
-      default: return Globe;
+      case "TEXT":
+        return FileText;
+      case "IMAGE":
+        return Image;
+      case "VIDEO":
+        return Film;
+      case "AUDIO":
+        return Music;
+      default:
+        return Globe;
     }
   };
 
   const getMethodColor = (method: string) => {
     switch (method) {
-      case "GET": return macOSColors.semantic.success;
-      case "POST": return macOSColors.semantic.info;
-      case "PUT": return macOSColors.semantic.warning;
-      case "DELETE": return macOSColors.semantic.error;
-      case "PATCH": return macOSColors.semantic.success;
-      default: return macOSColors.text.muted;
+      case "GET":
+        return macOSColors.semantic.success;
+      case "POST":
+        return macOSColors.semantic.info;
+      case "PUT":
+        return macOSColors.semantic.warning;
+      case "DELETE":
+        return macOSColors.semantic.error;
+      case "PATCH":
+        return macOSColors.semantic.success;
+      default:
+        return macOSColors.text.muted;
     }
   };
 
@@ -155,46 +184,63 @@ export function NetworkFilterViewV3({
     {
       id: "status",
       title: "Status",
-      chips: (["all", "success", "error", "pending"] as const).map(status => ({
-        id: `status-${status}`,
-        label: status.charAt(0).toUpperCase() + status.slice(1),
-        count: statusCounts[status],
-        icon: getStatusIcon(status),
-        color: status === "success" ? macOSColors.semantic.success :
-               status === "error" ? macOSColors.semantic.error :
-               status === "pending" ? macOSColors.semantic.warning :
-               macOSColors.semantic.info,
-        isActive: filter.status === status || (!filter.status && status === "all"),
-        value: status,
-      })),
+      chips: (["all", "success", "error", "pending"] as const).map(
+        (status) => ({
+          id: `status-${status}`,
+          label: status.charAt(0).toUpperCase() + status.slice(1),
+          count: statusCounts[status],
+          icon: getStatusIcon(status),
+          color:
+            status === "success"
+              ? macOSColors.semantic.success
+              : status === "error"
+              ? macOSColors.semantic.error
+              : status === "pending"
+              ? macOSColors.semantic.warning
+              : macOSColors.semantic.info,
+          isActive:
+            filter.status === status || (!filter.status && status === "all"),
+          value: status,
+        })
+      ),
     },
-    ...(Object.keys(methodCounts).length > 0 ? [{
-      id: "method",
-      title: "Method",
-      chips: Object.entries(methodCounts).map(([method, count]) => ({
-        id: `method-${method}`,
-        label: method,
-        count,
-        color: getMethodColor(method),
-        isActive: filter.method?.includes(method),
-        value: method,
-      })),
-      multiSelect: true,
-    }] : []),
-    ...(Object.keys(contentTypeCounts).length > 0 ? [{
-      id: "contentType",
-      title: "Content",
-      chips: Object.entries(contentTypeCounts).map(([type, count]) => ({
-        id: `contentType-${type}`,
-        label: type,
-        count,
-        icon: getContentTypeIcon(type),
-        color: getContentType(events.find(e => getContentType(e).type === type) || events[0]).color,
-        isActive: filter.contentType?.includes(type),
-        value: type,
-      })),
-      multiSelect: true,
-    }] : []),
+    ...(Object.keys(methodCounts).length > 0
+      ? [
+          {
+            id: "method",
+            title: "Method",
+            chips: Object.entries(methodCounts).map(([method, count]) => ({
+              id: `method-${method}`,
+              label: method,
+              count,
+              color: getMethodColor(method),
+              isActive: filter.method?.includes(method),
+              value: method,
+            })),
+            multiSelect: true,
+          },
+        ]
+      : []),
+    ...(Object.keys(contentTypeCounts).length > 0
+      ? [
+          {
+            id: "contentType",
+            title: "Content",
+            chips: Object.entries(contentTypeCounts).map(([type, count]) => ({
+              id: `contentType-${type}`,
+              label: type,
+              count,
+              icon: getContentTypeIcon(type),
+              color: getContentType(
+                events.find((e) => getContentType(e).type === type) || events[0]
+              ).color,
+              isActive: filter.contentType?.includes(type),
+              value: type,
+            })),
+            multiSelect: true,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -206,7 +252,10 @@ export function NetworkFilterViewV3({
       >
         {/* Compact Filter Chips */}
         <View style={styles.chipsSection}>
-          <CompactFilterChips groups={filterGroups} onChipPress={handleChipPress} />
+          <CompactFilterChips
+            groups={filterGroups}
+            onChipPress={handleChipPress}
+          />
         </View>
 
         {/* Pattern Filters */}
@@ -237,9 +286,16 @@ export function NetworkFilterViewV3({
         {ignoredPatterns.size > 0 && (
           <View style={styles.activePatterns}>
             <SectionHeader>
-              <SectionHeader.Icon icon={Filter} color={macOSColors.semantic.info} size={12} />
+              <SectionHeader.Icon
+                icon={Filter}
+                color={macOSColors.semantic.info}
+                size={12}
+              />
               <SectionHeader.Title>ACTIVE PATTERNS</SectionHeader.Title>
-              <SectionHeader.Badge count={ignoredPatterns.size} color={macOSColors.semantic.info} />
+              <SectionHeader.Badge
+                count={ignoredPatterns.size}
+                color={macOSColors.semantic.info}
+              />
             </SectionHeader>
             <View style={styles.patternsList}>
               <FilterList

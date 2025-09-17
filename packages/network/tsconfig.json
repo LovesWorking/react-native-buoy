@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./lib/typescript"
+    "outDir": "./lib/typescript",
+    "lib": ["ES2020", "DOM"]
   },
   "include": [
     "src/**/*"

@@ -17,6 +17,10 @@ export {
   FilterList,
 } from "./FilterComponents";
 export {
+  CompactFilterChips,
+} from "./CompactFilterChips";
+export type { FilterChipGroup } from "./CompactFilterChips";
+export {
   Badge,
   StatusBadge,
   CountBadge,

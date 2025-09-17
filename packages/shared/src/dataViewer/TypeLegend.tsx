@@ -1,7 +1,6 @@
 import { FC } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { macOSColors } from "../ui/gameUI";
 
 interface TypeLegendProps {
   types: string[];
@@ -61,7 +60,9 @@ export const TypeLegend: FC<TypeLegendProps> = ({
             style={[
               styles.typeBadge,
               isActive && styles.typeBadgeActive,
-              { borderColor: isActive ? color : macOSColors.text.primary + "1A" },
+              {
+                borderColor: isActive ? color : macOSColors.text.primary + "1A",
+              },
             ]}
             onPress={() => handleTypeFilter(type)}
             accessibilityLabel={`Filter by ${type} values`}

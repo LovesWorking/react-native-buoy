@@ -6,10 +6,9 @@ import QueryDetails from "./query-browser/QueryDetails";
 import ActionButton from "./query-browser/ActionButton";
 import { getQueryStatusLabel } from "../utils/getQueryStatusLabel";
 import { useActionButtons } from "../hooks/useActionButtons";
-import { gameUIColors } from "@monorepo/shared";
 import { macOSColors } from "@monorepo/shared";
-import { DataViewer } from "./shared/DataViewer";
 import { useEffect, useRef, useState } from "react";
+import { DataViewer } from "@monorepo/shared/dataViewer";
 
 interface ActionButtonConfig {
   label: string;

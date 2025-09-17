@@ -43,28 +43,28 @@ export type NetworkingEventListener = (event: NetworkingEvent) => void;
 
 /**
  * Network traffic interceptor for React Native applications
- * 
+ *
  * This class intercepts both fetch and XMLHttpRequest operations to provide
  * comprehensive network monitoring capabilities. It uses method swizzling to
  * wrap native networking APIs while preserving their original functionality.
- * 
+ *
  * @example
  * ```typescript
  * // Start monitoring network traffic
  * startNetworkListener();
- * 
+ *
  * // Add a listener for network events
  * const unsubscribe = addNetworkListener((event) => {
  *   if (event.type === 'response') {
  *     console.log(`${event.request.method} ${event.request.url}: ${event.response?.status}`);
  *   }
  * });
- * 
+ *
  * // Stop monitoring and cleanup
  * unsubscribe();
  * stopNetworkListener();
  * ```
- * 
+ *
  * @performance Uses lazy singleton pattern to minimize memory footprint
  * @performance Includes URL filtering to ignore development traffic
  */
@@ -93,7 +93,7 @@ class NetworkListener {
 
   constructor() {
     // Store original methods
-    this.originalFetch = global.fetch;
+    this.originalFetch = globalThis.fetch.bind(globalThis);
     this.originalXHROpen = XMLHttpRequest.prototype.open;
     this.originalXHRSend = XMLHttpRequest.prototype.send;
     this.originalXHRSetRequestHeader =
@@ -102,10 +102,10 @@ class NetworkListener {
 
   /**
    * Check if URL should be ignored from network monitoring
-   * 
+   *
    * Filters out development-related URLs like Metro bundler, debugger proxy,
    * and symbolication requests to reduce noise in the network logs.
-   * 
+   *
    * @param url - The URL to check
    * @returns True if the URL should be ignored
    */
@@ -126,10 +126,10 @@ class NetworkListener {
 
   /**
    * Parse URL to extract query parameters and clean URL
-   * 
+   *
    * @param url - The URL to parse
    * @returns Object containing cleaned URL and parsed query parameters
-   * 
+   *
    * @performance Uses manual parsing instead of URL constructor for better performance
    */
   private parseUrl(url: string): {
@@ -174,12 +174,12 @@ class NetworkListener {
 
   /**
    * Start intercepting network operations by swizzling fetch and XMLHttpRequest
-   * 
+   *
    * This method replaces the global fetch function and XMLHttpRequest methods
    * with instrumented versions that emit events while preserving original functionality.
-   * 
+   *
    * @throws Will log warnings if already listening
-   * 
+   *
    * @performance Uses method swizzling for minimal runtime overhead
    * @performance Includes request deduplication through ignored URL patterns
    */
@@ -189,21 +189,20 @@ class NetworkListener {
       return;
     }
 
-     
     const self = this;
 
     // Swizzle fetch
-    global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url =
         typeof input === "string"
           ? input
           : input instanceof URL
-            ? input.href
-            : (input as Request).url;
+          ? input.href
+          : (input as Request).url;
 
       // Skip ignored URLs
       if (self.shouldIgnoreUrl(url)) {
-        return self.originalFetch(input, init);
+        return self.originalFetch(input as RequestInfo, init);
       }
 
       const startTime = Date.now();
@@ -256,7 +255,7 @@ class NetworkListener {
       });
 
       try {
-        const response = await this.originalFetch(input, init);
+        const response = await this.originalFetch(input as RequestInfo, init);
         const duration = Date.now() - startTime;
 
         // Clone response to read body
@@ -337,7 +336,7 @@ class NetworkListener {
       url: string,
       async?: boolean,
       user?: string,
-      password?: string,
+      password?: string
     ) {
       // Store request info on the xhr instance
       const xhr = this as ExtendedXMLHttpRequest;
@@ -353,14 +352,14 @@ class NetworkListener {
         url,
         async,
         user,
-        password,
+        password
       ) as void;
     };
 
     // Track request headers
     XMLHttpRequest.prototype.setRequestHeader = function (
       header: string,
-      value: string,
+      value: string
     ) {
       const xhr = this as ExtendedXMLHttpRequest;
       if (xhr._requestHeaders) {
@@ -371,7 +370,8 @@ class NetworkListener {
     };
 
     XMLHttpRequest.prototype.send = function (
-      data?: Document | XMLHttpRequestBodyInit | null,
+      // @ts-ignore - this does exist on native
+      data?: Document | XMLHttpRequestBodyInit | null
     ) {
       const xhr = this as ExtendedXMLHttpRequest;
       const requestId = xhr._requestId;
@@ -484,7 +484,7 @@ class NetworkListener {
             } catch (error) {
               console.warn(
                 "[NetworkListener] Failed to parse response:",
-                error,
+                error
               );
               body = "~~~ unable to read body ~~~";
             }
@@ -576,7 +576,7 @@ class NetworkListener {
 
   /**
    * Stop listening and restore original networking methods
-   * 
+   *
    * This method restores the original fetch and XMLHttpRequest implementations,
    * effectively disabling network monitoring.
    */
@@ -587,7 +587,7 @@ class NetworkListener {
     }
 
     // Restore original methods
-    global.fetch = this.originalFetch;
+    globalThis.fetch = this.originalFetch;
     XMLHttpRequest.prototype.open = this.originalXHROpen;
     XMLHttpRequest.prototype.send = this.originalXHRSend;
     XMLHttpRequest.prototype.setRequestHeader =
@@ -601,7 +601,7 @@ class NetworkListener {
 
   /**
    * Add a listener for network events
-   * 
+   *
    * @param listener - Callback function to handle network events
    * @returns Unsubscribe function to remove the listener
    */
@@ -635,7 +635,7 @@ class NetworkListener {
 
 /**
  * Lazy singleton instance holder for NetworkListener
- * 
+ *
  * This pattern ensures only one NetworkListener instance exists throughout
  * the application lifecycle while deferring instantiation until first use.
  */
@@ -643,7 +643,7 @@ let _networkListener: NetworkListener | null = null;
 
 /**
  * Get or create the singleton NetworkListener instance
- * 
+ *
  * @returns The singleton NetworkListener instance
  */
 const getNetworkListener = () => {
@@ -655,14 +655,14 @@ const getNetworkListener = () => {
 
 /**
  * Access function for the singleton NetworkListener instance
- * 
+ *
  * @returns Function that returns the NetworkListener instance
  */
 export const networkListener = getNetworkListener;
 
 /**
  * Start network traffic monitoring
- * 
+ *
  * @example
  * ```typescript
  * startNetworkListener();
@@ -678,16 +678,16 @@ export const stopNetworkListener = () => getNetworkListener().stopListening();
 
 /**
  * Add a listener for network events
- * 
+ *
  * @param listener - Callback function to handle network events
  * @returns Unsubscribe function to remove the listener
- * 
+ *
  * @example
  * ```typescript
  * const unsubscribe = addNetworkListener((event) => {
  *   console.log(`Network ${event.type}:`, event.request.url);
  * });
- * 
+ *
  * // Later...
  * unsubscribe();
  * ```
@@ -703,14 +703,14 @@ export const removeAllNetworkListeners = () =>
 
 /**
  * Check if network monitoring is currently active
- * 
+ *
  * @returns True if currently intercepting network traffic
  */
 export const isNetworkListening = () => getNetworkListener().isActive;
 
 /**
  * Get the number of registered network event listeners
- * 
+ *
  * @returns Number of active listeners
  */
 export const getNetworkListenerCount = () => getNetworkListener().listenerCount;

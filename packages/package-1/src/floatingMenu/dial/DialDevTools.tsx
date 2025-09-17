@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, ReactNode, FC } from "react";
+import { useEffect, useMemo, useRef, useState, ReactNode, FC } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -95,6 +95,11 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   const iconsProgress = useRef(new Animated.Value(0)).current;
   const glitchOffset = useRef(new Animated.Value(0)).current;
   const pulseScale = useRef(new Animated.Value(1)).current;
+
+  const availableApps = useMemo(
+    () => apps.map(({ id, name, slot }) => ({ id, name, slot })),
+    [apps]
+  );
 
   // Subtle animations
   const floatingAnim = useRef(new Animated.Value(0)).current;
@@ -538,6 +543,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
           // Immediately update local settings for instant feedback
           setLocalSettings(newSettings);
         }}
+        availableApps={availableApps}
       />
     </View>
   );

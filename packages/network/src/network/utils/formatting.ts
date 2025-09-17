@@ -9,4 +9,4 @@ export {
   formatDuration,
   formatHttpStatus,
   getMethodColor,
-} from "@/rn-better-dev-tools/src/shared/utils/formatting";
+} from "@monorepo/shared";

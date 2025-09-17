@@ -13,9 +13,11 @@ export * from "./modals/SwipeIndicator";
 export * from "./query-browser";
 
 // Shared components
-export * from "./shared/VirtualizedDataExplorer";
-export * from "./shared/DataViewer";
-export * from "./shared/TypeLegend";
+export {
+  VirtualizedDataExplorer,
+  DataViewer,
+  TypeLegend,
+} from "@monorepo/shared/dataViewer";
 
 // Mode components
 export * from "./QueryBrowserMode";

@@ -6,15 +6,16 @@ import {
   Download,
   Clock,
   AlertCircle,
-} from "rn-better-dev-tools/icons";
-import { ListItem } from "../../../shared/ui/components";
-import { MethodBadge, TypeBadge } from "../../../shared/ui/components/Badge";
+  ListItem,
+  MethodBadge,
+  TypeBadge,
+  gameUIColors,
+  macOSColors,
+} from "@monorepo/shared";
 import type { NetworkEvent } from "../types";
 import { formatBytes, formatDuration } from "../utils/formatting";
-import { formatRelativeTime } from "@/rn-better-dev-tools/src/shared/utils/time/formatRelativeTime";
-import { useTickEveryMinute } from "../../sentry/hooks/useTickEveryMinute";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { formatRelativeTime } from "@monorepo/shared";
+import { useTickEveryMinute } from "../hooks/useTickEveryMinute";
 
 interface NetworkEventItemCompactProps {
   event: NetworkEvent;
@@ -186,7 +187,7 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
         <ChevronRight size={14} color={macOSColors.text.muted} />
       </ListItem>
     );
-  },
+  }
 );
 
 const styles = StyleSheet.create({

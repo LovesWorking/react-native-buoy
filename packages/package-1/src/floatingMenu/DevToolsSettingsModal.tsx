@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FC } from "react";
+import { useState, useEffect, useCallback, useMemo, FC } from "react";
 import {
   View,
   Text,
@@ -142,7 +142,10 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   initialSettings,
   availableApps = [],
 }) => {
-  const defaultSettings = generateDefaultSettings(availableApps);
+  const defaultSettings = useMemo(
+    () => generateDefaultSettings(availableApps),
+    [availableApps]
+  );
   const [settings, setSettings] = useState<DevToolsSettings>(
     initialSettings || defaultSettings
   );
@@ -153,11 +156,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   const modalHeight = Math.floor(screenHeight * 0.33); // 1/3 of screen height
   const modalWidth = Math.min(screenWidth - 32, 400); // Modal width with padding
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const savedSettings = await safeGetItem(STORAGE_KEY);
       if (savedSettings) {
@@ -171,7 +170,11 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
       console.error("Failed to load dev tools settings:", error);
       setSettings(defaultSettings);
     }
-  };
+  }, [defaultSettings]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const saveSettings = async (newSettings: DevToolsSettings) => {
     try {
