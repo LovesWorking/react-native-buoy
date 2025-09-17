@@ -10,18 +10,12 @@ import React, {
   ReactNode,
 } from "react";
 import { BackHandler, Modal, StyleSheet, View } from "react-native";
-
-type LaunchMode = "self-modal" | "host-modal" | "inline";
-
-type AppInstance = {
-  instanceId: string;
-  id: string;
-  title?: string;
-  component: React.ComponentType<any>;
-  props?: Record<string, unknown>;
-  launchMode: LaunchMode;
-  singleton?: boolean;
-};
+import {
+  AppInstance,
+  LaunchMode,
+  OpenDefinition,
+  resolveOpenAppsState,
+} from "./AppHostLogic";
 
 type AppHostContextValue = {
   openApps: AppInstance[];
@@ -44,20 +38,50 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
     null
   );
   const installedAppsRef = useRef<any[]>([]);
+  const pendingRestoreRef = useRef<string[] | null>(null);
 
   const open: AppHostContextValue["open"] = useCallback((def) => {
-    const instanceId = `${def.id}-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}`;
-    setOpenApps((s) => {
-      if (def.singleton) {
-        const already = s.find((a) => a.id === def.id);
-        if (already) return s;
-      }
-      return [...s, { ...def, instanceId }];
+    let resolvedId = "";
+
+    setOpenApps((current) => {
+      const { apps, instanceId } = resolveOpenAppsState(current, def, () =>
+        `${def.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      );
+      resolvedId = instanceId;
+      return apps;
     });
-    return instanceId;
+
+    return resolvedId;
   }, []);
+
+  const tryRestorePending = useCallback(() => {
+    if (isRestored) return;
+    if (!installedAppsRef.current.length) return;
+
+    const pendingIds = pendingRestoreRef.current;
+    if (!pendingIds || pendingIds.length === 0) {
+      setIsRestored(true);
+      return;
+    }
+
+    pendingRestoreRef.current = null;
+
+    pendingIds.forEach((appId) => {
+      const appDef = installedAppsRef.current.find((app: any) => app.id === appId);
+      if (appDef) {
+        open({
+          id: appDef.id,
+          title: appDef.name,
+          component: appDef.component,
+          props: appDef.props,
+          launchMode: appDef.launchMode || "self-modal",
+          singleton: appDef.singleton,
+        });
+      }
+    });
+
+    setIsRestored(true);
+  }, [isRestored, open]);
 
   // Restore open apps on mount
   useEffect(() => {
@@ -66,35 +90,21 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
         const saved = await safeGetItem(STORAGE_KEY_OPEN_APPS);
         if (saved) {
           const savedApps = JSON.parse(saved) as string[];
-          // Wait a bit for apps to be registered
-          setTimeout(() => {
-            savedApps.forEach((appId) => {
-              // Find the app definition from registered apps
-              const appDef = installedAppsRef.current.find(
-                (app: any) => app.id === appId
-              );
-              if (appDef) {
-                open({
-                  id: appDef.id,
-                  title: appDef.name,
-                  component: appDef.component,
-                  props: appDef.props,
-                  launchMode: appDef.launchMode || "self-modal",
-                  singleton: appDef.singleton,
-                });
-              }
-            });
-          }, 100);
+          if (savedApps.length) {
+            pendingRestoreRef.current = savedApps;
+            tryRestorePending();
+            return;
+          }
         }
       } catch (error) {
         console.warn("Failed to restore open apps:", error);
-      } finally {
-        setIsRestored(true);
       }
+
+      setIsRestored(true);
     };
 
     restoreOpenApps();
-  }, [open]);
+  }, [tryRestorePending]);
 
   // Save open apps with debounce
   useEffect(() => {
@@ -119,9 +129,13 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
   }, [openApps, isRestored]);
 
   // Store reference to installed apps for restoration
-  const registerApps = useCallback((apps: any[]) => {
-    installedAppsRef.current = apps;
-  }, []);
+  const registerApps = useCallback(
+    (apps: any[]) => {
+      installedAppsRef.current = apps;
+      tryRestorePending();
+    },
+    [tryRestorePending]
+  );
 
   const close: AppHostContextValue["close"] = useCallback((instanceId) => {
     setOpenApps((s) => {

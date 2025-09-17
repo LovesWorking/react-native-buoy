@@ -12,14 +12,18 @@ _Last updated: 2025-02-14_
 
 ## 🔜 In Flight
 - **File decomposition** – split `floatingTools.tsx` into smaller modules (persistence hook, presentation component, helpers) for maintainability.
+- **Singleton handling** – update `AppHost.open` so relaunching a singleton returns the existing instance id and promotes it to the top.
 
 ## ⏭️ Up Next
+- **Restore without timers** – remove the 100 ms `setTimeout` in `AppHost` and gate restoration on explicit app registration.
 - **Dial animation cleanup** – stop unused loops (`circuitOpacity`, always-on `Animated.loop`) to reduce idle work on low-end devices.
 - **Accessibility polish** – add `accessibilityRole/Label` to the dial button and grip handle, ensure the settings modal toggles announce state.
+- **Stronger typing** – replace `ComponentType<any>` / `registerApps(apps: any[])` with generics so plug-ins are type-checked at compile time.
+- **Clean persistence refs** – drop the unused `saveTimeoutRef` in `floatingTools.tsx` now that the hook owns debouncing.
 
 ## 📌 Backlog
-- Auto-unhide bubble when hosted modals close.
 - Orientation/Dimensions listener so saved positions clamp correctly on rotation.
-- Document plug-and-play API (`InstalledApp.component`, `launchMode`) in docs.
+- Host-modal ergonomics (safe-area, keyboard avoidance) for AppHost-wrapped tools.
+- Telemetry hooks (`onToolOpened` / `onToolClosed`) for downstream analytics.
 
-_The plan is to tackle the drag-to-hide fix next, then circle back to the “Up Next” list unless priorities shift._
+_Next focus: land the singleton + restoration fixes, then knock out the animation/accessibility cleanup items._
