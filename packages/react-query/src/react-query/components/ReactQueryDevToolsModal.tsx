@@ -1,0 +1,83 @@
+import { useCallback, useState } from "react";
+import type { QueryKey } from "@tanstack/react-query";
+import { ReactQueryModal } from "./modals/ReactQueryModal";
+
+export interface ReactQueryDevToolsModalProps {
+  visible: boolean;
+  onClose: () => void;
+  enableSharedModalDimensions?: boolean;
+}
+
+type ReactQueryModalProps = React.ComponentProps<typeof ReactQueryModal>;
+type OnQuerySelect = NonNullable<ReactQueryModalProps["onQuerySelect"]>;
+type OnMutationSelect = NonNullable<ReactQueryModalProps["onMutationSelect"]>;
+type OnFilterChange = NonNullable<ReactQueryModalProps["onFilterChange"]>;
+type OnTabChange = NonNullable<ReactQueryModalProps["onTabChange"]>;
+
+export function ReactQueryDevToolsModal({
+  visible,
+  onClose,
+  enableSharedModalDimensions = true,
+}: ReactQueryDevToolsModalProps) {
+  const [selectedQueryKey, setSelectedQueryKey] = useState<QueryKey | undefined>(
+    undefined,
+  );
+  const [selectedMutationId, setSelectedMutationId] = useState<
+    number | undefined
+  >(undefined);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"queries" | "mutations">(
+    "queries",
+  );
+
+  const resetState = useCallback(() => {
+    setSelectedQueryKey(undefined);
+    setSelectedMutationId(undefined);
+    setActiveFilter(null);
+    setActiveTab("queries");
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetState();
+    onClose();
+  }, [onClose, resetState]);
+
+  const handleQuerySelect = useCallback<OnQuerySelect>((query) => {
+    setSelectedQueryKey(query?.queryKey);
+  }, []);
+
+  const handleMutationSelect = useCallback<OnMutationSelect>((mutation) => {
+    setSelectedMutationId(mutation?.mutationId);
+  }, []);
+
+  const handleFilterChange = useCallback<OnFilterChange>((filter) => {
+    setActiveFilter(filter);
+  }, []);
+
+  const handleTabChange = useCallback<OnTabChange>((tab) => {
+    setActiveTab(tab);
+    setActiveFilter(null);
+    setSelectedQueryKey(undefined);
+    setSelectedMutationId(undefined);
+  }, []);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <ReactQueryModal
+      visible={visible}
+      selectedQueryKey={selectedQueryKey}
+      selectedMutationId={selectedMutationId}
+      onQuerySelect={handleQuerySelect}
+      onMutationSelect={handleMutationSelect}
+      onClose={handleClose}
+      activeFilter={activeFilter}
+      onFilterChange={handleFilterChange}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      enableSharedModalDimensions={enableSharedModalDimensions}
+    />
+  );
+}

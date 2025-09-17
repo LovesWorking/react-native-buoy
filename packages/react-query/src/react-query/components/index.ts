@@ -26,3 +26,4 @@ export * from "./QuerySelector";
 export * from "./QueryDebugInfo";
 export * from "./WifiToggle";
 export * from "./ReactQuerySection";
+export { ReactQueryDevToolsModal } from "./ReactQueryDevToolsModal";
