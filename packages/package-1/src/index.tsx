@@ -5,6 +5,13 @@ import { View, Text, StyleSheet } from "react-native";
 export { FloatingMenu } from "./floatingMenu/FloatingMenu";
 export * from "./floatingMenu/types";
 
+// Export AppHost components
+export {
+  AppHostProvider,
+  AppOverlay,
+  useAppHost,
+} from "./floatingMenu/AppHost";
+
 export const Package1Component = () => {
   return (
     <View>

@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
 import { FloatingTools, UserRole, UserStatus } from "./floatingTools";
 import type {
@@ -10,6 +10,7 @@ import { DialDevTools } from "./dial/DialDevTools";
 import { Environment } from "@monorepo/shared/lib/typescript/types/types";
 import { EnvironmentIndicator, gameUIColors } from "@monorepo/shared";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
+import { useAppHost } from "./AppHost";
 
 export interface FloatingMenuProps {
   apps: InstalledApp[];
@@ -30,9 +31,13 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 }) => {
   const [internalHidden, setInternalHidden] = useState(false);
   const [showDial, setShowDial] = useState(false);
+
+  const { isAnyOpen, open } = useAppHost();
+  const wasAppOpenRef = useRef(isAnyOpen);
+
   const isHidden = useMemo(
-    () => Boolean(hidden ?? (internalHidden || showDial)),
-    [hidden, internalHidden, showDial]
+    () => Boolean(hidden ?? (internalHidden || showDial || isAnyOpen)),
+    [hidden, internalHidden, showDial, isAnyOpen]
   );
   const { settings: devToolsSettings } = useDevToolsSettings();
 
@@ -45,6 +50,14 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
     } as FloatingMenuActions;
   }, [actions]);
 
+  useEffect(() => {
+    if (wasAppOpenRef.current && !isAnyOpen) {
+      setInternalHidden(false);
+      setShowDial(false);
+    }
+    wasAppOpenRef.current = isAnyOpen;
+  }, [isAnyOpen]);
+
   // Filter function for floating tools based on settings
   const isFloatingEnabled = (id: string) => {
     if (!devToolsSettings) return true;
@@ -55,15 +68,14 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   // Dial is the default/only layout
 
   const handlePress = (app: InstalledApp) => {
-    try {
-      const result = app.onPress({ state, actions: mergedActions });
-      if (result && typeof (result as Promise<void>).then === "function") {
-        setInternalHidden(true);
-        (result as Promise<void>).finally(() => setInternalHidden(false));
-      }
-    } catch {
-      // ignore errors from user handlers; do not hide in this case
-    }
+    open({
+      id: app.id,
+      title: app.name,
+      component: app.component,
+      props: app.props,
+      launchMode: app.launchMode ?? "self-modal",
+      singleton: app.singleton ?? true,
+    });
   };
 
   return (

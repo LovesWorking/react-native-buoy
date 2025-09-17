@@ -21,6 +21,7 @@ import type {
   FloatingMenuActions,
   FloatingMenuState,
 } from "../types";
+import { useAppHost } from "../AppHost";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CIRCLE_SIZE = Math.min(SCREEN_WIDTH * 0.75, 320); // Max 320px for better fit
@@ -56,6 +57,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   const [selectedIcon, setSelectedIcon] = useState(-1);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const { settings: hookSettings, refreshSettings } = useDevToolsSettings();
+  const { open } = useAppHost();
   // Initialize with external settings if provided, otherwise use hook settings
   const [localSettings, setLocalSettings] = useState(
     externalSettings || hookSettings
@@ -136,6 +138,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
         onPress: () => {},
       };
     }
+
     return {
       id: a.id,
       name: a.name,
@@ -144,7 +147,17 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
           ? a.icon({ slot: "dial", size: 32, state, actions })
           : a.icon,
       color: a.color ?? gameUIColors.primary,
-      onPress: () => a.onPress({ state, actions }),
+      onPress: () => {
+        open({
+          id: a.id,
+          title: a.name,
+          component: a.component,
+          props: a.props,
+          launchMode: a.launchMode ?? "self-modal",
+          singleton: a.singleton ?? true,
+        });
+        onClose?.();
+      },
     };
   });
 
