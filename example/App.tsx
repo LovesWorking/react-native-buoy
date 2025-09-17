@@ -15,6 +15,7 @@ import {
   EnvVarsModal,
 } from "@monorepo/package-2";
 import { EnvLaptopIcon } from "@monorepo/shared";
+import { ReactQueryComponent } from "@monorepo/react-query";
 
 // Test AsyncStorage import
 let asyncStorageStatus = "❌ Module not found";
@@ -97,6 +98,8 @@ export default function App() {
         <AppOverlay />
 
         <Text style={styles.title}>Monorepo Test App</Text>
+        <ReactQueryComponent />
+
         <ScrollView style={styles.scrollView}>
           <Text style={styles.subtitle}>Packages loaded via workspace:</Text>
           <Package1Component />
