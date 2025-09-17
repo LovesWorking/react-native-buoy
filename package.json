@@ -25,7 +25,8 @@
     "test:packages": "lerna run test --stream",
     "fresh": "pnpm run clean && pnpm install && pnpm run build",
     "zip": "bash scripts/gpt5-zip-repo.sh",
-    "zip:review": "bash scripts/gpt5-zip-repo.sh ./gpt5-review.zip"
+    "zip:review": "bash scripts/gpt5-zip-repo.sh ./gpt5-review.zip",
+    "screenshot": "bash scripts/screenshot.sh"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -8,16 +8,50 @@ import {
   Dimensions,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { pokemonNames, searchPokemon } from "./pokemonNames";
 import { PokemonCardSwipeable } from "./PokemonCardSwipeable";
+import { PokedexTrainerCollection } from "./PokedexTrainerCollection";
 import { useSafeAreaInsets } from "@monorepo/shared/hooks";
+import { safeGetItem, safeSetItem } from "@monorepo/shared";
+import { usePokemon } from "./usePokemon";
+import { PokemonTheme } from "./constants/PokemonTheme";
 
 const { width, height } = Dimensions.get("window");
+
+const SAVED_POKEMON_STORAGE_KEY = "@devtools/pokemon/saved";
+const SAVED_POKEMON_QUERY_KEY = ["pokemon", "saved"] as const;
+
+type LastActionState =
+  | { type: "saving"; pokemonId: string }
+  | { type: "saved"; pokemonId: string }
+  | { type: "skipped"; pokemonId: string }
+  | { type: "error"; pokemonId: string; message?: string }
+  | null;
+
+type ToastMeta = {
+  title: string;
+  subtitle: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  gradient: [string, string];
+};
+
+function formatPokemonName(name: string): string {
+  if (!name) return "";
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
 
 // Get random Pokemon from our database
 function getRandomPokemonNames(count: number): string[] {
@@ -46,6 +80,160 @@ export function PokemonScreen() {
     useState<string>("electric");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Auto-scrolling carousel animation
+  const scrollX = useRef(new Animated.Value(0)).current;
+
+  const queryClient = useQueryClient();
+  const [lastAction, setLastAction] = useState<LastActionState>(null);
+  const actionToastAnim = useRef(new Animated.Value(0)).current;
+
+  const savedPokemonQuery = useQuery<string[]>({
+    queryKey: SAVED_POKEMON_QUERY_KEY,
+    queryFn: async () => {
+      const raw = await safeGetItem(SAVED_POKEMON_STORAGE_KEY);
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((name): name is string => typeof name === "string");
+        }
+      } catch (error) {
+        console.warn("Failed to parse saved Pokémon from storage", error);
+      }
+      return [];
+    },
+    initialData: [],
+    staleTime: 1000 * 10,
+  });
+
+  const savePokemonMutation = useMutation<
+    { pokemonId: string; savedList: string[] },
+    Error,
+    string
+  >({
+    mutationKey: ["pokemon", "save"],
+    mutationFn: async (pokemonId: string) => {
+      const raw = await safeGetItem(SAVED_POKEMON_STORAGE_KEY);
+      let savedList: string[] = [];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            savedList = parsed.filter((name): name is string => typeof name === "string");
+          }
+        } catch (error) {
+          console.warn("Failed to parse saved Pokémon list", error);
+        }
+      }
+
+      const normalized = pokemonId.toLowerCase();
+      const uniqueList = [normalized, ...savedList.filter((name) => name !== normalized)];
+      const trimmedList = uniqueList.slice(0, 24);
+      await safeSetItem(
+        SAVED_POKEMON_STORAGE_KEY,
+        JSON.stringify(trimmedList)
+      );
+
+      return { pokemonId: normalized, savedList: trimmedList };
+    },
+    onMutate: async (pokemonId) => {
+      setLastAction({ type: "saving", pokemonId });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    },
+    onSuccess: ({ savedList, pokemonId }) => {
+      queryClient.setQueryData(SAVED_POKEMON_QUERY_KEY, savedList);
+      setLastAction({ type: "saved", pokemonId });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => {}
+      );
+    },
+    onError: (error, pokemonId) => {
+      setLastAction({
+        type: "error",
+        pokemonId,
+        message:
+          error instanceof Error ? error.message : "Could not save Pokémon.",
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(
+        () => {}
+      );
+    },
+  });
+
+  const deletePokemonMutation = useMutation<
+    { pokemonId: string; savedList: string[] },
+    Error,
+    string
+  >({
+    mutationKey: ["pokemon", "delete"],
+    mutationFn: async (pokemonId: string) => {
+      const raw = await safeGetItem(SAVED_POKEMON_STORAGE_KEY);
+      let savedList: string[] = [];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            savedList = parsed.filter((name): name is string => typeof name === "string");
+          }
+        } catch (error) {
+          console.warn("Failed to parse saved Pokémon list", error);
+        }
+      }
+
+      const normalized = pokemonId.toLowerCase();
+      const filteredList = savedList.filter((name) => name !== normalized);
+      await safeSetItem(
+        SAVED_POKEMON_STORAGE_KEY,
+        JSON.stringify(filteredList)
+      );
+
+      return { pokemonId: normalized, savedList: filteredList };
+    },
+    onSuccess: ({ savedList, pokemonId }) => {
+      queryClient.setQueryData(SAVED_POKEMON_QUERY_KEY, savedList);
+      setLastAction({ type: "skipped", pokemonId });
+    },
+    onError: (error, pokemonId) => {
+      setLastAction({
+        type: "error",
+        pokemonId,
+        message:
+          error instanceof Error ? error.message : "Could not release Pokémon.",
+      });
+    },
+  });
+
+  const hideToast = useCallback(() => {
+    Animated.timing(actionToastAnim, {
+      toValue: 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setLastAction(null);
+      }
+    });
+  }, [actionToastAnim, setLastAction]);
+
+  useEffect(() => {
+    if (!lastAction) {
+      return;
+    }
+
+    actionToastAnim.stopAnimation();
+    actionToastAnim.setValue(0);
+    Animated.timing(actionToastAnim, {
+      toValue: 1,
+      duration: 240,
+      useNativeDriver: true,
+    }).start();
+
+    const timeout = setTimeout(hideToast, 3200);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [lastAction, actionToastAnim, hideToast]);
 
   // Only keep essential animations for effects
   const floatAnim = useRef(new Animated.Value(0)).current;
@@ -235,6 +423,84 @@ export function PokemonScreen() {
     [pokemonStack]
   );
 
+  const savedPokemon = savedPokemonQuery.data ?? [];
+  // Duplicate the array for infinite scroll effect
+  const displayPokemon = savedPokemon.length > 0
+    ? [...savedPokemon, ...savedPokemon, ...savedPokemon]
+    : [];
+
+  // Auto-scroll animation for Pokemon collection
+  useEffect(() => {
+    if (displayPokemon.length > 3) {
+      const itemWidth = 84; // 72px circle + 12px margin
+      const totalWidth = displayPokemon.length * itemWidth / 3; // Divided by 3 for tripled array
+
+      Animated.loop(
+        Animated.timing(scrollX, {
+          toValue: -totalWidth,
+          duration: displayPokemon.length * 2000, // Slower, smoother scroll
+          useNativeDriver: true,
+        }),
+        { resetBeforeIteration: true }
+      ).start();
+    }
+    return () => {
+      scrollX.stopAnimation();
+    };
+  }, [displayPokemon.length, scrollX]);
+
+  const toastMeta: ToastMeta | null = lastAction
+    ? (() => {
+        const displayName = formatPokemonName(lastAction.pokemonId);
+
+        if (lastAction.type === "saving") {
+          return {
+            title: `Cataloguing ${displayName}`,
+            subtitle: "Submitting entry to Trainer Log…",
+            icon: "time-outline" as keyof typeof Ionicons.glyphMap,
+            gradient: [
+              "rgba(59,130,246,0.8)",
+              "rgba(30,64,175,0.75)",
+            ],
+          };
+        }
+
+        if (lastAction.type === "saved") {
+          return {
+            title: `${displayName} joined your squad!`,
+            subtitle: "React Query mutation + storage synced.",
+            icon: "sparkles" as keyof typeof Ionicons.glyphMap,
+            gradient: [
+              "rgba(16,185,129,0.82)",
+              "rgba(4,120,87,0.75)",
+            ],
+          };
+        }
+
+        if (lastAction.type === "skipped") {
+          return {
+            title: `Released ${displayName}`,
+            subtitle: "No log entry created.",
+            icon: "close-circle" as keyof typeof Ionicons.glyphMap,
+            gradient: [
+              "rgba(239,68,68,0.8)",
+              "rgba(153,27,27,0.7)",
+            ],
+          };
+        }
+
+        return {
+          title: `Couldn't save ${displayName}`,
+          subtitle: lastAction.message || "Try again after checking the link cable.",
+          icon: "alert-circle" as keyof typeof Ionicons.glyphMap,
+          gradient: [
+            "rgba(248,113,113,0.82)",
+            "rgba(185,28,28,0.75)",
+          ],
+        };
+      })()
+    : null;
+
   return (
     <View style={styles.container}>
       {/* Premium Animated Background */}
@@ -242,6 +508,49 @@ export function PokemonScreen() {
         colors={["#0A0E27", "#1a1f3a", "#2d1b69"]}
         style={StyleSheet.absoluteFillObject}
       />
+
+      {toastMeta ? (
+        <Animated.View
+          style={[
+            styles.actionToast,
+            {
+              top: insets.top + 16,
+              opacity: actionToastAnim,
+              transform: [
+                {
+                  translateY: actionToastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-12, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={toastMeta.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.toastGradient}
+          >
+            <BlurView intensity={40} tint="dark" style={styles.toastBlur}>
+              <View style={styles.toastContent}>
+                <View style={styles.toastIconBubble}>
+                  <Ionicons
+                    name={toastMeta.icon}
+                    size={18}
+                    color="#FFFFFF"
+                  />
+                </View>
+                <View style={styles.toastTextBlock}>
+                  <Text style={styles.toastTitle}>{toastMeta.title}</Text>
+                  <Text style={styles.toastSubtitle}>{toastMeta.subtitle}</Text>
+                </View>
+              </View>
+            </BlurView>
+          </LinearGradient>
+        </Animated.View>
+      ) : null}
 
       {/* Animated Background Orbs */}
       <Animated.View
@@ -616,12 +925,21 @@ export function PokemonScreen() {
                     pokemonId={pokemonId}
                     index={stackIndex}
                     isActive={stackIndex === 0}
-                    onSwipe={() => {
+                    onSwipe={({ direction, pokemonId: swipedPokemonId }) => {
                       if (stackIndex === 0) {
                         setCurrentIndex((prev) => prev + 1);
                         // Add a new random Pokemon to the end of the stack
                         const newPokemon = getRandomPokemonNames(1);
                         setPokemonStack((prev) => [...prev, ...newPokemon]);
+                      }
+
+                      if (direction === "right") {
+                        savePokemonMutation.mutate(swipedPokemonId);
+                      } else {
+                        setLastAction({ type: "skipped", pokemonId: swipedPokemonId });
+                        Haptics.impactAsync(
+                          Haptics.ImpactFeedbackStyle.Light
+                        ).catch(() => {});
                       }
                     }}
                     onTypeChange={setCurrentPokemonType}
@@ -657,6 +975,12 @@ export function PokemonScreen() {
             />
           ))}
         </View>
+
+        {/* Pokedex Trainer Collection */}
+        <PokedexTrainerCollection
+          shimmerAnim={shimmerAnim}
+          floatAnim={floatAnim}
+        />
       </ScrollView>
     </View>
   );
@@ -837,6 +1161,171 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 0.5,
   },
+  actionToast: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    zIndex: 10000,
+  },
+  toastGradient: {
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  toastBlur: {
+    padding: 14,
+    borderRadius: 20,
+    backgroundColor: "rgba(10, 10, 30, 0.6)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  toastContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  toastIconBubble: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.35)",
+  },
+  toastTextBlock: {
+    flex: 1,
+  },
+  toastTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.4,
+  },
+  toastSubtitle: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "rgba(226,232,255,0.8)",
+    letterSpacing: 0.3,
+  },
+  trainerLogSection: {
+    marginHorizontal: 18,
+    marginTop: 8,
+  },
+  trainerLogGradient: {
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(59,130,246,0.25)",
+  },
+  trainerLogBlur: {
+    padding: 18,
+    borderRadius: 24,
+    backgroundColor: "rgba(10, 12, 30, 0.75)",
+    gap: 14,
+  },
+  trainerLogHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  trainerLogTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  trainerLogIconBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,215,0,0.35)",
+  },
+  trainerLogTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.6,
+  },
+  trainerLogCount: {
+    fontSize: 12,
+    color: "rgba(226,232,255,0.7)",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  trainerLogStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  mutationBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  mutationBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  mutationBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  trainerSpinner: {
+    marginLeft: 4,
+  },
+  trainerChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  trainerChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  trainerChipText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0F172A",
+    letterSpacing: 0.6,
+  },
+  trainerEmptyText: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 13,
+    fontStyle: "italic",
+    color: "rgba(226,232,255,0.7)",
+  },
+  trainerMoreText: {
+    fontSize: 12,
+    color: "rgba(148,163,184,0.85)",
+    marginTop: -4,
+    letterSpacing: 0.6,
+  },
+  trainerErrorText: {
+    fontSize: 12,
+    color: "rgba(252,165,165,0.95)",
+    letterSpacing: 0.5,
+  },
   backgroundOrb: {
     position: "absolute",
     width: 300,
@@ -897,5 +1386,345 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "600",
     letterSpacing: 0.5,
+  },
+  // New Pokedex Styles
+  pokedexContainer: {
+    marginHorizontal: 15,
+    marginTop: 10,
+  },
+  pokedexGradient: {
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(10,15,40,0.4)",
+  },
+  pokedexBlur: {
+    padding: 20,
+    borderRadius: 26,
+  },
+  pokedexHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  pokedexTitleSection: {
+    flex: 1,
+    alignItems: "center",
+  },
+  pokedexHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  pokedexHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  pokeballContainer: {
+    width: 36,
+    height: 36,
+    position: "relative",
+  },
+  pokeballTop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 18,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+  },
+  pokeballBottom: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 18,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+  },
+  pokeballCenter: {
+    position: "absolute",
+    top: 14,
+    left: 0,
+    right: 0,
+    height: 8,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pokeballButton: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FFF",
+    borderWidth: 3,
+    borderColor: "#000",
+  },
+  pokedexTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#FFD700",
+    letterSpacing: 2,
+    textShadowColor: "rgba(255,215,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  pokedexSubtitle: {
+    fontSize: 10,
+    color: "rgba(255,255,255,0.6)",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  statusIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  countBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  countBadgeInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  countNumber: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+    textShadowColor: "rgba(0,0,0,0.2)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  carouselContainer: {
+    height: 100,
+    marginHorizontal: -20,
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  carouselMask: {
+    flex: 1,
+    position: "relative",
+  },
+  carouselTrack: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    height: "100%",
+  },
+  carouselFade: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: "none",
+  },
+  // Circular Pokemon entries
+  pokemonCircle: {
+    width: 72,
+    height: 72,
+    marginRight: 12,
+    position: "relative",
+  },
+  circleGlowBorder: {
+    position: "absolute",
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: 39,
+    zIndex: -1,
+  },
+  glowBorderGradient: {
+    flex: 1,
+    borderRadius: 39,
+  },
+  circleGlowRing: {
+    position: "absolute",
+    top: -8,
+    left: -8,
+    right: -8,
+    bottom: -8,
+    borderRadius: 44,
+    zIndex: -1,
+  },
+  circleGlowGradient: {
+    flex: 1,
+    borderRadius: 44,
+  },
+  circleGradient: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  circleContent: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(239,68,68,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#EF4444",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+  },
+  circleShimmer: {
+    position: "absolute",
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    borderRadius: 46,
+  },
+  shimmerInner: {
+    flex: 1,
+    borderRadius: 46,
+  },
+  circleImage: {
+    width: 56,
+    height: 56,
+    zIndex: 1,
+  },
+  miniPokeball: {
+    width: 32,
+    height: 32,
+    position: "relative",
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  miniPokeballHalf: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 16,
+  },
+  miniPokeballBottom: {
+    bottom: 0,
+  },
+  miniPokeballCenter: {
+    position: "absolute",
+    top: 13,
+    left: 0,
+    right: 0,
+    height: 6,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  miniPokeballButton: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFF",
+    borderWidth: 2,
+    borderColor: "#000",
+  },
+  emptyStateContainer: {
+    width: width - 80,
+    height: 140,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyStateBg: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255,215,0,0.2)",
+    borderStyle: "dashed",
+    gap: 8,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "rgba(255,215,0,0.7)",
+    letterSpacing: 0.5,
+  },
+  emptyStateSubtext: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.5)",
+    letterSpacing: 0.5,
+  },
+  scrollIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 8,
+  },
+  scrollIndicatorText: {
+    fontSize: 11,
+    color: "rgba(255,215,0,0.5)",
+    letterSpacing: 0.5,
+    fontStyle: "italic",
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "rgba(239,68,68,0.1)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(239,68,68,0.3)",
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#FF6B6B",
+    letterSpacing: 0.3,
   },
 });
