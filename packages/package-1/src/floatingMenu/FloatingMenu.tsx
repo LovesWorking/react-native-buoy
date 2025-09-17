@@ -32,7 +32,7 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   const [internalHidden, setInternalHidden] = useState(false);
   const [showDial, setShowDial] = useState(false);
 
-  const { isAnyOpen, open } = useAppHost();
+  const { isAnyOpen, open, registerApps } = useAppHost();
   const wasAppOpenRef = useRef(isAnyOpen);
 
   const isHidden = useMemo(
@@ -40,6 +40,13 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
     [hidden, internalHidden, showDial, isAnyOpen]
   );
   const { settings: devToolsSettings } = useDevToolsSettings();
+
+  // Register apps with AppHost for persistence
+  useEffect(() => {
+    if (registerApps) {
+      registerApps(apps);
+    }
+  }, [apps, registerApps]);
 
   const mergedActions = useMemo(() => {
     return {
