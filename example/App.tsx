@@ -1,30 +1,24 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useMemo, useRef } from "react";
 import {
-  Package1Component,
-  FloatingMenu,
-  type InstalledApp,
   AppHostProvider,
   AppOverlay,
+  FloatingMenu,
+  Package1Component,
+  type InstalledApp,
 } from "@monorepo/package-1";
 import {
+  EnvVarsModal,
   createEnvVarConfig,
   envVar,
-  type UserRole,
   type Environment,
-  EnvVarsModal,
+  type UserRole,
 } from "@monorepo/package-2";
 import { EnvLaptopIcon, ReactQueryIcon } from "@monorepo/shared";
-import { ReactQueryComponent } from "@monorepo/react-query";
-import { ReactQueryModal } from "@monorepo/react-query/react-query";
-import {
-  QueryClient,
-  QueryClientProvider,
-  type Query,
-  type Mutation,
-  type QueryKey,
-} from "@tanstack/react-query";
+import { ReactQueryDevToolsModal } from "@monorepo/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import BankingShowcase from "./components/BankingShowcase";
 
 // Test AsyncStorage import
 let asyncStorageStatus = "❌ Module not found";
@@ -34,84 +28,6 @@ try {
 } catch (error) {
   asyncStorageStatus = `❌ Module not found: ${error}`;
 }
-
-type ReactQueryDevToolsAppProps = {
-  visible: boolean;
-  onClose: () => void;
-  enableSharedModalDimensions?: boolean;
-};
-
-const ReactQueryDevToolsApp = ({
-  visible,
-  onClose,
-  enableSharedModalDimensions = true,
-}: ReactQueryDevToolsAppProps) => {
-  type ReactQueryModalProps = React.ComponentProps<typeof ReactQueryModal>;
-  type OnQuerySelect = NonNullable<ReactQueryModalProps["onQuerySelect"]>;
-  type OnMutationSelect = NonNullable<ReactQueryModalProps["onMutationSelect"]>;
-  type OnTabChange = ReactQueryModalProps["onTabChange"];
-
-  const [selectedQueryKey, setSelectedQueryKey] = useState<QueryKey | undefined>(
-    undefined,
-  );
-  const [selectedMutationId, setSelectedMutationId] = useState<
-    number | undefined
-  >(undefined);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"queries" | "mutations">(
-    "queries",
-  );
-
-  const handleClose = useCallback(() => {
-    setSelectedQueryKey(undefined);
-    setSelectedMutationId(undefined);
-    setActiveFilter(null);
-    setActiveTab("queries");
-    onClose();
-  }, [onClose]);
-
-  const handleQuerySelect = useCallback<OnQuerySelect>((query) => {
-      setSelectedQueryKey(query?.queryKey);
-    }, []);
-
-  const handleMutationSelect = useCallback<OnMutationSelect>((mutation) => {
-      setSelectedMutationId(mutation?.mutationId);
-    }, []);
-
-  const handleTabChange = useCallback<OnTabChange>((tab) => {
-    setActiveTab(tab);
-    setActiveFilter(null);
-    setSelectedQueryKey(undefined);
-    setSelectedMutationId(undefined);
-  }, []);
-
-  const handleFilterChange = useCallback<NonNullable<ReactQueryModalProps["onFilterChange"]>>(
-    (filter) => {
-      setActiveFilter(filter);
-    },
-    [],
-  );
-
-  if (!visible) {
-    return null;
-  }
-
-  return (
-    <ReactQueryModal
-      visible={visible}
-      selectedQueryKey={selectedQueryKey}
-      selectedMutationId={selectedMutationId}
-      onQuerySelect={handleQuerySelect}
-      onMutationSelect={handleMutationSelect}
-      onClose={handleClose}
-      activeFilter={activeFilter}
-      onFilterChange={handleFilterChange}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-      enableSharedModalDimensions={enableSharedModalDimensions}
-    />
-  );
-};
 
 export default function App() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -192,7 +108,7 @@ export default function App() {
             noBackground
           />
         ),
-        component: ReactQueryDevToolsApp,
+        component: ReactQueryDevToolsModal,
         props: {
           enableSharedModalDimensions: true,
         },
@@ -212,13 +128,17 @@ export default function App() {
             userRole={userRole}
           />
 
-        {/* AppOverlay renders the currently open app */}
+          {/* AppOverlay renders the currently open app */}
           <AppOverlay />
 
           <Text style={styles.title}>Monorepo Test App</Text>
-          <ReactQueryComponent />
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <BankingShowcase />
 
-          <ScrollView style={styles.scrollView}>
             <Text style={styles.subtitle}>Packages loaded via workspace:</Text>
             <Package1Component />
 
@@ -262,5 +182,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 48,
   },
 });
