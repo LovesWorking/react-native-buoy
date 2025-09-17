@@ -15,8 +15,9 @@ import {
   type Environment,
   type UserRole,
 } from "@monorepo/package-2";
-import { EnvLaptopIcon, ReactQueryIcon } from "@monorepo/shared";
+import { EnvLaptopIcon, ReactQueryIcon, Globe } from "@monorepo/shared";
 import { ReactQueryDevToolsModal } from "@monorepo/react-query";
+import { NetworkModal } from "@monorepo/network";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import BankingShowcase from "./components/BankingShowcase";
 
@@ -109,6 +110,18 @@ export default function App() {
           />
         ),
         component: ReactQueryDevToolsModal,
+        props: {
+          enableSharedModalDimensions: true,
+        },
+      },
+      {
+        id: "network",
+        name: "NET",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <Globe size={size} color="#38bdf8" />
+        ),
+        component: NetworkModal,
         props: {
           enableSharedModalDimensions: true,
         },
