@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,10 @@ interface PokemonCardSwipeableProps {
   pokemonId: string;
   index: number;
   isActive: boolean;
-  onSwipe: () => void;
+  onSwipe: (result: {
+    direction: "left" | "right";
+    pokemonId: string;
+  }) => void;
   shimmerAnim: any;
   floatAnim: any;
   cardGlowAnim: any;
@@ -51,6 +54,11 @@ export function PokemonCardSwipeable({
   const opacity = useRef(
     new Animated.Value(index === 0 ? 1 : index < 3 ? 0.8 : 0)
   ).current;
+  const decisionProgress = useRef(new Animated.Value(0)).current;
+  const swipeDirectionRef = useRef<"left" | "right" | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<
+    "left" | "right" | null
+  >(null);
 
   useEffect(() => {
     if (index === 0) {
@@ -105,6 +113,23 @@ export function PokemonCardSwipeable({
           // Manual interpolation for opacity
           const opacityValue = 1 - (Math.abs(gestureState.dx) / width) * 0.7;
           opacity.setValue(Math.max(0.3, Math.min(1, opacityValue)));
+
+          const absoluteDx = Math.abs(gestureState.dx);
+          const nextProgress = Math.min(1, absoluteDx / (width * 0.45));
+          decisionProgress.setValue(nextProgress);
+
+          if (absoluteDx < 12) {
+            if (swipeDirectionRef.current !== null) {
+              swipeDirectionRef.current = null;
+              setSwipeDirection(null);
+            }
+          } else {
+            const nextDirection = gestureState.dx >= 0 ? "right" : "left";
+            if (swipeDirectionRef.current !== nextDirection) {
+              swipeDirectionRef.current = nextDirection;
+              setSwipeDirection(nextDirection);
+            }
+          }
         },
         onPanResponderRelease: (_evt, gestureState) => {
           if (!isActive) return;
@@ -118,6 +143,7 @@ export function PokemonCardSwipeable({
 
           if (shouldSwipe) {
             const direction = gestureState.dx > 0 ? 1 : -1;
+            const directionLabel = direction === 1 ? "right" : "left";
 
             Animated.parallel([
               Animated.timing(translateX, {
@@ -140,9 +166,17 @@ export function PokemonCardSwipeable({
                 duration: 300,
                 useNativeDriver: true,
               }),
+              Animated.timing(decisionProgress, {
+                toValue: 1,
+                duration: 220,
+                useNativeDriver: true,
+              }),
             ]).start(() => {
               // Call onSwipe after animation completes
-              onSwipe();
+              onSwipe({ direction: directionLabel, pokemonId });
+              decisionProgress.setValue(0);
+              swipeDirectionRef.current = null;
+              setSwipeDirection(null);
             });
 
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -203,10 +237,28 @@ export function PokemonCardSwipeable({
                 }),
               ]).start();
             }
+
+            Animated.timing(decisionProgress, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }).start();
+            swipeDirectionRef.current = null;
+            setSwipeDirection(null);
           }
         },
       }),
-    [isActive, index, onSwipe, gestureRotation, opacity, translateX, translateY]
+    [
+      isActive,
+      index,
+      onSwipe,
+      gestureRotation,
+      opacity,
+      translateX,
+      translateY,
+      decisionProgress,
+      setSwipeDirection,
+    ]
   );
 
   // Create animated styles using React Native Animated
@@ -277,6 +329,42 @@ export function PokemonCardSwipeable({
           <PrismaticLayer shimmerAnim={shimmerAnim} />
 
           <BlurView intensity={10} tint="light" style={styles.cardContent}>
+            {isActive && swipeDirection === "right" ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.decisionBadge,
+                  styles.decisionBadgeRight,
+                  { opacity: decisionProgress },
+                ]}
+              >
+                <Ionicons
+                  name="heart"
+                  size={18}
+                  color="rgba(255,255,255,0.9)"
+                />
+                <Text style={styles.decisionText}>Add to Party</Text>
+              </Animated.View>
+            ) : null}
+
+            {isActive && swipeDirection === "left" ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.decisionBadge,
+                  styles.decisionBadgeLeft,
+                  { opacity: decisionProgress },
+                ]}
+              >
+                <Ionicons
+                  name="close"
+                  size={18}
+                  color="rgba(255,255,255,0.9)"
+                />
+                <Text style={styles.decisionText}>Release</Text>
+              </Animated.View>
+            ) : null}
+
             <CardFrame />
             <CardHeader data={data} />
             <ArtFrame
@@ -645,6 +733,41 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.4)",
+  },
+  decisionBadge: {
+    position: "absolute",
+    top: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    backgroundColor: "rgba(10,14,39,0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    zIndex: 20,
+  },
+  decisionBadgeRight: {
+    right: 18,
+    backgroundColor: "rgba(16,185,129,0.75)",
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  decisionBadgeLeft: {
+    left: 18,
+    backgroundColor: "rgba(239,68,68,0.75)",
+    borderColor: "rgba(255,255,255,0.35)",
+  },
+  decisionText: {
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    color: "#FFFFFF",
   },
   shimmer: {
     position: "absolute",
