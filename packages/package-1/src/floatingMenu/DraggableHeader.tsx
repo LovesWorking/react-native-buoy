@@ -12,6 +12,7 @@ interface DraggableHeaderProps {
   minPosition?: { x: number; y: number };
   style?: StyleProp<ViewStyle>;
   enabled?: boolean;
+  maxOverflowX?: number;
 }
 
 export const DraggableHeader = memo(function DraggableHeader({
@@ -25,6 +26,7 @@ export const DraggableHeader = memo(function DraggableHeader({
   minPosition = { x: 0, y: 0 },
   style,
   enabled = true,
+  maxOverflowX = 0,
 }: DraggableHeaderProps) {
   const isDraggingRef = useRef(false);
   const dragDistanceRef = useRef(0);
@@ -70,7 +72,8 @@ export const DraggableHeader = memo(function DraggableHeader({
             onTap?.();
             return;
           }
-          const clampedX = Math.max(minPosition.x, Math.min(currentX, containerBounds.width - elementSize.width));
+          const maxX = containerBounds.width - elementSize.width + maxOverflowX;
+          const clampedX = Math.max(minPosition.x, Math.min(currentX, maxX));
           const clampedY = Math.max(minPosition.y, Math.min(currentY, containerBounds.height - elementSize.height));
           position.setValue({ x: clampedX, y: clampedY });
           onDragEnd?.({ x: clampedX, y: clampedY });
@@ -81,7 +84,17 @@ export const DraggableHeader = memo(function DraggableHeader({
           isDraggingRef.current = false;
         },
       }),
-    [enabled, position, onDragStart, onDragEnd, onTap, containerBounds, elementSize, minPosition]
+    [
+      enabled,
+      position,
+      onDragStart,
+      onDragEnd,
+      onTap,
+      containerBounds,
+      elementSize,
+      minPosition,
+      maxOverflowX,
+    ]
   );
 
   return (

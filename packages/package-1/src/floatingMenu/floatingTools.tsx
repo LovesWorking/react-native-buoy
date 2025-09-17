@@ -18,7 +18,12 @@ import {
   type ViewStyle,
   type TextStyle,
 } from "react-native";
-import { gameUIColors, getSafeAreaInsets } from "@monorepo/shared";
+import {
+  gameUIColors,
+  getSafeAreaInsets,
+  safeGetItem,
+  safeSetItem,
+} from "@monorepo/shared";
 import { DraggableHeader } from "./DraggableHeader";
 import { useSafeAreaInsets } from "@monorepo/shared/src/hooks/useSafeAreaInsets";
 
@@ -93,60 +98,16 @@ function GripVerticalIcon({
   );
 }
 
-// =============================
-// Storage helper (self-contained)
-// Optional AsyncStorage; falls back to memory
-// =============================
-type AsyncStorageType = {
-  getItem: (key: string) => Promise<string | null>;
-  setItem: (key: string, value: string) => Promise<void>;
-  removeItem?: (key: string) => Promise<void>;
-};
-
-let AsyncStorageImpl: AsyncStorageType | null = null;
-let hasInitializedStorage = false;
-const memoryStorage: Record<string, string> = {};
-
-function initializeStorage(): void {
-  if (hasInitializedStorage) return;
-  hasInitializedStorage = true;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const asyncStorageModule = require("@react-native-async-storage/async-storage");
-    AsyncStorageImpl = asyncStorageModule.default || asyncStorageModule;
-  } catch {
-    // Silent fallback - AsyncStorage not installed
-  }
-}
-
-async function setStorageItem(key: string, value: string): Promise<void> {
-  try {
-    if (AsyncStorageImpl) {
-      await AsyncStorageImpl.setItem(key, value);
-    } else {
-      memoryStorage[key] = value;
-    }
-  } catch (error) {
-    console.warn(`[FloatingTools] Failed to save ${key}:`, error);
-  }
-}
-
-async function getStorageItem(key: string): Promise<string | null> {
-  try {
-    if (AsyncStorageImpl) {
-      return await AsyncStorageImpl.getItem(key);
-    }
-    return memoryStorage[key] ?? null;
-  } catch (error) {
-    console.warn(`[FloatingTools] Failed to load ${key}:`, error);
-    return null;
-  }
-}
-
 const STORAGE_KEYS = {
   BUBBLE_POSITION_X: "@floating_tools_bubble_position_x",
   BUBBLE_POSITION_Y: "@floating_tools_bubble_position_y",
 } as const;
+
+const debugLog = (...args: unknown[]) => {
+  if (__DEV__) {
+    console.log("[FloatingTools]", ...args);
+  }
+};
 
 // =============================
 // Position persistence hook
@@ -164,6 +125,7 @@ const STORAGE_KEYS = {
  * @param props.bubbleHeight - Height of the bubble for boundary calculations
  * @param props.enabled - Whether position persistence is enabled
  * @param props.visibleHandleWidth - Width of visible handle when bubble is hidden
+ * @param props.listenersSuspended - Pause automatic listeners without disabling manual saves
  *
  * @returns Object containing position management functions
  *
@@ -176,30 +138,30 @@ function useFloatingToolsPosition({
   bubbleHeight = 32,
   enabled = true,
   visibleHandleWidth = 32,
+  listenersSuspended = false,
 }: {
   animatedPosition: Animated.ValueXY;
   bubbleWidth?: number;
   bubbleHeight?: number;
   enabled?: boolean;
   visibleHandleWidth?: number;
+  listenersSuspended?: boolean;
 }) {
   const isInitialized = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
   );
 
-  useEffect(() => {
-    if (enabled) initializeStorage();
-  }, [enabled]);
-
   const savePosition = useCallback(
     async (x: number, y: number) => {
       if (!enabled) return;
+      debugLog("Saving bubble position", { x, y });
       try {
         await Promise.all([
-          setStorageItem(STORAGE_KEYS.BUBBLE_POSITION_X, x.toString()),
-          setStorageItem(STORAGE_KEYS.BUBBLE_POSITION_Y, y.toString()),
+          safeSetItem(STORAGE_KEYS.BUBBLE_POSITION_X, x.toString()),
+          safeSetItem(STORAGE_KEYS.BUBBLE_POSITION_Y, y.toString()),
         ]);
+        debugLog("Position persisted");
       } catch (error) {
         console.warn("[FloatingTools] Failed to save position:", error);
       }
@@ -211,6 +173,7 @@ function useFloatingToolsPosition({
     (x: number, y: number) => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => savePosition(x, y), 500);
+      debugLog("Scheduled debounced position save", { x, y });
     },
     [savePosition]
   );
@@ -220,10 +183,11 @@ function useFloatingToolsPosition({
     y: number;
   } | null> => {
     if (!enabled) return null;
+    debugLog("Attempting to load persisted position");
     try {
       const [xStr, yStr] = await Promise.all([
-        getStorageItem(STORAGE_KEYS.BUBBLE_POSITION_X),
-        getStorageItem(STORAGE_KEYS.BUBBLE_POSITION_Y),
+        safeGetItem(STORAGE_KEYS.BUBBLE_POSITION_X),
+        safeGetItem(STORAGE_KEYS.BUBBLE_POSITION_Y),
       ]);
       if (xStr !== null && yStr !== null) {
         const x = parseFloat(xStr);
@@ -233,6 +197,7 @@ function useFloatingToolsPosition({
     } catch (error) {
       console.warn("[FloatingTools] Failed to load position:", error);
     }
+    debugLog("No persisted position found");
     return null;
   }, [enabled]);
 
@@ -271,9 +236,14 @@ function useFloatingToolsPosition({
         if (wasOutOfBounds) {
           // Save the corrected position
           await savePosition(validated.x, validated.y);
+          debugLog("Adjusted out-of-bounds position", {
+            original: saved,
+            corrected: validated,
+          });
         }
 
         animatedPosition.setValue(validated);
+        debugLog("Restored persisted position", validated);
       } else {
         const { width: screenWidth, height: screenHeight } =
           Dimensions.get("window");
@@ -285,6 +255,10 @@ function useFloatingToolsPosition({
         animatedPosition.setValue({
           x: screenWidth - bubbleWidth - 20,
           y: defaultY, // Ensure it's within safe area bounds
+        });
+        debugLog("Using default position", {
+          x: screenWidth - bubbleWidth - 20,
+          y: defaultY,
         });
       }
       isInitialized.current = true;
@@ -301,7 +275,7 @@ function useFloatingToolsPosition({
   ]);
 
   useEffect(() => {
-    if (!enabled || !isInitialized.current) return;
+    if (!enabled || !isInitialized.current || listenersSuspended) return;
     const listener = animatedPosition.addListener((value) => {
       debouncedSavePosition(value.x, value.y);
     });
@@ -309,7 +283,7 @@ function useFloatingToolsPosition({
       animatedPosition.removeListener(listener);
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [enabled, animatedPosition, debouncedSavePosition]);
+  }, [enabled, listenersSuspended, animatedPosition, debouncedSavePosition]);
 
   return {
     savePosition,
@@ -485,8 +459,9 @@ export function FloatingTools({
     animatedPosition,
     bubbleWidth: bubbleSize.width,
     bubbleHeight: bubbleSize.height,
-    enabled: enablePositionPersistence && !isDragging, // don't listen while dragging
+    enabled: enablePositionPersistence,
     visibleHandleWidth: 32,
+    listenersSuspended: isDragging,
   });
 
   // Check if bubble is in hidden position on load
@@ -600,6 +575,13 @@ export function FloatingTools({
       const bubbleMidpoint = currentX + bubbleSize.width / 2;
       const shouldHide = bubbleMidpoint > screenWidth;
 
+      debugLog("Drag ended", {
+        finalPosition,
+        shouldHide,
+        bubbleMidpoint,
+        screenWidth,
+      });
+
       if (shouldHide) {
         // Animate to hidden position (only grabber visible)
         const hiddenX = screenWidth - 32; // Only show the 32px grabber
@@ -701,6 +683,7 @@ export function FloatingTools({
           }}
           style={dragHandleStyle}
           enabled={true}
+          maxOverflowX={bubbleSize.width}
         >
           <GripVerticalIcon size={12} color={gameUIColors.secondary + "CC"} />
         </DraggableHeader>

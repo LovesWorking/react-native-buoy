@@ -28,6 +28,39 @@ import { TabSelector } from "@monorepo/shared";
 
 const STORAGE_KEY = "@rn_better_dev_tools_settings";
 
+const sanitizeFloating = (
+  floating: DevToolsSettings["floatingTools"]
+) => {
+  const { userStatus, ...rest } = floating as Record<string, boolean> & {
+    userStatus?: boolean;
+  };
+  return {
+    ...rest,
+    environment:
+      floating.environment ??
+      (rest.environment as boolean | undefined) ??
+      true,
+  };
+};
+
+const mergeWithDefaults = (
+  defaults: DevToolsSettings,
+  stored?: Partial<DevToolsSettings> | null
+): DevToolsSettings => {
+  if (!stored) return defaults;
+
+  return {
+    dialTools: {
+      ...defaults.dialTools,
+      ...(stored.dialTools ?? {}),
+    },
+    floatingTools: sanitizeFloating({
+      ...defaults.floatingTools,
+      ...(stored.floatingTools ?? {}),
+    }),
+  };
+};
+
 export interface DevToolsSettings {
   dialTools: Record<string, boolean>;
   floatingTools: Record<string, boolean> & {
@@ -128,24 +161,15 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
     try {
       const savedSettings = await safeGetItem(STORAGE_KEY);
       if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        // Merge saved settings with defaults for any new tools
-        parsed.dialTools = {
-          ...basicDefaultSettings.dialTools,
-          ...parsed.dialTools,
-        };
-        parsed.floatingTools = {
-          ...basicDefaultSettings.floatingTools,
-          ...parsed.floatingTools,
-          environment: parsed.floatingTools.environment ?? true,
-        };
-
-        // Remove userStatus if it exists (legacy cleanup)
-        delete parsed.floatingTools.userStatus;
-        setSettings(parsed);
+        const parsed = JSON.parse(savedSettings) as DevToolsSettings;
+        const merged = mergeWithDefaults(defaultSettings, parsed);
+        setSettings(merged);
+        return;
       }
+      setSettings(defaultSettings);
     } catch (error) {
       console.error("Failed to load dev tools settings:", error);
+      setSettings(defaultSettings);
     }
   };
 
@@ -479,24 +503,12 @@ export const useDevToolsSettings = () => {
     try {
       const savedSettings = await safeGetItem(STORAGE_KEY);
       if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        // Merge saved settings with defaults for any new tools
-        parsed.dialTools = {
-          ...basicDefaultSettings.dialTools,
-          ...parsed.dialTools,
-        };
-        parsed.floatingTools = {
-          ...basicDefaultSettings.floatingTools,
-          ...parsed.floatingTools,
-          environment: parsed.floatingTools.environment ?? true,
-        };
-
-        // Remove userStatus if it exists (legacy cleanup)
-        delete parsed.floatingTools.userStatus;
-        setSettings(parsed);
-      } else {
-        setSettings(basicDefaultSettings);
+        const parsed = JSON.parse(savedSettings) as DevToolsSettings;
+        const merged = mergeWithDefaults(basicDefaultSettings, parsed);
+        setSettings(merged);
+        return;
       }
+      setSettings(basicDefaultSettings);
     } catch (error) {
       console.error("Failed to load dev tools settings:", error);
       setSettings(basicDefaultSettings);

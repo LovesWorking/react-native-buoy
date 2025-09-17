@@ -4,6 +4,8 @@ import {
   Package1Component,
   FloatingMenu,
   type InstalledApp,
+  AppHostProvider,
+  AppOverlay,
 } from "@monorepo/package-1";
 import {
   createEnvVarConfig,
@@ -13,7 +15,15 @@ import {
   EnvVarsModal,
 } from "@monorepo/package-2";
 import { EnvLaptopIcon } from "@monorepo/shared";
-import { useState } from "react";
+
+// Test AsyncStorage import
+let asyncStorageStatus = "❌ Module not found";
+try {
+  require("@react-native-async-storage/async-storage");
+  asyncStorageStatus = "✅ Module found and imported successfully";
+} catch (error) {
+  asyncStorageStatus = `❌ Module not found: ${error}`;
+}
 
 export default function App() {
   const userRole: UserRole = "admin";
@@ -58,11 +68,6 @@ export default function App() {
     envVar("EXPO_PUBLIC_ENABLE_TELEMETRY").withType("boolean").build(), // ⚠ Missing
   ]);
 
-  const [isEnvOpen, setEnvOpen] = useState(false);
-  const [envCloseResolver, setEnvCloseResolver] = useState<(() => void) | null>(
-    null
-  );
-
   const installedApps: InstalledApp[] = [
     {
       id: "env",
@@ -71,38 +76,38 @@ export default function App() {
       icon: ({ size }) => (
         <EnvLaptopIcon size={size} color="#9f6" glowColor="#9f6" noBackground />
       ),
-      onPress: () =>
-        new Promise<void>((resolve) => {
-          setEnvOpen(true);
-          resolve();
-        }),
+      component: EnvVarsModal,
+      props: {
+        requiredEnvVars,
+        enableSharedModalDimensions: true,
+      },
     },
   ];
   return (
-    <View style={styles.container}>
-      <FloatingMenu
-        apps={installedApps}
-        actions={{}}
-        environment={environment}
-        userRole={userRole}
-      />
-      <EnvVarsModal
-        visible={isEnvOpen}
-        onClose={() => {
-          setEnvOpen(false);
-          envCloseResolver?.();
-          setEnvCloseResolver(null);
-        }}
-        requiredEnvVars={requiredEnvVars}
-        enableSharedModalDimensions={true}
-      />
-      <Text style={styles.title}>Monorepo Test App</Text>
-      <ScrollView style={styles.scrollView}>
-        <Text style={styles.subtitle}>Packages loaded via workspace:</Text>
-        <Package1Component />
-      </ScrollView>
-      <StatusBar style="auto" />
-    </View>
+    <AppHostProvider>
+      <View style={styles.container}>
+        <FloatingMenu
+          apps={installedApps}
+          actions={{}}
+          environment={environment}
+          userRole={userRole}
+        />
+
+        {/* AppOverlay renders the currently open app */}
+        <AppOverlay />
+
+        <Text style={styles.title}>Monorepo Test App</Text>
+        <ScrollView style={styles.scrollView}>
+          <Text style={styles.subtitle}>Packages loaded via workspace:</Text>
+          <Package1Component />
+
+          <Text style={styles.asyncStorageTest}>
+            AsyncStorage Test: {asyncStorageStatus}
+          </Text>
+        </ScrollView>
+        <StatusBar style="auto" />
+      </View>
+    </AppHostProvider>
   );
 }
 
@@ -123,6 +128,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 10,
     color: "#666",
+  },
+  asyncStorageTest: {
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 5,
+    margin: 10,
   },
   scrollView: {
     flex: 1,
