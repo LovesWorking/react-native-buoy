@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -379,8 +373,10 @@ export function PokedexTrainerCollection({
       }
       return [];
     },
-    placeholderData: [],
-    staleTime: 1000 * 10,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 
   const deletePokemonMutation = useMutation<
@@ -447,6 +443,11 @@ export function PokedexTrainerCollection({
   });
 
   const savedPokemon = savedPokemonQuery.data ?? [];
+
+  // Force refetch on mount to ensure we have the latest data
+  useEffect(() => {
+    savedPokemonQuery.refetch();
+  }, []);
 
   const handleEnterDeleteMode = useCallback(
     (pokemonId: string) => {
@@ -979,6 +980,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
+    paddingBottom: 8,
   },
   emptyStateBg: {
     width: "100%",

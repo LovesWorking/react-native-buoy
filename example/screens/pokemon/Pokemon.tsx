@@ -143,6 +143,7 @@ export function PokemonScreen() {
     },
     onSuccess: ({ savedList, pokemonId }) => {
       queryClient.setQueryData(SAVED_POKEMON_QUERY_KEY, savedList);
+      queryClient.invalidateQueries({ queryKey: SAVED_POKEMON_QUERY_KEY });
       setLastAction({ type: "saved", pokemonId });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
         () => {}
@@ -192,6 +193,7 @@ export function PokemonScreen() {
     },
     onSuccess: ({ savedList, pokemonId }) => {
       queryClient.setQueryData(SAVED_POKEMON_QUERY_KEY, savedList);
+      queryClient.invalidateQueries({ queryKey: SAVED_POKEMON_QUERY_KEY });
       setLastAction({ type: "skipped", pokemonId });
     },
     onError: (error, pokemonId) => {
