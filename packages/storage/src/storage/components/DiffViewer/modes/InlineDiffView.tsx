@@ -6,16 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
 import {
+  gameUIColors,
+  macOSColors,
   Plus,
   Minus,
   Edit3,
   ChevronDown,
   ChevronRight,
-} from "rn-better-dev-tools/icons";
-import { DataViewer } from "../../../../react-query/components/shared/DataViewer";
+} from "@monorepo/shared";
+import { DataViewer } from "@monorepo/shared/dataViewer";
 import type { DiffItem } from "../../../utils/objectDiff";
 
 interface InlineDiffViewProps {
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   path: {
     fontSize: 11,
-    color: macOSColors.text.primaryLight,
+    color: macOSColors.text.primary,
     fontFamily: "monospace",
     flex: 1,
   },

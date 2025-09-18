@@ -8,10 +8,10 @@ import {
   XCircle,
   Eye,
   Zap,
-} from "rn-better-dev-tools/icons";
+  gameUIColors,
+  macOSColors,
+} from "@monorepo/shared";
 import { StorageKeyStats } from "../types";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/gameUIColors";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
 
 interface GameUIStorageStatsProps {
   stats: StorageKeyStats;

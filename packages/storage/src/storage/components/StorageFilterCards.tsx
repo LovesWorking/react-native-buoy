@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { macOSColors } from "@monorepo/shared";
 
 export type StorageFilterType = "all" | "missing" | "issues";
 export type StorageTypeFilter = "all" | "async" | "mmkv" | "secure";

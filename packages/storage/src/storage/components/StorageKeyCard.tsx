@@ -7,16 +7,16 @@ import {
   HardDrive,
   Database,
   Shield,
-} from "rn-better-dev-tools/icons";
+  gameUIColors,
+  macOSColors,
+} from "@monorepo/shared";
 import { StorageKeyInfo } from "../types";
 import {
   getStorageTypeLabel,
   getStorageTypeHexColor,
-} from "../../react-query/utils/storageQueryUtils";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
-import { getEnvVarType } from "../../env/utils/envTypeDetector";
-import { DataViewer } from "../../react-query/components/shared/DataViewer";
+} from "../utils/storageQueryUtils";
+import { getValueTypeLabel } from "../utils/valueType";
+import { DataViewer } from "@monorepo/shared/dataViewer";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
@@ -160,7 +160,7 @@ export function StorageKeyCard({
               {hasValue && (
                 <View style={styles.valueBadge}>
                   <Text style={styles.valueText}>
-                    {getEnvVarType(storageKey.value)}
+                  {getValueTypeLabel(storageKey.value)}
                   </Text>
                 </View>
               )}
@@ -197,7 +197,7 @@ export function StorageKeyCard({
                   </Text>
                 </View>
                 <Text style={styles.valueTypeText}>
-                  Type: {getEnvVarType(storageKey.value)}
+                  Type: {getValueTypeLabel(storageKey.value)}
                 </Text>
               </View>
             ) : (
@@ -230,7 +230,7 @@ export function StorageKeyCard({
                 </Text>
               </View>
               <Text style={styles.typeHelperText}>
-                Current type: {getEnvVarType(storageKey.value)}
+                Current type: {getValueTypeLabel(storageKey.value)}
               </Text>
             </View>
           )}

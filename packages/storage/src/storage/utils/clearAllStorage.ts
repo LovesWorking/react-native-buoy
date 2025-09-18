@@ -1,4 +1,4 @@
-import { isDevToolsStorageKey } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
+import { isDevToolsStorageKey } from "@monorepo/shared";
 
 // AsyncStorage will be loaded lazily
 let AsyncStorageModule: {

@@ -1,6 +1,5 @@
-import { HardDrive } from "rn-better-dev-tools/icons";
-import { CyberpunkSectionButton } from "@/rn-better-dev-tools/src/shared/ui/console/CyberpunkSectionButton";
-import { useStorageQueryCounts } from "../../react-query/hooks/useStorageQueryCounts";
+import { HardDrive, CyberpunkSectionButton } from "@monorepo/shared";
+import { useStorageQueryCounts } from "../hooks/useStorageQueryCounts";
 
 interface StorageSectionProps {
   onPress: () => void;

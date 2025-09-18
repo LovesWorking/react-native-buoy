@@ -1,9 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { RefreshCw, Trash2 } from "rn-better-dev-tools/icons";
 import { useState, useCallback } from "react";
 import { StorageKeyInfo } from "../types";
 import { clearAllStorageIncludingDevTools } from "../utils/clearAllStorage";
-import { CopyButton } from "@/rn-better-dev-tools/src/shared/ui/components/CopyButton";
+import { RefreshCw, Trash2, CopyButton } from "@monorepo/shared";
 
 interface StorageActionsProps {
   storageKeys: StorageKeyInfo[];

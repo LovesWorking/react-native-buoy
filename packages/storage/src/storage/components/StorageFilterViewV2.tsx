@@ -1,8 +1,8 @@
-import { Filter } from "rn-better-dev-tools/icons";
 import {
+  Filter,
   DynamicFilterView,
   type DynamicFilterConfig,
-} from "@/rn-better-dev-tools/src/shared/ui/components/DynamicFilterView";
+} from "@monorepo/shared";
 
 interface StorageFilterViewV2Props {
   ignoredPatterns: Set<string>;

@@ -1,12 +1,12 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
 import {
+  gameUIColors,
+  macOSColors,
   FileCode,
   Layers,
   FileText,
   GitBranch,
-} from "rn-better-dev-tools/icons";
+} from "@monorepo/shared";
 
 export type DiffMode = "inline" | "side-by-side" | "unified" | "structure";
 

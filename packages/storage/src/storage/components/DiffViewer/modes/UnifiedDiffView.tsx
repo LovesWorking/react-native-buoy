@@ -1,8 +1,6 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import { gameUIColors, macOSColors, formatValue } from "@monorepo/shared";
 import type { DiffItem } from "../../../utils/objectDiff";
-import { formatValue } from "@/rn-better-dev-tools/src/shared/utils/valueFormatting";
 
 interface UnifiedDiffViewProps {
   oldValue: unknown;

@@ -1,11 +1,9 @@
 import { View, Text, StyleSheet } from "react-native";
 import { StorageKeyInfo } from "../types";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
-import { CompactRow } from "@/rn-better-dev-tools/src/shared/ui/components/CompactRow";
-import { TypeBadge } from "@/rn-better-dev-tools/src/shared/ui/components/TypeBadge";
-import { getEnvVarType } from "../../env/utils/envTypeDetector";
-import { getStorageTypeLabel } from "../../react-query/utils/storageQueryUtils";
-import { DataViewer } from "../../react-query/components/shared/DataViewer";
+import { macOSColors, CompactRow, TypeBadge } from "@monorepo/shared";
+import { getStorageTypeLabel } from "../utils/storageQueryUtils";
+import { getValueTypeLabel } from "../utils/valueType";
+import { DataViewer } from "@monorepo/shared/dataViewer";
 
 interface StorageKeyRowProps {
   storageKey: StorageKeyInfo;
@@ -133,7 +131,7 @@ export function StorageKeyRow({
           <>
             <View style={styles.expandedRow}>
               <Text style={styles.expandedLabel}>Type:</Text>
-              <TypeBadge type={getEnvVarType(storageKey.value)} />
+          <TypeBadge type={getValueTypeLabel(storageKey.value)} />
             </View>
             <View style={styles.expandedRow}>
               <Text style={styles.expandedLabel}>Expected:</Text>
@@ -186,7 +184,7 @@ export function StorageKeyRow({
       statusLabel={config.label}
       statusSublabel={config.sublabel}
       primaryText={primaryText}
-      secondaryText={hasValue ? getEnvVarType(storageKey.value) : undefined}
+      secondaryText={hasValue ? getValueTypeLabel(storageKey.value) : undefined}
       expandedContent={expandedContent}
       isExpanded={isExpanded}
       expandedGlowColor={config.color}

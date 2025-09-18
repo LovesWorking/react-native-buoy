@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { StorageKeyInfo } from "../types";
 import { StorageKeyRow } from "./StorageKeyRow";
-import { SectionHeader } from "@/rn-better-dev-tools/src/shared/ui/components/SectionHeader";
+import { SectionHeader } from "@monorepo/shared";
 
 interface StorageKeySectionProps {
   title: string;

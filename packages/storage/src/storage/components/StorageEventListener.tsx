@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { Play, Pause, Trash2 } from "rn-better-dev-tools/icons";
+import { Play, Pause, Trash2 } from "@monorepo/shared";
 import {
   startListening,
   stopListening,

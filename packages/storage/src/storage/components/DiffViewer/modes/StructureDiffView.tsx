@@ -1,7 +1,8 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+import type { ReactNode } from "react";
 import {
+  gameUIColors,
+  macOSColors,
   Plus,
   Minus,
   Edit3,
@@ -11,7 +12,7 @@ import {
   FileCode,
   CheckCircle,
   Box,
-} from "rn-better-dev-tools/icons";
+} from "@monorepo/shared";
 import type { DiffItem } from "../../../utils/objectDiff";
 
 interface StructureDiffViewProps {
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   nodeName: {
     fontSize: 10,
     fontFamily: "monospace",
-    color: macOSColors.text.primaryLight,
+    color: macOSColors.text.primary,
     flex: 1,
   },
   typeChange: {

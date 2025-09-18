@@ -6,12 +6,9 @@ import {
   Eye,
   Database,
   Shield,
-} from "rn-better-dev-tools/icons";
+} from "@monorepo/shared";
 import { StorageKeyStats } from "../types";
-import {
-  getStorageTypeHexColor,
-  StorageType,
-} from "../../react-query/utils/storageQueryUtils";
+import { getStorageTypeHexColor, StorageType } from "../utils/storageQueryUtils";
 
 interface StorageKeyStatsProps {
   stats: StorageKeyStats;

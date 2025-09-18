@@ -1,20 +1,18 @@
 import { useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
 import {
+  gameUIColors,
+  macOSColors,
+  formatValue,
+  getTypeColor,
+  formatPath,
   Plus,
   Minus,
   Edit3,
   GitBranch,
   ChevronRight,
-} from "rn-better-dev-tools/icons";
+} from "@monorepo/shared";
 import { objectDiff, type DiffItem } from "../utils/objectDiff";
-import {
-  formatValue,
-  getTypeColor,
-  formatPath,
-} from "@/rn-better-dev-tools/src/shared/utils/valueFormatting";
 
 interface DiffViewerProps {
   oldValue: unknown;

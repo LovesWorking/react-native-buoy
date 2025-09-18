@@ -2,18 +2,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   JsModal,
   type ModalMode,
-} from "@/rn-better-dev-tools/src/components/modals/jsModal/JsModal";
-import { ModalHeader } from "@/rn-better-dev-tools/src/shared/ui/components/ModalHeader";
-import { useSafeAreaInsets } from "@/rn-better-dev-tools/src/shared/hooks/useSafeAreaInsets";
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
-import {
+  ModalHeader,
+  useSafeAreaInsets,
+  formatRelativeTime,
+  InlineCopyButton,
+  ToolbarCopyButton,
+  devToolsStorageKeys,
+  parseValue,
   Database,
   Activity,
   Clock,
@@ -24,16 +19,17 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-} from "rn-better-dev-tools/icons";
-import { AsyncStorageEvent } from "../utils/AsyncStorageListener";
-import { formatRelativeTime } from "@/rn-better-dev-tools/src/shared/utils/time/formatRelativeTime";
+} from "@monorepo/shared";
 import {
-  InlineCopyButton,
-  ToolbarCopyButton,
-} from "@/rn-better-dev-tools/src/shared/ui/components";
-import { DataViewer } from "../../react-query/components/shared/DataViewer";
-import { devToolsStorageKeys } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
-import { parseValue } from "@/rn-better-dev-tools/src/shared/utils/valueFormatting";
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { AsyncStorageEvent } from "../utils/AsyncStorageListener";
+import { DataViewer } from "@monorepo/shared/dataViewer";
 
 interface StorageEventDetailModalProps {
   visible: boolean;

@@ -1,28 +1,24 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { Text, View, TouchableOpacity, StyleSheet, FlatList } from "react-native";
 import {
   JsModal,
   type ModalMode,
-} from "@/rn-better-dev-tools/src/components/modals/jsModal/JsModal";
-import { RequiredStorageKey } from "../types";
-import { StorageBrowserMode } from "./StorageBrowserMode";
-import { ModalHeader } from "@/rn-better-dev-tools/src/shared/ui/components/ModalHeader";
-import { TabSelector } from "@/rn-better-dev-tools/src/shared/ui/components/TabSelector";
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-} from "react-native";
-import {
+  ModalHeader,
+  TabSelector,
+  ValueTypeBadge,
+  formatRelativeTime,
+  parseValue,
+  devToolsStorageKeys,
+  gameUIColors,
+  macOSColors,
   Database,
   Pause,
   Play,
   Trash2,
   Filter,
-} from "rn-better-dev-tools/icons";
-import { devToolsStorageKeys } from "@/rn-better-dev-tools/src/shared/storage/devToolsStorageKeys";
-import { macOSColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI/constants/macOSDesignSystemColors";
+} from "@monorepo/shared";
+import { RequiredStorageKey } from "../types";
+import { StorageBrowserMode } from "./StorageBrowserMode";
 import {
   startListening,
   stopListening,
@@ -30,14 +26,11 @@ import {
   AsyncStorageEvent,
   isListening as checkIsListening,
 } from "../utils/AsyncStorageListener";
-import { formatRelativeTime } from "@/rn-better-dev-tools/src/shared/utils/time/formatRelativeTime";
 import {
   StorageEventDetailContent,
   StorageEventDetailFooter,
 } from "./StorageEventDetailContent";
 import { StorageFilterViewV2 } from "./StorageFilterViewV2";
-import { ValueTypeBadge } from "@/rn-better-dev-tools/src/shared/ui/components/ValueTypeBadge";
-import { parseValue } from "@/rn-better-dev-tools/src/shared/utils/valueFormatting";
 
 interface StorageModalWithTabsProps {
   visible: boolean;

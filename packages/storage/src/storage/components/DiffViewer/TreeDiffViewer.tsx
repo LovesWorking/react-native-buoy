@@ -1,6 +1,6 @@
 import { View, StyleSheet } from "react-native";
-import TreeDiffViewerComponent from "@/dif-viewer/TreeDiffViewer";
-import { gameUIColors } from "@/rn-better-dev-tools/src/shared/ui/gameUI";
+import { gameUIColors } from "@monorepo/shared";
+import { TreeDiffViewer as SharedTreeDiffViewer } from "@monorepo/shared/dataViewer";
 
 interface TreeDiffViewerProps {
   oldValue: unknown;
@@ -10,7 +10,7 @@ interface TreeDiffViewerProps {
 export function TreeDiffViewer({ oldValue, newValue }: TreeDiffViewerProps) {
   return (
     <View style={styles.container}>
-      <TreeDiffViewerComponent
+      <SharedTreeDiffViewer
         oldValue={oldValue}
         newValue={newValue}
         theme="dark"
