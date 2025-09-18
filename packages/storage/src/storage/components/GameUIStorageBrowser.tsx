@@ -221,9 +221,8 @@ export function GameUIStorageBrowser({
         keys = keys.filter(k => k.status === "required_missing");
         break;
       case "issues":
-        keys = keys.filter(k => 
-          k.status === "required_missing" || 
-          k.status === "required_wrong_type" || 
+        keys = keys.filter(k =>
+          k.status === "required_wrong_type" ||
           k.status === "required_wrong_value"
         );
         break;

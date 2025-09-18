@@ -395,12 +395,54 @@ export function PokemonCardSwipeable({
                   { opacity: decisionProgress },
                 ]}
               >
-                <Ionicons
-                  name="heart"
-                  size={18}
-                  color="rgba(255,255,255,0.9)"
-                />
-                <Text style={styles.decisionText}>Add to Party</Text>
+                <View style={styles.pokeballContainer}>
+                  <View style={styles.pokeballShadow} />
+                  <View style={styles.pokeballShell}>
+                    {/* Top Half */}
+                    <View style={styles.pokeballTopHalf}>
+                      <LinearGradient
+                        colors={["#EF4444", "#DC2626"]}
+                        start={{ x: 0.2, y: 0 }}
+                        end={{ x: 0.8, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      {/* Highlight */}
+                      <View style={styles.pokeballHighlight}>
+                        <LinearGradient
+                          colors={["rgba(255,255,255,0.8)", "rgba(255,200,200,0.2)"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={StyleSheet.absoluteFill}
+                        />
+                      </View>
+                    </View>
+
+                    {/* Bottom Half */}
+                    <View style={styles.pokeballBottomHalf}>
+                      <LinearGradient
+                        colors={["#FFFFFF", "#D0D7FF"]}
+                        start={{ x: 0.3, y: 0 }}
+                        end={{ x: 0.7, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                    </View>
+
+                    {/* Center Band */}
+                    <View style={styles.pokeballBand} />
+
+                    {/* Center Button */}
+                    <View style={styles.pokeballButtonOuter}>
+                      <View style={styles.pokeballButtonInner}>
+                        <LinearGradient
+                          colors={["#FFFFFF", "#D0D7FF"]}
+                          start={{ x: 0.3, y: 0 }}
+                          end={{ x: 0.7, y: 1 }}
+                          style={StyleSheet.absoluteFill}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
               </Animated.View>
             ) : null}
 
@@ -413,12 +455,10 @@ export function PokemonCardSwipeable({
                   { opacity: decisionProgress },
                 ]}
               >
-                <Ionicons
-                  name="close"
-                  size={18}
-                  color="rgba(255,255,255,0.9)"
-                />
-                <Text style={styles.decisionText}>Release</Text>
+                <View style={styles.xIconContainer}>
+                  <View style={[styles.xLine, styles.xLineOne]} />
+                  <View style={[styles.xLine, styles.xLineTwo]} />
+                </View>
               </Animated.View>
             ) : null}
 
@@ -793,31 +833,31 @@ const styles = StyleSheet.create({
   },
   decisionBadge: {
     position: "absolute",
-    top: 18,
-    flexDirection: "row",
+    top: "45%",
+    marginTop: -30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: "rgba(10,14,39,0.8)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 15,
     zIndex: 20,
   },
   decisionBadgeRight: {
-    right: 18,
-    backgroundColor: "rgba(16,185,129,0.75)",
-    borderColor: "rgba(255,255,255,0.5)",
+    right: 25,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 3,
+    borderColor: "#2B2B2B",
   },
   decisionBadgeLeft: {
-    left: 18,
-    backgroundColor: "rgba(239,68,68,0.75)",
-    borderColor: "rgba(255,255,255,0.35)",
+    left: 25,
+    backgroundColor: "#DC2626",
+    borderWidth: 3,
+    borderColor: "#7F1D1D",
   },
   decisionText: {
     fontSize: 13,
@@ -1106,6 +1146,120 @@ const styles = StyleSheet.create({
   },
   swipeHintRight: {
     right: 10,
+  },
+  pokeballContainer: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pokeballShell: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1.4,
+    borderColor: "rgba(17,24,39,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+  },
+  pokeballTopHalf: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "55%",
+    borderTopLeftRadius: 17,
+    borderTopRightRadius: 17,
+    overflow: "hidden",
+  },
+  pokeballBottomHalf: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "52%",
+    borderBottomLeftRadius: 17,
+    borderBottomRightRadius: 17,
+    overflow: "hidden",
+  },
+  pokeballHighlight: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    right: 18,
+    height: 10,
+    borderRadius: 12,
+    opacity: 0.55,
+    transform: [{ rotate: "-28deg" }],
+  },
+  pokeballBand: {
+    position: "absolute",
+    left: -2,
+    right: -2,
+    top: "50%",
+    height: 5,
+    marginTop: -2.5,
+    backgroundColor: "rgba(17,24,39,0.8)",
+    shadowColor: "rgba(0,0,0,0.35)",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  pokeballButtonOuter: {
+    width: 13,
+    height: 13,
+    borderRadius: 6.5,
+    borderWidth: 2,
+    borderColor: "rgba(17,24,39,0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    backgroundColor: "#F4F4F4",
+  },
+  pokeballButtonInner: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pokeballShadow: {
+    position: "absolute",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(15,23,42,0.18)",
+    opacity: 0.4,
+    transform: [{ scaleY: 1.05 }],
+    zIndex: -1,
+  },
+  xIconContainer: {
+    width: 30,
+    height: 30,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  xLine: {
+    position: "absolute",
+    width: 4,
+    height: 30,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  xLineOne: {
+    transform: [{ rotate: "45deg" }],
+  },
+  xLineTwo: {
+    transform: [{ rotate: "-45deg" }],
   },
 });
 

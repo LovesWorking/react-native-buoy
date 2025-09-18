@@ -37,8 +37,7 @@ export function StorageFilterCards({
   activeStorageType = "all",
   onStorageTypeChange,
 }: StorageFilterCardsProps) {
-  const issuesCount =
-    stats.missingCount + stats.wrongValueCount + stats.wrongTypeCount;
+  const issuesCount = stats.wrongValueCount + stats.wrongTypeCount;
 
   return (
     <View style={styles.container}>
