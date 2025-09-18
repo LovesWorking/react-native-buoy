@@ -27,6 +27,25 @@ import { ModalHeader } from "@monorepo/shared";
 import { TabSelector } from "@monorepo/shared";
 
 const STORAGE_KEY = "@rn_better_dev_tools_settings";
+const MAX_DIAL_SLOTS = 6;
+
+const enforceDialLimit = (
+  dialTools: Record<string, boolean>
+): Record<string, boolean> => {
+  let remaining = MAX_DIAL_SLOTS;
+  const limited: Record<string, boolean> = {};
+
+  for (const [id, enabled] of Object.entries(dialTools)) {
+    if (enabled && remaining > 0) {
+      limited[id] = true;
+      remaining -= 1;
+    } else {
+      limited[id] = false;
+    }
+  }
+
+  return limited;
+};
 
 const sanitizeFloating = (
   floating: DevToolsSettings["floatingTools"]
@@ -49,11 +68,13 @@ const mergeWithDefaults = (
 ): DevToolsSettings => {
   if (!stored) return defaults;
 
+  const mergedDial = enforceDialLimit({
+    ...defaults.dialTools,
+    ...(stored.dialTools ?? {}),
+  });
+
   return {
-    dialTools: {
-      ...defaults.dialTools,
-      ...(stored.dialTools ?? {}),
-    },
+    dialTools: mergedDial,
     floatingTools: sanitizeFloating({
       ...defaults.floatingTools,
       ...(stored.floatingTools ?? {}),
@@ -90,6 +111,7 @@ const generateDefaultSettings = (
 ): DevToolsSettings => {
   const dialDefaults: Record<string, boolean> = {};
   const floatingDefaults: Record<string, boolean> = {};
+  let remainingDialSlots = MAX_DIAL_SLOTS;
 
   // Default enabled states for known tools
   const knownDefaults = {
@@ -115,8 +137,15 @@ const generateDefaultSettings = (
     const { id, slot = "both" } = app;
 
     if (slot === "dial" || slot === "both") {
-      dialDefaults[id] =
+      const preferredDefault =
         knownDefaults.dial[id as keyof typeof knownDefaults.dial] ?? true;
+      const shouldEnable = preferredDefault && remainingDialSlots > 0;
+      dialDefaults[id] = shouldEnable;
+      if (shouldEnable) {
+        remainingDialSlots -= 1;
+      }
+    } else {
+      dialDefaults[id] = false;
     }
 
     if (slot === "row" || slot === "both") {
@@ -127,7 +156,7 @@ const generateDefaultSettings = (
   }
 
   return {
-    dialTools: dialDefaults,
+    dialTools: enforceDialLimit(dialDefaults),
     floatingTools: {
       ...floatingDefaults,
       environment: true, // Special setting for environment indicator
@@ -178,11 +207,16 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
 
   const saveSettings = async (newSettings: DevToolsSettings) => {
     try {
-      await safeSetItem(STORAGE_KEY, JSON.stringify(newSettings));
-      setSettings(newSettings);
-      onSettingsChange?.(newSettings);
+      const limitedSettings: DevToolsSettings = {
+        ...newSettings,
+        dialTools: enforceDialLimit(newSettings.dialTools),
+      };
+
+      await safeSetItem(STORAGE_KEY, JSON.stringify(limitedSettings));
+      setSettings(limitedSettings);
+      onSettingsChange?.(limitedSettings);
       // Notify listeners (e.g., floating bubble) to refresh immediately
-      settingsBus.emit(newSettings);
+      settingsBus.emit(limitedSettings);
     } catch (error) {
       console.error("Failed to save dev tools settings:", error);
     }
@@ -195,7 +229,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
     const isCurrentlyEnabled = settings.dialTools[tool];
 
     // If trying to enable and already at 6, don't allow
-    if (!isCurrentlyEnabled && currentEnabled >= 6) {
+    if (!isCurrentlyEnabled && currentEnabled >= MAX_DIAL_SLOTS) {
       return; // Could also show a toast/alert here
     }
 
@@ -412,7 +446,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
               const enabledCount = Object.values(settings.dialTools).filter(
                 (v) => v
               ).length;
-              const isAtLimit = enabledCount >= 6;
+              const isAtLimit = enabledCount >= MAX_DIAL_SLOTS;
 
               return Object.entries(settings.dialTools).map(([key, value]) => {
                 const isDisabled = !value && isAtLimit;
@@ -526,7 +560,9 @@ export const useDevToolsSettings = () => {
         if (payload) {
           setSettings(payload);
         }
-      } catch {}
+      } catch (err) {
+        // Listener errors are intentionally swallowed to avoid breaking subscribers
+      }
     });
     return () => {
       unsub();

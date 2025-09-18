@@ -94,7 +94,7 @@ export function StructureDiffView({
         return <Database size={11} color={gameUIColors.dataTypes.object} />;
       case "array":
         return <Box size={11} color={gameUIColors.dataTypes.array} />;
-      case "primitive":
+      case "primitive": {
         if (value === null || value === undefined) {
           return <FileText size={11} color={gameUIColors.dataTypes.null} />;
         }
@@ -111,6 +111,7 @@ export function StructureDiffView({
           );
         }
         return <FileText size={11} color={macOSColors.text.muted} />;
+      }
       default:
         return <FileText size={11} color={macOSColors.text.muted} />;
     }

@@ -47,7 +47,7 @@ function computeDiffByMethod(
       oldParts = oldStr.match(/\S+|\s+/g) || [];
       newParts = newStr.match(/\S+|\s+/g) || [];
       break;
-    case "trimmedLines":
+    case "trimmedLines": {
       // For trimmedLines, compare without leading/trailing whitespace
       const oldTrimmed = oldStr.trim();
       const newTrimmed = newStr.trim();
@@ -55,6 +55,7 @@ function computeDiffByMethod(
       oldParts = oldTrimmed.match(/\S+|\s+/g) || [];
       newParts = newTrimmed.match(/\S+|\s+/g) || [];
       break;
+    }
     case "lines":
     default:
       // For lines mode, don't do word diff - just show the whole line

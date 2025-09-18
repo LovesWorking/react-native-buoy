@@ -26,6 +26,7 @@ import { useAppHost } from "../AppHost";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CIRCLE_SIZE = Math.min(SCREEN_WIDTH * 0.75, 320); // Max 320px for better fit
 const BUTTON_SIZE = 80; // Fixed button size
+const MAX_DIAL_SLOTS = 6;
 
 export type IconType = {
   id?: string; // optional; used for special behaviors like wifi toggle
@@ -132,39 +133,60 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     }
   };
 
-  const icons: IconType[] = dialApps.map((a) => {
-    const enabled = isDialEnabled(a.id);
-    if (!enabled) {
-      return {
-        id: a.id,
-        name: `empty-${a.id}`,
-        icon: null,
-        color: "transparent",
-        onPress: () => {},
-      };
+  const createEmptySlot = (slotIndex: number | string): IconType => ({
+    id: `empty-${slotIndex}`,
+    name: `empty-${slotIndex}`,
+    icon: null,
+    color: "transparent",
+    onPress: () => {},
+  });
+
+  const enabledIcons: IconType[] = [];
+  for (const app of dialApps) {
+    if (!isDialEnabled(app.id)) {
+      continue;
+    }
+    if (enabledIcons.length >= MAX_DIAL_SLOTS) {
+      break;
     }
 
-    return {
-      id: a.id,
-      name: a.name,
+    enabledIcons.push({
+      id: app.id,
+      name: app.name,
       icon:
-        typeof a.icon === "function"
-          ? a.icon({ slot: "dial", size: 32, state, actions })
-          : a.icon,
-      color: a.color ?? gameUIColors.primary,
+        typeof app.icon === "function"
+          ? app.icon({ slot: "dial", size: 32, state, actions })
+          : app.icon,
+      color: app.color ?? gameUIColors.primary,
       onPress: () => {
         open({
-          id: a.id,
-          title: a.name,
-          component: a.component,
-          props: a.props,
-          launchMode: a.launchMode ?? "self-modal",
-          singleton: a.singleton ?? true,
+          id: app.id,
+          title: app.name,
+          component: app.component,
+          props: app.props,
+          launchMode: app.launchMode ?? "self-modal",
+          singleton: app.singleton ?? true,
         });
         onClose?.();
       },
-    };
-  });
+    });
+  }
+
+  if (__DEV__) {
+    const totalEnabled = dialApps.filter((app) => isDialEnabled(app.id)).length;
+    if (totalEnabled > MAX_DIAL_SLOTS) {
+      console.warn(
+        `[DialDevTools] Only ${MAX_DIAL_SLOTS} dial tools can be shown at once. ${
+          totalEnabled - MAX_DIAL_SLOTS
+        } tool(s) were hidden. Adjust dial defaults to avoid this warning.`
+      );
+    }
+  }
+
+  const icons: IconType[] = [...enabledIcons];
+  while (icons.length < MAX_DIAL_SLOTS) {
+    icons.push(createEmptySlot(icons.length));
+  }
 
   // Initialize animations on mount
   useEffect(() => {

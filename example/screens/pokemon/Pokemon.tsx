@@ -34,25 +34,6 @@ const { width, height } = Dimensions.get("window");
 const SAVED_POKEMON_STORAGE_KEY = "@devtools/pokemon/saved";
 const SAVED_POKEMON_QUERY_KEY = ["pokemon", "saved"] as const;
 
-type LastActionState =
-  | { type: "saving"; pokemonId: string }
-  | { type: "saved"; pokemonId: string }
-  | { type: "skipped"; pokemonId: string }
-  | { type: "error"; pokemonId: string; message?: string }
-  | null;
-
-type ToastMeta = {
-  title: string;
-  subtitle: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  gradient: [string, string];
-};
-
-function formatPokemonName(name: string): string {
-  if (!name) return "";
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
 // Get random Pokemon from our database
 function getRandomPokemonNames(count: number): string[] {
   const shuffled = [...pokemonNames].sort(() => Math.random() - 0.5);
@@ -85,8 +66,6 @@ export function PokemonScreen() {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   const queryClient = useQueryClient();
-  const [lastAction, setLastAction] = useState<LastActionState>(null);
-  const actionToastAnim = useRef(new Animated.Value(0)).current;
 
   const savedPokemonQuery = useQuery<string[]>({
     queryKey: SAVED_POKEMON_QUERY_KEY,
@@ -138,24 +117,16 @@ export function PokemonScreen() {
       return { pokemonId: normalized, savedList: trimmedList };
     },
     onMutate: async (pokemonId) => {
-      setLastAction({ type: "saving", pokemonId });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     },
     onSuccess: ({ savedList, pokemonId }) => {
       queryClient.setQueryData(SAVED_POKEMON_QUERY_KEY, savedList);
       queryClient.invalidateQueries({ queryKey: SAVED_POKEMON_QUERY_KEY });
-      setLastAction({ type: "saved", pokemonId });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
         () => {}
       );
     },
-    onError: (error, pokemonId) => {
-      setLastAction({
-        type: "error",
-        pokemonId,
-        message:
-          error instanceof Error ? error.message : "Could not save Pokémon.",
-      });
+    onError: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(
         () => {}
       );
@@ -194,48 +165,10 @@ export function PokemonScreen() {
     onSuccess: ({ savedList, pokemonId }) => {
       queryClient.setQueryData(SAVED_POKEMON_QUERY_KEY, savedList);
       queryClient.invalidateQueries({ queryKey: SAVED_POKEMON_QUERY_KEY });
-      setLastAction({ type: "skipped", pokemonId });
     },
-    onError: (error, pokemonId) => {
-      setLastAction({
-        type: "error",
-        pokemonId,
-        message:
-          error instanceof Error ? error.message : "Could not release Pokémon.",
-      });
+    onError: () => {
     },
   });
-
-  const hideToast = useCallback(() => {
-    Animated.timing(actionToastAnim, {
-      toValue: 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) {
-        setLastAction(null);
-      }
-    });
-  }, [actionToastAnim, setLastAction]);
-
-  useEffect(() => {
-    if (!lastAction) {
-      return;
-    }
-
-    actionToastAnim.stopAnimation();
-    actionToastAnim.setValue(0);
-    Animated.timing(actionToastAnim, {
-      toValue: 1,
-      duration: 240,
-      useNativeDriver: true,
-    }).start();
-
-    const timeout = setTimeout(hideToast, 3200);
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [lastAction, actionToastAnim, hideToast]);
 
   // Only keep essential animations for effects
   const floatAnim = useRef(new Animated.Value(0)).current;
@@ -451,58 +384,6 @@ export function PokemonScreen() {
     };
   }, [displayPokemon.length, scrollX]);
 
-  const toastMeta: ToastMeta | null = lastAction
-    ? (() => {
-        const displayName = formatPokemonName(lastAction.pokemonId);
-
-        if (lastAction.type === "saving") {
-          return {
-            title: `Cataloguing ${displayName}`,
-            subtitle: "Submitting entry to Trainer Log…",
-            icon: "time-outline" as keyof typeof Ionicons.glyphMap,
-            gradient: [
-              "rgba(59,130,246,0.8)",
-              "rgba(30,64,175,0.75)",
-            ],
-          };
-        }
-
-        if (lastAction.type === "saved") {
-          return {
-            title: `${displayName} joined your squad!`,
-            subtitle: "React Query mutation + storage synced.",
-            icon: "sparkles" as keyof typeof Ionicons.glyphMap,
-            gradient: [
-              "rgba(16,185,129,0.82)",
-              "rgba(4,120,87,0.75)",
-            ],
-          };
-        }
-
-        if (lastAction.type === "skipped") {
-          return {
-            title: `Released ${displayName}`,
-            subtitle: "No log entry created.",
-            icon: "close-circle" as keyof typeof Ionicons.glyphMap,
-            gradient: [
-              "rgba(239,68,68,0.8)",
-              "rgba(153,27,27,0.7)",
-            ],
-          };
-        }
-
-        return {
-          title: `Couldn't save ${displayName}`,
-          subtitle: lastAction.message || "Try again after checking the link cable.",
-          icon: "alert-circle" as keyof typeof Ionicons.glyphMap,
-          gradient: [
-            "rgba(248,113,113,0.82)",
-            "rgba(185,28,28,0.75)",
-          ],
-        };
-      })()
-    : null;
-
   return (
     <View style={styles.container}>
       {/* Premium Animated Background */}
@@ -511,48 +392,6 @@ export function PokemonScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      {toastMeta ? (
-        <Animated.View
-          style={[
-            styles.actionToast,
-            {
-              top: insets.top + 16,
-              opacity: actionToastAnim,
-              transform: [
-                {
-                  translateY: actionToastAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-12, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={toastMeta.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.toastGradient}
-          >
-            <BlurView intensity={40} tint="dark" style={styles.toastBlur}>
-              <View style={styles.toastContent}>
-                <View style={styles.toastIconBubble}>
-                  <Ionicons
-                    name={toastMeta.icon}
-                    size={18}
-                    color="#FFFFFF"
-                  />
-                </View>
-                <View style={styles.toastTextBlock}>
-                  <Text style={styles.toastTitle}>{toastMeta.title}</Text>
-                  <Text style={styles.toastSubtitle}>{toastMeta.subtitle}</Text>
-                </View>
-              </View>
-            </BlurView>
-          </LinearGradient>
-        </Animated.View>
-      ) : null}
 
       {/* Animated Background Orbs */}
       <Animated.View
@@ -938,7 +777,6 @@ export function PokemonScreen() {
                       if (direction === "right") {
                         savePokemonMutation.mutate(swipedPokemonId);
                       } else {
-                        setLastAction({ type: "skipped", pokemonId: swipedPokemonId });
                         Haptics.impactAsync(
                           Haptics.ImpactFeedbackStyle.Light
                         ).catch(() => {});
