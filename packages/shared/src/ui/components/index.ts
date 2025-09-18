@@ -45,3 +45,9 @@ export { DraggableHeader } from "./DraggableHeader";
 export { CollapsibleSection } from "./CollapsibleSection";
 export { DataInspector } from "./DataInspector";
 export { SearchBar } from "./SearchBar";
+export {
+  DynamicFilterView,
+} from "./DynamicFilterView";
+export type {
+  DynamicFilterConfig,
+} from "./DynamicFilterView";
