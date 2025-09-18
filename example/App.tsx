@@ -17,6 +17,7 @@ import {
 import {
   EnvLaptopIcon,
   ReactQueryIcon,
+  StorageStackIcon,
   Globe,
   useSafeAreaInsets,
 } from "@monorepo/shared";
@@ -24,6 +25,10 @@ import { ReactQueryDevToolsModal } from "@monorepo/react-query";
 import { NetworkModal } from "@monorepo/network";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PokemonScreen } from "./screens/pokemon/Pokemon";
+import {
+  StorageModalWithTabs,
+  type RequiredStorageKey,
+} from "@monorepo/storage/storage";
 
 export default function App() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -72,6 +77,29 @@ export default function App() {
     envVar("EXPO_PUBLIC_ENABLE_TELEMETRY").withType("boolean").build(), // ⚠ Missing
   ]);
 
+  const storageRequiredKeys = useMemo<RequiredStorageKey[]>(
+    () => [
+      {
+        key: "@app/session",
+        expectedType: "string",
+        description: "Current user session token",
+        storageType: "secure",
+      },
+      {
+        key: "@app/settings:theme",
+        expectedValue: "dark",
+        description: "Preferred theme",
+        storageType: "mmkv",
+      },
+      {
+        key: "@devtools/storage/activeTab",
+        description: "Last viewed storage tab",
+        storageType: "async",
+      },
+    ],
+    []
+  );
+
   const installedApps: InstalledApp[] = useMemo(
     () => [
       {
@@ -90,6 +118,24 @@ export default function App() {
         props: {
           requiredEnvVars,
           enableSharedModalDimensions: true,
+        },
+      },
+      {
+        id: "storage",
+        name: "STORAGE",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <StorageStackIcon
+            size={size}
+            color="#38f8a7"
+            glowColor="#10B981"
+            noBackground
+          />
+        ),
+        component: StorageModalWithTabs,
+        props: {
+          enableSharedModalDimensions: true,
+          requiredStorageKeys: storageRequiredKeys,
         },
       },
       {
@@ -122,7 +168,7 @@ export default function App() {
         },
       },
     ],
-    [requiredEnvVars]
+    [requiredEnvVars, storageRequiredKeys]
   );
   const insets = useSafeAreaInsets();
   return (

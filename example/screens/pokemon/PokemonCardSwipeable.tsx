@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useState } from "react";
+import { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Dimensions,
   ActivityIndicator,
   PanResponder,
+  PanResponderGestureState,
   StyleSheet,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,6 +18,7 @@ import { PokemonTheme } from "./constants/PokemonTheme";
 import { getTypeColor } from "./pokemonTypeColors";
 
 const { width } = Dimensions.get("window");
+const CARD_WIDTH = width - 60;
 
 interface PokemonCardSwipeableProps {
   pokemonId: string;
@@ -56,41 +58,99 @@ export function PokemonCardSwipeable({
   ).current;
   const decisionProgress = useRef(new Animated.Value(0)).current;
   const swipeDirectionRef = useRef<"left" | "right" | null>(null);
+  const committedDirectionRef = useRef<"left" | "right" | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<
     "left" | "right" | null
   >(null);
 
+  const resetCardPosition = useCallback(
+    (
+      targetIndex: number,
+      options: { animate?: boolean } = { animate: true }
+    ) => {
+      const preset =
+        targetIndex === 0
+          ? { translateX: 0, translateY: 0, scale: 1, opacity: 1 }
+          : targetIndex === 1
+          ? { translateX: 8, translateY: 8, scale: 0.95, opacity: 0.9 }
+          : targetIndex === 2
+          ? { translateX: 16, translateY: 16, scale: 0.9, opacity: 0.8 }
+          : { translateX: 16, translateY: 16, scale: 0.85, opacity: 0 };
+
+      if (options.animate) {
+        Animated.parallel([
+          Animated.spring(translateX, {
+            toValue: preset.translateX,
+            useNativeDriver: true,
+          }),
+          Animated.spring(translateY, {
+            toValue: preset.translateY,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scale, {
+            toValue: preset.scale,
+            useNativeDriver: true,
+          }),
+          Animated.spring(opacity, {
+            toValue: preset.opacity,
+            useNativeDriver: true,
+          }),
+          Animated.spring(gestureRotation, {
+            toValue: 0,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      } else {
+        translateX.setValue(preset.translateX);
+        translateY.setValue(preset.translateY);
+        scale.setValue(preset.scale);
+        opacity.setValue(preset.opacity);
+        gestureRotation.setValue(0);
+      }
+    },
+    [gestureRotation, opacity, scale, translateX, translateY]
+  );
+
   useEffect(() => {
-    if (index === 0) {
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
-        Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-        Animated.spring(opacity, { toValue: 1, useNativeDriver: true }),
-      ]).start();
-    } else if (index === 1) {
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 0.95, useNativeDriver: true }),
-        Animated.spring(translateY, { toValue: 8, useNativeDriver: true }),
-        Animated.spring(translateX, { toValue: 8, useNativeDriver: true }),
-        Animated.spring(opacity, { toValue: 0.9, useNativeDriver: true }),
-      ]).start();
-    } else if (index === 2) {
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 0.9, useNativeDriver: true }),
-        Animated.spring(translateY, { toValue: 16, useNativeDriver: true }),
-        Animated.spring(translateX, { toValue: 16, useNativeDriver: true }),
-        Animated.spring(opacity, { toValue: 0.8, useNativeDriver: true }),
-      ]).start();
+    if (index <= 2) {
+      resetCardPosition(index, { animate: true });
     } else {
       Animated.spring(opacity, { toValue: 0, useNativeDriver: true }).start();
     }
-  }, [index, opacity, scale, translateX, translateY]);
+  }, [index, resetCardPosition]);
+
+  useEffect(() => {
+    if (!isActive) {
+      translateX.stopAnimation();
+      translateY.stopAnimation();
+      gestureRotation.stopAnimation();
+      decisionProgress.stopAnimation();
+      resetCardPosition(index, { animate: false });
+      swipeDirectionRef.current = null;
+      committedDirectionRef.current = null;
+      setSwipeDirection(null);
+      decisionProgress.setValue(0);
+    }
+  }, [index, isActive, decisionProgress, gestureRotation, resetCardPosition, translateX, translateY]);
+
+  const shouldSetResponder = useCallback(
+    (_evt: any, gestureState: PanResponderGestureState) => {
+      if (!isActive) return false;
+      const { dx, dy } = gestureState;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (absDx < 4) return false;
+      return absDx > absDy * 1.1;
+    },
+    [isActive]
+  );
 
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: () => isActive,
+        onStartShouldSetPanResponder: shouldSetResponder,
+        onMoveShouldSetPanResponder: shouldSetResponder,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           // Stop any ongoing animations when starting a gesture
           if (isActive) {
@@ -98,6 +158,11 @@ export function PokemonCardSwipeable({
             translateY.stopAnimation();
             gestureRotation.stopAnimation();
             opacity.stopAnimation();
+            decisionProgress.stopAnimation();
+            decisionProgress.setValue(0);
+            swipeDirectionRef.current = null;
+            committedDirectionRef.current = null;
+            setSwipeDirection(null);
           }
         },
         onPanResponderMove: (_evt, gestureState) => {
@@ -115,7 +180,8 @@ export function PokemonCardSwipeable({
           opacity.setValue(Math.max(0.3, Math.min(1, opacityValue)));
 
           const absoluteDx = Math.abs(gestureState.dx);
-          const nextProgress = Math.min(1, absoluteDx / (width * 0.45));
+          const decisionDistance = CARD_WIDTH * 0.25;
+          const nextProgress = Math.min(1, absoluteDx / decisionDistance);
           decisionProgress.setValue(nextProgress);
 
           if (absoluteDx < 12) {
@@ -130,20 +196,44 @@ export function PokemonCardSwipeable({
               setSwipeDirection(nextDirection);
             }
           }
+
+          const swipeDistanceThreshold = CARD_WIDTH * 0.18;
+          const hysteresisDistance = swipeDistanceThreshold * 0.5;
+
+          if (absoluteDx >= swipeDistanceThreshold) {
+            const nextDirection = gestureState.dx >= 0 ? "right" : "left";
+            if (committedDirectionRef.current !== nextDirection) {
+              committedDirectionRef.current = nextDirection;
+            }
+          } else if (
+            committedDirectionRef.current &&
+            absoluteDx < swipeDistanceThreshold - hysteresisDistance
+          ) {
+            committedDirectionRef.current = null;
+          }
         },
         onPanResponderRelease: (_evt, gestureState) => {
           if (!isActive) return;
 
-          const SWIPE_THRESHOLD = width * 0.3;
-          const VELOCITY_THRESHOLD = 0.5;
+          const swipeDistanceThreshold = CARD_WIDTH * 0.18;
+          const VELOCITY_THRESHOLD = 0.45;
 
           const shouldSwipe =
-            Math.abs(gestureState.dx) > SWIPE_THRESHOLD ||
+            committedDirectionRef.current !== null ||
+            Math.abs(gestureState.dx) > swipeDistanceThreshold ||
             Math.abs(gestureState.vx) > VELOCITY_THRESHOLD;
 
           if (shouldSwipe) {
-            const direction = gestureState.dx > 0 ? 1 : -1;
-            const directionLabel = direction === 1 ? "right" : "left";
+            const directionLabel =
+              committedDirectionRef.current ||
+              (gestureState.dx === 0
+                ? gestureState.vx >= 0
+                  ? "right"
+                  : "left"
+                : gestureState.dx > 0
+                ? "right"
+                : "left");
+            const direction = directionLabel === "right" ? 1 : -1;
 
             Animated.parallel([
               Animated.timing(translateX, {
@@ -171,81 +261,46 @@ export function PokemonCardSwipeable({
                 duration: 220,
                 useNativeDriver: true,
               }),
-            ]).start(() => {
+            ]).start(({ finished }) => {
+              if (!finished) {
+                resetCardPosition(index);
+                decisionProgress.setValue(0);
+                swipeDirectionRef.current = null;
+                committedDirectionRef.current = null;
+                setSwipeDirection(null);
+                return;
+              }
+
               // Call onSwipe after animation completes
               onSwipe({ direction: directionLabel, pokemonId });
               decisionProgress.setValue(0);
               swipeDirectionRef.current = null;
+              committedDirectionRef.current = null;
               setSwipeDirection(null);
             });
 
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(
+              () => {}
+            );
           } else {
-            // Reset to proper positions based on index
-            if (index === 0) {
-              Animated.parallel([
-                Animated.spring(translateX, {
-                  toValue: 0,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(translateY, {
-                  toValue: 0,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(gestureRotation, {
-                  toValue: 0,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(opacity, { toValue: 1, useNativeDriver: true }),
-              ]).start();
-            } else if (index === 1) {
-              Animated.parallel([
-                Animated.spring(translateX, {
-                  toValue: 8,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(translateY, {
-                  toValue: 8,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(gestureRotation, {
-                  toValue: 0,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(opacity, {
-                  toValue: 0.9,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-            } else if (index === 2) {
-              Animated.parallel([
-                Animated.spring(translateX, {
-                  toValue: 16,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(translateY, {
-                  toValue: 16,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(gestureRotation, {
-                  toValue: 0,
-                  useNativeDriver: true,
-                }),
-                Animated.spring(opacity, {
-                  toValue: 0.8,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-            }
-
+            resetCardPosition(index);
             Animated.timing(decisionProgress, {
               toValue: 0,
               duration: 200,
               useNativeDriver: true,
             }).start();
             swipeDirectionRef.current = null;
+            committedDirectionRef.current = null;
             setSwipeDirection(null);
           }
+        },
+        onPanResponderTerminate: () => {
+          if (!isActive) return;
+          resetCardPosition(index);
+          decisionProgress.setValue(0);
+          swipeDirectionRef.current = null;
+          committedDirectionRef.current = null;
+          setSwipeDirection(null);
         },
       }),
     [
@@ -258,6 +313,8 @@ export function PokemonCardSwipeable({
       translateY,
       decisionProgress,
       setSwipeDirection,
+      resetCardPosition,
+      shouldSetResponder,
     ]
   );
 
@@ -717,7 +774,7 @@ function SwipeHints({ shimmerAnim }: { shimmerAnim: any }) {
 const styles = StyleSheet.create({
   pokemonCard: {
     position: "absolute",
-    width: width - 60,
+    width: CARD_WIDTH,
     height: 430,
     borderRadius: 25,
     shadowColor: "#000",
