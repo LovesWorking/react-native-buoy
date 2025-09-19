@@ -1,31 +1,40 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useMemo, useRef, useState } from "react";
 import {
-  Package1Component,
-  FloatingMenu,
-  type InstalledApp,
   AppHostProvider,
   AppOverlay,
+  FloatingMenu,
+  type InstalledApp,
 } from "@monorepo/package-1";
 import {
+  EnvVarsModal,
   createEnvVarConfig,
   envVar,
-  type UserRole,
   type Environment,
-  EnvVarsModal,
+  type UserRole,
 } from "@monorepo/package-2";
-import { EnvLaptopIcon } from "@monorepo/shared";
-
-// Test AsyncStorage import
-let asyncStorageStatus = "❌ Module not found";
-try {
-  require("@react-native-async-storage/async-storage");
-  asyncStorageStatus = "✅ Module found and imported successfully";
-} catch (error) {
-  asyncStorageStatus = `❌ Module not found: ${error}`;
-}
+import {
+  EnvLaptopIcon,
+  ReactQueryIcon,
+  StorageStackIcon,
+  Globe,
+  useSafeAreaInsets,
+} from "@monorepo/shared";
+import { ReactQueryDevToolsModal } from "@monorepo/react-query";
+import { NetworkModal } from "@monorepo/network";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PokemonScreen } from "./screens/pokemon/Pokemon";
+import {
+  StorageModalWithTabs,
+  type RequiredStorageKey,
+} from "@monorepo/storage/storage";
 
 export default function App() {
+  const queryClientRef = useRef<QueryClient | null>(null);
+  if (!queryClientRef.current) {
+    queryClientRef.current = new QueryClient({});
+  }
   const userRole: UserRole = "admin";
   const environment: Environment = "local";
   const requiredEnvVars = createEnvVarConfig([
@@ -68,77 +77,164 @@ export default function App() {
     envVar("EXPO_PUBLIC_ENABLE_TELEMETRY").withType("boolean").build(), // ⚠ Missing
   ]);
 
-  const installedApps: InstalledApp[] = [
-    {
-      id: "env",
-      name: "ENV",
-      slot: "both",
-      icon: ({ size }) => (
-        <EnvLaptopIcon size={size} color="#9f6" glowColor="#9f6" noBackground />
-      ),
-      component: EnvVarsModal,
-      props: {
-        requiredEnvVars,
-        enableSharedModalDimensions: true,
+  const storageRequiredKeys = useMemo<RequiredStorageKey[]>(
+    () => [
+      {
+        key: "@app/session",
+        expectedType: "string",
+        description: "Current user session token",
+        storageType: "secure",
       },
-    },
-  ];
+      {
+        key: "@app/settings:theme",
+        expectedValue: "dark",
+        description: "Preferred theme",
+        storageType: "mmkv",
+      },
+      {
+        key: "@devtools/storage/activeTab",
+        description: "Last viewed storage tab",
+        storageType: "async",
+      },
+    ],
+    []
+  );
+
+  const installedApps: InstalledApp[] = useMemo(
+    () => [
+      {
+        id: "env",
+        name: "ENV",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <EnvLaptopIcon
+            size={size}
+            color="#9f6"
+            glowColor="#9f6"
+            noBackground
+          />
+        ),
+        component: EnvVarsModal,
+        props: {
+          requiredEnvVars,
+          enableSharedModalDimensions: true,
+        },
+      },
+      {
+        id: "storage",
+        name: "STORAGE",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <StorageStackIcon
+            size={size}
+            color="#38f8a7"
+            glowColor="#10B981"
+            noBackground
+          />
+        ),
+        component: StorageModalWithTabs,
+        props: {
+          enableSharedModalDimensions: true,
+          requiredStorageKeys: storageRequiredKeys,
+        },
+      },
+      {
+        id: "react-query",
+        name: "QUERY",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <ReactQueryIcon
+            size={size}
+            colorPreset="red"
+            glowColor="#FF6B8A"
+            noBackground
+          />
+        ),
+        component: ReactQueryDevToolsModal,
+        props: {
+          enableSharedModalDimensions: true,
+        },
+      },
+      {
+        id: "network",
+        name: "NET",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <Globe size={size} color="#38bdf8" />
+        ),
+        component: NetworkModal,
+        props: {
+          enableSharedModalDimensions: true,
+        },
+      },
+    ],
+    [requiredEnvVars, storageRequiredKeys]
+  );
+  const insets = useSafeAreaInsets();
   return (
-    <AppHostProvider>
-      <View style={styles.container}>
-        <FloatingMenu
-          apps={installedApps}
-          actions={{}}
-          environment={environment}
-          userRole={userRole}
-        />
-
-        {/* AppOverlay renders the currently open app */}
-        <AppOverlay />
-
-        <Text style={styles.title}>Monorepo Test App</Text>
-        <ScrollView style={styles.scrollView}>
-          <Text style={styles.subtitle}>Packages loaded via workspace:</Text>
-          <Package1Component />
-
-          <Text style={styles.asyncStorageTest}>
-            AsyncStorage Test: {asyncStorageStatus}
-          </Text>
-        </ScrollView>
-        <StatusBar style="auto" />
-      </View>
-    </AppHostProvider>
+    <QueryClientProvider client={queryClientRef.current!}>
+      <AppHostProvider>
+        <View style={styles.container}>
+          <FloatingMenu
+            apps={installedApps}
+            actions={{}}
+            environment={environment}
+            userRole={userRole}
+          />
+          <AppOverlay />
+          <PokemonScreen />
+          <StatusBar style="dark" />
+        </View>
+      </AppHostProvider>
+    </QueryClientProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 50,
+    backgroundColor: "#F3F4F6",
+  },
+  safeArea: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 10,
-    color: "#666",
+  navBar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 16,
+    backgroundColor: "#111827",
+    borderRadius: 999,
+    padding: 4,
   },
-  asyncStorageTest: {
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
-    margin: 10,
+  navButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 2,
   },
-  scrollView: {
+  navButtonActive: {
+    backgroundColor: "#F9FAFB",
+  },
+  navButtonText: {
+    color: "#E5E7EB",
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  navButtonTextActive: {
+    color: "#111827",
+  },
+  screenContainer: {
     flex: 1,
   },
 });

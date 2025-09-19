@@ -32,7 +32,59 @@ take_ios_screenshot() {
     echo "xcrun not found. Install Xcode command line tools." >&2
     return 1
   fi
-  # Attempt to capture from the booted simulator.
+
+  local target_device="iPhone 16 Pro Rosetta"
+  local device_info=""
+
+  if have_cmd python3; then
+    if ! device_info=$(TARGET_DEVICE="$target_device" python3 - <<'PY'
+import json
+import os
+import subprocess
+import sys
+
+target = os.environ.get("TARGET_DEVICE")
+
+try:
+    raw = subprocess.check_output(["xcrun", "simctl", "list", "devices", "--json"], stderr=subprocess.DEVNULL)
+except Exception:
+    sys.exit(1)
+
+data = json.loads(raw)
+
+for runtime_devices in data.get("devices", {}).values():
+    for device in runtime_devices:
+        if device.get("name") == target:
+            sys.stdout.write(f"{device.get('udid')}|{device.get('state')}")
+            sys.exit(0)
+
+sys.exit(1)
+PY
+    ); then
+      device_info=""
+    fi
+  fi
+
+  local udid=""
+  local state=""
+  if [ -n "$device_info" ]; then
+    IFS='|' read -r udid state <<<"$device_info"
+  fi
+
+  if [ -n "$udid" ]; then
+    if [ "$state" != "Booted" ]; then
+      echo "Booting simulator '$target_device' ($udid)..."
+      xcrun simctl boot "$udid" >/dev/null 2>&1 || true
+      xcrun simctl bootstatus "$udid" -b >/dev/null 2>&1 || true
+    fi
+
+    if xcrun simctl io "$udid" screenshot "$OUT" >/dev/null 2>&1; then
+      echo "iOS screenshot saved: $OUT"
+      return 0
+    fi
+  fi
+
+  # Fallback to whatever simulator is currently booted
   xcrun simctl io booted screenshot "$OUT"
   echo "iOS screenshot saved: $OUT"
 }

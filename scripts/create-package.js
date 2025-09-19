@@ -1,34 +1,34 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+const fs = require("fs");
+const path = require("path");
+const { execSync } = require("child_process");
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 const packageName = args[0];
-const packageType = args[1] || 'standard'; // standard, ui, hook, util
+const packageType = args[1] || "standard"; // standard, ui, hook, util
 
 if (!packageName) {
-  console.error('❌ Error: Package name is required');
-  console.log('\nUsage: pnpm create:package <package-name> [type]');
-  console.log('\nTypes:');
-  console.log('  standard (default) - Regular React Native package');
-  console.log('  ui                 - UI component library');
-  console.log('  hook               - Custom hooks package');
-  console.log('  util               - Utility functions package');
-  console.log('\nExample: pnpm create:package my-feature');
+  console.error("❌ Error: Package name is required");
+  console.log("\nUsage: pnpm create:package <package-name> [type]");
+  console.log("\nTypes:");
+  console.log("  standard (default) - Regular React Native package");
+  console.log("  ui                 - UI component library");
+  console.log("  hook               - Custom hooks package");
+  console.log("  util               - Utility functions package");
+  console.log("\nExample: pnpm create:package my-feature");
   process.exit(1);
 }
 
 // Validate package name
 if (!/^[a-z0-9-]+$/.test(packageName)) {
-  console.error('❌ Error: Package name must be lowercase with hyphens only');
+  console.error("❌ Error: Package name must be lowercase with hyphens only");
   process.exit(1);
 }
 
-const rootDir = path.resolve(__dirname, '..');
-const packagesDir = path.join(rootDir, 'packages');
+const rootDir = path.resolve(__dirname, "..");
+const packagesDir = path.join(rootDir, "packages");
 const packageDir = path.join(packagesDir, packageName);
 
 // Check if package already exists
@@ -43,105 +43,107 @@ console.log(`   Location: packages/${packageName}\n`);
 
 // Create package directory structure
 const createDirectoryStructure = () => {
-  console.log('📁 Creating directory structure...');
+  console.log("📁 Creating directory structure...");
 
   fs.mkdirSync(packageDir, { recursive: true });
-  fs.mkdirSync(path.join(packageDir, 'src'), { recursive: true });
+  fs.mkdirSync(path.join(packageDir, "src"), { recursive: true });
 
-  if (packageType === 'ui') {
-    fs.mkdirSync(path.join(packageDir, 'src', 'components'), { recursive: true });
-    fs.mkdirSync(path.join(packageDir, 'src', 'styles'), { recursive: true });
-  } else if (packageType === 'hook') {
-    fs.mkdirSync(path.join(packageDir, 'src', 'hooks'), { recursive: true });
-  } else if (packageType === 'util') {
-    fs.mkdirSync(path.join(packageDir, 'src', 'utils'), { recursive: true });
+  if (packageType === "ui") {
+    fs.mkdirSync(path.join(packageDir, "src", "components"), {
+      recursive: true,
+    });
+    fs.mkdirSync(path.join(packageDir, "src", "styles"), { recursive: true });
+  } else if (packageType === "hook") {
+    fs.mkdirSync(path.join(packageDir, "src", "hooks"), { recursive: true });
+  } else if (packageType === "util") {
+    fs.mkdirSync(path.join(packageDir, "src", "utils"), { recursive: true });
   }
 };
 
 // Create package.json
 const createPackageJson = () => {
-  console.log('📝 Creating package.json...');
+  console.log("📝 Creating package.json...");
 
   const packageJson = {
     name: `@monorepo/${packageName}`,
-    version: '0.1.0',
+    version: "0.1.0",
     description: `${packageName} package`,
-    main: 'lib/commonjs/index.js',
-    module: 'lib/module/index.js',
-    types: 'lib/typescript/index.d.ts',
+    main: "lib/commonjs/index.js",
+    module: "lib/module/index.js",
+    types: "lib/typescript/index.d.ts",
     exports: {
-      '.': {
-        source: './src/index.ts',
-        import: './lib/module/index.js',
-        require: './lib/commonjs/index.js',
-        types: './lib/typescript/index.d.ts'
-      }
+      ".": {
+        source: "./src/index.ts",
+        import: "./lib/module/index.js",
+        require: "./lib/commonjs/index.js",
+        types: "./lib/typescript/index.d.ts",
+      },
     },
-    files: ['src', 'lib'],
+    files: ["src", "lib"],
     sideEffects: false,
     scripts: {
-      build: 'bob build',
-      typecheck: 'tsc --noEmit',
-      clean: 'rimraf lib',
-      test: 'pnpm run typecheck',
+      build: "bob build",
+      typecheck: "tsc --noEmit",
+      clean: "rimraf lib",
+      test: "pnpm run typecheck",
       // Note: 'prepare' script will be added after first install
-      postinstall: 'echo "Run pnpm build to compile this package"'
+      postinstall: 'echo "Run pnpm build to compile this package"',
     },
     dependencies: {
-      '@monorepo/shared': 'workspace:*'
+      "@monorepo/shared": "workspace:*",
     },
     peerDependencies: {
-      react: '*',
-      'react-native': '*'
+      react: "*",
+      "react-native": "*",
     },
     devDependencies: {
-      '@types/react': '^19.0.14',
-      '@types/react-native': '^0.73.0'
+      "@types/react": "^19.0.14",
+      "@types/react-native": "^0.73.0",
     },
-    'react-native-builder-bob': {
-      source: 'src',
-      output: 'lib',
-      targets: ['commonjs', 'module', 'typescript']
-    }
+    "react-native-builder-bob": {
+      source: "src",
+      output: "lib",
+      targets: ["commonjs", "module", "typescript"],
+    },
   };
 
   fs.writeFileSync(
-    path.join(packageDir, 'package.json'),
-    JSON.stringify(packageJson, null, 2) + '\n'
+    path.join(packageDir, "package.json"),
+    JSON.stringify(packageJson, null, 2) + "\n"
   );
 };
 
 // Create tsconfig.json
 const createTsConfig = () => {
-  console.log('📝 Creating tsconfig.json...');
+  console.log("📝 Creating tsconfig.json...");
 
   const tsConfig = {
-    extends: '../../tsconfig.json',
+    extends: "../../tsconfig.json",
     compilerOptions: {
-      rootDir: './src',
-      outDir: './lib/typescript'
+      rootDir: "./src",
+      outDir: "./lib/typescript",
     },
-    include: ['src/**/*'],
-    exclude: ['node_modules', 'lib']
+    include: ["src/**/*"],
+    exclude: ["node_modules", "lib"],
   };
 
   fs.writeFileSync(
-    path.join(packageDir, 'tsconfig.json'),
-    JSON.stringify(tsConfig, null, 2) + '\n'
+    path.join(packageDir, "tsconfig.json"),
+    JSON.stringify(tsConfig, null, 2) + "\n"
   );
 };
 
 // Create index file based on package type
 const createIndexFile = () => {
-  const isReactComponent = packageType === 'standard' || packageType === 'ui';
-  const fileName = isReactComponent ? 'index.tsx' : 'index.ts';
+  const isReactComponent = packageType === "standard" || packageType === "ui";
+  const fileName = isReactComponent ? "index.tsx" : "index.ts";
 
   console.log(`📝 Creating ${fileName}...`);
 
-  let indexContent = '';
+  let indexContent = "";
 
   switch (packageType) {
-    case 'ui':
+    case "ui":
       indexContent = `// Export all UI components
 export * from './components';
 
@@ -150,7 +152,7 @@ export { Button, Card } from '@monorepo/shared';
 `;
       break;
 
-    case 'hook':
+    case "hook":
       indexContent = `// Export all custom hooks
 export * from './hooks';
 
@@ -159,7 +161,7 @@ export { useCounter, useToggle } from '@monorepo/shared';
 `;
       break;
 
-    case 'util':
+    case "util":
       indexContent = `// Export all utility functions
 export * from './utils';
 
@@ -171,7 +173,6 @@ export { formatNumber, debounce } from '@monorepo/shared';
     default:
       indexContent = `import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Card } from '@monorepo/shared';
 
 export interface ${toPascalCase(packageName)}Props {
   title?: string;
@@ -181,12 +182,12 @@ export function ${toPascalCase(packageName)}Component({
   title = '${packageName} Component'
 }: ${toPascalCase(packageName)}Props) {
   return (
-    <Card margin={10}>
+    <View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>
         This is a new package created with create-package script
       </Text>
-    </Card>
+    </View>
   );
 }
 
@@ -205,22 +206,22 @@ const styles = StyleSheet.create({
 `;
   }
 
-  fs.writeFileSync(path.join(packageDir, 'src', fileName), indexContent);
+  fs.writeFileSync(path.join(packageDir, "src", fileName), indexContent);
 };
 
 // Create additional files based on type
 const createTypeSpecificFiles = () => {
   switch (packageType) {
-    case 'ui':
-      console.log('📝 Creating UI component example...');
+    case "ui":
+      console.log("📝 Creating UI component example...");
       fs.writeFileSync(
-        path.join(packageDir, 'src', 'components', 'index.ts'),
+        path.join(packageDir, "src", "components", "index.ts"),
         `export * from './ExampleComponent';
 `
       );
 
       fs.writeFileSync(
-        path.join(packageDir, 'src', 'components', 'ExampleComponent.tsx'),
+        path.join(packageDir, "src", "components", "ExampleComponent.tsx"),
         `import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Button } from '@monorepo/shared';
@@ -255,16 +256,16 @@ const styles = StyleSheet.create({
       );
       break;
 
-    case 'hook':
-      console.log('📝 Creating hook example...');
+    case "hook":
+      console.log("📝 Creating hook example...");
       fs.writeFileSync(
-        path.join(packageDir, 'src', 'hooks', 'index.ts'),
+        path.join(packageDir, "src", "hooks", "index.ts"),
         `export * from './useExample';
 `
       );
 
       fs.writeFileSync(
-        path.join(packageDir, 'src', 'hooks', 'useExample.ts'),
+        path.join(packageDir, "src", "hooks", "useExample.ts"),
         `import { useState, useCallback } from 'react';
 
 export interface UseExampleReturn {
@@ -299,16 +300,16 @@ export function useExample(initialValue = ''): UseExampleReturn {
       );
       break;
 
-    case 'util':
-      console.log('📝 Creating utility example...');
+    case "util":
+      console.log("📝 Creating utility example...");
       fs.writeFileSync(
-        path.join(packageDir, 'src', 'utils', 'index.ts'),
+        path.join(packageDir, "src", "utils", "index.ts"),
         `export * from './helpers';
 `
       );
 
       fs.writeFileSync(
-        path.join(packageDir, 'src', 'utils', 'helpers.ts'),
+        path.join(packageDir, "src", "utils", "helpers.ts"),
         `/**
  * Example utility function
  * @param input - Input string to process
@@ -336,7 +337,7 @@ export async function processAsync<T>(data: T): Promise<T> {
 
 // Create README
 const createReadme = () => {
-  console.log('📝 Creating README.md...');
+  console.log("📝 Creating README.md...");
 
   const readmeContent = `# @monorepo/${packageName}
 
@@ -351,7 +352,9 @@ This package is part of the monorepo and is automatically available to other pac
 ## Usage
 
 \`\`\`typescript
-import { ${toPascalCase(packageName)}Component } from '@monorepo/${packageName}';
+import { ${toPascalCase(
+    packageName
+  )}Component } from '@monorepo/${packageName}';
 
 // Use in your component
 <${toPascalCase(packageName)}Component title="Hello World" />
@@ -395,12 +398,12 @@ ${packageName}/
 - React and React Native as peer dependencies
 `;
 
-  fs.writeFileSync(path.join(packageDir, 'README.md'), readmeContent);
+  fs.writeFileSync(path.join(packageDir, "README.md"), readmeContent);
 };
 
 // Create .gitignore
 const createGitignore = () => {
-  console.log('📝 Creating .gitignore...');
+  console.log("📝 Creating .gitignore...");
 
   const gitignoreContent = `# Dependencies
 node_modules/
@@ -425,28 +428,32 @@ coverage/
 Thumbs.db
 `;
 
-  fs.writeFileSync(path.join(packageDir, '.gitignore'), gitignoreContent);
+  fs.writeFileSync(path.join(packageDir, ".gitignore"), gitignoreContent);
 };
 
 // Add package to example app dependencies
 const addToExampleApp = () => {
-  console.log('📝 Adding package to example app dependencies...');
+  console.log("📝 Adding package to example app dependencies...");
 
-  const examplePackageJsonPath = path.join(rootDir, 'example', 'package.json');
+  const examplePackageJsonPath = path.join(rootDir, "example", "package.json");
 
   if (fs.existsSync(examplePackageJsonPath)) {
-    const examplePackageJson = JSON.parse(fs.readFileSync(examplePackageJsonPath, 'utf8'));
+    const examplePackageJson = JSON.parse(
+      fs.readFileSync(examplePackageJsonPath, "utf8")
+    );
 
     // Add the new package to dependencies
-    examplePackageJson.dependencies[`@monorepo/${packageName}`] = 'workspace:*';
+    examplePackageJson.dependencies[`@monorepo/${packageName}`] = "workspace:*";
 
     // Sort dependencies alphabetically (keeping @monorepo packages together)
     const sortedDeps = {};
     const monorepoPackages = [];
     const otherPackages = [];
 
-    for (const [key, value] of Object.entries(examplePackageJson.dependencies)) {
-      if (key.startsWith('@monorepo/')) {
+    for (const [key, value] of Object.entries(
+      examplePackageJson.dependencies
+    )) {
+      if (key.startsWith("@monorepo/")) {
         monorepoPackages.push([key, value]);
       } else {
         otherPackages.push([key, value]);
@@ -467,21 +474,21 @@ const addToExampleApp = () => {
     // Write back to file
     fs.writeFileSync(
       examplePackageJsonPath,
-      JSON.stringify(examplePackageJson, null, 2) + '\n'
+      JSON.stringify(examplePackageJson, null, 2) + "\n"
     );
 
-    console.log('✅ Added to example app dependencies');
+    console.log("✅ Added to example app dependencies");
   } else {
-    console.log('⚠️  Example app not found, skipping dependency addition');
+    console.log("⚠️  Example app not found, skipping dependency addition");
   }
 };
 
 // Helper function to convert kebab-case to PascalCase
 function toPascalCase(str) {
   return str
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('');
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join("");
 }
 
 // Main execution
@@ -495,19 +502,19 @@ try {
   createGitignore();
   addToExampleApp();
 
-  console.log('\n✅ Package created successfully!');
+  console.log("\n✅ Package created successfully!");
 
   // Run pnpm install to link the new package
-  console.log('\n📦 Installing dependencies...');
+  console.log("\n📦 Installing dependencies...");
   try {
-    execSync('pnpm install', {
+    execSync("pnpm install", {
       cwd: rootDir,
-      stdio: 'inherit'
+      stdio: "inherit",
     });
-    console.log('✅ Dependencies installed');
+    console.log("✅ Dependencies installed");
   } catch (error) {
-    console.log('⚠️  Failed to run pnpm install automatically');
-    console.log('   Please run manually: pnpm install');
+    console.log("⚠️  Failed to run pnpm install automatically");
+    console.log("   Please run manually: pnpm install");
   }
 
   // Build the new package
@@ -515,20 +522,25 @@ try {
   try {
     execSync(`pnpm --filter @monorepo/${packageName} build`, {
       cwd: rootDir,
-      stdio: 'inherit'
+      stdio: "inherit",
     });
-    console.log('✅ Package built successfully');
+    console.log("✅ Package built successfully");
   } catch (error) {
-    console.log('⚠️  Failed to build package automatically');
-    console.log(`   Please run manually: pnpm --filter @monorepo/${packageName} build`);
+    console.log("⚠️  Failed to build package automatically");
+    console.log(
+      `   Please run manually: pnpm --filter @monorepo/${packageName} build`
+    );
   }
 
-  console.log('\n💡 To use in the example app:');
-  console.log(`   import { ${toPascalCase(packageName)}Component } from '@monorepo/${packageName}';`);
-  console.log('\n🔥 Package is ready and hot reload is configured!');
-
+  console.log("\n💡 To use in the example app:");
+  console.log(
+    `   import { ${toPascalCase(
+      packageName
+    )}Component } from '@monorepo/${packageName}';`
+  );
+  console.log("\n🔥 Package is ready and hot reload is configured!");
 } catch (error) {
-  console.error('\n❌ Error creating package:', error.message);
+  console.error("\n❌ Error creating package:", error.message);
 
   // Clean up on error
   if (fs.existsSync(packageDir)) {
