@@ -35,6 +35,7 @@ export {
 
 // Also export formatting utils
 export * from "./utils/formatting";
+export * from "./utils/time";
 
 // Type helper's isPlainObject as isPlainObjectUtil to avoid conflict
 export { isPlainObject as isPlainObjectUtil } from "./utils/typeHelpers";
@@ -47,6 +48,7 @@ export * from "./clipboard";
 export * from "./logger";
 export * from "./settings";
 export * from "./storage";
+export { useSafeAreaInsets, useFilterManager } from "./hooks";
 
 // JsModal
 export { JsModal } from "./JsModal";

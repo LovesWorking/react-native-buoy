@@ -1,0 +1,3 @@
+src/**/*.d.ts
+src/**/*.d.ts.map
+!src/types/**/*.d.ts

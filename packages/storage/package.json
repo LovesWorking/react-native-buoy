@@ -1,0 +1,55 @@
+{
+  "name": "@monorepo/storage",
+  "version": "0.1.0",
+  "description": "storage package",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.tsx",
+      "import": "./lib/module/index.js",
+      "require": "./lib/commonjs/index.js",
+      "types": "./lib/typescript/index.d.ts"
+    },
+    "./storage": {
+      "source": "./src/storage/index.ts",
+      "import": "./lib/module/storage/index.js",
+      "require": "./lib/commonjs/storage/index.js",
+      "types": "./lib/typescript/storage/index.d.ts"
+    }
+  },
+  "files": [
+    "src",
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "bob build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf lib",
+    "test": "pnpm run typecheck",
+    "postinstall": "echo \"Run pnpm build to compile this package\""
+  },
+  "dependencies": {
+    "@monorepo/shared": "workspace:*",
+    "@tanstack/react-query": "^5.89.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.14",
+    "@types/react-native": "^0.73.0"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
+  }
+}

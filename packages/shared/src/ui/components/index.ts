@@ -17,6 +17,10 @@ export {
   FilterList,
 } from "./FilterComponents";
 export {
+  CompactFilterChips,
+} from "./CompactFilterChips";
+export type { FilterChipGroup } from "./CompactFilterChips";
+export {
   Badge,
   StatusBadge,
   CountBadge,
@@ -41,3 +45,9 @@ export { DraggableHeader } from "./DraggableHeader";
 export { CollapsibleSection } from "./CollapsibleSection";
 export { DataInspector } from "./DataInspector";
 export { SearchBar } from "./SearchBar";
+export {
+  DynamicFilterView,
+} from "./DynamicFilterView";
+export type {
+  DynamicFilterConfig,
+} from "./DynamicFilterView";

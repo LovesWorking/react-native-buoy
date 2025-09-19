@@ -28,8 +28,7 @@ export function EnvStatsOverview({
   activeFilter = "all",
   onFilterChange,
 }: EnvStatsOverviewProps) {
-  const issuesCount =
-    stats.missingCount + stats.wrongValueCount + stats.wrongTypeCount;
+  const issuesCount = stats.wrongValueCount + stats.wrongTypeCount;
 
   return (
     <View style={styles.container}>
