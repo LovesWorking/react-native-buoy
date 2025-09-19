@@ -17,8 +17,8 @@ A production-ready React Native monorepo with automated package creation, hot re
 ```
 ├── packages/              # All packages
 │   ├── shared/           # Shared UI, hooks, utilities
-│   ├── package-1/        # Counter demo package
-│   ├── package-2/        # Toggle demo package
+│   ├── devtools-floating-menu/ # Floating dev tools launcher
+│   ├── env-tools/        # Environment variables tooling
 │   ├── ui-kit/           # UI library example
 │   └── [your-packages]/  # Your custom packages
 ├── example/              # Expo test app
@@ -169,15 +169,15 @@ pnpm fresh
 
 ## 🎯 Example Packages
 
-### package-1 (Counter Demo)
-- Uses `Button`, `Card` from shared
-- Implements `useCounter` hook
-- Demonstrates number formatting
+### devtools-floating-menu (Floating Dev Tools)
+- Floating bubble launcher for developer tools
+- AppHost system to mount plug-in modals and overlays
+- Settings modal with per-tool visibility controls
 
-### package-2 (Toggle Demo)
-- Uses `Card`, `Button` from shared
-- Implements `useToggle` hook
-- Demonstrates debounce utility
+### env-tools (Environment Variable Inspector)
+- `EnvVarsModal` for surfacing runtime configuration issues
+- Helpers (`createEnvVarConfig`, `envVar`) to declare required variables
+- Role-aware UI showing environment, status, and remediation tips
 
 ### ui-kit (Component Library)
 - Custom UI components

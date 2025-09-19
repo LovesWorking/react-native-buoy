@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@monorepo/network": "workspace:*",
-    "@monorepo/package-1": "workspace:*",
-    "@monorepo/package-2": "workspace:*",
+    "@monorepo/devtools-floating-menu": "workspace:*",
+    "@monorepo/env-tools": "workspace:*",
     "@monorepo/react-query": "workspace:*",
     "@monorepo/shared": "workspace:*",
     "@monorepo/storage": "workspace:*",

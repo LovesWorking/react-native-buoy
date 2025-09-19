@@ -6,14 +6,14 @@ import {
   AppOverlay,
   FloatingMenu,
   type InstalledApp,
-} from "@monorepo/package-1";
+} from "@monorepo/devtools-floating-menu";
 import {
   EnvVarsModal,
   createEnvVarConfig,
   envVar,
   type Environment,
   type UserRole,
-} from "@monorepo/package-2";
+} from "@monorepo/env-tools";
 import {
   EnvLaptopIcon,
   ReactQueryIcon,

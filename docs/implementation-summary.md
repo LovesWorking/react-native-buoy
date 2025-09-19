@@ -6,7 +6,7 @@ We successfully implemented the **gpt5 pro.md** plan (App Host pattern) for the 
 
 ## Key Changes Made
 
-### 1. Created AppHost System (`packages/package-1/src/floatingMenu/AppHost.tsx`)
+### 1. Created AppHost System (`packages/devtools-floating-menu/src/floatingMenu/AppHost.tsx`)
 - `AppHostProvider`: Context provider that tracks open apps
 - `useAppHost`: Hook to access app management functions
 - `AppOverlay`: Component that renders the currently open app
@@ -81,7 +81,7 @@ const [envCloseResolver, setEnvCloseResolver] = useState(null);
 ### Plug-and-Play API Reference
 
 ```ts
-import type { InstalledApp } from "@monorepo/package-1";
+import type { InstalledApp } from "@monorepo/devtools-floating-menu";
 
 export const installedApps: InstalledApp[] = [
   {

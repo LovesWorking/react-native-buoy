@@ -16,8 +16,8 @@ This monorepo is set up with:
 rn-monorepo-clean/
 ├── packages/               # All packages
 │   ├── shared/            # Shared UI, hooks, utilities
-│   ├── package-1/         # Example package 1
-│   ├── package-2/         # Example package 2
+│   ├── devtools-floating-menu/ # Floating dev tools launcher
+│   ├── env-tools/         # Environment variables tooling
 │   └── [your-packages]/   # Your new packages
 ├── example/               # Demo/test app
 ├── scripts/               # Automation scripts
@@ -250,8 +250,8 @@ Each package uses Bob for building:
 ```typescript
 // example/App.tsx
 import { ScrollView, View, Text } from 'react-native';
-import { Package1Component } from '@monorepo/package-1';
-import { Package2Component } from '@monorepo/package-2';
+import { Package1Component } from '@monorepo/devtools-floating-menu';
+import { Package2Component } from '@monorepo/env-tools';
 import { MyFeatureComponent } from '@monorepo/my-feature';
 
 export default function App() {
