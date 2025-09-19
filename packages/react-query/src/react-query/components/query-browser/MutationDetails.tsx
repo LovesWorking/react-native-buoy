@@ -2,6 +2,7 @@ import { Mutation } from "@tanstack/react-query";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { displayValue } from "@monorepo/shared";
 import MutationDetailsChips from "./MutationDetailsChips";
+import { macOSColors } from "@monorepo/shared";
 
 interface Props {
   selectedMutation: Mutation | undefined;
@@ -17,11 +18,11 @@ export default function MutationDetails({ selectedMutation }: Props) {
   ).toLocaleTimeString();
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.mutationDetailsText, styles.bgEAECF0, styles.p1]}>
+    <View style={styles.minWidth}>
+      <Text style={styles.headerText}>
         Mutation Details
       </Text>
-      <View style={[styles.flexRow, styles.justifyBetween, styles.p1]}>
+      <View style={styles.row}>
         <ScrollView
           sentry-label="ignore devtools mutation details scroll"
           horizontal
@@ -35,7 +36,7 @@ export default function MutationDetails({ selectedMutation }: Props) {
         </ScrollView>
         <MutationDetailsChips status={selectedMutation.state.status} />
       </View>
-      <View style={[styles.flexRow, styles.justifyBetween, styles.p1]}>
+      <View style={styles.row}>
         <Text style={styles.labelText}>Submitted At:</Text>
         <Text style={styles.valueText}>{submittedAt}</Text>
       </View>
@@ -44,37 +45,39 @@ export default function MutationDetails({ selectedMutation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  minWidth: {
     minWidth: 200,
-    backgroundColor: "#171717",
-    borderRadius: 8,
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: macOSColors.semantic.info + "4D",
     overflow: "hidden",
+    shadowColor: macOSColors.semantic.info,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
-  mutationDetailsText: {
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
-    padding: 12,
+  headerText: {
+    backgroundColor: macOSColors.semantic.infoBackground,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     fontWeight: "600",
-    fontSize: 14,
-    color: "#FFFFFF",
+    fontSize: 12,
+    color: macOSColors.semantic.info,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    borderBottomColor: macOSColors.semantic.info + "33",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    fontFamily: "monospace",
   },
-  flexRow: {
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.02)",
-  },
-  justifyBetween: {
-    justifyContent: "space-between",
-  },
-  p1: {
-    padding: 12,
+    borderBottomColor: macOSColors.text.muted + "66",
   },
   flex1: {
     flex: 1,
@@ -82,23 +85,30 @@ const styles = StyleSheet.create({
   },
   flexWrap: {
     fontSize: 12,
-    color: "#F9FAFB",
+    color: macOSColors.text.primary,
     fontFamily: "monospace",
-    lineHeight: 16,
+    lineHeight: 18,
     flexShrink: 1,
-  },
-  bgEAECF0: {
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
+    backgroundColor: macOSColors.semantic.infoBackground,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.info + "4D",
   },
   labelText: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    fontWeight: "500",
+    fontSize: 10,
+    color: macOSColors.text.secondary,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    fontFamily: "monospace",
   },
   valueText: {
     fontSize: 12,
-    color: "#FFFFFF",
-    fontWeight: "600",
+    color: macOSColors.text.primary,
+    fontWeight: "500",
     fontVariant: ["tabular-nums"],
+    fontFamily: "monospace",
   },
 });

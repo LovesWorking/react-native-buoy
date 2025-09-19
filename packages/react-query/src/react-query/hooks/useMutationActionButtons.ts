@@ -3,8 +3,16 @@ import { Mutation , useQueryClient } from "@tanstack/react-query";
 
 interface ActionButtonConfig {
   label: string;
-  bgColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
-  textColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
+  bgColorClass:
+    | "btnRefetch"
+    | "btnTriggerLoading"
+    | "btnTriggerLoadiError"
+    | "btnRemove";
+  textColorClass:
+    | "btnRefetch"
+    | "btnTriggerLoading"
+    | "btnTriggerLoadiError"
+    | "btnRemove";
   disabled: boolean;
   onPress: () => void;
 }
@@ -17,8 +25,8 @@ export function useMutationActionButtons(
     () => [
       {
         label: "Remove",
-        bgColorClass: "btnTriggerLoadiError",
-        textColorClass: "btnTriggerLoadiError",
+        bgColorClass: "btnRemove",
+        textColorClass: "btnRemove",
         disabled: false,
         onPress: () => queryClient.getMutationCache().remove(selectedMutation),
       },

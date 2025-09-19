@@ -7,8 +7,16 @@ import { getQueryStatusLabel } from "../utils/getQueryStatusLabel";
 
 interface ActionButtonConfig {
   label: string;
-  bgColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
-  textColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
+  bgColorClass:
+    | "btnRefetch"
+    | "btnTriggerLoading"
+    | "btnTriggerLoadiError"
+    | "btnRemove";
+  textColorClass:
+    | "btnRefetch"
+    | "btnTriggerLoading"
+    | "btnTriggerLoadiError"
+    | "btnRemove";
   disabled: boolean;
   onPress: () => void;
 }

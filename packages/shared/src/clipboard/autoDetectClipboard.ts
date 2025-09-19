@@ -1,3 +1,5 @@
+import { loadOptionalModule, getCachedOptionalModule } from "../utils/loadOptionalModule";
+
 // Define the clipboard function type locally
 export type ClipboardFunction = (text: string) => Promise<boolean>;
 
@@ -18,54 +20,56 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
 
   if (!loadPromise) {
     loadPromise = (async () => {
-      // Try Expo clipboard first
-      try {
-        const expoClipboardModule = await import("expo-clipboard");
-        const expoClipboard =
-          (expoClipboardModule as any)?.default || expoClipboardModule;
-        if (expoClipboard?.setStringAsync) {
-          log("Detected expo-clipboard module");
-          return async (text: string) => {
-            try {
-              await expoClipboard.setStringAsync(text);
-              return true;
-            } catch (error) {
-              console.error(
-                "[RnBetterDevTools] Expo clipboard copy failed:",
-                error,
-              );
-              return false;
-            }
-          };
-        }
-      } catch (error) {
-        log("expo-clipboard import failed", error);
+      const expoClipboard = await loadOptionalModule<any>("expo-clipboard", {
+        logger: {
+          log,
+          warn: (...args) => log("expo-clipboard", ...args),
+          error: (...args) => console.error("[RnBetterDevTools]", ...args),
+        },
+      });
+
+      if (expoClipboard?.setStringAsync) {
+        log("Detected expo-clipboard module");
+        return async (text: string) => {
+          try {
+            await expoClipboard.setStringAsync(text);
+            return true;
+          } catch (error) {
+            console.error(
+              "[RnBetterDevTools] Expo clipboard copy failed:",
+              error,
+            );
+            return false;
+          }
+        };
       }
 
-      // Fallback to React Native CLI clipboard
-      try {
-        const rnClipboardModule = await import(
-          "@react-native-clipboard/clipboard"
-        );
-        const rnClipboard =
-          (rnClipboardModule as any)?.default || rnClipboardModule;
-        if (rnClipboard?.setString) {
-          log("Detected @react-native-clipboard/clipboard module");
-          return async (text: string) => {
-            try {
-              await rnClipboard.setString(text);
-              return true;
-            } catch (error) {
-              console.error(
-                "[RnBetterDevTools] RN CLI clipboard copy failed:",
-                error,
-              );
-              return false;
-            }
-          };
+      const rnClipboard = await loadOptionalModule<any>(
+        "@react-native-clipboard/clipboard",
+        {
+          logger: {
+            log,
+            warn: (...args) =>
+              log("@react-native-clipboard/clipboard", ...args),
+            error: (...args) => console.error("[RnBetterDevTools]", ...args),
+          },
         }
-      } catch (error) {
-        log("@react-native-clipboard/clipboard import failed", error);
+      );
+
+      if (rnClipboard?.setString) {
+        log("Detected @react-native-clipboard/clipboard module");
+        return async (text: string) => {
+          try {
+            await rnClipboard.setString(text);
+            return true;
+          } catch (error) {
+            console.error(
+              "[RnBetterDevTools] RN CLI clipboard copy failed:",
+              error,
+            );
+            return false;
+          }
+        };
       }
 
       return null;

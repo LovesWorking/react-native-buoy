@@ -1,25 +1,26 @@
 import { Mutation } from "@tanstack/react-query";
 import { Text, View, StyleSheet } from "react-native";
+import { macOSColors } from "@monorepo/shared";
 
 const backgroundColors = {
-  success: "rgba(16, 185, 129, 0.1)", // Green
-  error: "rgba(239, 68, 68, 0.1)", // Red
-  pending: "rgba(59, 130, 246, 0.1)", // Blue
-  idle: "rgba(107, 114, 128, 0.1)", // Grey
+  success: macOSColors.semantic.successBackground,
+  error: macOSColors.semantic.errorBackground,
+  pending: macOSColors.semantic.infoBackground,
+  idle: macOSColors.text.muted + "1A",
 };
 
 const borderColors = {
-  success: "rgba(16, 185, 129, 0.2)", // Green
-  error: "rgba(239, 68, 68, 0.2)", // Red
-  pending: "rgba(59, 130, 246, 0.2)", // Blue
-  idle: "rgba(107, 114, 128, 0.2)", // Grey
+  success: macOSColors.semantic.success + "33",
+  error: macOSColors.semantic.error + "33",
+  pending: macOSColors.semantic.info + "33",
+  idle: macOSColors.text.muted + "33",
 };
 
 const textColors = {
-  success: "#10B981", // Green
-  error: "#EF4444", // Red
-  pending: "#3B82F6", // Blue
-  idle: "#6B7280", // Grey
+  success: macOSColors.semantic.success,
+  error: macOSColors.semantic.error,
+  pending: macOSColors.semantic.info,
+  idle: macOSColors.text.muted,
 };
 interface Props {
   status: Mutation["state"]["status"];
@@ -49,5 +50,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+    fontFamily: "monospace",
   },
 });

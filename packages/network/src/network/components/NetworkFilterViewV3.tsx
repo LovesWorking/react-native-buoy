@@ -1,25 +1,20 @@
 import {
   CheckCircle,
-  XCircle,
   Clock,
-  Globe,
+  DynamicFilterView,
+  Film,
   FileJson,
   FileText,
-  Image,
-  Film,
-  Music,
   Filter,
+  Globe,
+  Image,
   macOSColors,
-  CompactFilterChips,
-  SectionHeader,
-  FilterList,
-  AddFilterInput,
-  AddFilterButton,
+  Music,
+  type DynamicFilterConfig,
+  XCircle,
 } from "@monorepo/shared";
 import type { NetworkEvent } from "../types";
-import { View, StyleSheet, ScrollView, Text } from "react-native";
-import { useFilterManager, type FilterChipGroup } from "@monorepo/shared";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 interface NetworkFilter {
   status?: "all" | "success" | "error" | "pending";
@@ -61,6 +56,42 @@ function getContentType(event: NetworkEvent): { type: string; color: string } {
   return { type: "OTHER", color: macOSColors.text.muted };
 }
 
+function getContentTypeIcon(type: string) {
+  switch (type) {
+    case "JSON":
+      return FileJson;
+    case "HTML":
+    case "XML":
+    case "TEXT":
+      return FileText;
+    case "IMAGE":
+      return Image;
+    case "VIDEO":
+      return Film;
+    case "AUDIO":
+      return Music;
+    default:
+      return Globe;
+  }
+}
+
+function getMethodColor(method: string) {
+  switch (method) {
+    case "GET":
+      return macOSColors.semantic.success;
+    case "POST":
+      return macOSColors.semantic.info;
+    case "PUT":
+      return macOSColors.semantic.warning;
+    case "DELETE":
+      return macOSColors.semantic.error;
+    case "PATCH":
+      return macOSColors.semantic.success;
+    default:
+      return macOSColors.text.muted;
+  }
+}
+
 export function NetworkFilterViewV3({
   events,
   filter,
@@ -69,286 +100,262 @@ export function NetworkFilterViewV3({
   onTogglePattern = () => {},
   onAddPattern = () => {},
 }: NetworkFilterViewV3Props) {
-  const filterManager = useFilterManager(ignoredPatterns);
+  const statusCounts = useMemo(() => {
+    const counts = {
+      all: events.length,
+      success: 0,
+      error: 0,
+      pending: 0,
+    };
 
-  // Calculate counts
-  const statusCounts = {
-    all: events.length,
-    success: events.filter((e) => e.status && e.status >= 200 && e.status < 300)
-      .length,
-    error: events.filter((e) => e.error || (e.status && e.status >= 400))
-      .length,
-    pending: events.filter((e) => !e.status && !e.error).length,
-  };
-
-  const methodCounts = events.reduce((acc, event) => {
-    acc[event.method] = (acc[event.method] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const contentTypeCounts = events.reduce((acc, event) => {
-    const { type } = getContentType(event);
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "success":
-        return CheckCircle;
-      case "error":
-        return XCircle;
-      case "pending":
-        return Clock;
-      default:
-        return Globe;
-    }
-  };
-
-  const getContentTypeIcon = (type: string) => {
-    switch (type) {
-      case "JSON":
-        return FileJson;
-      case "HTML":
-      case "XML":
-      case "TEXT":
-        return FileText;
-      case "IMAGE":
-        return Image;
-      case "VIDEO":
-        return Film;
-      case "AUDIO":
-        return Music;
-      default:
-        return Globe;
-    }
-  };
-
-  const getMethodColor = (method: string) => {
-    switch (method) {
-      case "GET":
-        return macOSColors.semantic.success;
-      case "POST":
-        return macOSColors.semantic.info;
-      case "PUT":
-        return macOSColors.semantic.warning;
-      case "DELETE":
-        return macOSColors.semantic.error;
-      case "PATCH":
-        return macOSColors.semantic.success;
-      default:
-        return macOSColors.text.muted;
-    }
-  };
-
-  const handleChipPress = (groupId: string, chipId: string, value: any) => {
-    if (groupId === "status") {
-      if (value === "all") {
-        onFilterChange({ ...filter, status: undefined });
-      } else {
-        onFilterChange({ ...filter, status: value });
+    events.forEach((event) => {
+      if (event.error || (event.status && event.status >= 400)) {
+        counts.error += 1;
+        return;
       }
-    } else if (groupId === "method") {
-      const currentMethods = filter.method || [];
-      if (currentMethods.includes(value)) {
-        const newMethods = currentMethods.filter((m) => m !== value);
+
+      if (event.status && event.status >= 200 && event.status < 300) {
+        counts.success += 1;
+        return;
+      }
+
+      if (!event.status && !event.error) {
+        counts.pending += 1;
+      }
+    });
+
+    return counts;
+  }, [events]);
+
+  const methodCounts = useMemo(() => {
+    return events.reduce((acc, event) => {
+      if (!event.method) return acc;
+      acc[event.method] = (acc[event.method] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [events]);
+
+  const contentTypeCounts = useMemo(() => {
+    return events.reduce((acc, event) => {
+      const { type } = getContentType(event);
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [events]);
+
+  const availableDomains = useMemo(() => {
+    const domains = new Set<string>();
+
+    events.forEach((event) => {
+      if (event.host) {
+        domains.add(event.host);
+        return;
+      }
+
+      try {
+        if (event.url) {
+          const parsed = new URL(event.url);
+          if (parsed.host) domains.add(parsed.host);
+        }
+      } catch {
+        // Ignore relative URLs
+      }
+    });
+
+    return Array.from(domains)
+      .filter((domain) => domain && domain !== "")
+      .sort((a, b) => a.localeCompare(b));
+  }, [events]);
+
+  const availableUrls = useMemo(() => {
+    const urls = new Set<string>();
+
+    events.forEach((event) => {
+      if (!event.url) return;
+      try {
+        const parsed = new URL(event.url);
+        const normalized = `${parsed.origin}${parsed.pathname}`;
+        urls.add(normalized);
+      } catch {
+        // URL constructor fails for relative paths - fall back to raw value
+        urls.add(event.url);
+      }
+    });
+
+    return Array.from(urls)
+      .filter((url) => url && url !== "")
+      .sort((a, b) => a.localeCompare(b));
+  }, [events]);
+
+  const suggestionItems = useMemo(() => {
+    const maxItemsPerGroup = 30;
+    const domainSuggestions = availableDomains.slice(0, maxItemsPerGroup);
+    const urlSuggestions = availableUrls.slice(0, maxItemsPerGroup);
+
+    return [...domainSuggestions, ...urlSuggestions];
+  }, [availableDomains, availableUrls]);
+
+  const handleDynamicFilterChange = useCallback(
+    (optionId: string, value: unknown) => {
+      const [group] = optionId.split("::");
+
+      if (group === "status") {
+        const nextStatus = value === "all" ? undefined : (value as typeof filter.status);
+        onFilterChange({ ...filter, status: nextStatus });
+        return;
+      }
+
+      if (group === "method") {
+        const methodValue = String(value);
+        const currentMethods = filter.method || [];
+        const hasMethod = currentMethods.includes(methodValue);
+        const updatedMethods = hasMethod
+          ? currentMethods.filter((method) => method !== methodValue)
+          : [methodValue];
+
         onFilterChange({
           ...filter,
-          method: newMethods.length > 0 ? newMethods : undefined,
+          method: updatedMethods.length > 0 ? updatedMethods : undefined,
         });
-      } else {
-        onFilterChange({ ...filter, method: [value] });
+        return;
       }
-    } else if (groupId === "contentType") {
-      const currentTypes = filter.contentType || [];
-      if (currentTypes.includes(value)) {
-        const newTypes = currentTypes.filter((t) => t !== value);
+
+      if (group === "contentType") {
+        const typeValue = String(value);
+        const currentTypes = filter.contentType || [];
+        const hasType = currentTypes.includes(typeValue);
+        const updatedTypes = hasType
+          ? currentTypes.filter((type) => type !== typeValue)
+          : [typeValue];
+
         onFilterChange({
           ...filter,
-          contentType: newTypes.length > 0 ? newTypes : undefined,
+          contentType: updatedTypes.length > 0 ? updatedTypes : undefined,
         });
-      } else {
-        onFilterChange({ ...filter, contentType: [value] });
       }
-    }
-  };
+    },
+    [filter, onFilterChange]
+  );
 
-  const handleAddPattern = () => {
-    if (filterManager.newFilter.trim() && onAddPattern) {
-      onAddPattern(filterManager.newFilter.trim());
-      filterManager.addFilter(filterManager.newFilter);
-    }
-  };
+  const filterSections = useMemo((): DynamicFilterConfig["sections"] => {
+    const sections: NonNullable<DynamicFilterConfig["sections"]> = [];
 
-  const filterGroups: FilterChipGroup[] = [
-    {
+    sections.push({
       id: "status",
       title: "Status",
-      chips: (["all", "success", "error", "pending"] as const).map(
-        (status) => ({
-          id: `status-${status}`,
-          label: status.charAt(0).toUpperCase() + status.slice(1),
-          count: statusCounts[status],
-          icon: getStatusIcon(status),
-          color:
-            status === "success"
-              ? macOSColors.semantic.success
-              : status === "error"
-              ? macOSColors.semantic.error
-              : status === "pending"
-              ? macOSColors.semantic.warning
-              : macOSColors.semantic.info,
-          isActive:
-            filter.status === status || (!filter.status && status === "all"),
-          value: status,
-        })
-      ),
+      type: "status",
+      data: (["all", "success", "error", "pending"] as const).map((status) => ({
+        id: `status::${status}`,
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        count: statusCounts[status],
+        icon:
+          status === "success"
+            ? CheckCircle
+            : status === "error"
+            ? XCircle
+            : status === "pending"
+            ? Clock
+            : Globe,
+        color:
+          status === "success"
+            ? macOSColors.semantic.success
+            : status === "error"
+            ? macOSColors.semantic.error
+            : status === "pending"
+            ? macOSColors.semantic.warning
+            : macOSColors.semantic.info,
+        isActive:
+          filter.status === status || (!filter.status && status === "all"),
+        value: status,
+      })),
+    });
+
+    const methodEntries = Object.entries(methodCounts);
+    if (methodEntries.length > 0) {
+      sections.push({
+        id: "method",
+        title: "Method",
+        type: "method",
+        data: methodEntries.map(([method, count]) => ({
+          id: `method::${method}`,
+          label: method,
+          count,
+          color: getMethodColor(method),
+          isActive: filter.method?.includes(method) ?? false,
+          value: method,
+        })),
+      });
+    }
+
+    const contentTypeEntries = Object.entries(contentTypeCounts);
+    if (contentTypeEntries.length > 0) {
+      sections.push({
+        id: "contentType",
+        title: "Content Type",
+        type: "contentType",
+        data: contentTypeEntries.map(([type, count]) => {
+          const representativeEvent = events.find(
+            (event) => getContentType(event).type === type
+          );
+          const { color } = representativeEvent
+            ? getContentType(representativeEvent)
+            : { color: macOSColors.text.muted };
+
+          return {
+            id: `contentType::${type}`,
+            label: type,
+            count,
+            icon: getContentTypeIcon(type),
+            color,
+            isActive: filter.contentType?.includes(type) ?? false,
+            value: type,
+          };
+        }),
+      });
+    }
+
+    return sections;
+  }, [contentTypeCounts, events, filter.contentType, filter.method, filter.status, methodCounts, statusCounts]);
+
+  const dynamicFilterConfig = useMemo<DynamicFilterConfig>(() => ({
+    sections: filterSections,
+    addFilterSection: {
+      enabled: true,
+      placeholder: "Enter domain or URL pattern...",
+      title: "ACTIVE FILTERS",
+      icon: Filter,
     },
-    ...(Object.keys(methodCounts).length > 0
-      ? [
-          {
-            id: "method",
-            title: "Method",
-            chips: Object.entries(methodCounts).map(([method, count]) => ({
-              id: `method-${method}`,
-              label: method,
-              count,
-              color: getMethodColor(method),
-              isActive: filter.method?.includes(method),
-              value: method,
-            })),
-            multiSelect: true,
-          },
-        ]
-      : []),
-    ...(Object.keys(contentTypeCounts).length > 0
-      ? [
-          {
-            id: "contentType",
-            title: "Content",
-            chips: Object.entries(contentTypeCounts).map(([type, count]) => ({
-              id: `contentType-${type}`,
-              label: type,
-              count,
-              icon: getContentTypeIcon(type),
-              color: getContentType(
-                events.find((e) => getContentType(e).type === type) || events[0]
-              ).color,
-              isActive: filter.contentType?.includes(type),
-              value: type,
-            })),
-            multiSelect: true,
-          },
-        ]
-      : []),
-  ];
+    availableItemsSection: {
+      enabled: true,
+      title: "AVAILABLE DOMAINS & URLS",
+      emptyMessage:
+        "No network events captured yet. Domains and URLs will appear here.",
+      items: suggestionItems,
+    },
+    howItWorksSection: {
+      enabled: true,
+      title: "HOW NETWORK FILTERS WORK",
+      description:
+        "Patterns hide matching requests from the network event list. Filters match if the domain or URL contains the provided text.",
+      examples: [
+        "• example.com → filters any request whose host includes example.com",
+        "• https://api.example.com/v1/users → filters that exact endpoint",
+        "• /health → filters any URL path containing /health",
+      ],
+      icon: Filter,
+    },
+    onFilterChange: handleDynamicFilterChange,
+    onPatternAdd: onAddPattern,
+    onPatternToggle: onTogglePattern,
+    activePatterns: ignoredPatterns,
+  }), [
+    filterSections,
+    handleDynamicFilterChange,
+    ignoredPatterns,
+    onAddPattern,
+    onTogglePattern,
+    suggestionItems,
+  ]);
 
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Compact Filter Chips */}
-        <View style={styles.chipsSection}>
-          <CompactFilterChips
-            groups={filterGroups}
-            onChipPress={handleChipPress}
-          />
-        </View>
-
-        {/* Pattern Filters */}
-        <View style={styles.patternSection}>
-          {!filterManager.showAddInput ? (
-            <AddFilterButton
-              onPress={() => filterManager.setShowAddInput(true)}
-              color={macOSColors.semantic.info}
-            />
-          ) : (
-            <View style={styles.filterInputWrapper}>
-              <AddFilterInput
-                value={filterManager.newFilter}
-                onChange={filterManager.setNewFilter}
-                onSubmit={handleAddPattern}
-                onCancel={() => {
-                  filterManager.setShowAddInput(false);
-                  filterManager.setNewFilter("");
-                }}
-                placeholder="Enter URL pattern..."
-                color={macOSColors.text.primary}
-              />
-            </View>
-          )}
-        </View>
-
-        {/* Active Patterns */}
-        {ignoredPatterns.size > 0 && (
-          <View style={styles.activePatterns}>
-            <SectionHeader>
-              <SectionHeader.Icon
-                icon={Filter}
-                color={macOSColors.semantic.info}
-                size={12}
-              />
-              <SectionHeader.Title>ACTIVE PATTERNS</SectionHeader.Title>
-              <SectionHeader.Badge
-                count={ignoredPatterns.size}
-                color={macOSColors.semantic.info}
-              />
-            </SectionHeader>
-            <View style={styles.patternsList}>
-              <FilterList
-                filters={ignoredPatterns}
-                onRemoveFilter={onTogglePattern}
-                color={macOSColors.semantic.info}
-              />
-            </View>
-          </View>
-        )}
-      </ScrollView>
-    </View>
-  );
+  return <DynamicFilterView {...dynamicFilterConfig} />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: macOSColors.background.base,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 12,
-    paddingHorizontal: 12,
-    paddingBottom: 24,
-  },
-  chipsSection: {
-    backgroundColor: macOSColors.background.card,
-    borderRadius: 6,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default + "50",
-    marginBottom: 8,
-  },
-  patternSection: {
-    marginBottom: 8,
-  },
-  filterInputWrapper: {
-    marginBottom: 4,
-  },
-  activePatterns: {
-    backgroundColor: macOSColors.background.card,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default + "50",
-    overflow: "hidden",
-  },
-  patternsList: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 12,
-    maxHeight: 150,
-  },
-});

@@ -124,9 +124,8 @@ export function EnvVarsModal({
         vars = allVars.filter(v => v.status === "required_missing");
         break;
       case "issues":
-        vars = allVars.filter(v => 
-          v.status === "required_missing" || 
-          v.status === "required_wrong_type" || 
+        vars = allVars.filter(v =>
+          v.status === "required_wrong_type" ||
           v.status === "required_wrong_value"
         );
         break;
