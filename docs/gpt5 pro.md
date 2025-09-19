@@ -14,7 +14,7 @@ Below is a small, composable **App Host** layer that lives inside your dev menu 
 
 ## 1) Add a tiny App Host (new file)
 
-**`packages/package-1/src/floatingMenu/AppHost.tsx`**
+**`packages/devtools-floating-menu/src/floatingMenu/AppHost.tsx`**
 
 ```tsx
 import React, {
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
 
 ## 2) Extend your `InstalledApp` type (non‑breaking)
 
-**`packages/package-1/src/floatingMenu/types.ts`** (add the new optional fields)
+**`packages/devtools-floating-menu/src/floatingMenu/types.ts`** (add the new optional fields)
 
 ```ts
 export type AppSlot = "row" | "dial" | "both";
@@ -228,7 +228,7 @@ export interface InstalledApp {
 
 ## 3) Teach the Floating Menu to open apps & auto‑hide
 
-**`packages/package-1/src/floatingMenu/FloatingMenu.tsx`** (key changes only)
+**`packages/devtools-floating-menu/src/floatingMenu/FloatingMenu.tsx`** (key changes only)
 
 - Import and use the host.
 - Hide the menu whenever any app is open.
@@ -316,7 +316,7 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 
 ## 4) Export the App Host (so app roots can include it)
 
-**`packages/package-1/src/index.tsx`**
+**`packages/devtools-floating-menu/src/index.tsx`**
 
 ```ts
 export { FloatingMenu } from "./floatingMenu/FloatingMenu";
@@ -344,14 +344,14 @@ import {
   type InstalledApp,
   AppHostProvider, // NEW
   AppOverlay, // NEW
-} from "@monorepo/package-1";
+} from "@monorepo/devtools-floating-menu";
 import {
   createEnvVarConfig,
   envVar,
   type UserRole,
   type Environment,
   EnvVarsModal,
-} from "@monorepo/package-2";
+} from "@monorepo/env-tools";
 import { EnvLaptopIcon } from "@monorepo/shared";
 // ❌ remove useState for isEnvOpen/envCloseResolver
 

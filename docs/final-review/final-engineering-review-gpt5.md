@@ -3,7 +3,7 @@
 _Date: 2025-02-14_
 _Reviewer: Senior Engineering Pass_
 
-This document captures the final audit of the floating dev tools packages (`@monorepo/package-1`, shared support, and the example app). The goal is to validate that the current architecture is production-ready, enumerate any remaining defects, and outline refinements that will keep the system maintainable as we build additional tooling.
+This document captures the final audit of the floating dev tools packages (`@monorepo/devtools-floating-menu`, shared support, and the example app). The goal is to validate that the current architecture is production-ready, enumerate any remaining defects, and outline refinements that will keep the system maintainable as we build additional tooling.
 
 ## Executive Summary
 
@@ -12,7 +12,7 @@ The plug-and-play iteration is in a solid place: everything now routes through `
 ## Critical Findings (Must Fix)
 
 1. **Singleton apps return ghost instance IDs**  
-   - **Location:** `packages/package-1/src/floatingMenu/AppHost.tsx:32-48`  
+   - **Location:** `packages/devtools-floating-menu/src/floatingMenu/AppHost.tsx:32-48`  
    - **Issue:** `open()` always generates and returns a fresh `instanceId`, even when the `def.singleton` guard short-circuits because an instance already exists. Callers that attempt to focus/close the returned id will operate on an entity that never entered `openApps`.  
    - **Impact:** Plug-in authors relying on the return value (e.g., to programmatically close or focus later) will end up with orphan references. This also makes debugging harder because logs show ids that never existed.  
    - **Recommendation:** When `singleton === true` and an existing instance is found, return that instance’s id and consider promoting it to the top of the stack (so repeated launches surface the tool). Example patch:
@@ -52,7 +52,7 @@ The plug-and-play iteration is in a solid place: everything now routes through `
 
 ## File-by-File Observations
 
-### `packages/package-1/src/floatingMenu/AppHost.tsx`
+### `packages/devtools-floating-menu/src/floatingMenu/AppHost.tsx`
 - Singleton handling (see critical finding) needs adjustment.  
 - Consider exposing a `focus(instanceId)` helper to bring an existing tool to the top without closing/reopening.  
 - `launchMode === "inline"` mounting is nice; we may also want to capture pointer events to avoid interaction leaks.
