@@ -103,6 +103,7 @@ export default function App() {
 - Run `pnpm changeset` for every meaningful change to record the package bump and changelog entry.
 - When you are ready to cut versions, run `pnpm run release:version` to apply the collected changesets and refresh lockfiles.
 - After verifying the repo (builds, tests, docs), publish with `pnpm run release:publish` to push all pending `@react-buoy/*` packages to npm.
+- Prefer the one-shot helper `pnpm run release` locally if you want lint → typecheck → build → version → publish in a single command (it creates the release commit for you).
 
 > Only install the dev tool packages you actually list in `APPS`. Remove entries you do not need.
 
