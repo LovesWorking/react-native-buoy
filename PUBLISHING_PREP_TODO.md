@@ -14,12 +14,12 @@
 ## Repository Refactors
 - [ ] Update each package’s `package.json` metadata (name, description, keywords, homepage, repository, bugs, publishConfig)
 - [ ] Align workspace tooling (`pnpm-workspace.yaml`, `lerna.json`, `tsconfig.json`, bob configs) with new scoped names
-- [ ] Replace all legacy `@monorepo/*` import paths with the new `@react-buoy/*` scope across packages and `example/`
+- [x] Replace all legacy `@monorepo/*` import paths with the new `@react-buoy/*` scope across packages and `example/`
 - [ ] Run `pnpm run build`, `pnpm run typecheck`, and `pnpm run lint` to validate renames
 - [ ] Refresh docs (`CREATE_PACKAGE_GUIDE.md`, `SHARED_PACKAGE_PLAN.md`, `docs/`, etc.) with updated package list and import examples
 
 ## Publishing Readiness
-- [ ] Choose release/versioning workflow (e.g., Changesets + pnpm publish or Lerna)
+- [x] Choose release/versioning workflow (e.g., pnpm + Changesets for versioning, with Lerna for orchestration)
 - [ ] Implement release scripts and CI automation (build/lint/typecheck, publish dry-run, tagging)
 - [ ] Ensure each package has complete `exports`, `types`, README, and changelog content for npm
 - [ ] Add or update smoke tests per package; wire into CI
