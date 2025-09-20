@@ -8,15 +8,15 @@ The Network Monitor captures fetch/XMLHttpRequest traffic, lets you slice events
 ## Install
 
 ```bash
-pnpm add @monorepo/network
+pnpm add @react-buoy/network
 ```
 
 ## Register the Tool
 
 [//]: # 'Example'
 ```tsx
-import { NetworkModal } from '@monorepo/network';
-import { WifiCircuitIcon } from '@monorepo/shared';
+import { NetworkModal } from '@react-buoy/network';
+import { WifiCircuitIcon } from '@react-buoy/shared-ui';
 
 export const NETWORK_TOOL = {
   id: 'network',

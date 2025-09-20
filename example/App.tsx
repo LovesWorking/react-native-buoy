@@ -6,29 +6,29 @@ import {
   AppOverlay,
   FloatingMenu,
   type InstalledApp,
-} from "@monorepo/devtools-floating-menu";
+} from "@react-buoy/core";
 import {
   EnvVarsModal,
   createEnvVarConfig,
   envVar,
   type Environment,
   type UserRole,
-} from "@monorepo/env-tools";
+} from "@react-buoy/env";
 import {
   EnvLaptopIcon,
   ReactQueryIcon,
   StorageStackIcon,
   Globe,
   useSafeAreaInsets,
-} from "@monorepo/shared";
-import { ReactQueryDevToolsModal } from "@monorepo/react-query";
-import { NetworkModal } from "@monorepo/network";
+} from "@react-buoy/shared-ui";
+import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
+import { NetworkModal } from "@react-buoy/network";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PokemonScreen } from "./screens/pokemon/Pokemon";
 import {
   StorageModalWithTabs,
   type RequiredStorageKey,
-} from "@monorepo/storage/storage";
+} from "@react-buoy/storage/storage";
 
 export default function App() {
   const queryClientRef = useRef<QueryClient | null>(null);

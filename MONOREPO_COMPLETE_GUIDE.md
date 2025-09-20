@@ -58,7 +58,7 @@ pnpm create:package helpers util
 
 ## 📦 Package Types
 
-### Shared Package (`@monorepo/shared`)
+### Shared Package (`@react-buoy/shared-ui`)
 The foundation package containing:
 - **UI Components**: Button, Card
 - **Hooks**: useCounter, useToggle
@@ -66,17 +66,17 @@ The foundation package containing:
 
 ```typescript
 // Import everything
-import { Button, Card, useCounter, formatNumber } from '@monorepo/shared';
+import { Button, Card, useCounter, formatNumber } from '@react-buoy/shared-ui';
 
 // Or import from specific exports
-import { Button } from '@monorepo/shared/ui';
-import { useCounter } from '@monorepo/shared/hooks';
-import { formatNumber } from '@monorepo/shared/utils';
+import { Button } from '@react-buoy/shared-ui/ui';
+import { useCounter } from '@react-buoy/shared-ui/hooks';
+import { formatNumber } from '@react-buoy/shared-ui/utils';
 ```
 
 ### Your Packages
 Every package you create:
-- Automatically depends on `@monorepo/shared`
+- Automatically depends on `@react-buoy/shared-ui`
 - Has Bob build configuration
 - Supports hot reload
 - Includes TypeScript setup
@@ -103,7 +103,7 @@ This works because:
 pnpm build
 
 # Build specific package
-pnpm --filter @monorepo/my-package build
+pnpm --filter @react-buoy/my-package build
 
 # Clean and rebuild
 pnpm fresh
@@ -132,7 +132,7 @@ pnpm lint
 
 ```bash
 # Add dependency to specific package
-pnpm --filter @monorepo/my-package add axios
+pnpm --filter @react-buoy/my-package add axios
 
 # Add dev dependency to root
 pnpm add -D -w eslint-plugin-react
@@ -149,7 +149,7 @@ pnpm update -r
 // packages/my-feature/src/index.tsx
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Card, Button, useCounter } from '@monorepo/shared';
+import { Card, Button, useCounter } from '@react-buoy/shared-ui';
 
 export function MyFeature() {
   const counter = useCounter(0);
@@ -208,7 +208,7 @@ Every package has:
 
 ```json
 {
-  "name": "@monorepo/package-name",
+  "name": "@react-buoy/package-name",
   "version": "0.1.0",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
@@ -222,7 +222,7 @@ Every package has:
     }
   },
   "dependencies": {
-    "@monorepo/shared": "workspace:*"  // Internal dependency
+    "@react-buoy/shared-ui": "workspace:*"  // Internal dependency
   },
   "peerDependencies": {
     "react": "*",
@@ -250,9 +250,9 @@ Each package uses Bob for building:
 ```typescript
 // example/App.tsx
 import { ScrollView, View, Text } from 'react-native';
-import { Package1Component } from '@monorepo/devtools-floating-menu';
-import { Package2Component } from '@monorepo/env-tools';
-import { MyFeatureComponent } from '@monorepo/my-feature';
+import { Package1Component } from '@react-buoy/core';
+import { Package2Component } from '@react-buoy/env';
+import { MyFeatureComponent } from '@react-buoy/my-feature';
 
 export default function App() {
   return (
@@ -275,7 +275,7 @@ export default function App() {
 pnpm install
 
 # Rebuild the package
-pnpm --filter @monorepo/package-name build
+pnpm --filter @react-buoy/package-name build
 ```
 
 ### TypeScript Errors
@@ -332,7 +332,7 @@ If you see React type errors:
 ### Extending Shared Components
 
 ```typescript
-import { Button } from '@monorepo/shared';
+import { Button } from '@react-buoy/shared-ui';
 
 export function PrimaryButton(props) {
   return <Button {...props} variant="primary" />;
@@ -342,9 +342,9 @@ export function PrimaryButton(props) {
 ### Composing Multiple Packages
 
 ```typescript
-import { useAuth } from '@monorepo/auth-hooks';
-import { UserCard } from '@monorepo/user-ui';
-import { formatDate } from '@monorepo/utils';
+import { useAuth } from '@react-buoy/auth-hooks';
+import { UserCard } from '@react-buoy/user-ui';
+import { formatDate } from '@react-buoy/utils';
 
 export function UserProfile() {
   const { user } = useAuth();

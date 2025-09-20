@@ -37,7 +37,7 @@ if (fs.existsSync(packageDir)) {
   process.exit(1);
 }
 
-console.log(`\n🚀 Creating new package: @monorepo/${packageName}`);
+console.log(`\n🚀 Creating new package: @react-buoy/${packageName}`);
 console.log(`   Type: ${packageType}`);
 console.log(`   Location: packages/${packageName}\n`);
 
@@ -65,7 +65,7 @@ const createPackageJson = () => {
   console.log("📝 Creating package.json...");
 
   const packageJson = {
-    name: `@monorepo/${packageName}`,
+    name: `@react-buoy/${packageName}`,
     version: "0.1.0",
     description: `${packageName} package`,
     main: "lib/commonjs/index.js",
@@ -90,7 +90,7 @@ const createPackageJson = () => {
       postinstall: 'echo "Run pnpm build to compile this package"',
     },
     dependencies: {
-      "@monorepo/shared": "workspace:*",
+      "@react-buoy/shared-ui": "workspace:*",
     },
     peerDependencies: {
       react: "*",
@@ -148,7 +148,7 @@ const createIndexFile = () => {
 export * from './components';
 
 // Re-export commonly used shared components if needed
-export { Button, Card } from '@monorepo/shared';
+export { Button, Card } from '@react-buoy/shared-ui';
 `;
       break;
 
@@ -157,7 +157,7 @@ export { Button, Card } from '@monorepo/shared';
 export * from './hooks';
 
 // Re-export commonly used shared hooks if needed
-export { useCounter, useToggle } from '@monorepo/shared';
+export { useCounter, useToggle } from '@react-buoy/shared-ui';
 `;
       break;
 
@@ -166,7 +166,7 @@ export { useCounter, useToggle } from '@monorepo/shared';
 export * from './utils';
 
 // Re-export commonly used shared utilities if needed
-export { formatNumber, debounce } from '@monorepo/shared';
+export { formatNumber, debounce } from '@react-buoy/shared-ui';
 `;
       break;
 
@@ -224,7 +224,7 @@ const createTypeSpecificFiles = () => {
         path.join(packageDir, "src", "components", "ExampleComponent.tsx"),
         `import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Button } from '@monorepo/shared';
+import { Button } from '@react-buoy/shared-ui';
 
 export interface ExampleComponentProps {
   text?: string;
@@ -339,7 +339,7 @@ export async function processAsync<T>(data: T): Promise<T> {
 const createReadme = () => {
   console.log("📝 Creating README.md...");
 
-  const readmeContent = `# @monorepo/${packageName}
+  const readmeContent = `# @react-buoy/${packageName}
 
 ## Description
 
@@ -354,7 +354,7 @@ This package is part of the monorepo and is automatically available to other pac
 \`\`\`typescript
 import { ${toPascalCase(
     packageName
-  )}Component } from '@monorepo/${packageName}';
+  )}Component } from '@react-buoy/${packageName}';
 
 // Use in your component
 <${toPascalCase(packageName)}Component title="Hello World" />
@@ -394,7 +394,7 @@ ${packageName}/
 
 ## Dependencies
 
-- Uses \`@monorepo/shared\` for common components and utilities
+- Uses \`@react-buoy/shared-ui\` for common components and utilities
 - React and React Native as peer dependencies
 `;
 
@@ -443,29 +443,29 @@ const addToExampleApp = () => {
     );
 
     // Add the new package to dependencies
-    examplePackageJson.dependencies[`@monorepo/${packageName}`] = "workspace:*";
+    examplePackageJson.dependencies[`@react-buoy/${packageName}`] = "workspace:*";
 
-    // Sort dependencies alphabetically (keeping @monorepo packages together)
+    // Sort dependencies alphabetically (keeping @react-buoy packages together)
     const sortedDeps = {};
-    const monorepoPackages = [];
+    const reactBuoyPackages = [];
     const otherPackages = [];
 
     for (const [key, value] of Object.entries(
       examplePackageJson.dependencies
     )) {
-      if (key.startsWith("@monorepo/")) {
-        monorepoPackages.push([key, value]);
+      if (key.startsWith("@react-buoy/")) {
+        reactBuoyPackages.push([key, value]);
       } else {
         otherPackages.push([key, value]);
       }
     }
 
     // Sort each group
-    monorepoPackages.sort((a, b) => a[0].localeCompare(b[0]));
+    reactBuoyPackages.sort((a, b) => a[0].localeCompare(b[0]));
     otherPackages.sort((a, b) => a[0].localeCompare(b[0]));
 
     // Combine them
-    [...monorepoPackages, ...otherPackages].forEach(([key, value]) => {
+    [...reactBuoyPackages, ...otherPackages].forEach(([key, value]) => {
       sortedDeps[key] = value;
     });
 
@@ -518,9 +518,9 @@ try {
   }
 
   // Build the new package
-  console.log(`\n🔨 Building @monorepo/${packageName}...`);
+  console.log(`\n🔨 Building @react-buoy/${packageName}...`);
   try {
-    execSync(`pnpm --filter @monorepo/${packageName} build`, {
+    execSync(`pnpm --filter @react-buoy/${packageName} build`, {
       cwd: rootDir,
       stdio: "inherit",
     });
@@ -528,7 +528,7 @@ try {
   } catch (error) {
     console.log("⚠️  Failed to build package automatically");
     console.log(
-      `   Please run manually: pnpm --filter @monorepo/${packageName} build`
+      `   Please run manually: pnpm --filter @react-buoy/${packageName} build`
     );
   }
 
@@ -536,7 +536,7 @@ try {
   console.log(
     `   import { ${toPascalCase(
       packageName
-    )}Component } from '@monorepo/${packageName}';`
+    )}Component } from '@react-buoy/${packageName}';`
   );
   console.log("\n🔥 Package is ready and hot reload is configured!");
 } catch (error) {

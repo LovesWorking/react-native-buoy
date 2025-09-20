@@ -8,7 +8,7 @@ title: useNetworkEvents
 Hook powering the Network Monitor. It subscribes to a shared event store, filters network traffic, and exposes controls for interception.
 
 ```ts
-import { useNetworkEvents } from '@monorepo/network';
+import { useNetworkEvents } from '@react-buoy/network';
 
 const {
   events,

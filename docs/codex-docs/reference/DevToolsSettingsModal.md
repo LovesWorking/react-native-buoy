@@ -8,7 +8,7 @@ title: DevToolsSettingsModal
 Configuration surface for the floating menu. Lets users toggle dial slots, row icons, and the environment badge while persisting preferences to async storage.
 
 ```tsx
-import { DevToolsSettingsModal } from '@monorepo/devtools-floating-menu';
+import { DevToolsSettingsModal } from '@react-buoy/core';
 
 <DevToolsSettingsModal
   visible={isOpen}

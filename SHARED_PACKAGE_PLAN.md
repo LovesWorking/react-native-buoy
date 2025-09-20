@@ -130,7 +130,7 @@ const debouncedSearch = debounce(searchFunction, 300)
 ### package.json Structure
 ```json
 {
-  "name": "@monorepo/shared",
+  "name": "@react-buoy/shared-ui",
   "version": "0.1.0",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
@@ -163,7 +163,7 @@ const debouncedSearch = debounce(searchFunction, 300)
 
 ### Dependency Configuration
 - Shared package has React/React Native as peer dependencies
-- Other packages reference shared as: `"@monorepo/shared": "workspace:*"`
+- Other packages reference shared as: `"@react-buoy/shared-ui": "workspace:*"`
 - Example app gets shared transitively through other packages
 
 ## Success Metrics
@@ -195,8 +195,8 @@ const debouncedSearch = debounce(searchFunction, 300)
    - Verify all packages build successfully
 
 4. **Import Test**
-   - Import specific exports: `import { Button } from '@monorepo/shared/ui'`
-   - Import from barrel: `import { Button, useCounter } from '@monorepo/shared'`
+   - Import specific exports: `import { Button } from '@react-buoy/shared-ui/ui'`
+   - Import from barrel: `import { Button, useCounter } from '@react-buoy/shared-ui'`
 
 ## Potential Issues & Solutions
 

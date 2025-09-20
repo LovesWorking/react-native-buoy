@@ -12,7 +12,7 @@ The floating menu balances visibility with screen real estate. Use these pattern
 
 [//]: # 'Example'
 ```tsx
-import { FloatingMenu, useDevToolsVisibility } from '@monorepo/devtools-floating-menu';
+import { FloatingMenu, useDevToolsVisibility } from '@react-buoy/core';
 
 export function DevtoolsShell({ apps, modals }) {
   const hidden = useDevToolsVisibility(modals);
@@ -36,7 +36,7 @@ Set defaults that make sense for your team, then let engineers override them via
 
 ## Color and Branding
 
-The menu inherits styling from `gameUIColors` in `@monorepo/shared`. To customize:
+The menu inherits styling from `gameUIColors` in `@react-buoy/shared-ui`. To customize:
 
 1. Extend the shared theme with your brand palette.
 2. Pass custom icon components (SVG, Lottie, React nodes) per tool.

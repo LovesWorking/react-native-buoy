@@ -8,7 +8,7 @@ title: useDynamicEnv
 Hook that probes environment variables and configuration sources, returning key/value pairs consumed by `EnvVarsModal`.
 
 ```ts
-import { useDynamicEnv } from '@monorepo/env-tools';
+import { useDynamicEnv } from '@react-buoy/env';
 
 const results = useDynamicEnv();
 ```

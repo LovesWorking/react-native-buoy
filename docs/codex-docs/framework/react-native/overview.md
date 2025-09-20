@@ -14,17 +14,17 @@ The floating menu is a start button for your mobile debug tools. Drop it into yo
 ## Quick look
 ```tsx
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider, FloatingMenu } from '@monorepo/devtools-floating-menu';
-import { EnvVarsModal } from '@monorepo/env-tools';
-import { NetworkModal } from '@monorepo/network';
-import { StorageModalWithTabs } from '@monorepo/storage';
-import { ReactQueryDevToolsModal } from '@monorepo/react-query';
+import { AppHostProvider, FloatingMenu } from '@react-buoy/core';
+import { EnvVarsModal } from '@react-buoy/env';
+import { NetworkModal } from '@react-buoy/network';
+import { StorageModalWithTabs } from '@react-buoy/storage';
+import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
 import {
   EnvLaptopIcon,
   WifiCircuitIcon,
   StorageStackIcon,
   ReactQueryIcon,
-} from '@monorepo/shared';
+} from '@react-buoy/shared-ui';
 
 const queryClient = new QueryClient();
 

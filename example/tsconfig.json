@@ -4,12 +4,12 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@monorepo/react-query": ["../packages/react-query/src"],
-      "@monorepo/react-query/*": ["../packages/react-query/src/*"],
-      "@monorepo/react-query/react-query": [
+      "@react-buoy/react-query": ["../packages/react-query/src"],
+      "@react-buoy/react-query/*": ["../packages/react-query/src/*"],
+      "@react-buoy/react-query/react-query": [
         "../packages/react-query/src/react-query/index"
       ],
-      "@monorepo/react-query/react-query/*": [
+      "@react-buoy/react-query/react-query/*": [
         "../packages/react-query/src/react-query/*"
       ]
     }

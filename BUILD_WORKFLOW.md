@@ -100,7 +100,7 @@ cd packages/my-new-package
 2. Create package.json:
 ```json
 {
-  "name": "@monorepo/my-new-package",
+  "name": "@react-buoy/my-new-package",
   "version": "0.1.0",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",

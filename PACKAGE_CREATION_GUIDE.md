@@ -59,7 +59,7 @@ Each package is automatically configured with:
 1. **TypeScript Support** - Full TypeScript configuration extending the root tsconfig
 2. **React Native Builder Bob** - Build configuration for CommonJS, ES modules, and TypeScript definitions
 3. **Hot Reload** - Metro watches source files for instant updates
-4. **Shared Package Dependency** - Automatic access to `@monorepo/shared` components and utilities
+4. **Shared Package Dependency** - Automatic access to `@react-buoy/shared-ui` components and utilities
 5. **Proper Exports** - Configured package.json exports for optimal bundling
 
 ## Post-Creation Steps
@@ -73,12 +73,12 @@ pnpm install
 
 ### 2. Build the Package
 ```bash
-pnpm --filter @monorepo/your-package build
+pnpm --filter @react-buoy/your-package build
 ```
 
 ### 3. Use in Example App
 ```typescript
-import { YourPackageComponent } from '@monorepo/your-package';
+import { YourPackageComponent } from '@react-buoy/your-package';
 
 // In your component
 <YourPackageComponent title="Hello" />
@@ -118,7 +118,7 @@ Creates a utility package with:
 
 ### Individual Package
 ```bash
-pnpm --filter @monorepo/package-name build
+pnpm --filter @react-buoy/package-name build
 ```
 
 ### All Packages
@@ -128,20 +128,20 @@ pnpm build
 
 ### Clean Build
 ```bash
-pnpm --filter @monorepo/package-name clean
-pnpm --filter @monorepo/package-name build
+pnpm --filter @react-buoy/package-name clean
+pnpm --filter @react-buoy/package-name build
 ```
 
 ## Adding Dependencies
 
 ### To a Specific Package
 ```bash
-pnpm --filter @monorepo/package-name add axios
+pnpm --filter @react-buoy/package-name add axios
 ```
 
 ### Dev Dependencies
 ```bash
-pnpm --filter @monorepo/package-name add -D @types/lodash
+pnpm --filter @react-buoy/package-name add -D @types/lodash
 ```
 
 ## Hot Reload
@@ -162,16 +162,16 @@ No additional configuration needed!
 pnpm install
 
 # Build the package
-pnpm --filter @monorepo/your-package build
+pnpm --filter @react-buoy/your-package build
 ```
 
 ### TypeScript Errors
 ```bash
 # Type check the package
-pnpm --filter @monorepo/your-package typecheck
+pnpm --filter @react-buoy/your-package typecheck
 
 # Rebuild if needed
-pnpm --filter @monorepo/your-package build
+pnpm --filter @react-buoy/your-package build
 ```
 
 ### Hot Reload Not Working
@@ -190,7 +190,7 @@ The Bob warnings about ESM and exports are normal and don't affect functionality
    - Be descriptive: `user-authentication` not just `auth`
 
 2. **Dependencies**
-   - All packages automatically depend on `@monorepo/shared`
+   - All packages automatically depend on `@react-buoy/shared-ui`
    - Add package-specific deps only when needed
    - Use peer dependencies for React and React Native
 
@@ -232,7 +232,7 @@ All packages start at `0.1.0`. Update as needed:
 
 ```json
 {
-  "name": "@monorepo/your-package",
+  "name": "@react-buoy/your-package",
   "version": "1.0.0"
 }
 ```

@@ -11,15 +11,15 @@ Drop a floating bubble into any React Native or Expo app, tap it, and launch the
 ## Install
 Base packages — always add these:
 ```bash
-pnpm add @monorepo/devtools-floating-menu @monorepo/shared
+pnpm add @react-buoy/core @react-buoy/shared-ui
 ```
 
 Dev tools (pick what you need):
 ```bash
-pnpm add @monorepo/env-tools      # Environment inspector
-pnpm add @monorepo/network        # Network monitor
-pnpm add @monorepo/storage        # Storage browser
-pnpm add @monorepo/react-query    # React Query panel
+pnpm add @react-buoy/env      # Environment inspector
+pnpm add @react-buoy/network        # Network monitor
+pnpm add @react-buoy/storage        # Storage browser
+pnpm add @react-buoy/react-query    # React Query panel
 pnpm add @tanstack/react-query    # Required only if you use the React Query panel
 ```
 
@@ -28,17 +28,17 @@ pnpm add @tanstack/react-query    # Required only if you use the React Query pan
 import React from 'react';
 import { SafeAreaView, Text } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider, FloatingMenu } from '@monorepo/devtools-floating-menu';
-import { EnvVarsModal } from '@monorepo/env-tools';
-import { NetworkModal } from '@monorepo/network';
-import { StorageModalWithTabs } from '@monorepo/storage';
-import { ReactQueryDevToolsModal } from '@monorepo/react-query';
+import { AppHostProvider, FloatingMenu } from '@react-buoy/core';
+import { EnvVarsModal } from '@react-buoy/env';
+import { NetworkModal } from '@react-buoy/network';
+import { StorageModalWithTabs } from '@react-buoy/storage';
+import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
 import {
   EnvLaptopIcon,
   WifiCircuitIcon,
   StorageStackIcon,
   ReactQueryIcon,
-} from '@monorepo/shared';
+} from '@react-buoy/shared-ui';
 
 const queryClient = new QueryClient();
 

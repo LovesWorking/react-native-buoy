@@ -12,7 +12,7 @@ import { AppState } from 'react-native';
 import {
   useAppHost,
   DevToolsSettingsModal,
-} from '@monorepo/devtools-floating-menu';
+} from '@react-buoy/core';
 
 export function AutoOpenSettings({ apps }) {
   const { open } = useAppHost();
@@ -43,7 +43,7 @@ Wrap App Host with a service that reacts to deep links or command palette events
 [//]: # 'Example'
 ```ts
 import { Linking } from 'react-native';
-import { useAppHost } from '@monorepo/devtools-floating-menu';
+import { useAppHost } from '@react-buoy/core';
 
 export function useDevtoolsLinking(apps) {
   const { open } = useAppHost();

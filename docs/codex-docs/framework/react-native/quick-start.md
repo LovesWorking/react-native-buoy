@@ -12,11 +12,11 @@ import {
   WifiCircuitIcon,
   StorageStackIcon,
   ReactQueryIcon,
-} from '@monorepo/shared';
-import { EnvVarsModal } from '@monorepo/env-tools';
-import { NetworkModal } from '@monorepo/network';
-import { StorageModalWithTabs } from '@monorepo/storage';
-import { ReactQueryDevToolsModal } from '@monorepo/react-query';
+} from '@react-buoy/shared-ui';
+import { EnvVarsModal } from '@react-buoy/env';
+import { NetworkModal } from '@react-buoy/network';
+import { StorageModalWithTabs } from '@react-buoy/storage';
+import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
 
 export const INSTALLED_APPS = [
   {
@@ -61,7 +61,7 @@ Remove any entries you did not install—the menu only needs the tools you actua
 ```tsx
 import React from 'react';
 import { SafeAreaView, Text } from 'react-native';
-import { FloatingMenu } from '@monorepo/devtools-floating-menu';
+import { FloatingMenu } from '@react-buoy/core';
 import { INSTALLED_APPS } from './installedApps';
 
 export default function AppShell() {
@@ -97,7 +97,7 @@ Tap each icon:
 ## 5. Add a settings button (optional)
 ```tsx
 import { Button } from 'react-native';
-import { DevToolsSettingsModal, useAppHost } from '@monorepo/devtools-floating-menu';
+import { DevToolsSettingsModal, useAppHost } from '@react-buoy/core';
 import { INSTALLED_APPS } from './installedApps';
 
 export function OpenSettings() {

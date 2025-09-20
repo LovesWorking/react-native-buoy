@@ -8,7 +8,7 @@ title: settingsBus
 Lightweight event emitter used by `DevToolsSettingsModal` and `useDevToolsSettings` to share configuration changes across the app.
 
 ```ts
-import { settingsBus } from '@monorepo/devtools-floating-menu';
+import { settingsBus } from '@react-buoy/core';
 
 const unsubscribe = settingsBus.addListener((settings) => {
   console.log('Settings updated', settings);

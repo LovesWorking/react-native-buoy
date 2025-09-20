@@ -6,24 +6,24 @@ title: Devtools
 The menu ships with four optional tools. Install the packages you need and add them to your `apps` array.
 
 ## Built-ins
-- **Environment Inspector** – `@monorepo/env-tools`
-- **Network Monitor** – `@monorepo/network`
-- **Storage Browser** – `@monorepo/storage`
-- **React Query Panel** – `@monorepo/react-query` (requires `@tanstack/react-query`)
+- **Environment Inspector** – `@react-buoy/env`
+- **Network Monitor** – `@react-buoy/network`
+- **Storage Browser** – `@react-buoy/storage`
+- **React Query Panel** – `@react-buoy/react-query` (requires `@tanstack/react-query`)
 
 ## Register them
 ```tsx
-import { FloatingMenu } from '@monorepo/devtools-floating-menu';
-import { EnvVarsModal } from '@monorepo/env-tools';
-import { NetworkModal } from '@monorepo/network';
-import { StorageModalWithTabs } from '@monorepo/storage';
-import { ReactQueryDevToolsModal } from '@monorepo/react-query';
+import { FloatingMenu } from '@react-buoy/core';
+import { EnvVarsModal } from '@react-buoy/env';
+import { NetworkModal } from '@react-buoy/network';
+import { StorageModalWithTabs } from '@react-buoy/storage';
+import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
 import {
   EnvLaptopIcon,
   WifiCircuitIcon,
   StorageStackIcon,
   ReactQueryIcon,
-} from '@monorepo/shared';
+} from '@react-buoy/shared-ui';
 
 const INSTALLED_APPS = [
   {

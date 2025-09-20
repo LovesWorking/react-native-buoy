@@ -8,7 +8,7 @@ title: useDevToolsSettings
 Hook that exposes the latest settings saved by `DevToolsSettingsModal` and refreshes when the modal broadcasts updates.
 
 ```ts
-import { useDevToolsSettings } from '@monorepo/devtools-floating-menu';
+import { useDevToolsSettings } from '@react-buoy/core';
 
 const { settings, refreshSettings } = useDevToolsSettings();
 ```

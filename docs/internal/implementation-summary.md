@@ -81,7 +81,7 @@ const [envCloseResolver, setEnvCloseResolver] = useState(null);
 ### Plug-and-Play API Reference
 
 ```ts
-import type { InstalledApp } from "@monorepo/devtools-floating-menu";
+import type { InstalledApp } from "@react-buoy/core";
 
 export const installedApps: InstalledApp[] = [
   {
