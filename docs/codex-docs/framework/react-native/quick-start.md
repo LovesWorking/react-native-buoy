@@ -3,101 +3,104 @@ id: quick-start
 title: Quick Start
 ---
 
-This walkthrough wires the floating menu into an Expo or React Native app, registers three core tools, and demonstrates launching them from the dial.
+You already installed the floating menu and any dev tool packages you want. Now wire them up.
 
-- [Install the packages](./installation.md)
-- Inject the providers and menu
-- Register tools with the App Host
-- Verify persistence and visibility rules
-
-[//]: # 'Example'
+## 1. Create `installedApps.ts`
 ```tsx
-import React from 'react';
-import { SafeAreaView, Text } from 'react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider, FloatingMenu } from '@monorepo/devtools-floating-menu';
+import {
+  EnvLaptopIcon,
+  WifiCircuitIcon,
+  StorageStackIcon,
+  ReactQueryIcon,
+} from '@monorepo/shared';
 import { EnvVarsModal } from '@monorepo/env-tools';
 import { NetworkModal } from '@monorepo/network';
 import { StorageModalWithTabs } from '@monorepo/storage';
-import { EnvironmentIndicator } from '@monorepo/shared';
+import { ReactQueryDevToolsModal } from '@monorepo/react-query';
 
-const queryClient = new QueryClient();
-
-const INSTALLED_APPS = [
+export const INSTALLED_APPS = [
   {
     id: 'env',
     name: 'Environment',
-    icon: ({ size }) => (
-      <EnvironmentIndicator environment={{ name: 'QA' }} size={size} />
-    ),
+    icon: <EnvLaptopIcon size={16} />,
     component: EnvVarsModal,
     props: {
-      requiredEnvKeys: ['API_URL', 'SENTRY_DSN'],
+      requiredEnvVars: [
+        { key: 'API_URL', description: 'Backend base URL' },
+        { key: 'SENTRY_DSN', description: 'Crash reporting DSN' },
+      ],
     },
   },
   {
     id: 'network',
     name: 'Network',
-    icon: ({ size }) => <Text style={{ color: 'white' }}>NET</Text>,
+    icon: <WifiCircuitIcon size={16} />,
     component: NetworkModal,
     launchMode: 'host-modal',
+    singleton: true,
   },
   {
     id: 'storage',
     name: 'Storage',
-    icon: ({ size }) => <Text style={{ color: 'white' }}>KV</Text>,
+    icon: <StorageStackIcon size={16} />,
     component: StorageModalWithTabs,
+    singleton: true,
+  },
+  {
+    id: 'query',
+    name: 'React Query',
+    icon: <ReactQueryIcon size={16} />,
+    component: ReactQueryDevToolsModal,
+    singleton: true,
   },
 ];
+```
+Remove any entries you did not install—the menu only needs the tools you actually use.
 
-export default function App() {
+## 2. Mount the menu near the root
+```tsx
+import React from 'react';
+import { SafeAreaView, Text } from 'react-native';
+import { FloatingMenu } from '@monorepo/devtools-floating-menu';
+import { INSTALLED_APPS } from './installedApps';
+
+export default function AppShell() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppHostProvider>
-        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text>Tap the floating bubble to open Dev Tools</Text>
-        </SafeAreaView>
-
-        <FloatingMenu
-          apps={INSTALLED_APPS}
-          environment={{ name: 'QA', color: '#22d3ee' }}
-          userRole="internal"
-        />
-      </AppHostProvider>
-    </QueryClientProvider>
+    <SafeAreaView style={{ flex: 1 }}>
+      <Text>Tap the bubble to open Dev Tools</Text>
+      <FloatingMenu
+        apps={INSTALLED_APPS}
+        environment={{ name: 'QA', color: '#22d3ee' }}
+        userRole="internal"
+      />
+    </SafeAreaView>
   );
 }
 ```
-[//]: # 'Example'
+Render `AppShell` inside the providers added during [installation](./installation.md) so `AppHostProvider` and `QueryClientProvider` wrap your tree once.
 
-## Step 1 – Confirm the Bubble
+The menu calls `registerApps` under the hood so the host can restore open tools after reloads.
 
-Run `pnpm start` and open the app. You should see the draggable bubble plus row icons for each tool. Drag it around; position is persisted to async storage.
+## 3. Launch it
+```bash
+pnpm start
+```
+You should see the floating row with your icons, plus the dial when you tap the bubble.
 
-## Step 2 – Launch Tools
+## 4. Open the tools
+Tap each icon:
+- **Environment** – Checks the required keys and highlights anything missing.
+- **Network** – Streams requests in a host modal.
+- **Storage** – Shows async storage keys and live events.
+- **React Query** – Opens TanStack Query Devtools.
 
-Tap the bubble to open the dial and launch:
-
-- **Environment** – Verifies required variables and highlights missing ones.
-- **Network** – Streams fetch/XHR activity with filtering.
-- **Storage** – Lists persisted keys with detail modals.
-
-## Step 3 – Toggle Visibility
-
-Open the settings modal by exposing a shortcut that uses the App Host to open the built-in settings component.
-
-[//]: # 'Example'
+## 5. Add a settings button (optional)
 ```tsx
-import React from 'react';
 import { Button } from 'react-native';
-import {
-  DevToolsSettingsModal,
-  useAppHost,
-} from '@monorepo/devtools-floating-menu';
+import { DevToolsSettingsModal, useAppHost } from '@monorepo/devtools-floating-menu';
+import { INSTALLED_APPS } from './installedApps';
 
-const INSTALLED_APPS = [...]; // same array from above
-
-export function OpenSettingsButton() {
+export function OpenSettings() {
   const { open } = useAppHost();
 
   return (
@@ -108,21 +111,15 @@ export function OpenSettingsButton() {
           id: 'settings',
           title: 'Dev Tools Settings',
           component: DevToolsSettingsModal,
-          props: { availableApps: INSTALLED_APPS },
           launchMode: 'host-modal',
           singleton: true,
+          props: { availableApps: INSTALLED_APPS },
         })
       }
     />
   );
 }
 ```
-[//]: # 'Example'
+Disable a tool, reload the app, and confirm the preference sticks.
 
-Disable a tool in the dial tab, close the modal, and confirm it disappears from the bubble row. Reload the app to verify preferences persist.
-
-You now have the floating menu running end to end. Continue with deep dives:
-
-- [App Host lifecycle](../../guides/app-host.md)
-- [Customizing the floating menu](../../guides/customizing-floating-menu.md)
-- [Integrating the environment inspector](../../plugins/environment-inspector.md)
+Next: dive into the [App Host lifecycle](../../guides/app-host.md) or tweak slots in [Customizing the Floating Menu](../../guides/customizing-floating-menu.md).

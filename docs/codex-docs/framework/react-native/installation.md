@@ -3,32 +3,31 @@ id: installation
 title: Installation
 ---
 
-Follow these steps to add the floating dev menu to a fresh or existing React Native workspace. The repo ships as a pnpm-based monorepo; adapt the steps if you consume packages individually.
+Install the floating menu once, then add only the dev tools you care about.
 
-## Prerequisites
-
+## Requirements
 - React Native 0.81+ or Expo SDK 54+
-- TypeScript 5.8
-- pnpm 10 or yarn/npm with workspace support
-- Metro configured to resolve workspace packages (see `metro.config.js` in the monorepo example)
+- TypeScript 5.8+
+- pnpm 10+ (or yarn/npm workspaces)
+- Metro config that watches workspace packages (see example below)
 
-## Install Packages
-
-1. Add the devtool packages to your app shell:
-
+## 1. Base packages (always install)
 ```bash
-pnpm add @monorepo/devtools-floating-menu @monorepo/env-tools @monorepo/network @monorepo/storage @tanstack/react-query
+pnpm add @monorepo/devtools-floating-menu @monorepo/shared
 ```
 
-2. If you do not already depend on the shared design system, fetch it as well:
-
+## 2. Optional dev tools
+Install the packages for the tools you plan to expose:
 ```bash
-pnpm add @monorepo/shared
+pnpm add @monorepo/env-tools      # Environment inspector
+pnpm add @monorepo/network        # Network monitor
+pnpm add @monorepo/storage        # Storage browser
+pnpm add @monorepo/react-query    # React Query panel
+pnpm add @tanstack/react-query    # Only if you use the React Query panel
 ```
+Skip anything you do not need—the floating menu works fine without them.
 
-3. Ensure each package is linked in your metro resolver. In an Expo app, extend the `watchFolders` array:
-
-[//]: # 'Example'
+## 3. Point Metro at the workspace (Expo example)
 ```ts
 // metro.config.js
 const { getDefaultConfig } = require('expo/metro-config');
@@ -40,51 +39,33 @@ const workspaceRoot = path.resolve(__dirname, '..');
 const config = getDefaultConfig(projectRoot);
 config.watchFolders = [workspaceRoot];
 config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
+  path.join(projectRoot, 'node_modules'),
+  path.join(workspaceRoot, 'node_modules'),
 ];
 
 module.exports = config;
 ```
-[//]: # 'Example'
 
-## Configure Fonts & Icons (Optional)
-
-The shared package exposes icon components and typography tokens. Importing them works out of the box; if you rely on custom fonts ensure Expo or React Native CLI loads them during app bootstrap.
-
-## Wrap the App
-
-Integrate the host provider and menu near the root of your component tree.
-
-[//]: # 'Example'
+## 4. Wrap your providers once
 ```tsx
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider, FloatingMenu } from '@monorepo/devtools-floating-menu';
+import { AppHostProvider } from '@monorepo/devtools-floating-menu';
 
 const queryClient = new QueryClient();
 
 export function AppProviders({ children }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppHostProvider>
-        {children}
-        <FloatingMenu apps={[]} />
-      </AppHostProvider>
+      <AppHostProvider>{children}</AppHostProvider>
     </QueryClientProvider>
   );
 }
 ```
-[//]: # 'Example'
+If you are not using the React Query panel, you can drop `QueryClientProvider` and the TanStack dependency.
 
-Later docs will populate the `apps` array.
-
-## Verify the Build
-
-Run the Metro bundler, ensure the floating bubble renders without tools configured, and confirm no missing dependency warnings.
-
+## 5. Verify the bubble
 ```bash
 pnpm start
 ```
-
-Proceed to the [Quick Start](./quick-start.md) to install sample tools and test the workflow end to end.
+Launch your app, confirm the draggable bubble appears, and move on to the [Quick Start](./quick-start.md) to register tools.
