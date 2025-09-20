@@ -25,8 +25,8 @@ The App Host owns tool lifecycle. It exposes a context with `open`, `close`, and
 import {
   AppHostProvider,
   useAppHost,
-} from '@monorepo/devtools-floating-menu';
-import { NetworkModal } from '@monorepo/network';
+} from '@react-buoy/core';
+import { NetworkModal } from '@react-buoy/network';
 
 export function DevtoolsRoot({ children }) {
   return <AppHostProvider>{children}</AppHostProvider>;
@@ -67,7 +67,7 @@ Use the context anywhere—deep link handler, command palette, or custom debug b
 ```tsx
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
-import { useAppHost } from '@monorepo/devtools-floating-menu';
+import { useAppHost } from '@react-buoy/core';
 import { ErrorReporterModal } from './ErrorReporterModal';
 
 export function AutoOpenOnBackgroundErrors() {

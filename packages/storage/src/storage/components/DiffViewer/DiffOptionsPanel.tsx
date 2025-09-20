@@ -6,7 +6,7 @@ import {
   Hash,
   FileText,
   Filter,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 
 export type DiffCompareMethod = "chars" | "words" | "lines" | "trimmedLines";
 

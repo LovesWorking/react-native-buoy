@@ -14,7 +14,7 @@ import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { safeGetItem, safeSetItem } from "@monorepo/shared";
+import { safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
 import { usePokemon } from "./usePokemon";
 import { PokemonTheme } from "./constants/PokemonTheme";
 

@@ -3,7 +3,7 @@
 _Date: 2025-02-14_
 _Reviewer: Senior Engineering Pass_
 
-This document captures the final audit of the floating dev tools packages (`@monorepo/devtools-floating-menu`, shared support, and the example app). The goal is to validate that the current architecture is production-ready, enumerate any remaining defects, and outline refinements that will keep the system maintainable as we build additional tooling.
+This document captures the final audit of the floating dev tools packages (`@react-buoy/core`, shared support, and the example app). The goal is to validate that the current architecture is production-ready, enumerate any remaining defects, and outline refinements that will keep the system maintainable as we build additional tooling.
 
 ## Executive Summary
 

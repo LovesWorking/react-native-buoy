@@ -1,8 +1,8 @@
 import { Mutation } from "@tanstack/react-query";
 import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 import { CheckCircle, LoadingCircle, PauseCircle, XCircle } from "./svgs";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 const getMutationText = (mutation: Mutation) => {
   if (!mutation.options.mutationKey) return "Anonymous Mutation";

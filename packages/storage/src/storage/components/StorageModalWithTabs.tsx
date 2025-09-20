@@ -16,7 +16,7 @@ import {
   Play,
   Trash2,
   Filter,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import { RequiredStorageKey } from "../types";
 import { StorageBrowserMode } from "./StorageBrowserMode";
 import {

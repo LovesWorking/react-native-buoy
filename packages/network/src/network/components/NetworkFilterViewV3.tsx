@@ -12,7 +12,7 @@ import {
   Music,
   type DynamicFilterConfig,
   XCircle,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import type { NetworkEvent } from "../types";
 import { useCallback, useMemo } from "react";
 

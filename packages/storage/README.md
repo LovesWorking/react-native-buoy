@@ -1,16 +1,16 @@
-# @monorepo/storage
+# @react-buoy/storage
 
 Async storage browser for the floating dev tools menu.
 
 ## Install
 ```bash
-pnpm add @monorepo/storage @react-native-async-storage/async-storage @monorepo/shared
+pnpm add @react-buoy/storage @react-native-async-storage/async-storage @react-buoy/shared-ui
 ```
 
 ## Register it
 ```tsx
-import { StorageModalWithTabs } from '@monorepo/storage';
-import { StorageStackIcon } from '@monorepo/shared';
+import { StorageModalWithTabs } from '@react-buoy/storage';
+import { StorageStackIcon } from '@react-buoy/shared-ui';
 
 export const STORAGE_TOOL = {
   id: 'storage',

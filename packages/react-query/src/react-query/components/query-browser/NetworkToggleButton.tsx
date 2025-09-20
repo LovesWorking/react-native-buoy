@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
-import { Wifi, WifiOff } from "@monorepo/shared";
-import { gameUIColors } from "@monorepo/shared";
+import { Wifi, WifiOff } from "@react-buoy/shared-ui";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface NetworkToggleButtonProps {
   isOffline: boolean;

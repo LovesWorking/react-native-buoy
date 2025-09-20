@@ -4,8 +4,8 @@ import { Query } from "@tanstack/react-query";
 import QueryRow from "./QueryRow";
 import useAllQueries from "../../hooks/useAllQueries";
 import { getQueryStatusLabel } from "../../utils/getQueryStatusLabel";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 interface Props {
   selectedQuery: Query | undefined;

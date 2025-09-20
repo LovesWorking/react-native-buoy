@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet } from "react-native";
 import { StorageKeyInfo } from "../types";
-import { macOSColors, CompactRow, TypeBadge } from "@monorepo/shared";
+import { macOSColors, CompactRow, TypeBadge } from "@react-buoy/shared-ui";
 import { getStorageTypeLabel } from "../utils/storageQueryUtils";
 import { getValueTypeLabel } from "../utils/valueType";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 
 interface StorageKeyRowProps {
   storageKey: StorageKeyInfo;

@@ -13,16 +13,16 @@ Install the floating menu once, then add only the dev tools you care about.
 
 ## 1. Base packages (always install)
 ```bash
-pnpm add @monorepo/devtools-floating-menu @monorepo/shared
+pnpm add @react-buoy/core @react-buoy/shared-ui
 ```
 
 ## 2. Optional dev tools
 Install the packages for the tools you plan to expose:
 ```bash
-pnpm add @monorepo/env-tools      # Environment inspector
-pnpm add @monorepo/network        # Network monitor
-pnpm add @monorepo/storage        # Storage browser
-pnpm add @monorepo/react-query    # React Query panel
+pnpm add @react-buoy/env      # Environment inspector
+pnpm add @react-buoy/network        # Network monitor
+pnpm add @react-buoy/storage        # Storage browser
+pnpm add @react-buoy/react-query    # React Query panel
 pnpm add @tanstack/react-query    # Only if you use the React Query panel
 ```
 Skip anything you do not need—the floating menu works fine without them.
@@ -50,7 +50,7 @@ module.exports = config;
 ```tsx
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider } from '@monorepo/devtools-floating-menu';
+import { AppHostProvider } from '@react-buoy/core';
 
 const queryClient = new QueryClient();
 

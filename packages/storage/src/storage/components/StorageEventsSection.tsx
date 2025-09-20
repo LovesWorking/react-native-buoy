@@ -1,4 +1,4 @@
-import { Database, CyberpunkSectionButton } from "@monorepo/shared";
+import { Database, CyberpunkSectionButton } from "@react-buoy/shared-ui";
 
 interface StorageEventsSectionProps {
   onPress: () => void;

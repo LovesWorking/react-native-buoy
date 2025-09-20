@@ -47,8 +47,8 @@ export function QaDashboard({ visible, onClose, releaseChannel }: QaDashboardPro
 
 [//]: # 'Example'
 ```tsx
-import { FloatingMenu } from '@monorepo/devtools-floating-menu';
-import { ClipboardIcon } from '@monorepo/shared';
+import { FloatingMenu } from '@react-buoy/core';
+import { ClipboardIcon } from '@react-buoy/shared-ui';
 import { QaDashboard } from './QaDashboard';
 
 const INSTALLED_APPS = [
@@ -78,7 +78,7 @@ So testers can hide the tool or move it to the row, feed it into the settings mo
 import {
   DevToolsSettingsModal,
   useDevToolsSettings,
-} from '@monorepo/devtools-floating-menu';
+} from '@react-buoy/core';
 
 const { settings } = useDevToolsSettings();
 const isEnabled = settings.dialTools['qa-dashboard'] ?? true;

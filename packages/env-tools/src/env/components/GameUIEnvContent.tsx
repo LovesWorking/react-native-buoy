@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { StyleSheet, Text, View, ScrollView } from "react-native";
-import { CheckCircle2, Search, gameUIColors, displayValue, type IssueItem } from "@monorepo/shared";
+import { CheckCircle2, Search, gameUIColors, displayValue, type IssueItem } from "@react-buoy/shared-ui";
 
 // Import shared Game UI components
  

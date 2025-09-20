@@ -11,10 +11,10 @@ import {
   TypeBadge,
   gameUIColors,
   macOSColors,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import type { NetworkEvent } from "../types";
 import { formatBytes, formatDuration } from "../utils/formatting";
-import { formatRelativeTime } from "@monorepo/shared";
+import { formatRelativeTime } from "@react-buoy/shared-ui";
 import { useTickEveryMinute } from "../hooks/useTickEveryMinute";
 
 interface NetworkEventItemCompactProps {

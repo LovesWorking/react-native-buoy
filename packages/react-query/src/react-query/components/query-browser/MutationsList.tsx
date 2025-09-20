@@ -13,7 +13,7 @@ import { Mutation } from "@tanstack/react-query";
 import MutationButton from "./MutationButton";
 import MutationInformation from "./MutationInformation";
 import useAllMutations from "../../hooks/useAllMutations";
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface Props {
   selectedMutation: Mutation | undefined;

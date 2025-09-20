@@ -1,4 +1,4 @@
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 export type StorageType = "mmkv" | "async" | "secure";
 

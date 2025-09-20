@@ -1,6 +1,6 @@
 import { Mutation } from "@tanstack/react-query";
 import { Text, View, StyleSheet } from "react-native";
-import { macOSColors } from "@monorepo/shared";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 const backgroundColors = {
   success: macOSColors.semantic.successBackground,

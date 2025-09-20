@@ -13,15 +13,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   AppHostProvider,
   FloatingMenu,
-} from '@monorepo/devtools-floating-menu';
-import { EnvVarsModal } from '@monorepo/env-tools';
-import { NetworkModal } from '@monorepo/network';
-import { StorageModalWithTabs } from '@monorepo/storage';
+} from '@react-buoy/core';
+import { EnvVarsModal } from '@react-buoy/env';
+import { NetworkModal } from '@react-buoy/network';
+import { StorageModalWithTabs } from '@react-buoy/storage';
 import {
   EnvLaptopIcon,
   WifiCircuitIcon,
   StorageStackIcon,
-} from '@monorepo/shared';
+} from '@react-buoy/shared-ui';
 
 const queryClient = new QueryClient();
 

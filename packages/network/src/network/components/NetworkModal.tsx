@@ -22,8 +22,8 @@ import {
   devToolsStorageKeys,
   macOSColors,
   useSafeAsyncStorage,
-} from "@monorepo/shared";
-import type { ModalMode } from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
+import type { ModalMode } from "@react-buoy/shared-ui";
 import { NetworkEventItemCompact } from "./NetworkEventItemCompact";
 import { NetworkFilterViewV3 } from "./NetworkFilterViewV3";
 import { TickProvider } from "../hooks/useTickEveryMinute";

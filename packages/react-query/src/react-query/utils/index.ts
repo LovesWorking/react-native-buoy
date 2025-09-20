@@ -19,7 +19,7 @@ export * from "./modalStorageOperations";
 // Data manipulation utilities
 export * from "./updateNestedDataByPath";
 export * from "./deleteNestedDataByPath";
-export { safeStringify } from "@monorepo/shared";
+export { safeStringify } from "@react-buoy/shared-ui";
 
 // Display utilities
-export { displayValue, parseDisplayValue } from "@monorepo/shared";
+export { displayValue, parseDisplayValue } from "@react-buoy/shared-ui";

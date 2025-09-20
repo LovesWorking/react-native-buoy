@@ -1,19 +1,27 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Query, useQueryClient } from "@tanstack/react-query";
-import { useSafeAreaInsets } from "@monorepo/shared";
+import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import Explorer from "./query-browser/Explorer";
 import QueryDetails from "./query-browser/QueryDetails";
 import ActionButton from "./query-browser/ActionButton";
 import { getQueryStatusLabel } from "../utils/getQueryStatusLabel";
 import { useActionButtons } from "../hooks/useActionButtons";
-import { macOSColors } from "@monorepo/shared";
+import { macOSColors } from "@react-buoy/shared-ui";
 import { useEffect, useRef, useState } from "react";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 
 interface ActionButtonConfig {
   label: string;
-  bgColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
-  textColorClass: "btnRefetch" | "btnTriggerLoading" | "btnTriggerLoadiError";
+  bgColorClass:
+    | "btnRefetch"
+    | "btnTriggerLoading"
+    | "btnTriggerLoadiError"
+    | "btnRemove";
+  textColorClass:
+    | "btnRefetch"
+    | "btnTriggerLoading"
+    | "btnTriggerLoadiError"
+    | "btnRemove";
   disabled: boolean;
   onPress: () => void;
 }

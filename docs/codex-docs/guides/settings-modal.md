@@ -13,7 +13,7 @@ import { Button } from 'react-native';
 import {
   DevToolsSettingsModal,
   useAppHost,
-} from '@monorepo/devtools-floating-menu';
+} from '@react-buoy/core';
 
 function OpenSettings({ apps }) {
   const { open } = useAppHost();
@@ -83,7 +83,7 @@ Call `useDevToolsSettings` in components that need the current configuration.
 
 [//]: # 'Example'
 ```tsx
-import { useDevToolsSettings } from '@monorepo/devtools-floating-menu';
+import { useDevToolsSettings } from '@react-buoy/core';
 
 function DialBadge({ id, children }) {
   const { settings } = useDevToolsSettings();

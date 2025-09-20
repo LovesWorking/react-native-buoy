@@ -10,12 +10,12 @@
     "reload": "expo run:ios --no-build-cache"
   },
   "dependencies": {
-    "@monorepo/network": "workspace:*",
-    "@monorepo/devtools-floating-menu": "workspace:*",
-    "@monorepo/env-tools": "workspace:*",
-    "@monorepo/react-query": "workspace:*",
-    "@monorepo/shared": "workspace:*",
-    "@monorepo/storage": "workspace:*",
+    "@react-buoy/network": "workspace:*",
+    "@react-buoy/core": "workspace:*",
+    "@react-buoy/env": "workspace:*",
+    "@react-buoy/react-query": "workspace:*",
+    "@react-buoy/shared-ui": "workspace:*",
+    "@react-buoy/storage": "workspace:*",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@tanstack/react-query": "^5.89.0",

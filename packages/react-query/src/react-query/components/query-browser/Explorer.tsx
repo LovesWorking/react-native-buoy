@@ -2,13 +2,13 @@ import { useState, useMemo, useCallback, useRef, useEffect, memo } from "react";
 import { JsonValue } from "../../types/types";
 import { Query, QueryKey, useQueryClient } from "@tanstack/react-query";
 import { updateNestedDataByPath } from "../../utils/updateNestedDataByPath";
-import { displayValue } from "@monorepo/shared";
+import { displayValue } from "@react-buoy/shared-ui";
 import deleteItem from "../../utils/actions/deleteItem";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
-import { CopyButton as SharedCopyButton } from "@monorepo/shared";
-import { gameUIColors } from "@monorepo/shared";
-import { ChevronRight, ChevronDown, Trash, Minus } from "@monorepo/shared";
-import { CyberpunkInput } from "@monorepo/shared/dataViewer";
+import { CopyButton as SharedCopyButton } from "@react-buoy/shared-ui";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { ChevronRight, ChevronDown, Trash, Minus } from "@react-buoy/shared-ui";
+import { CyberpunkInput } from "@react-buoy/shared-ui/dataViewer";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
 const CHUNK_SIZE = 100;

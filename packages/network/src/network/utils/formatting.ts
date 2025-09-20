@@ -9,4 +9,4 @@ export {
   formatDuration,
   formatHttpStatus,
   getMethodColor,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";

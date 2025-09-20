@@ -7,7 +7,7 @@
 
 ## Quick wins
 - Drop a few screenshots or GIFs of the bubble, dial, and bundled tools to break up text-only pages.
-- Mention that shared icons live in `@monorepo/shared` wherever we show them so readers know where they come from.
+- Mention that shared icons live in `@react-buoy/shared-ui` wherever we show them so readers know where they come from.
 - Add an “Add your own tool” checklist (5 bullets) that sits above the longer guide for people who just need the steps.
 
 ## Consistency pass

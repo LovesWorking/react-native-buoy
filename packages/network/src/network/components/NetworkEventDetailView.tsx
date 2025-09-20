@@ -21,15 +21,15 @@ import {
   Link,
   InlineCopyButton,
   macOSColors,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import type { NetworkEvent } from "../types";
 import {
   formatBytes,
   formatDuration,
   formatHttpStatus,
 } from "../utils/formatting";
-import { formatRelativeTime } from "@monorepo/shared";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+import { formatRelativeTime } from "@react-buoy/shared-ui";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 interface NetworkEventDetailViewProps {
   event: NetworkEvent;
   ignoredPatterns?: Set<string>;

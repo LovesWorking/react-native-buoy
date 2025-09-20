@@ -244,8 +244,8 @@ import type {
   FloatingMenuState,
 } from "./types";
 import { DialDevTools } from "./dial/DialDevTools";
-import { Environment } from "@monorepo/shared/lib/typescript/types/types";
-import { EnvironmentIndicator, gameUIColors } from "@monorepo/shared";
+import { Environment } from "@react-buoy/shared-ui/lib/typescript/types/types";
+import { EnvironmentIndicator, gameUIColors } from "@react-buoy/shared-ui";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
 import { useAppHost } from "./AppHost"; // NEW
 
@@ -344,15 +344,15 @@ import {
   type InstalledApp,
   AppHostProvider, // NEW
   AppOverlay, // NEW
-} from "@monorepo/devtools-floating-menu";
+} from "@react-buoy/core";
 import {
   createEnvVarConfig,
   envVar,
   type UserRole,
   type Environment,
   EnvVarsModal,
-} from "@monorepo/env-tools";
-import { EnvLaptopIcon } from "@monorepo/shared";
+} from "@react-buoy/env";
+import { EnvLaptopIcon } from "@react-buoy/shared-ui";
 // ❌ remove useState for isEnvOpen/envCloseResolver
 
 export default function App() {

@@ -1,6 +1,6 @@
 import { View, StyleSheet } from "react-native";
-import { gameUIColors } from "@monorepo/shared";
-import { TreeDiffViewer as SharedTreeDiffViewer } from "@monorepo/shared/dataViewer";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { TreeDiffViewer as SharedTreeDiffViewer } from "@react-buoy/shared-ui/dataViewer";
 
 interface TreeDiffViewerProps {
   oldValue: unknown;

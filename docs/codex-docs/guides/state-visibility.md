@@ -11,7 +11,7 @@ Use `useAppHost` to know whether any tools are active.
 
 [//]: # 'Example'
 ```tsx
-import { useAppHost } from '@monorepo/devtools-floating-menu';
+import { useAppHost } from '@react-buoy/core';
 
 function HideBubbleWhileOpen({ children }) {
   const { isAnyOpen } = useAppHost();
@@ -26,7 +26,7 @@ function HideBubbleWhileOpen({ children }) {
 
 [//]: # 'Example'
 ```tsx
-import { FloatingMenu, useDevToolsVisibility } from '@monorepo/devtools-floating-menu';
+import { FloatingMenu, useDevToolsVisibility } from '@react-buoy/core';
 
 const hidden = useDevToolsVisibility({
   env: isEnvOpen,
@@ -44,8 +44,8 @@ Whenever the settings modal changes dial or floating visibility, it emits throug
 
 [//]: # 'Example'
 ```tsx
-import { EnvironmentIndicator } from '@monorepo/shared';
-import { useDevToolsSettings } from '@monorepo/devtools-floating-menu';
+import { EnvironmentIndicator } from '@react-buoy/shared-ui';
+import { useDevToolsSettings } from '@react-buoy/core';
 
 function EnvironmentBadge({ environment }) {
   const { settings } = useDevToolsSettings();

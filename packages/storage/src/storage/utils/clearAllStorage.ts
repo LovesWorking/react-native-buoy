@@ -1,4 +1,4 @@
-import { isDevToolsStorageKey } from "@monorepo/shared";
+import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 
 // AsyncStorage will be loaded lazily
 let AsyncStorageModule: {

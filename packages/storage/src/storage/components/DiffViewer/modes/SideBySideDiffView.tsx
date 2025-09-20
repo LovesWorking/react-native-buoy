@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { gameUIColors, macOSColors } from "@monorepo/shared";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+import { gameUIColors, macOSColors } from "@react-buoy/shared-ui";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 import type { DiffItem } from "../../../utils/objectDiff";
 
 interface SideBySideDiffViewProps {

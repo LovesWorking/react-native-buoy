@@ -8,7 +8,7 @@ title: useDevToolsVisibility
 Utility hook that returns `true` when any supplied modal flags are active. Use it to hide the floating menu while custom overlays or App Host tools are open.
 
 ```ts
-import { useDevToolsVisibility } from '@monorepo/devtools-floating-menu';
+import { useDevToolsVisibility } from '@react-buoy/core';
 
 const isHidden = useDevToolsVisibility([
   isEnvModalOpen,

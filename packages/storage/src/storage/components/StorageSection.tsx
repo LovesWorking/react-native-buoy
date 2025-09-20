@@ -1,4 +1,4 @@
-import { HardDrive, CyberpunkSectionButton } from "@monorepo/shared";
+import { HardDrive, CyberpunkSectionButton } from "@react-buoy/shared-ui";
 import { useStorageQueryCounts } from "../hooks/useStorageQueryCounts";
 
 interface StorageSectionProps {

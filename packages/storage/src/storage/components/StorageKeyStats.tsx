@@ -6,7 +6,7 @@ import {
   Eye,
   Database,
   Shield,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import { StorageKeyStats } from "../types";
 import { getStorageTypeHexColor, StorageType } from "../utils/storageQueryUtils";
 

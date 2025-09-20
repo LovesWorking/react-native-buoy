@@ -2,8 +2,8 @@ import type { Dispatch, SetStateAction } from "react";
 import { View, StyleSheet } from "react-native";
 import { Mutation } from "@tanstack/react-query";
 import MutationsList from "./query-browser/MutationsList";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 interface MutationBrowserModeProps {
   selectedMutation: Mutation | undefined;

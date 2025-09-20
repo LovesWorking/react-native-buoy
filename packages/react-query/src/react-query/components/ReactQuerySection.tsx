@@ -1,7 +1,7 @@
 import { View } from "react-native";
-import { CyberpunkSectionButton } from "@monorepo/shared";
+import { CyberpunkSectionButton } from "@react-buoy/shared-ui";
 import { TanstackLogo } from "./query-browser/svgs";
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface ReactQuerySectionProps {
   onPress: () => void;

@@ -8,7 +8,7 @@ title: AppHostProvider
 Context provider that stores currently open dev tools, persists their ids, and exposes helper methods for opening and closing tools from anywhere in the app.
 
 ```tsx
-import { AppHostProvider } from '@monorepo/devtools-floating-menu';
+import { AppHostProvider } from '@react-buoy/core';
 
 <AppHostProvider>
   <YourApp />

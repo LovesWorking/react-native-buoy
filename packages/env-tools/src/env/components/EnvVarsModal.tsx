@@ -9,7 +9,7 @@ import {
   gameUIColors,
   macOSColors,
   displayValue,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import { RequiredEnvVar, EnvVarInfo } from "../types";
 import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet, ScrollView, Text } from "react-native";

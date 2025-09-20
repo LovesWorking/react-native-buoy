@@ -19,7 +19,7 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import {
   View,
   Text,
@@ -29,7 +29,7 @@ import {
   Alert,
 } from "react-native";
 import { AsyncStorageEvent } from "../utils/AsyncStorageListener";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 
 interface StorageEventDetailModalProps {
   visible: boolean;

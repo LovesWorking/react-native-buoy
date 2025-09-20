@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { EnvVarInfo } from "../types";
-import { gameUIColors, macOSColors, CompactRow, TypeBadge } from "@monorepo/shared";
+import { gameUIColors, macOSColors, CompactRow, TypeBadge } from "@react-buoy/shared-ui";
 import { getEnvVarType } from "../utils/envTypeDetector";
 
 interface EnvVarRowProps {

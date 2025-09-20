@@ -1,9 +1,9 @@
 import { Query } from "@tanstack/react-query";
 import QueryDetailsChip from "./QueryDetailsChip";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { displayValue } from "@monorepo/shared";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { displayValue } from "@react-buoy/shared-ui";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 interface Props {
   query: Query | undefined;

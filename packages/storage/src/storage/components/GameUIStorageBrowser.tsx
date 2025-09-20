@@ -12,7 +12,7 @@ import {
   RefreshCw,
   Trash2,
   Search,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   StorageType,
@@ -21,13 +21,13 @@ import {
   isStorageQuery,
 } from "../utils/storageQueryUtils";
 import { StorageKeyInfo, RequiredStorageKey, StorageKeyStats } from "../types";
-import { isDevToolsStorageKey } from "@monorepo/shared";
+import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 import { clearAllAppStorage } from "../utils/clearAllStorage";
 import { StorageKeySection } from "./StorageKeySection";
 import { StorageFilterCards, type StorageFilterType, type StorageTypeFilter } from "./StorageFilterCards";
 
 // Import shared Game UI components
-import { gameUIColors, macOSColors, copyToClipboard as copyToClipboardUtil } from "@monorepo/shared";
+import { gameUIColors, macOSColors, copyToClipboard as copyToClipboardUtil } from "@react-buoy/shared-ui";
 
 interface GameUIStorageBrowserProps {
   requiredStorageKeys?: RequiredStorageKey[];

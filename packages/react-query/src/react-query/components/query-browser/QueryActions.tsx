@@ -9,7 +9,7 @@ import remove from "../../utils/actions/remove";
 import invalidate from "../../utils/actions/invalidate";
 import triggerError from "../../utils/actions/triggerError";
 import { View, Text, StyleSheet } from "react-native";
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface Props {
   setSelectedQuery: Dispatch<SetStateAction<Query | undefined>>;

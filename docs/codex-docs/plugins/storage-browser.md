@@ -8,15 +8,15 @@ Inspect async storage keys, watch mutations in real time, and monitor required v
 ## Install
 
 ```bash
-pnpm add @monorepo/storage @react-native-async-storage/async-storage
+pnpm add @react-buoy/storage @react-native-async-storage/async-storage
 ```
 
 ## Register the Tool
 
 [//]: # 'Example'
 ```tsx
-import { StorageModalWithTabs } from '@monorepo/storage';
-import { StorageStackIcon } from '@monorepo/shared';
+import { StorageModalWithTabs } from '@react-buoy/storage';
+import { StorageStackIcon } from '@react-buoy/shared-ui';
 
 export const STORAGE_TOOL = {
   id: 'storage',

@@ -6,7 +6,7 @@ import {
   Layers,
   FileText,
   GitBranch,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 
 export type DiffMode = "inline" | "side-by-side" | "unified" | "structure";
 

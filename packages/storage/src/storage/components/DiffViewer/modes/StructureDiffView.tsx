@@ -12,7 +12,7 @@ import {
   FileCode,
   CheckCircle,
   Box,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import type { DiffItem } from "../../../utils/objectDiff";
 
 interface StructureDiffViewProps {

@@ -1,6 +1,6 @@
 import { Query, Mutation } from "@tanstack/react-query";
-import { ModalHeader } from "@monorepo/shared";
-import { TabSelector } from "@monorepo/shared";
+import { ModalHeader } from "@react-buoy/shared-ui";
+import { TabSelector } from "@react-buoy/shared-ui";
 
 interface ReactQueryModalHeaderProps {
   selectedQuery?: Query;

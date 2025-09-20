@@ -8,7 +8,7 @@ title: StorageModalWithTabs
 Async storage inspector modal with a browser tab and an events timeline. Works best with App Host `self-modal` launch mode.
 
 ```tsx
-import { StorageModalWithTabs } from '@monorepo/storage';
+import { StorageModalWithTabs } from '@react-buoy/storage';
 
 <StorageModalWithTabs
   visible={visible}

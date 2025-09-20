@@ -11,7 +11,7 @@ import {
   Edit3,
   GitBranch,
   ChevronRight,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import { objectDiff, type DiffItem } from "../utils/objectDiff";
 
 interface DiffViewerProps {

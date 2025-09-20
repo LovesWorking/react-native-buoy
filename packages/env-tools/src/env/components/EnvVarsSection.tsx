@@ -1,8 +1,8 @@
 import { ScrollView } from "react-native";
-import { Settings, CyberpunkSectionButton } from "@monorepo/shared";
+import { Settings, CyberpunkSectionButton } from "@react-buoy/shared-ui";
 import { RequiredEnvVar } from "../types";
 import { GameUIEnvContent } from "./GameUIEnvContent";
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface EnvVarsSectionProps {
   onPress: () => void;

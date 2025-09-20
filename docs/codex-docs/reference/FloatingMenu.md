@@ -8,7 +8,7 @@ title: FloatingMenu
 Renders the draggable devtools bubble, tool row, and dial launcher. It registers the provided apps with the App Host so persistence works across reloads.
 
 ```tsx
-import { FloatingMenu } from '@monorepo/devtools-floating-menu';
+import { FloatingMenu } from '@react-buoy/core';
 
 <FloatingMenu
   apps={apps}
@@ -99,7 +99,7 @@ Simple dictionary for passing shared state into icon renderers. Use it to surfac
 The menu relies on `resolveOpenAppsState(current, definition, generateId)` to compute the new open-app list. It ensures singleton tools reuse the same instance id while non-singleton tools append to the stack.
 
 ```ts
-import { resolveOpenAppsState } from '@monorepo/devtools-floating-menu/floatingMenu/AppHostLogic';
+import { resolveOpenAppsState } from '@react-buoy/core/floatingMenu/AppHostLogic';
 ```
 
 > IMPORTANT: `resolveOpenAppsState` is currently internal. If you need to customize launch ordering, copy the helper when forking the App Host implementation.

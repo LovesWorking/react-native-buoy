@@ -2,7 +2,7 @@ import { Mutation } from "@tanstack/react-query";
 import DataExplorer from "./Explorer";
 import { ScrollView, Text, View, StyleSheet } from "react-native";
 import MutationDetails from "./MutationDetails";
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface Props {
   selectedMutation: Mutation | undefined;

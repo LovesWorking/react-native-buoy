@@ -8,7 +8,7 @@ title: ReactQueryDevToolsModal
 Floating menu-compatible wrapper around TanStack Query Devtools. Launch it in `self-modal` mode to inspect query and mutation caches inside your app.
 
 ```tsx
-import { ReactQueryDevToolsModal } from '@monorepo/react-query';
+import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
 
 <ReactQueryDevToolsModal visible={visible} onClose={onClose} />;
 ```

@@ -14,8 +14,8 @@ import {
   Edit3,
   ChevronDown,
   ChevronRight,
-} from "@monorepo/shared";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+} from "@react-buoy/shared-ui";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 import type { DiffItem } from "../../../utils/objectDiff";
 
 interface InlineDiffViewProps {

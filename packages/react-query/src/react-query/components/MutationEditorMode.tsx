@@ -1,12 +1,12 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Mutation } from "@tanstack/react-query";
-import { useSafeAreaInsets } from "@monorepo/shared";
+import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import Explorer from "./query-browser/Explorer";
 import MutationDetails from "./query-browser/MutationDetails";
 import ActionButton from "./query-browser/ActionButton";
 import { useMutationActionButtons } from "../hooks/useMutationActionButtons";
-import { macOSColors } from "@monorepo/shared";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+import { macOSColors } from "@react-buoy/shared-ui";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 
 interface MutationEditorModeProps {
   selectedMutation: Mutation;

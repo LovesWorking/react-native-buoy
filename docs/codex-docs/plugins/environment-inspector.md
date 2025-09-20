@@ -8,15 +8,15 @@ The Environment Inspector surfaces required configuration, highlights missing va
 ## Install
 
 ```bash
-pnpm add @monorepo/env-tools
+pnpm add @react-buoy/env
 ```
 
 ## Register the Tool
 
 [//]: # 'Example'
 ```tsx
-import { EnvVarsModal } from '@monorepo/env-tools';
-import { EnvLaptopIcon } from '@monorepo/shared';
+import { EnvVarsModal } from '@react-buoy/env';
+import { EnvLaptopIcon } from '@react-buoy/shared-ui';
 
 export const ENV_TOOL = {
   id: 'env',
@@ -48,7 +48,7 @@ export const ENV_TOOL = {
 - **Filter Chips** – Switch between all, missing, and issues-only views.
 - **Search** – Toggle search mode from the header to filter by key, value, or description.
 - **Health Meter** – Calculates present/missing stats and renders a color-coded summary.
-- **Persistence** – Saves modal size/position under `@monorepo/shared` storage keys.
+- **Persistence** – Saves modal size/position under `@react-buoy/shared-ui` storage keys.
 
 ## Usage Tips
 

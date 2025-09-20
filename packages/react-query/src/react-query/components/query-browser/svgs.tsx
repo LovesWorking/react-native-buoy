@@ -1,11 +1,11 @@
-import { ReactQueryIcon } from "@monorepo/shared";
+import { ReactQueryIcon } from "@react-buoy/shared-ui";
 import {
   CheckCircle as SharedCheckCircle,
   Activity as SharedActivity,
   Pause as SharedPause,
   XCircle as SharedXCircle,
-} from "@monorepo/shared";
-import { gameUIColors } from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface IconProps {
   size?: number;

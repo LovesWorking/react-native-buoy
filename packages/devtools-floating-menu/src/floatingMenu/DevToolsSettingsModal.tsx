@@ -19,12 +19,12 @@ import {
   ChevronRightIcon,
   safeGetItem,
   safeSetItem,
-} from "@monorepo/shared";
-import { JsModal, type ModalMode } from "@monorepo/shared";
-import { gameUIColors } from "@monorepo/shared";
-import { useSafeAreaInsets } from "@monorepo/shared/src/hooks/useSafeAreaInsets";
-import { ModalHeader } from "@monorepo/shared";
-import { TabSelector } from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
+import { JsModal, type ModalMode } from "@react-buoy/shared-ui";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { useSafeAreaInsets } from "@react-buoy/shared-ui/src/hooks/useSafeAreaInsets";
+import { ModalHeader } from "@react-buoy/shared-ui";
+import { TabSelector } from "@react-buoy/shared-ui";
 
 const STORAGE_KEY = "@rn_better_dev_tools_settings";
 const MAX_DIAL_SLOTS = 6;

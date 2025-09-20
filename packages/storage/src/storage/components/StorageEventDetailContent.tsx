@@ -18,8 +18,8 @@ import {
   X,
   Database,
   GitBranch,
-} from "@monorepo/shared";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+} from "@react-buoy/shared-ui";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 import { ThemedSplitView } from "./DiffViewer/modes/ThemedSplitView";
 import { diffThemes } from "./DiffViewer/themes/diffThemes";
 import { computeLineDiff, DiffType } from "../utils/lineDiff";

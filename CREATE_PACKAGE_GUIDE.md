@@ -116,7 +116,7 @@ helpers/
    - Proper organization
 
 2. **Generates package.json**
-   - Correct name with @monorepo scope
+   - Correct name with @react-buoy scope
    - Bob build configuration
    - Workspace dependency on shared package
    - All necessary scripts
@@ -146,7 +146,7 @@ pnpm install
 ### 2. Build the Package
 ```bash
 # Build just this package
-pnpm --filter @monorepo/my-feature build
+pnpm --filter @react-buoy/my-feature build
 
 # Or build all packages
 pnpm build
@@ -157,7 +157,7 @@ pnpm build
 Edit `example/App.tsx`:
 
 ```typescript
-import { MyFeatureComponent } from '@monorepo/my-feature';
+import { MyFeatureComponent } from '@react-buoy/my-feature';
 
 export default function App() {
   return (
@@ -175,7 +175,7 @@ Add to another package's `package.json`:
 ```json
 {
   "dependencies": {
-    "@monorepo/my-feature": "workspace:*"
+    "@react-buoy/my-feature": "workspace:*"
   }
 }
 ```
@@ -183,7 +183,7 @@ Add to another package's `package.json`:
 Then import:
 
 ```typescript
-import { MyFeatureComponent } from '@monorepo/my-feature';
+import { MyFeatureComponent } from '@react-buoy/my-feature';
 ```
 
 ## Hot Reload
@@ -202,7 +202,7 @@ Hot reload works automatically! When you edit files in your new package:
 - Group related packages with prefixes (e.g., `ui-buttons`, `ui-forms`)
 
 ### 2. Dependencies
-- Always use `@monorepo/shared` for common components
+- Always use `@react-buoy/shared-ui` for common components
 - Add package-specific deps to your package's `package.json`
 - Use `workspace:*` for internal dependencies
 
@@ -220,10 +220,10 @@ Hot reload works automatically! When you edit files in your new package:
 Before committing:
 ```bash
 # Type check
-pnpm --filter @monorepo/my-feature typecheck
+pnpm --filter @react-buoy/my-feature typecheck
 
 # Build
-pnpm --filter @monorepo/my-feature build
+pnpm --filter @react-buoy/my-feature build
 
 # Test in app
 pnpm start
@@ -241,17 +241,17 @@ pnpm dev  # If you add a dev script
 ### Building
 ```bash
 # Clean build
-pnpm --filter @monorepo/my-feature clean
-pnpm --filter @monorepo/my-feature build
+pnpm --filter @react-buoy/my-feature clean
+pnpm --filter @react-buoy/my-feature build
 ```
 
 ### Publishing (when ready)
 ```bash
 # Version bump
-pnpm --filter @monorepo/my-feature version patch
+pnpm --filter @react-buoy/my-feature version patch
 
 # Publish to npm
-pnpm --filter @monorepo/my-feature publish
+pnpm --filter @react-buoy/my-feature publish
 ```
 
 ## Common Patterns
@@ -259,7 +259,7 @@ pnpm --filter @monorepo/my-feature publish
 ### Extending Shared Components
 
 ```typescript
-import { Button, ButtonProps } from '@monorepo/shared';
+import { Button, ButtonProps } from '@react-buoy/shared-ui';
 
 interface CustomButtonProps extends ButtonProps {
   icon?: string;
@@ -273,7 +273,7 @@ export function IconButton({ icon, ...props }: CustomButtonProps) {
 ### Composing Hooks
 
 ```typescript
-import { useCounter } from '@monorepo/shared';
+import { useCounter } from '@react-buoy/shared-ui';
 
 export function useScore() {
   const score = useCounter(0);
@@ -292,7 +292,7 @@ export function useScore() {
 ### Wrapping Utilities
 
 ```typescript
-import { formatNumber } from '@monorepo/shared';
+import { formatNumber } from '@react-buoy/shared-ui';
 
 export function formatCurrency(amount: number, currency = 'USD') {
   const formatted = formatNumber(amount);
@@ -317,7 +317,7 @@ pnpm build
 pnpm typecheck
 
 # Rebuild TypeScript definitions
-pnpm --filter @monorepo/my-feature build
+pnpm --filter @react-buoy/my-feature build
 ```
 
 ### Hot Reload Not Working

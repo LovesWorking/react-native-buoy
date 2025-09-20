@@ -6,8 +6,8 @@ import {
   StyleSheet,
   GestureResponderEvent,
 } from "react-native";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 interface QueryStatusProps {
   label: string;

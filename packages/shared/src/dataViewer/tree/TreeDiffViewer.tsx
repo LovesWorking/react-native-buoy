@@ -21,7 +21,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 // ============================================
 // TYPES & INTERFACES

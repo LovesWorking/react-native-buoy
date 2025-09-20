@@ -1,8 +1,8 @@
 import { View, StyleSheet } from "react-native";
 import { Query } from "@tanstack/react-query";
 import { QueryBrowser } from "./query-browser/index";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 interface QueryBrowserModeProps {
   selectedQuery: Query | undefined;

@@ -9,14 +9,14 @@ import {
   Shield,
   gameUIColors,
   macOSColors,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import { StorageKeyInfo } from "../types";
 import {
   getStorageTypeLabel,
   getStorageTypeHexColor,
 } from "../utils/storageQueryUtils";
 import { getValueTypeLabel } from "../utils/valueType";
-import { DataViewer } from "@monorepo/shared/dataViewer";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };

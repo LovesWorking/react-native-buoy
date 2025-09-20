@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { gameUIColors, macOSColors, formatValue } from "@monorepo/shared";
+import { gameUIColors, macOSColors, formatValue } from "@react-buoy/shared-ui";
 import type { DiffItem } from "../../../utils/objectDiff";
 
 interface UnifiedDiffViewProps {

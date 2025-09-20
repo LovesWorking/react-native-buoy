@@ -1,4 +1,4 @@
-import { gameUIColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 /**
  * Centralized storage query keys for all storage hooks

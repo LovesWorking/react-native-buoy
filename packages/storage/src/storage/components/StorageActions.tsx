@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useState, useCallback } from "react";
 import { StorageKeyInfo } from "../types";
 import { clearAllStorageIncludingDevTools } from "../utils/clearAllStorage";
-import { RefreshCw, Trash2, CopyButton } from "@monorepo/shared";
+import { RefreshCw, Trash2, CopyButton } from "@react-buoy/shared-ui";
 
 interface StorageActionsProps {
   storageKeys: StorageKeyInfo[];

@@ -1,4 +1,4 @@
-import { safeSetItem, safeGetItem } from "@monorepo/shared";
+import { safeSetItem, safeGetItem } from "@react-buoy/shared-ui";
 
 // Helper functions for persisting panel state using shared storage wrapper
 const setItem = async (key: string, value: string) => {

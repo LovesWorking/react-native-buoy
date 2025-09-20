@@ -1,6 +1,6 @@
 import { QueryKey } from "@tanstack/react-query";
-import { JsModal } from "@monorepo/shared";
-import type { ModalMode } from "@monorepo/shared";
+import { JsModal } from "@react-buoy/shared-ui";
+import type { ModalMode } from "@react-buoy/shared-ui";
 import { useGetQueryByQueryKey } from "../../hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { DataEditorMode, DataEditorActionsFooter } from "../DataEditorMode";

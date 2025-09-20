@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/devtools-floating-menu",
+  "name": "@react-buoy/core",
   "version": "0.1.0",
   "description": "Floating dev tools launcher and AppHost",
   "main": "lib/commonjs/index.js",
@@ -26,7 +26,7 @@
     "test": "pnpm run typecheck"
   },
   "dependencies": {
-    "@monorepo/shared": "workspace:*"
+    "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "*",

@@ -1,8 +1,8 @@
 import { View, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "@monorepo/shared";
+import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import QueryStatusCount from "../query-browser/QueryStatusCount";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 interface QueryBrowserFooterProps {
   activeFilter?: string | null;

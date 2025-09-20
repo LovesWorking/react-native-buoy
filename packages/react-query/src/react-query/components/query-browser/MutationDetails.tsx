@@ -1,8 +1,8 @@
 import { Mutation } from "@tanstack/react-query";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { displayValue } from "@monorepo/shared";
+import { displayValue } from "@react-buoy/shared-ui";
 import MutationDetailsChips from "./MutationDetailsChips";
-import { macOSColors } from "@monorepo/shared";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 interface Props {
   selectedMutation: Mutation | undefined;

@@ -10,7 +10,7 @@ import {
   Zap,
   gameUIColors,
   macOSColors,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 import { StorageKeyStats } from "../types";
 
 interface GameUIStorageStatsProps {

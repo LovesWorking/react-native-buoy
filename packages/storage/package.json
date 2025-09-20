@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/storage",
+  "name": "@react-buoy/storage",
   "version": "0.1.0",
   "description": "storage package",
   "main": "lib/commonjs/index.js",
@@ -32,7 +32,7 @@
     "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
-    "@monorepo/shared": "workspace:*",
+    "@react-buoy/shared-ui": "workspace:*",
     "@tanstack/react-query": "^5.89.0"
   },
   "peerDependencies": {

@@ -1,9 +1,9 @@
 import { View, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "@monorepo/shared";
+import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import MutationStatusCount from "../query-browser/MutationStatusCount";
 import { useMemo } from "react";
-import { ModalMode } from "@monorepo/shared";
-import { gameUIColors } from "@monorepo/shared";
+import { ModalMode } from "@react-buoy/shared-ui";
+import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface MutationBrowserFooterProps {
   activeFilter?: string | null;

@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { Play, Pause, Trash2 } from "@monorepo/shared";
+import { Play, Pause, Trash2 } from "@react-buoy/shared-ui";
 import {
   startListening,
   stopListening,

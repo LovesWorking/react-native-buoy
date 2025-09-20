@@ -8,7 +8,7 @@ Embed TanStack Query Devtools directly inside the floating menu. The React Query
 ## Install
 
 ```bash
-pnpm add @monorepo/react-query @tanstack/react-query
+pnpm add @react-buoy/react-query @tanstack/react-query
 ```
 
 Ensure your app wraps components in a `QueryClientProvider`.
@@ -18,9 +18,9 @@ Ensure your app wraps components in a `QueryClientProvider`.
 [//]: # 'Example'
 ```tsx
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider, FloatingMenu } from '@monorepo/devtools-floating-menu';
-import { ReactQueryDevToolsModal } from '@monorepo/react-query';
-import { ReactQueryIcon } from '@monorepo/shared';
+import { AppHostProvider, FloatingMenu } from '@react-buoy/core';
+import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
+import { ReactQueryIcon } from '@react-buoy/shared-ui';
 
 const queryClient = new QueryClient();
 
@@ -53,6 +53,6 @@ const QUERY_TOOL = {
 
 - Keep the panel `singleton` to avoid multiple modals fighting over the cache.
 - Pair with [React Query docs](https://tanstack.com/query/latest) so teammates can look up APIs quickly.
-- Import the exported hooks and utilities from `@monorepo/react-query` if you need custom dashboards outside the modal.
+- Import the exported hooks and utilities from `@react-buoy/react-query` if you need custom dashboards outside the modal.
 
 For API specifics see the [`ReactQueryDevToolsModal` reference](../reference/ReactQueryDevToolsModal.md) and TanStack Query’s official docs.

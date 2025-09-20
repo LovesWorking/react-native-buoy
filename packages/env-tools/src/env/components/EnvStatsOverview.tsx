@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { gameUIColors, macOSColors, CompactRow } from "@monorepo/shared";
+import { gameUIColors, macOSColors, CompactRow } from "@react-buoy/shared-ui";
 
 export type EnvFilterType = "all" | "missing" | "issues";
 

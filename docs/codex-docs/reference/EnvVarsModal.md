@@ -8,7 +8,7 @@ title: EnvVarsModal
 Modal UI that audits environment variables, highlights missing or invalid values, and surfaces optional config. Designed for App Host `self-modal` launch mode.
 
 ```tsx
-import { EnvVarsModal } from '@monorepo/env-tools';
+import { EnvVarsModal } from '@react-buoy/env';
 
 <EnvVarsModal
   visible={visible}

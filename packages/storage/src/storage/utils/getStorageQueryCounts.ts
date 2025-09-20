@@ -1,5 +1,5 @@
 import type { Query } from "@tanstack/react-query";
-import { isDevToolsStorageKey } from "@monorepo/shared";
+import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 import {
   getCleanStorageKey,
   getStorageType,

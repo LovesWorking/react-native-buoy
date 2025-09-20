@@ -1,4 +1,4 @@
-import { safeGetItem, safeSetItem } from "@monorepo/shared";
+import { safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
 import React, {
   createContext,
   useCallback,

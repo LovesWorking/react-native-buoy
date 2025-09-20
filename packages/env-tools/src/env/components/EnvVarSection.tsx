@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { EnvVarInfo } from "../types";
 import { EnvVarRow } from "./EnvVarRow";
-import { SectionHeader } from "@monorepo/shared";
+import { SectionHeader } from "@react-buoy/shared-ui";
 
 interface EnvVarSectionProps {
   title: string;

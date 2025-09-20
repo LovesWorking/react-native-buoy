@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/network",
+  "name": "@react-buoy/network",
   "version": "0.1.0",
   "description": "network package",
   "main": "lib/commonjs/index.js",
@@ -26,8 +26,8 @@
     "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
-    "@monorepo/react-query": "workspace:*",
-    "@monorepo/shared": "workspace:*"
+    "@react-buoy/react-query": "workspace:*",
+    "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "*",

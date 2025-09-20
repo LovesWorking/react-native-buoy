@@ -1,16 +1,16 @@
-# @monorepo/network
+# @react-buoy/network
 
 Network monitor modal for the floating dev tools menu.
 
 ## Install
 ```bash
-pnpm add @monorepo/network @monorepo/shared
+pnpm add @react-buoy/network @react-buoy/shared-ui
 ```
 
 ## Register it
 ```tsx
-import { NetworkModal } from '@monorepo/network';
-import { WifiCircuitIcon } from '@monorepo/shared';
+import { NetworkModal } from '@react-buoy/network';
+import { WifiCircuitIcon } from '@react-buoy/shared-ui';
 
 export const NETWORK_TOOL = {
   id: 'network',

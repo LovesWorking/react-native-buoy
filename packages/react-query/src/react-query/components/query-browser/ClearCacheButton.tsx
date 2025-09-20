@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
-import { macOSColors } from "@monorepo/shared";
-import { Trash } from "@monorepo/shared";
+import { macOSColors } from "@react-buoy/shared-ui";
+import { Trash } from "@react-buoy/shared-ui";
 
 interface ClearCacheButtonProps {
   type: "queries" | "mutations";

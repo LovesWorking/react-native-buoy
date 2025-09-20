@@ -48,7 +48,7 @@ export {
   VirtualizedDataExplorer,
   DataViewer,
   TypeLegend,
-} from "@monorepo/shared/dataViewer";
+} from "@react-buoy/shared-ui/dataViewer";
 
 // Re-export mode components
 export { QueryBrowserMode } from "./components/QueryBrowserMode";

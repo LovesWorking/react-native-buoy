@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/env-tools",
+  "name": "@react-buoy/env",
   "version": "0.1.0",
   "description": "Environment variables dev tooling",
   "main": "lib/commonjs/index.js",
@@ -26,7 +26,7 @@
     "test": "pnpm run typecheck"
   },
   "dependencies": {
-    "@monorepo/shared": "workspace:*"
+    "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "*",

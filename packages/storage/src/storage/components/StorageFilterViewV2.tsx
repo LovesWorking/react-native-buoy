@@ -2,7 +2,7 @@ import {
   Filter,
   DynamicFilterView,
   type DynamicFilterConfig,
-} from "@monorepo/shared";
+} from "@react-buoy/shared-ui";
 
 interface StorageFilterViewV2Props {
   ignoredPatterns: Set<string>;

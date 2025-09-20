@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { onlineManager } from "@tanstack/react-query";
-import { devToolsStorageKeys, safeGetItem, safeSetItem } from "@monorepo/shared";
+import { devToolsStorageKeys, safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
 
 export function useWifiState() {
   const [isOnline, setIsOnline] = useState(() => onlineManager.isOnline());

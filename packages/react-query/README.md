@@ -1,16 +1,16 @@
-# @monorepo/react-query
+# @react-buoy/react-query
 
 React Query Devtools modal tailored for the floating menu.
 
 ## Install
 ```bash
-pnpm add @monorepo/react-query @tanstack/react-query @monorepo/shared
+pnpm add @react-buoy/react-query @tanstack/react-query @react-buoy/shared-ui
 ```
 
 ## Use it with the floating menu
 ```tsx
-import { ReactQueryDevToolsModal } from '@monorepo/react-query';
-import { ReactQueryIcon } from '@monorepo/shared';
+import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
+import { ReactQueryIcon } from '@react-buoy/shared-ui';
 
 export const QUERY_TOOL = {
   id: 'query',

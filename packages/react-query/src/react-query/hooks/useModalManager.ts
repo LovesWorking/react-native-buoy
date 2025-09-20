@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Mutation, Query, QueryKey } from "@tanstack/react-query";
 import { useModalPersistence } from "./useModalPersistence";
-import { devToolsStorageKeys } from "@monorepo/shared";
+import { devToolsStorageKeys } from "@react-buoy/shared-ui";
 
 /**
  * Custom hook for managing modal states and related query selection

@@ -22,7 +22,7 @@ export function ReactQueryComponent({
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>
         React Query package loaded. Import components from
-        `@monorepo/react-query/react-query` to access the dev tools surface.
+        `@react-buoy/react-query/react-query` to access the dev tools surface.
       </Text>
     </View>
   );

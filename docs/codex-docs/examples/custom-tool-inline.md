@@ -10,7 +10,7 @@ Render a HUD-style tool that floats above the app instead of opening a modal—i
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider, FloatingMenu } from '@monorepo/devtools-floating-menu';
+import { AppHostProvider, FloatingMenu } from '@react-buoy/core';
 
 function FpsOverlay({ fps }) {
   return (

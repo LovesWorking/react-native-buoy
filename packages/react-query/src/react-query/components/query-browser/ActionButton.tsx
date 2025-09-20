@@ -1,6 +1,6 @@
 import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
-import { gameUIColors } from "@monorepo/shared";
-import { macOSColors } from "@monorepo/shared";
+import { gameUIColors } from "@react-buoy/shared-ui";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 // Define the color mappings using Game UI colors
 const buttonConfigs = {

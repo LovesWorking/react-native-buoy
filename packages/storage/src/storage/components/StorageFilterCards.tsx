@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { macOSColors } from "@monorepo/shared";
+import { macOSColors } from "@react-buoy/shared-ui";
 
 export type StorageFilterType = "all" | "missing" | "issues";
 export type StorageTypeFilter = "all" | "async" | "mmkv" | "secure";

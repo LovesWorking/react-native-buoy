@@ -4,7 +4,7 @@ import {
   getStorageType,
   getCleanStorageKey,
 } from "./storageQueryUtils";
-import { isDevToolsStorageKey } from "@monorepo/shared";
+import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 
 export interface StorageTypeCounts {
   mmkv: number;

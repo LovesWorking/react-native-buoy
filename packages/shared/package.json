@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/shared",
+  "name": "@react-buoy/shared-ui",
   "version": "0.1.0",
   "description": "Shared UI components, hooks, and utilities",
   "main": "lib/commonjs/index.js",
