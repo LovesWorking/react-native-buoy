@@ -697,9 +697,6 @@ const useDataFlattening = (
       processingRef.current = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-
-    // isProcessing is not used in the dependency array because it is not needed - DONT ADD IT TO THE DEPENDENCY ARRAY
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, expandedItems, flattenDataStable, maxDepth]);
 
   // Incremental update function for expand/collapse

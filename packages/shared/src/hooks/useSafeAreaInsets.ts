@@ -103,7 +103,6 @@ let hasNativePackage = false;
 let SafeAreaContextModule: SafeAreaContextModuleType | null = null;
 
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   SafeAreaContextModule = require("react-native-safe-area-context");
   if (SafeAreaContextModule?.useSafeAreaInsets) {
     hasNativePackage = true;
@@ -243,7 +242,6 @@ export const SafeAreaConfig = {
    */
   hasNativeSupport: (): boolean => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require("react-native-safe-area-context");
       return true;
     } catch {

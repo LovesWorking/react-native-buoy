@@ -337,7 +337,6 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
         pulseAnimationRef.current.stop();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- All animated values are useRef().current which are stable
   }, []);
 
   const handleClose = () => {

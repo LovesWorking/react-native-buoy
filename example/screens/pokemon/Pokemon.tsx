@@ -274,7 +274,6 @@ export function PokemonScreen() {
         ])
       ).start();
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle search with haptic feedback

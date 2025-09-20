@@ -99,7 +99,6 @@ function NetworkModalInner({
           const patterns = JSON.parse(storedPatterns) as string[];
           setIgnoredPatterns(new Set(patterns));
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_error) {
         // Silently fail - filters will use defaults
       } finally {
@@ -122,7 +121,6 @@ function NetworkModalInner({
           devToolsStorageKeys.network.ignoredDomains(),
           JSON.stringify(patterns)
         );
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_error) {
         // Silently fail - filters will remain in memory
       }

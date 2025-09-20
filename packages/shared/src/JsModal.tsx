@@ -276,7 +276,18 @@ const ModalHeader = memo(function ModalHeader({
         clearTimeout(tapTimeoutRef.current);
       }
     };
-  }, []);
+  }, [
+    animatedBottomPosition,
+    animatedFloatingHeight,
+    animatedWidth,
+    bottomSheetTranslateY,
+    dragOffset,
+    floatingPosition,
+    floatingScale,
+    visibilityProgress,
+    initialHeight,
+    currentHeightRef,
+  ]);
 
   const headerProps = panHandlers ? panHandlers : {};
   // Disable tap handling when no panHandlers (i.e., when using DraggableHeader in floating mode)
@@ -460,6 +471,7 @@ const JsModalComponent: FC<JsModalProps> = ({
   const animatedBottomPosition = useRef(
     new Animated.Value(initialHeight)
   ).current;
+  const currentHeightRef = useRef(initialHeight);
 
   // Save state with debounce
   useEffect(() => {
@@ -596,7 +608,6 @@ const JsModalComponent: FC<JsModalProps> = ({
       animatedBottomPosition.setValue(initialHeight);
       currentHeightRef.current = initialHeight;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- All animated values are stable useRef().current
   }, []);
 
   // ============================================================================
@@ -613,7 +624,6 @@ const JsModalComponent: FC<JsModalProps> = ({
   // ============================================================================
   // REFS for values we need to track
   // ============================================================================
-  const currentHeightRef = useRef(initialHeight);
   const isExternallyControlled = !!externalAnimatedHeight;
   const effectiveMaxHeight = maxHeight || SCREEN.height - insets.top;
 

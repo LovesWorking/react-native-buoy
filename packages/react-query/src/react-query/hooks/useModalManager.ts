@@ -95,8 +95,7 @@ export function useModalManager() {
     };
 
     restoreState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  }, [isStateRestored, loadSavedState]);
 
   const handleModalDismiss = () => {
     setIsModalOpen(false);

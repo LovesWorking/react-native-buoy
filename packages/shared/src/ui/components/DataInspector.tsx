@@ -73,9 +73,8 @@ export function DataInspector({
         const newData = syntax === "json" ? JSON.parse(editedData) : editedData;
         onEdit?.(newData);
         setIsEditing(false);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        // Show error somehow
+        console.error("Failed to parse edited data", error);
       }
     }
   };

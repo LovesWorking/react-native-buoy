@@ -270,8 +270,7 @@ export default function Explorer({
         setLocalInputValue(newValue);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, label]); // Don't include localInputValue in deps to avoid infinite loop
+  }, [value, label, localInputValue]);
 
   // Determine if this is a main section
   const isMainSection = useMemo(() => {
