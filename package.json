@@ -29,10 +29,14 @@
     "screenshot": "bash scripts/screenshot.sh",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "changeset": "changeset",
+    "release:version": "pnpm changeset version && pnpm install",
+    "release:publish": "pnpm run build:packages && pnpm changeset publish"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@changesets/cli": "^2.29.7",
     "@eslint/js": "^9.35.0",
     "@lerna-lite/cli": "^4.1.2",
     "@lerna-lite/publish": "^4.1.2",
