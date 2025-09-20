@@ -1,0 +1,479 @@
+:root {
+  --vp-c-brand-1: #2563eb;
+  --vp-c-brand-2: #1d4ed8;
+  --vp-c-brand-3: #93c5fd;
+  --vp-c-brand-soft: rgba(37, 99, 235, 0.12);
+  --vp-sidebar-width: 280px;
+  --vp-layout-max-width: 1100px;
+  --vp-font-family-base: 'Inter', 'Segoe UI', sans-serif;
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f1f5f9;
+  --vp-c-divider: rgba(15, 23, 42, 0.07);
+  --vp-c-text-1: #0f172a;
+  --vp-c-text-2: #334155;
+  --vp-c-text-3: #64748b;
+  --vp-c-surface: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='dark'] {
+  --vp-c-bg: #0f172a;
+  --vp-c-bg-alt: #0b152a;
+  --vp-c-text-1: #f8fafc;
+  --vp-c-text-2: #e2e8f0;
+  --vp-c-text-3: #cbd5f5;
+  --vp-c-divider: rgba(148, 163, 184, 0.18);
+  --vp-c-surface: rgba(15, 23, 42, 0.88);
+  --vp-c-brand-soft: rgba(59, 130, 246, 0.2);
+  --vp-c-brand-1: #60a5fa;
+  --vp-c-brand-2: #3b82f6;
+  --vp-c-brand-3: #bfdbfe;
+}
+
+html,
+body {
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+}
+
+body {
+  background-image: radial-gradient(circle at 15% -10%, rgba(59, 130, 246, 0.08), transparent 55%),
+    radial-gradient(circle at 85% -20%, rgba(14, 165, 233, 0.08), transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* Navbar styling - React Query style structure */
+.VPNav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06),
+              0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.VPNav::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02), transparent);
+  pointer-events: none;
+}
+
+.VPNavBar {
+  background: transparent;
+}
+
+.VPNavBarTitle .title {
+  font-weight: 700;
+  color: var(--vp-c-brand-1);
+}
+
+/* Nav items */
+.VPNavBarMenu .VPNavBarMenuLink {
+  color: var(--vp-c-text-2);
+  font-weight: 500;
+  transition: color 0.25s;
+}
+
+.VPNavBarMenu .VPNavBarMenuLink:hover,
+.VPNavBarMenu .VPNavBarMenuLink.active {
+  color: var(--vp-c-brand-1);
+}
+
+/* Dropdown menu */
+.VPNavBarMenuGroup .text {
+  color: var(--vp-c-text-2);
+}
+
+.VPMenu {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--vp-c-divider);
+  backdrop-filter: blur(12px);
+}
+
+.VPMenu .VPMenuLink {
+  color: var(--vp-c-text-2);
+}
+
+.VPMenu .VPMenuLink:hover {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+/* Dark mode navbar adjustments */
+[data-theme='dark'] .VPNav {
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2),
+              0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='dark'] .VPNav::after {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), transparent);
+}
+
+[data-theme='dark'] .VPMenu {
+  background: rgba(15, 23, 42, 0.98);
+}
+
+/* Sidebar styling */
+.VPSidebar {
+  background: var(--vp-c-surface);
+  backdrop-filter: blur(18px);
+  border-right: 1px solid var(--vp-c-divider);
+  padding: 0;
+}
+
+/* Add padding to the nav section */
+.VPSidebarNav {
+  padding: 0;
+}
+
+/* Style for section groups - exact React Query spacing */
+.VPSidebarItem.level-0 {
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.VPSidebarItem.level-0:not(:last-child) {
+  margin-bottom: 20px;
+}
+
+/* Section headers - make them non-clickable labels with exact React Query styling */
+.VPSidebarItem.level-0 > .item {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  cursor: default !important;
+}
+
+.VPSidebarItem.level-0 > .item > .text {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  line-height: 24px !important;
+  text-transform: uppercase !important;
+  color: #525860 !important;
+  padding: 8px 24px 8px 24px !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  cursor: default !important;
+  display: block !important;
+}
+
+/* Dark mode text color for headers */
+[data-theme='dark'] .VPSidebarItem.level-0 > .item > .text {
+  color: #a1a1aa !important;
+}
+
+/* Remove hover effects from section headers */
+.VPSidebarItem.level-0 > .item:hover {
+  background: transparent !important;
+}
+
+/* Remove the chevron/indicator from section headers */
+.VPSidebarItem.level-0 > .item .indicator,
+.VPSidebarItem.level-0 > .item .caret {
+  display: none !important;
+}
+
+/* Container for nested items */
+.VPSidebarItem.level-0 .items {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Style for nested items under sections - exact React Query styling */
+.VPSidebarItem.level-1 {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.VPSidebarItem.level-1 .link {
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+  padding: 7px 24px 7px 32px !important;
+  margin: 0 !important;
+  color: #1a1d1e !important;
+  transition: all 0.2s ease;
+  border-radius: 0;
+  position: relative;
+  display: block;
+}
+
+/* Dark mode text color for items */
+[data-theme='dark'] .VPSidebarItem.level-1 .link {
+  color: #e4e4e7 !important;
+}
+
+.VPSidebarItem.level-1 .link:hover {
+  background: rgba(37, 99, 235, 0.04);
+  color: var(--vp-c-brand-1) !important;
+}
+
+[data-theme='dark'] .VPSidebarItem.level-1 .link:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.VPSidebarItem.level-1 .link.active {
+  color: var(--vp-c-brand-1) !important;
+  background: rgba(37, 99, 235, 0.08);
+  font-weight: 500 !important;
+}
+
+[data-theme='dark'] .VPSidebarItem.level-1 .link.active {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* Add left border for active items */
+.VPSidebarItem.level-1 .link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--vp-c-brand-1);
+}
+
+/* Ensure section groups are always expanded */
+.VPSidebarItem.collapsible > .item > .caret {
+  display: none !important;
+}
+
+.VPSidebarItem.level-0 .items {
+  display: block !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.VPDoc {
+  padding-top: 36px;
+}
+
+.VPDoc h1 {
+  font-size: clamp(2.2rem, 3vw, 2.6rem);
+  letter-spacing: -0.03em;
+  margin-bottom: 0.6rem;
+}
+
+.VPDoc h2 {
+  border: none;
+  margin-top: 2.6rem;
+  margin-bottom: 0.8rem;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+.VPDoc p {
+  color: var(--vp-c-text-2);
+  line-height: 1.7;
+}
+
+.VPDoc a {
+  color: var(--vp-c-brand-2);
+  font-weight: 500;
+}
+
+.VPDoc a:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.VPDoc blockquote {
+  border-left: 3px solid var(--vp-c-brand-2);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--vp-c-text-2);
+}
+
+[data-theme='dark'] .VPDoc blockquote {
+  background: rgba(59, 130, 246, 0.16);
+}
+
+.VPDoc pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid rgba(15, 23, 42, 0.6);
+  border-radius: 14px;
+}
+
+[data-theme='light'] .VPDoc pre {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+.VPDoc code {
+  border-radius: 6px;
+}
+
+.VPDoc .custom-block-tip {
+  border-radius: 12px;
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  background: rgba(45, 212, 191, 0.12);
+  color: #0f766e;
+}
+
+.VPDoc .custom-block-warning {
+  border-radius: 12px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  background: rgba(250, 204, 21, 0.12);
+  color: #92400e;
+}
+
+.VPDoc .custom-block-danger {
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.VPDoc .outline-title {
+  color: var(--vp-c-text-3);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.VPDoc .outline-link {
+  color: var(--vp-c-text-2);
+}
+
+.VPDoc .outline-link.is-active {
+  color: var(--vp-c-brand-1);
+}
+
+.DocSearch-Button {
+  background: rgba(248, 250, 252, 0.95) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  color: var(--vp-c-text-2) !important;
+}
+
+.DocSearch-Button .DocSearch-Search-Icon {
+  color: var(--vp-c-brand-2);
+}
+
+.VPSocialLinks .social-link {
+  color: var(--vp-c-text-3);
+}
+
+.VPSocialLinks .social-link:hover {
+  color: var(--vp-c-brand-1);
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+  color: #082f49;
+}
+
+/* Custom Dropdown Styles */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.custom-dropdown-trigger {
+  width: 100%;
+  padding: 8px 36px 8px 12px;
+  background: var(--vp-c-bg-alt);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.custom-dropdown-trigger:hover {
+  border-color: var(--vp-c-brand-1);
+  background-color: var(--vp-c-bg);
+}
+
+.custom-dropdown-trigger:focus {
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 0 0 3px var(--vp-c-brand-soft);
+}
+
+.dropdown-icon {
+  position: absolute;
+  right: 10px;
+  color: var(--vp-c-text-3);
+  transition: transform 0.2s ease;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08),
+              0 2px 8px rgba(0, 0, 0, 0.04);
+  z-index: 100;
+  overflow: hidden;
+  animation: dropdownSlide 0.2s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.custom-dropdown-option {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  outline: none;
+}
+
+.custom-dropdown-option:hover {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+.custom-dropdown-option:focus {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+/* Dark mode adjustments for dropdown */
+[data-theme='dark'] .custom-dropdown-trigger {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme='dark'] .custom-dropdown-trigger:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: var(--vp-c-brand-2);
+}
+
+[data-theme='dark'] .custom-dropdown-menu {
+  background: var(--vp-c-bg-alt);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3),
+              0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .custom-dropdown-option:hover {
+  background: rgba(59, 130, 246, 0.2);
+}

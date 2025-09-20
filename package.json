@@ -26,7 +26,10 @@
     "fresh": "pnpm run clean && pnpm install && pnpm run build",
     "zip": "bash scripts/gpt5-zip-repo.sh",
     "zip:review": "bash scripts/gpt5-zip-repo.sh ./gpt5-review.zip",
-    "screenshot": "bash scripts/screenshot.sh"
+    "screenshot": "bash scripts/screenshot.sh",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -43,6 +46,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "react-native-builder-bob": "^0.40.13",
     "rimraf": "^5.0.10",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitepress": "^1.6.4"
   }
 }
