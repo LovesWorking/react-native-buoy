@@ -266,8 +266,16 @@ export function CyberpunkConsoleSection({
     const timeoutId = setTimeout(startRandomGlitch, initialDelay);
 
     return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Animated values are stable useRef().current
-  }, [index]);
+  }, [
+    borderGlow,
+    glitchOpacity,
+    glitchScale,
+    glitchX,
+    glitchY,
+    glowIntensity,
+    index,
+    pulseScale,
+  ]);
 
   const handlePressIn = () => {
     isPressedRef.current = 1;
