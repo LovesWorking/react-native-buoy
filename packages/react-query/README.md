@@ -1,55 +1,29 @@
 # @monorepo/react-query
 
-## Description
+React Query Devtools modal tailored for the floating menu.
 
-react-query package for the monorepo.
-
-## Installation
-
-This package is part of the monorepo and is automatically available to other packages and the example app.
-
-## Usage
-
-```typescript
-import { ReactQueryComponent } from '@monorepo/react-query';
-
-// Use in your component
-<ReactQueryComponent title="Hello World" />
-```
-
-## Development
-
-### Building
-
+## Install
 ```bash
-pnpm build
+pnpm add @monorepo/react-query @tanstack/react-query @monorepo/shared
 ```
 
-### Type Checking
+## Use it with the floating menu
+```tsx
+import { ReactQueryDevToolsModal } from '@monorepo/react-query';
+import { ReactQueryIcon } from '@monorepo/shared';
 
-```bash
-pnpm typecheck
+export const QUERY_TOOL = {
+  id: 'query',
+  name: 'React Query',
+  icon: <ReactQueryIcon size={16} />,
+  component: ReactQueryDevToolsModal,
+  singleton: true,
+};
 ```
+Wrap your app in `QueryClientProvider` once so the modal can read the cache.
 
-### Clean Build
+## Exports
+- `ReactQueryDevToolsModal` – Floating menu-ready modal.
+- `react-query/*` – Re-exports TanStack helpers used by the modal.
 
-```bash
-pnpm clean
-```
-
-## Structure
-
-```
-react-query/
-├── src/
-│   └── index.ts        # Main export file
-├── lib/                # Built output (git ignored)
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-## Dependencies
-
-- Uses `@monorepo/shared` for common components and utilities
-- React and React Native as peer dependencies
+Launch it from the floating menu or call `useAppHost().open(QUERY_TOOL)`.

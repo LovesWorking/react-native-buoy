@@ -1,55 +1,29 @@
 # @monorepo/network
 
-## Description
+Network monitor modal for the floating dev tools menu.
 
-network package for the monorepo.
-
-## Installation
-
-This package is part of the monorepo and is automatically available to other packages and the example app.
-
-## Usage
-
-```typescript
-import { NetworkComponent } from '@monorepo/network';
-
-// Use in your component
-<NetworkComponent title="Hello World" />
-```
-
-## Development
-
-### Building
-
+## Install
 ```bash
-pnpm build
+pnpm add @monorepo/network @monorepo/shared
 ```
 
-### Type Checking
+## Register it
+```tsx
+import { NetworkModal } from '@monorepo/network';
+import { WifiCircuitIcon } from '@monorepo/shared';
 
-```bash
-pnpm typecheck
+export const NETWORK_TOOL = {
+  id: 'network',
+  name: 'Network',
+  icon: <WifiCircuitIcon size={16} />,
+  component: NetworkModal,
+  launchMode: 'host-modal',
+  singleton: true,
+};
 ```
+Place this inside your `apps` array and the floating menu will launch it in a hosted modal.
 
-### Clean Build
-
-```bash
-pnpm clean
-```
-
-## Structure
-
-```
-network/
-├── src/
-│   └── index.ts        # Main export file
-├── lib/                # Built output (git ignored)
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-## Dependencies
-
-- Uses `@monorepo/shared` for common components and utilities
-- React and React Native as peer dependencies
+## What you get
+- Live fetch/XMLHttpRequest stream with filters.
+- Detail panel for headers, payloads, and timings.
+- Toggle to pause or resume interception.

@@ -1,212 +1,120 @@
-# React Native Monorepo
+# Floating Dev Tools
 
-A production-ready React Native monorepo with automated package creation, hot reload, and a shared component library.
+Drop a floating bubble into any React Native or Expo app, tap it, and launch the dev tools you need. The host takes care of opening modals, remembering state, and hiding the menu when tools are active.
 
-## 🚀 Features
+## What You Get
+- **Floating bubble** – Draggable launcher with a dial for extra tools.
+- **App Host** – Central brain for opening, closing, and persisting tools.
+- **Bundled tools** – Environment inspector, network monitor, storage browser, React Query panel (install only the ones you want).
+- **Pluggable API** – Describe tools in an `apps` array and you are done.
 
-- **Automated Package Creation** - Create new packages with one command
-- **Shared Component Library** - Common UI, hooks, and utilities
-- **Hot Reload** - Changes reflect instantly without rebuilding
-- **TypeScript** - Full type safety across all packages
-- **pnpm Workspaces** - Efficient dependency management
-- **React Native Builder Bob** - Professional package building
-- **Lerna-lite** - Streamlined package orchestration
-
-## 📁 Structure
-
-```
-├── packages/              # All packages
-│   ├── shared/           # Shared UI, hooks, utilities
-│   ├── devtools-floating-menu/ # Floating dev tools launcher
-│   ├── env-tools/        # Environment variables tooling
-│   ├── ui-kit/           # UI library example
-│   └── [your-packages]/  # Your custom packages
-├── example/              # Expo test app
-├── scripts/              # Automation scripts
-│   └── create-package.js # Package creation script
-├── docs/                 # Documentation
-│   ├── CREATE_PACKAGE_GUIDE.md
-│   ├── MONOREPO_COMPLETE_GUIDE.md
-│   └── SHARED_PACKAGE_PLAN.md
-├── pnpm-workspace.yaml
-├── lerna.json
-└── package.json
+## Install
+Base packages — always add these:
+```bash
+pnpm add @monorepo/devtools-floating-menu @monorepo/shared
 ```
 
-## 🏁 Quick Start
+Dev tools (pick what you need):
+```bash
+pnpm add @monorepo/env-tools      # Environment inspector
+pnpm add @monorepo/network        # Network monitor
+pnpm add @monorepo/storage        # Storage browser
+pnpm add @monorepo/react-query    # React Query panel
+pnpm add @tanstack/react-query    # Required only if you use the React Query panel
+```
 
-1. Install dependencies:
+## Wire It Up (copy + paste)
+```tsx
+import React from 'react';
+import { SafeAreaView, Text } from 'react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppHostProvider, FloatingMenu } from '@monorepo/devtools-floating-menu';
+import { EnvVarsModal } from '@monorepo/env-tools';
+import { NetworkModal } from '@monorepo/network';
+import { StorageModalWithTabs } from '@monorepo/storage';
+import { ReactQueryDevToolsModal } from '@monorepo/react-query';
+import {
+  EnvLaptopIcon,
+  WifiCircuitIcon,
+  StorageStackIcon,
+  ReactQueryIcon,
+} from '@monorepo/shared';
+
+const queryClient = new QueryClient();
+
+const APPS = [
+  {
+    id: 'env',
+    name: 'Environment',
+    icon: <EnvLaptopIcon size={16} />,
+    component: EnvVarsModal,
+    props: {
+      requiredEnvVars: [
+        { key: 'API_URL', description: 'Backend base URL' },
+        { key: 'SENTRY_DSN', description: 'Crash reporting DSN' },
+      ],
+    },
+  },
+  {
+    id: 'network',
+    name: 'Network',
+    icon: <WifiCircuitIcon size={16} />,
+    component: NetworkModal,
+    launchMode: 'host-modal',
+    singleton: true,
+  },
+  {
+    id: 'storage',
+    name: 'Storage',
+    icon: <StorageStackIcon size={16} />,
+    component: StorageModalWithTabs,
+    singleton: true,
+  },
+  {
+    id: 'query',
+    name: 'React Query',
+    icon: <ReactQueryIcon size={16} />,
+    component: ReactQueryDevToolsModal,
+    singleton: true,
+  },
+];
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppHostProvider>
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text>Tap the bubble to open Dev Tools.</Text>
+        </SafeAreaView>
+
+        <FloatingMenu
+          apps={APPS}
+          environment={{ name: 'QA', color: '#22d3ee' }}
+          userRole="internal"
+        />
+      </AppHostProvider>
+    </QueryClientProvider>
+  );
+}
+```
+
+> Only install the dev tool packages you actually list in `APPS`. Remove entries you do not need.
+
+## Next Steps
+- Installation notes – `docs/codex-docs/framework/react-native/installation.md`
+- Quick start walkthrough – `docs/codex-docs/framework/react-native/quick-start.md`
+- Build your own tool – `docs/codex-docs/guides/building-a-tool.md`
+
+## Try the Example App
 ```bash
 pnpm install
-```
-
-2. Build all packages:
-```bash
-pnpm build
-```
-
-3. Start the example app:
-```bash
 pnpm start
 ```
 
-## ✨ Create New Packages
+## Useful Scripts
+- `pnpm build`
+- `pnpm typecheck`
+- `pnpm lint`
 
-Use the automated package creation script:
-
-```bash
-# Standard React Native package
-pnpm create:package my-feature
-
-# UI component library
-pnpm create:package design-system ui
-
-# Custom hooks package
-pnpm create:package auth-hooks hook
-
-# Utility functions package
-pnpm create:package validators util
-```
-
-Each package is automatically configured with:
-- TypeScript setup
-- Bob build configuration
-- Shared package dependency
-- Hot reload support
-- Proper exports and documentation
-
-[📖 Full Package Creation Guide →](./CREATE_PACKAGE_GUIDE.md)
-
-## 🔥 Hot Reload
-
-Hot reload works automatically! Edit any file in any package and see changes instantly:
-
-1. Edit source files (e.g., `packages/shared/src/ui/Button.tsx`)
-2. Metro detects changes via source watching
-3. App updates immediately - no rebuild needed!
-
-This works because Metro watches the "source" field in package.json exports.
-
-## 📦 Shared Package
-
-The `@monorepo/shared` package provides:
-
-### UI Components
-- `Button` - Customizable button with variants (primary, secondary, danger)
-- `Card` - Container with padding and shadow
-
-### Hooks
-- `useCounter` - Counter state with increment/decrement/reset
-- `useToggle` - Boolean state with toggle functions
-
-### Utilities
-- `formatNumber` - Number formatting with commas
-- `formatCurrency` - Currency formatting
-- `debounce` - Debounce function
-- `throttle` - Throttle function
-
-```typescript
-import { Button, Card, useCounter, formatNumber } from '@monorepo/shared';
-```
-
-## 📜 Available Scripts
-
-### Root Commands
-| Command | Description |
-|---------|-------------|
-| `pnpm create:package <name> [type]` | Create a new package |
-| `pnpm build` | Build all packages |
-| `pnpm fresh` | Clean install and build |
-| `pnpm clean` | Remove all build artifacts |
-| `pnpm start` | Start the example app |
-| `pnpm ios` | Run on iOS simulator |
-| `pnpm android` | Run on Android emulator |
-| `pnpm typecheck` | Type check all packages |
-| `pnpm lint` | Lint all packages |
-| `pnpm test` | Run full test suite |
-
-### Package-Specific Commands
-```bash
-# Build specific package
-pnpm --filter @monorepo/package-name build
-
-# Add dependency to package
-pnpm --filter @monorepo/package-name add axios
-
-# Clean specific package
-pnpm --filter @monorepo/package-name clean
-```
-
-## 📚 Documentation
-
-- [**Complete Monorepo Guide**](./MONOREPO_COMPLETE_GUIDE.md) - Full reference and architecture
-- [**Package Creation Guide**](./CREATE_PACKAGE_GUIDE.md) - Detailed package creation instructions
-- [**Shared Package Plan**](./SHARED_PACKAGE_PLAN.md) - Shared package architecture
-
-## 🚨 Troubleshooting
-
-### Module Not Found
-```bash
-pnpm install
-pnpm --filter @monorepo/package-name build
-```
-
-### TypeScript Errors
-```bash
-pnpm typecheck
-pnpm build
-```
-
-### Hot Reload Not Working
-```bash
-pnpm start --reset-cache
-```
-
-### Build Failures
-```bash
-pnpm fresh
-```
-
-## 🎯 Example Packages
-
-### devtools-floating-menu (Floating Dev Tools)
-- Floating bubble launcher for developer tools
-- AppHost system to mount plug-in modals and overlays
-- Settings modal with per-tool visibility controls
-
-### env-tools (Environment Variable Inspector)
-- `EnvVarsModal` for surfacing runtime configuration issues
-- Helpers (`createEnvVarConfig`, `envVar`) to declare required variables
-- Role-aware UI showing environment, status, and remediation tips
-
-### ui-kit (Component Library)
-- Custom UI components
-- Re-exports shared components
-- TypeScript interfaces
-
-## 🛠️ Technology Stack
-
-- **React Native 0.81** - Mobile framework
-- **Expo SDK 54** - Development platform
-- **TypeScript 5.8** - Type safety
-- **pnpm 10.10** - Package manager
-- **React Native Builder Bob** - Package builder
-- **Lerna-lite 4.7** - Monorepo tools
-- **React 19** - UI library
-
-## 🤝 Contributing
-
-1. Create new package: `pnpm create:package <name>`
-2. Implement your feature
-3. Test in example app
-4. Build: `pnpm build`
-5. Type check: `pnpm typecheck`
-6. Submit PR
-
-## 📄 License
-
+## License
 MIT
-
----
-
-Built with ❤️ for the React Native community

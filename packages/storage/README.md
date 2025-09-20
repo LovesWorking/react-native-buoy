@@ -1,55 +1,33 @@
 # @monorepo/storage
 
-## Description
+Async storage browser for the floating dev tools menu.
 
-storage package for the monorepo.
-
-## Installation
-
-This package is part of the monorepo and is automatically available to other packages and the example app.
-
-## Usage
-
-```typescript
-import { StorageComponent } from '@monorepo/storage';
-
-// Use in your component
-<StorageComponent title="Hello World" />
-```
-
-## Development
-
-### Building
-
+## Install
 ```bash
-pnpm build
+pnpm add @monorepo/storage @react-native-async-storage/async-storage @monorepo/shared
 ```
 
-### Type Checking
+## Register it
+```tsx
+import { StorageModalWithTabs } from '@monorepo/storage';
+import { StorageStackIcon } from '@monorepo/shared';
 
-```bash
-pnpm typecheck
+export const STORAGE_TOOL = {
+  id: 'storage',
+  name: 'Storage',
+  icon: <StorageStackIcon size={16} />,
+  component: StorageModalWithTabs,
+  singleton: true,
+  props: {
+    requiredStorageKeys: [
+      { key: 'AUTH_TOKEN', description: 'Current session token' },
+    ],
+  },
+};
 ```
+Add it to your `apps` array and launch from the bubble or programmatically via `useAppHost().open()`.
 
-### Clean Build
-
-```bash
-pnpm clean
-```
-
-## Structure
-
-```
-storage/
-├── src/
-│   └── index.ts        # Main export file
-├── lib/                # Built output (git ignored)
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-## Dependencies
-
-- Uses `@monorepo/shared` for common components and utilities
-- React and React Native as peer dependencies
+## Features
+- Key/value grid with copy, delete, and inspect actions.
+- Live events timeline for AsyncStorage operations.
+- Support for required keys and ignored patterns.
