@@ -22,7 +22,7 @@
 - [x] Choose release/versioning workflow (e.g., pnpm + Changesets for versioning, with Lerna for orchestration)
 - [ ] Implement release scripts and CI automation (build/lint/typecheck, publish dry-run, tagging)
   - [x] Add local release helper (`pnpm run release`) that lint/typecheck/builds before publishing
-  - [ ] Wire CI workflow for validation + publish dry-run
+  - [x] Wire CI workflow for validation + publish dry-run
 - [ ] Ensure each package has complete `exports`, `types`, README, and changelog content for npm
 - [ ] Add or update smoke tests per package; wire into CI
 - [ ] Confirm licensing, contributing guidelines, and code ownership docs for external users

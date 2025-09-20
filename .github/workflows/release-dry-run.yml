@@ -1,0 +1,43 @@
+name: Release Dry Run
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dry-run:
+    name: Validate & Dry Run Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build packages
+        run: pnpm run build:packages
+
+      - name: Show pending changesets
+        run: pnpm changeset status --verbose
+
+      - name: Dry run publish
+        run: pnpm changeset publish --dry-run --no-git-tag

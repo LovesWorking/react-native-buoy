@@ -104,6 +104,7 @@ export default function App() {
 - When you are ready to cut versions, run `pnpm run release:version` to apply the collected changesets and refresh lockfiles.
 - After verifying the repo (builds, tests, docs), publish with `pnpm run release:publish` to push all pending `@react-buoy/*` packages to npm.
 - Prefer the one-shot helper `pnpm run release` locally if you want lint → typecheck → build → version → publish in a single command (it creates the release commit for you).
+- CI mirrors this flow: PRs run lint/typecheck/build automatically, and the "Release Dry Run" workflow (manual trigger) runs the full pipeline with `changeset publish --dry-run` so you can sanity-check npm credentials before doing the real release.
 
 > Only install the dev tool packages you actually list in `APPS`. Remove entries you do not need.
 
