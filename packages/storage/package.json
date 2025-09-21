@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/storage",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "storage package",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
@@ -32,7 +32,7 @@
     "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
-    "@react-buoy/shared-ui": "workspace:*",
+    "@react-buoy/shared-ui": "^0.1.1",
     "@tanstack/react-query": "^5.89.0"
   },
   "peerDependencies": {
