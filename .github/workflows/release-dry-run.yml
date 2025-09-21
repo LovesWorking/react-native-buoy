@@ -36,6 +36,9 @@ jobs:
       - name: Build packages
         run: pnpm run build:packages
 
+      - name: Smoke tests
+        run: pnpm run smoke
+
       - name: Show pending changesets
         run: pnpm changeset status --verbose
 

@@ -23,9 +23,9 @@
 - [ ] Implement release scripts and CI automation (build/lint/typecheck, publish dry-run, tagging)
   - [x] Add local release helper (`pnpm run release`) that lint/typecheck/builds before publishing
   - [x] Wire CI workflow for validation + publish dry-run
-- [ ] Ensure each package has complete `exports`, `types`, README, and changelog content for npm
-- [ ] Add or update smoke tests per package; wire into CI
-- [ ] Confirm licensing, contributing guidelines, and code ownership docs for external users
+- [x] Ensure each package has complete `exports`, `types`, README, and changelog content for npm
+- [x] Add or update smoke tests per package; wire into CI
+- [x] Confirm licensing, contributing guidelines, and code ownership docs for external users
 
 ## Next Milestones
 - [ ] Ratify plan with team and adjust timelines
