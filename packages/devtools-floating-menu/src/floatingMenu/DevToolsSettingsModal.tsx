@@ -26,7 +26,7 @@ import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import { ModalHeader } from "@react-buoy/shared-ui";
 import { TabSelector } from "@react-buoy/shared-ui";
 
-const STORAGE_KEY = "@rn_better_dev_tools_settings";
+const STORAGE_KEY = "@react_buoy_dev_tools_settings";
 const MAX_DIAL_SLOTS = 6;
 
 const enforceDialLimit = (

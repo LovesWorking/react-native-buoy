@@ -52,7 +52,7 @@ interface DevToolsSettings {
 
 ## Persistence
 
-- Loads/saves under `@rn_better_dev_tools_settings` using the `safeGetItem`/`safeSetItem` helpers.
+- Loads/saves under `@react_buoy_dev_tools_settings` using the `safeGetItem`/`safeSetItem` helpers.
 - Dial slots enforce `MAX_DIAL_SLOTS = 6` via `enforceDialLimit`.
 - Floating settings sanitize unknown keys but keep defaults for new tools.
 

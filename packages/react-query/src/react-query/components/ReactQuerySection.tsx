@@ -5,7 +5,7 @@ import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface ReactQuerySectionProps {
   onPress: () => void;
-  getRnBetterDevToolsSubtitle: () => string;
+  getReactBuoySubtitle: () => string;
 }
 
 // Component definition moved outside render to prevent recreation on every render
@@ -21,11 +21,11 @@ const TanstackIcon = () => (
  */
 export function ReactQuerySection({
   onPress,
-  getRnBetterDevToolsSubtitle,
+  getReactBuoySubtitle,
 }: ReactQuerySectionProps) {
   // Format subtitle to be shorter: "45 queries • 10 mutations" → "45Q • 10M"
   const formatSubtitle = () => {
-    const full = getRnBetterDevToolsSubtitle();
+    const full = getReactBuoySubtitle();
     const match = full.match(/(\d+) queries • (\d+) mutations/);
     if (match) {
       return `${match[1]}Q • ${match[2]}M`;
@@ -35,7 +35,7 @@ export function ReactQuerySection({
 
   return (
     <CyberpunkSectionButton
-      id="rn-better-dev-tools"
+      id="react-buoy-dev-tools"
       title="QUERY"
       subtitle={formatSubtitle()}
       icon={TanstackIcon as React.ComponentType<{ size?: number; color?: string }>}

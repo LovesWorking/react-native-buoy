@@ -22,7 +22,7 @@ const { settings, refreshSettings } = useDevToolsSettings();
 
 **Behavior**
 
-- Loads settings from `@rn_better_dev_tools_settings` and merges them with defaults.
+- Loads settings from `@react_buoy_dev_tools_settings` and merges them with defaults.
 - Subscribes to [`settingsBus`](./settingsBus.md) to receive push updates.
 - Catches and logs errors while still providing baseline defaults.
 

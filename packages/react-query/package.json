@@ -26,7 +26,7 @@
     "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
-    "@react-buoy/shared-ui": "^0.1.1"
+    "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5.0.0",
