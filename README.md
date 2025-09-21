@@ -1,5 +1,8 @@
 # Floating Dev Tools
 
+[![npm](https://img.shields.io/npm/v/%40react-buoy%2Fcore)](https://www.npmjs.com/package/@react-buoy/core)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Drop a floating bubble into any React Native or Expo app, tap it, and launch the dev tools you need. The host takes care of opening modals, remembering state, and hiding the menu when tools are active.
 
 ## What You Get
@@ -118,6 +121,9 @@ export default function App() {
 pnpm install
 pnpm start
 ```
+
+## Release Notes
+- [0.1.1 – Initial React Buoy publish](docs/releases/0.1.1.md)
 
 ## Useful Scripts
 - `pnpm build`
