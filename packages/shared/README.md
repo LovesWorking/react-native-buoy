@@ -1,5 +1,8 @@
 # @react-buoy/shared-ui
 
+[![npm](https://img.shields.io/npm/v/@react-buoy%2Fshared-ui)](https://www.npmjs.com/package/@react-buoy/shared-ui)
+
+
 Design system pieces shared across the React Buoy dev tools.
 
 ## Install

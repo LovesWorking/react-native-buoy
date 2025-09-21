@@ -1,5 +1,8 @@
 # @react-buoy/react-query
 
+[![npm](https://img.shields.io/npm/v/@react-buoy%2Freact-query)](https://www.npmjs.com/package/@react-buoy/react-query)
+
+
 React Query Devtools modal tailored for the floating menu.
 
 ## Install

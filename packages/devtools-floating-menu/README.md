@@ -1,5 +1,8 @@
 # @react-buoy/core
 
+[![npm](https://img.shields.io/npm/v/@react-buoy%2Fcore)](https://www.npmjs.com/package/@react-buoy/core)
+
+
 Floating dev tools launcher and host provider for React Native apps.
 
 ## Install

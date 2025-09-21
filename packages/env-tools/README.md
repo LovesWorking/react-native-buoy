@@ -1,5 +1,8 @@
 # @react-buoy/env
 
+[![npm](https://img.shields.io/npm/v/@react-buoy%2Fenv)](https://www.npmjs.com/package/@react-buoy/env)
+
+
 Environment variables inspector tailored for the React Buoy floating menu.
 
 ## Install

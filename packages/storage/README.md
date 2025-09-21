@@ -1,5 +1,8 @@
 # @react-buoy/storage
 
+[![npm](https://img.shields.io/npm/v/@react-buoy%2Fstorage)](https://www.npmjs.com/package/@react-buoy/storage)
+
+
 Async storage browser for the floating dev tools menu.
 
 ## Install

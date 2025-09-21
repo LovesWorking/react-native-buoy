@@ -1,5 +1,8 @@
 # @react-buoy/network
 
+[![npm](https://img.shields.io/npm/v/@react-buoy%2Fnetwork)](https://www.npmjs.com/package/@react-buoy/network)
+
+
 Network monitor modal for the floating dev tools menu.
 
 ## Install
