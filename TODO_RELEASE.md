@@ -14,7 +14,7 @@
   - [x] Update `@react-buoy/core` imports (avoid deep `lib/*` paths, rely on public exports).
   - [x] Confirm `@react-buoy/env` builds cleanly in isolation.
 - [x] Re-run dry run after fixes: `pnpm changeset publish --dry-run --no-git-tag`.
-- [ ] Execute full release once dry run succeeds: `pnpm run release` then `git push origin main --follow-tags`.
+- [x] Execute full release once dry run succeeds: `pnpm run release` then `git push origin main --follow-tags` (published v0.1.1 packages).
 - [ ] Update READMEs/badges (if any still reference `better-dev-tools`).
 
 ## Optional / Follow-ups
