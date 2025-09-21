@@ -8,7 +8,7 @@ on:
 
 jobs:
   quality:
-    name: Lint, Typecheck, Build
+    name: Lint, Typecheck, Build, Smoke
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,6 +38,9 @@ jobs:
 
       - name: Build packages
         run: pnpm run build:packages
+
+      - name: Smoke tests
+        run: pnpm run smoke
 
   changeset-status:
     name: Changeset Status

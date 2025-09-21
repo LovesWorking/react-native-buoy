@@ -23,6 +23,9 @@ pnpm run typecheck
 print_step "Building packages"
 pnpm run build:packages
 
+print_step "Running smoke tests"
+pnpm run smoke
+
 print_step "Applying pending changesets"
 pnpm changeset version
 

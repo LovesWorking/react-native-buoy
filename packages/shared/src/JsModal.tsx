@@ -276,18 +276,7 @@ const ModalHeader = memo(function ModalHeader({
         clearTimeout(tapTimeoutRef.current);
       }
     };
-  }, [
-    animatedBottomPosition,
-    animatedFloatingHeight,
-    animatedWidth,
-    bottomSheetTranslateY,
-    dragOffset,
-    floatingPosition,
-    floatingScale,
-    visibilityProgress,
-    initialHeight,
-    currentHeightRef,
-  ]);
+  }, []);
 
   const headerProps = panHandlers ? panHandlers : {};
   // Disable tap handling when no panHandlers (i.e., when using DraggableHeader in floating mode)

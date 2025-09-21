@@ -31,6 +31,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "changeset": "changeset",
+    "smoke": "node tests/smoke/imports.cjs",
     "release:version": "pnpm changeset version && pnpm install",
     "release:publish": "pnpm run build:packages && pnpm changeset publish",
     "release": "bash scripts/release.sh"
