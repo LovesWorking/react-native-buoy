@@ -60,3 +60,4 @@ export { dialColors } from "./ui/gameUI/constants/gameUIColors";
 export type { GameUIColorKey } from "./ui/gameUI/constants/gameUIColors";
 //EnvironmentIndicator
 export { EnvironmentIndicator } from "./env/EnvironmentIndicator";
+export type { Environment } from "./types/types";

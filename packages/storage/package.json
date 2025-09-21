@@ -51,5 +51,18 @@
       "module",
       "typescript"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LovesWorking/react-native-buoy.git",
+    "directory": "packages/storage"
+  },
+  "bugs": {
+    "url": "https://github.com/LovesWorking/react-native-buoy/issues"
+  },
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/storage#readme",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   }
 }

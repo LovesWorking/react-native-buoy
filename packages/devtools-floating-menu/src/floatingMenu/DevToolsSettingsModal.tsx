@@ -22,7 +22,7 @@ import {
 } from "@react-buoy/shared-ui";
 import { JsModal, type ModalMode } from "@react-buoy/shared-ui";
 import { gameUIColors } from "@react-buoy/shared-ui";
-import { useSafeAreaInsets } from "@react-buoy/shared-ui/src/hooks/useSafeAreaInsets";
+import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import { ModalHeader } from "@react-buoy/shared-ui";
 import { TabSelector } from "@react-buoy/shared-ui";
 
@@ -486,7 +486,8 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
                   { key: "floating", label: "FLOATING" },
                 ]}
                 activeTab={activeTab}
-                onTabChange={(tab) => setActiveTab(tab as "dial" | "floating")}
+                onTabChange={(tab: string) =>
+                  setActiveTab(tab as "dial" | "floating")}
               />
             </ModalHeader.Content>
             <ModalHeader.Actions onClose={onClose} />

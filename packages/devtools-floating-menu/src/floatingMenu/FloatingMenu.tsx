@@ -7,7 +7,7 @@ import type {
   FloatingMenuState,
 } from "./types";
 import { DialDevTools } from "./dial/DialDevTools";
-import { Environment } from "@react-buoy/shared-ui/lib/typescript/types/types";
+import type { Environment } from "@react-buoy/shared-ui";
 import { EnvironmentIndicator, gameUIColors } from "@react-buoy/shared-ui";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
 import { useAppHost } from "./AppHost";

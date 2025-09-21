@@ -29,14 +29,14 @@
     "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
+    "@tanstack/react-query": ">=5.0.0",
     "react": "*",
-    "react-native": "*",
-    "@tanstack/react-query": ">=5.0.0"
+    "react-native": "*"
   },
   "devDependencies": {
+    "@tanstack/react-query": "^5.89.0",
     "@types/react": "^19.0.14",
-    "@types/react-native": "^0.73.0",
-    "@tanstack/react-query": "^5.89.0"
+    "@types/react-native": "^0.73.0"
   },
   "react-native-builder-bob": {
     "source": "src",
@@ -46,5 +46,18 @@
       "module",
       "typescript"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LovesWorking/react-native-buoy.git",
+    "directory": "packages/react-query"
+  },
+  "bugs": {
+    "url": "https://github.com/LovesWorking/react-native-buoy/issues"
+  },
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/react-query#readme",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   }
 }

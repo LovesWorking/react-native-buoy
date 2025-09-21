@@ -25,7 +25,7 @@ import {
   safeSetItem,
 } from "@react-buoy/shared-ui";
 import { DraggableHeader } from "./DraggableHeader";
-import { useSafeAreaInsets } from "@react-buoy/shared-ui/src/hooks/useSafeAreaInsets";
+import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 
 // Using Views to render grip dots; no react-native-svg dependency
 

@@ -39,8 +39,12 @@
   },
   "typesVersions": {
     "*": {
-      "dataViewer": ["lib/typescript/dataViewer/index.d.ts"],
-      "dataViewer/*": ["lib/typescript/dataViewer/*"]
+      "dataViewer": [
+        "lib/typescript/dataViewer/index.d.ts"
+      ],
+      "dataViewer/*": [
+        "lib/typescript/dataViewer/*"
+      ]
     }
   },
   "files": [
@@ -74,5 +78,18 @@
       "module",
       "typescript"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LovesWorking/react-native-buoy.git",
+    "directory": "packages/shared"
+  },
+  "bugs": {
+    "url": "https://github.com/LovesWorking/react-native-buoy/issues"
+  },
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/shared#readme",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   }
 }

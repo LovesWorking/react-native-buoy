@@ -44,5 +44,18 @@
   "devDependencies": {
     "@types/react": "^19.0.14",
     "@types/react-native": "^0.73.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LovesWorking/react-native-buoy.git",
+    "directory": "packages/env-tools"
+  },
+  "bugs": {
+    "url": "https://github.com/LovesWorking/react-native-buoy/issues"
+  },
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/env-tools#readme",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   }
 }
