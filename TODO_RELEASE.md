@@ -15,7 +15,7 @@
   - [x] Confirm `@react-buoy/env` builds cleanly in isolation.
 - [x] Re-run dry run after fixes: `pnpm changeset publish --dry-run --no-git-tag`.
 - [x] Execute full release once dry run succeeds: `pnpm run release` then `git push origin main --follow-tags` (published v0.1.1 packages).
-- [ ] Update READMEs/badges (if any still reference `better-dev-tools`).
+- [x] Update READMEs/badges (if any still reference old branding).
 
 ## Optional / Follow-ups
 - [ ] Automate release via GitHub Actions (if desired).

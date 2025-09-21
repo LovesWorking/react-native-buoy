@@ -41,7 +41,7 @@ function OpenSettings({ apps }) {
 
 ## Data Model
 
-The modal stores two maps under `@rn_better_dev_tools_settings`:
+The modal stores two maps under `@react_buoy_dev_tools_settings`:
 
 - `dialTools`: `{ [id]: boolean }` – whether a tool occupies one of the six dial slots.
 - `floatingTools`: `{ [id]: boolean; environment: boolean }` – controls the row icons and environment indicator.

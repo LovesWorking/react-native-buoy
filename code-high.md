@@ -66,5 +66,5 @@
 ## Open Questions
 - Do we want the floating bubble to respect right-to-left layouts? Currently all coordinates assume LTR (hidden grabber on the right). If we flip to RTL the hide animation should mirror.
 - Should `AppHost` expose a context menu so dev apps can close themselves or request focus? Some debug tools might want to dismiss neighbors (e.g. network inspector opening storage inspector).
-- Are we comfortable storing settings under `@rn_better_dev_tools_settings` forever? If we rename the package users will lose preferences. Maybe namespace by package version to allow for schema migrations.
+- Are we comfortable storing settings under `@react_buoy_dev_tools_settings` forever? If we rename the package users will lose preferences. Maybe namespace by package version to allow for schema migrations.
 
