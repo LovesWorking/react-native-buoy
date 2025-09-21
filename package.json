@@ -7,6 +7,14 @@
     "example"
   ],
   "packageManager": "pnpm@10.10.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LovesWorking/react-native-buoy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LovesWorking/react-native-buoy/issues"
+  },
+  "homepage": "https://github.com/LovesWorking/react-native-buoy#readme",
   "scripts": {
     "build": "pnpm run build:packages",
     "build:packages": "lerna run build --stream",
