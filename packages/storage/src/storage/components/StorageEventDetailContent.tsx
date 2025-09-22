@@ -6,6 +6,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useEffect, useState, useCallback, useRef } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AsyncStorageEvent } from "../utils/AsyncStorageListener";
 import {
   formatRelativeTime,
@@ -77,9 +78,6 @@ export function StorageEventDetailContent({
 
     const loadPreferences = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
 
         // Load detail view preference (current/diff)
         const savedDetailView = await AsyncStorage.getItem(
@@ -110,9 +108,6 @@ export function StorageEventDetailContent({
   const handleViewChange = useCallback(async (view: "current" | "diff") => {
     setInternalActiveView(view);
     try {
-      const { default: AsyncStorage } = await import(
-        "@react-native-async-storage/async-storage"
-      );
       await AsyncStorage.setItem(
         devToolsStorageKeys.storage.detailView(),
         view
@@ -126,9 +121,6 @@ export function StorageEventDetailContent({
   const handleDiffModeChange = useCallback(async (mode: "split" | "tree") => {
     setDiffViewerTab(mode);
     try {
-      const { default: AsyncStorage } = await import(
-        "@react-native-async-storage/async-storage"
-      );
       await AsyncStorage.setItem(
         devToolsStorageKeys.storage.diffViewerMode(),
         mode

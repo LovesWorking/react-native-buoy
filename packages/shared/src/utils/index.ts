@@ -25,4 +25,5 @@ export {
   flattenObject,
   formatPath,
 } from "./valueFormatting";
+export { loadOptionalModule, getCachedOptionalModule } from "./loadOptionalModule";
 

@@ -542,7 +542,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
                     </>
                   ) : (
                     <>
-                      <Text style={styles.centerText}>RN BETTER</Text>
+                      <Text style={styles.centerText}>BUOY</Text>
                       <Text style={styles.centerText}>DEV TOOLS</Text>
                     </>
                   )}

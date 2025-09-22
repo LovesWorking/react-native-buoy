@@ -1,55 +1,19 @@
-// AsyncStorage method signatures
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// AsyncStorage method signatures - matching the actual AsyncStorage API
 type AsyncStorageSetItem = (key: string, value: string) => Promise<void>;
 type AsyncStorageRemoveItem = (key: string) => Promise<void>;
 type AsyncStorageMergeItem = (key: string, value: string) => Promise<void>;
 type AsyncStorageClear = () => Promise<void>;
 type AsyncStorageMultiSet = (
-  keyValuePairs: [string, string][]
+  keyValuePairs: readonly (readonly [string, string])[]
 ) => Promise<void>;
-type AsyncStorageMultiRemove = (keys: string[]) => Promise<void>;
+type AsyncStorageMultiRemove = (keys: readonly string[]) => Promise<void>;
 type AsyncStorageMultiMerge = (
-  keyValuePairs: [string, string][]
+  keyValuePairs: readonly (readonly [string, string])[]
 ) => Promise<void>;
 
-interface IAsyncStorageModule {
-  setItem: AsyncStorageSetItem;
-  removeItem: AsyncStorageRemoveItem;
-  mergeItem: AsyncStorageMergeItem;
-  clear: AsyncStorageClear;
-  multiSet: AsyncStorageMultiSet;
-  multiRemove: AsyncStorageMultiRemove;
-  multiMerge?: AsyncStorageMultiMerge;
-}
 
-// AsyncStorage will be loaded lazily
-let AsyncStorageModule: IAsyncStorageModule | null = null;
-let asyncStorageLoadPromise: Promise<void> | null = null;
-
-/**
- * Dynamically loads the AsyncStorage module to avoid import errors when not available
- *
- * @returns Promise that resolves when module loading is complete
- *
- * @internal Uses lazy loading pattern to handle optional dependencies gracefully
- */
-const loadAsyncStorage = async () => {
-  if (asyncStorageLoadPromise) return asyncStorageLoadPromise;
-
-  asyncStorageLoadPromise = (async () => {
-    try {
-      const module = await import("@react-native-async-storage/async-storage");
-      AsyncStorageModule = module.default;
-      // AsyncStorage module loaded successfully
-    } catch (error) {
-      console.warn(
-        "[AsyncStorageListener] AsyncStorage not found. Listener disabled.",
-        error
-      );
-    }
-  })();
-
-  return asyncStorageLoadPromise;
-};
 
 // Event types for AsyncStorage operations
 export interface AsyncStorageEvent {
@@ -157,15 +121,8 @@ class AsyncStorageListener {
       return true;
     }
 
-    await loadAsyncStorage();
-
-    if (!AsyncStorageModule) {
-      console.error("[AsyncStorageListener] AsyncStorage module not available");
-      return false;
-    }
-
     // Check if methods are already swizzled by checking the function name
-    if (AsyncStorageModule.setItem.name === "swizzled_setItem") {
+    if (AsyncStorage.setItem.name === "swizzled_setItem") {
       console.error(
         "[AsyncStorageListener] CRITICAL: AsyncStorage methods are already swizzled! " +
           "This means another instance of AsyncStorageListener is already running. " +
@@ -176,18 +133,18 @@ class AsyncStorageListener {
     }
 
     // Store original methods (these should be the real AsyncStorage methods)
-    this.originalSetItem = AsyncStorageModule.setItem.bind(AsyncStorageModule);
+    this.originalSetItem = AsyncStorage.setItem.bind(AsyncStorage);
     this.originalRemoveItem =
-      AsyncStorageModule.removeItem.bind(AsyncStorageModule);
+      AsyncStorage.removeItem.bind(AsyncStorage);
     this.originalMergeItem =
-      AsyncStorageModule.mergeItem.bind(AsyncStorageModule);
-    this.originalClear = AsyncStorageModule.clear.bind(AsyncStorageModule);
+      AsyncStorage.mergeItem.bind(AsyncStorage);
+    this.originalClear = AsyncStorage.clear.bind(AsyncStorage);
     this.originalMultiSet =
-      AsyncStorageModule.multiSet.bind(AsyncStorageModule);
+      AsyncStorage.multiSet.bind(AsyncStorage) as AsyncStorageMultiSet;
     this.originalMultiRemove =
-      AsyncStorageModule.multiRemove.bind(AsyncStorageModule);
-    this.originalMultiMerge = AsyncStorageModule.multiMerge
-      ? AsyncStorageModule.multiMerge.bind(AsyncStorageModule)
+      AsyncStorage.multiRemove.bind(AsyncStorage) as AsyncStorageMultiRemove;
+    this.originalMultiMerge = AsyncStorage.multiMerge
+      ? (AsyncStorage.multiMerge.bind(AsyncStorage) as AsyncStorageMultiMerge)
       : null;
 
     // Original methods stored successfully
@@ -203,28 +160,28 @@ class AsyncStorageListener {
    * AsyncStorage methods that were saved during initialization.
    */
   private restoreOriginalMethods() {
-    if (!AsyncStorageModule || !this.originalSetItem) {
+    if (!AsyncStorage || !this.originalSetItem) {
       return;
     }
 
-    AsyncStorageModule.setItem = this.originalSetItem;
+    AsyncStorage.setItem = this.originalSetItem;
     if (this.originalRemoveItem) {
-      AsyncStorageModule.removeItem = this.originalRemoveItem;
+      AsyncStorage.removeItem = this.originalRemoveItem;
     }
     if (this.originalMergeItem) {
-      AsyncStorageModule.mergeItem = this.originalMergeItem;
+      AsyncStorage.mergeItem = this.originalMergeItem;
     }
     if (this.originalClear) {
-      AsyncStorageModule.clear = this.originalClear;
+      AsyncStorage.clear = this.originalClear;
     }
     if (this.originalMultiSet) {
-      AsyncStorageModule.multiSet = this.originalMultiSet;
+      AsyncStorage.multiSet = this.originalMultiSet;
     }
     if (this.originalMultiRemove) {
-      AsyncStorageModule.multiRemove = this.originalMultiRemove;
+      AsyncStorage.multiRemove = this.originalMultiRemove;
     }
     if (this.originalMultiMerge) {
-      AsyncStorageModule.multiMerge = this.originalMultiMerge;
+      AsyncStorage.multiMerge = this.originalMultiMerge;
     }
   }
 
@@ -281,7 +238,7 @@ class AsyncStorageListener {
     }
 
     // Check if methods are already swizzled (this can happen if initialize was called twice somehow)
-    if (AsyncStorageModule && AsyncStorageModule.setItem.name === "swizzled_setItem") {
+    if (AsyncStorage && AsyncStorage.setItem.name === "swizzled_setItem") {
       console.warn(
         "[AsyncStorageListener] Methods already swizzled - restoring originals first"
       );
@@ -311,13 +268,13 @@ class AsyncStorageListener {
     Object.defineProperty(swizzled_setItem, "name", {
       value: "swizzled_setItem",
     });
-    if (AsyncStorageModule) {
-      AsyncStorageModule.setItem = swizzled_setItem;
+    if (AsyncStorage) {
+      AsyncStorage.setItem = swizzled_setItem;
     }
 
     // Swizzle removeItem
-    if (AsyncStorageModule) {
-      AsyncStorageModule.removeItem = async (key: string) => {
+    if (AsyncStorage) {
+      AsyncStorage.removeItem = async (key: string) => {
         // Intercepted removeItem
 
         // Only emit event if key is not ignored
@@ -336,8 +293,8 @@ class AsyncStorageListener {
     }
 
     // Swizzle mergeItem
-    if (AsyncStorageModule) {
-      AsyncStorageModule.mergeItem = async (key: string, value: string) => {
+    if (AsyncStorage) {
+      AsyncStorage.mergeItem = async (key: string, value: string) => {
       // Intercepted mergeItem operation
 
       // Only emit event if key is not ignored
@@ -356,8 +313,8 @@ class AsyncStorageListener {
     }
 
     // Swizzle clear
-    if (AsyncStorageModule) {
-      AsyncStorageModule.clear = async () => {
+    if (AsyncStorage) {
+      AsyncStorage.clear = async () => {
       // Intercepted clear operation
       this.emit({
         action: "clear",
@@ -368,8 +325,8 @@ class AsyncStorageListener {
     }
 
     // Swizzle multiSet
-    if (AsyncStorageModule) {
-      AsyncStorageModule.multiSet = async (
+    if (AsyncStorage) {
+      AsyncStorage.multiSet = async (
       keyValuePairs: readonly (readonly [string, string])[]
     ) => {
       // Intercepted multiSet operation with multiple pairs
@@ -394,8 +351,8 @@ class AsyncStorageListener {
     }
 
     // Swizzle multiRemove
-    if (AsyncStorageModule) {
-      AsyncStorageModule.multiRemove = async (keys: readonly string[]) => {
+    if (AsyncStorage) {
+      AsyncStorage.multiRemove = async (keys: readonly string[]) => {
       // Intercepted multiRemove operation with multiple keys
 
       // Filter out ignored keys
@@ -416,8 +373,8 @@ class AsyncStorageListener {
     }
 
     // Swizzle multiMerge if available
-    if (this.originalMultiMerge && AsyncStorageModule) {
-      AsyncStorageModule.multiMerge = async (
+    if (this.originalMultiMerge && AsyncStorage) {
+      AsyncStorage.multiMerge = async (
         keyValuePairs: readonly (readonly [string, string])[]
       ) => {
         // Intercepted multiMerge operation with multiple pairs
@@ -457,7 +414,7 @@ class AsyncStorageListener {
       return;
     }
 
-    if (!AsyncStorageModule) {
+    if (!AsyncStorage) {
       console.warn("[AsyncStorageListener] AsyncStorage module not loaded");
       return;
     }
@@ -466,25 +423,25 @@ class AsyncStorageListener {
 
     // Restore original methods
     if (this.originalSetItem) {
-      AsyncStorageModule.setItem = this.originalSetItem;
+      AsyncStorage.setItem = this.originalSetItem;
     }
     if (this.originalRemoveItem) {
-      AsyncStorageModule.removeItem = this.originalRemoveItem;
+      AsyncStorage.removeItem = this.originalRemoveItem;
     }
     if (this.originalMergeItem) {
-      AsyncStorageModule.mergeItem = this.originalMergeItem;
+      AsyncStorage.mergeItem = this.originalMergeItem;
     }
     if (this.originalClear) {
-      AsyncStorageModule.clear = this.originalClear;
+      AsyncStorage.clear = this.originalClear;
     }
     if (this.originalMultiSet) {
-      AsyncStorageModule.multiSet = this.originalMultiSet;
+      AsyncStorage.multiSet = this.originalMultiSet;
     }
     if (this.originalMultiRemove) {
-      AsyncStorageModule.multiRemove = this.originalMultiRemove;
+      AsyncStorage.multiRemove = this.originalMultiRemove;
     }
     if (this.originalMultiMerge) {
-      AsyncStorageModule.multiMerge = this.originalMultiMerge;
+      AsyncStorage.multiMerge = this.originalMultiMerge;
     }
 
     this.isListening = false;

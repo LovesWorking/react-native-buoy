@@ -1,27 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
-
-// AsyncStorage will be loaded lazily
-let AsyncStorageModule: {
-  getAllKeys: () => Promise<readonly string[]>;
-  multiRemove: (keys: readonly string[]) => Promise<void>;
-  clear: () => Promise<void>;
-} | null = null;
-let asyncStorageLoadPromise: Promise<void> | null = null;
-
-const loadAsyncStorage = async () => {
-  if (asyncStorageLoadPromise) return asyncStorageLoadPromise;
-
-  asyncStorageLoadPromise = (async () => {
-    try {
-      const module = await import("@react-native-async-storage/async-storage");
-      AsyncStorageModule = module.default;
-    } catch {
-      console.warn("AsyncStorage not found. Cannot clear storage.");
-    }
-  })();
-
-  return asyncStorageLoadPromise;
-};
 
 /**
  * Clear all storage data except dev tools keys
@@ -29,14 +7,8 @@ const loadAsyncStorage = async () => {
  */
 export async function clearAllAppStorage(): Promise<void> {
   try {
-    await loadAsyncStorage();
-
-    if (!AsyncStorageModule) {
-      throw new Error("AsyncStorage not available");
-    }
-
     // Get all keys
-    const allKeys = await AsyncStorageModule.getAllKeys();
+    const allKeys = await AsyncStorage.getAllKeys();
 
     if (!allKeys || allKeys.length === 0) {
       // No keys to clear
@@ -56,7 +28,7 @@ export async function clearAllAppStorage(): Promise<void> {
     // Clearing ${keysToRemove.length} app storage keys
 
     // Remove all non-dev-tool keys
-    await AsyncStorageModule.multiRemove(keysToRemove);
+    await AsyncStorage.multiRemove(keysToRemove);
 
     // Successfully cleared app storage
   } catch (error) {
@@ -71,14 +43,8 @@ export async function clearAllAppStorage(): Promise<void> {
  */
 export async function clearAllStorageIncludingDevTools(): Promise<void> {
   try {
-    await loadAsyncStorage();
-
-    if (!AsyncStorageModule) {
-      throw new Error("AsyncStorage not available");
-    }
-
     // Clear everything
-    await AsyncStorageModule.clear();
+    await AsyncStorage.clear();
 
     // Successfully cleared all storage including dev tools
   } catch (error) {
