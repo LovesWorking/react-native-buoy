@@ -1,134 +1,226 @@
-# Floating Dev Tools
+# React Buoy Devtools
 
-[![npm](https://img.shields.io/npm/v/%40react-buoy%2Fcore)](https://www.npmjs.com/package/@react-buoy/core)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+**The floating devtools menu that every React Native team needs.**
 
-Drop a floating bubble into any React Native or Expo app, tap it, and launch the dev tools you need. The host takes care of opening modals, remembering state, and hiding the menu when tools are active.
+A persistent floating row that shows your current environment (dev/staging/prod) and user role (admin/internal/user) at all times, with instant access to the tools your team uses every day.
+
+## The Problem
+
+Most React Native teams build similiar internal tools:
+
+- Admin panels hidden behind secret taps
+
+Your engineers waste time hunting for tools, forget what environment they're in, and everyone's setup looks different.
+
+## The Solution
+
+One floating menu that:
+
+- **Always visible** – Shows environment & user role in a draggable row that survives reloads
+- **Consistent everywhere** – Same tools in dev, staging, and production
+- **Bring your own tools** – Drop in any React component as a tool
+- **Team-friendly** – Each engineer can show/hide the tools they need
 
 ## What You Get
-- **Floating bubble** – Draggable launcher with a dial for extra tools.
-- **App Host** – Central brain for opening, closing, and persisting tools.
-- **Bundled tools** – Environment inspector, network monitor, storage browser, React Query panel (install only the ones you want).
-- **Pluggable API** – Describe tools in an `apps` array and you are done.
 
-## Install
-Base packages — always add these:
+### 🎯 Smart Floating Row
+
+A draggable status bar that docks to screen edges, remembers its position, and can be collapsed to just a handle. Shows your environment (dev/qa/prod) and user role (admin/internal/user) at a glance.
+
+### 🎨 Animated Tool Dial
+
+Tap the role badge to open a radial menu with your tools. Beautiful neon transitions, enforced slot limits, automatic sync between row and dial views.
+
+### 🏗️ Production-Ready Architecture
+
+- **AppHost lifecycle** – Tools stay open after reload, singleton enforcement, hardware back button support
+- **Smart persistence** – Per-device settings that sync instantly without code changes
+- **Launch modes** – Choose between modal, inline, or custom presentation for each tool
+- **TypeScript throughout** – Full type safety and IntelliSense support
+
+## Built-in Professional Tools
+
+### 🌍 Environment Inspector
+
+Visual health check for your app config. Required/optional variables, auto-detection, search, filters. Know instantly if your app is misconfigured.
+
+### 📡 Network Monitor
+
+Production-grade request inspector. Timeline view, capture toggle, ignore patterns, detailed headers/body inspection, performance stats.
+
+### 💾 Storage Explorer
+
+Real-time AsyncStorage browser. Live updates, key grouping, bulk operations, conversation view for debugging state changes.
+
+### ⚡ React Query DevTools
+
+TanStack Query devtools, adapted for mobile. Query explorer, mutation tracking, cache manipulation, online/offline toggle.
+
+## Quick Start
+
 ```bash
-pnpm add @react-buoy/core @react-buoy/shared-ui
+# Core floating menu
+npm install @react-buoy/core
+
+# Pick your tools (or build your own)
+npm install @react-buoy/env        # Environment inspector
+npm install @react-buoy/network    # Network monitor
+npm install @react-buoy/storage    # Storage explorer
+npm install @react-buoy/react-query # React Query devtools
 ```
 
-Dev tools (pick what you need):
-```bash
-pnpm add @react-buoy/env      # Environment inspector
-pnpm add @react-buoy/network        # Network monitor
-pnpm add @react-buoy/storage        # Storage browser
-pnpm add @react-buoy/react-query    # React Query panel
-pnpm add @tanstack/react-query    # Required only if you use the React Query panel
-```
+## Drop It In – 2 Minutes
 
-## Wire It Up (copy + paste)
 ```tsx
-import React from 'react';
-import { SafeAreaView, Text } from 'react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppHostProvider, FloatingMenu } from '@react-buoy/core';
-import { EnvVarsModal } from '@react-buoy/env';
-import { NetworkModal } from '@react-buoy/network';
-import { StorageModalWithTabs } from '@react-buoy/storage';
-import { ReactQueryDevToolsModal } from '@react-buoy/react-query';
+import { AppHostProvider, FloatingMenu, AppOverlay } from "@react-buoy/core";
+import { EnvVarsModal } from "@react-buoy/env";
+import { NetworkModal } from "@react-buoy/network";
+import { StorageModalWithTabs } from "@react-buoy/storage";
+import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
 import {
   EnvLaptopIcon,
   WifiCircuitIcon,
   StorageStackIcon,
   ReactQueryIcon,
-} from '@react-buoy/shared-ui';
+} from "@react-buoy/shared-ui";
 
-const queryClient = new QueryClient();
-
-const APPS = [
+const TOOLS = [
   {
-    id: 'env',
-    name: 'Environment',
+    id: "env",
+    name: "Environment",
     icon: <EnvLaptopIcon size={16} />,
     component: EnvVarsModal,
     props: {
-      requiredEnvVars: [
-        { key: 'API_URL', description: 'Backend base URL' },
-        { key: 'SENTRY_DSN', description: 'Crash reporting DSN' },
-      ],
+      requiredEnvVars: [{ key: "API_URL", description: "Backend base URL" }],
     },
   },
   {
-    id: 'network',
-    name: 'Network',
+    id: "network",
+    name: "Network",
     icon: <WifiCircuitIcon size={16} />,
     component: NetworkModal,
-    launchMode: 'host-modal',
+    launchMode: "host-modal",
     singleton: true,
   },
   {
-    id: 'storage',
-    name: 'Storage',
+    id: "storage",
+    name: "Storage",
     icon: <StorageStackIcon size={16} />,
     component: StorageModalWithTabs,
     singleton: true,
   },
   {
-    id: 'query',
-    name: 'React Query',
+    id: "query",
+    name: "React Query",
     icon: <ReactQueryIcon size={16} />,
     component: ReactQueryDevToolsModal,
     singleton: true,
   },
 ];
 
-export default function App() {
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppHostProvider>
-        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text>Tap the bubble to open Dev Tools.</Text>
-        </SafeAreaView>
+    <AppHostProvider>
+      {/* Your existing app */}
+      <YourAppContent />
 
-        <FloatingMenu
-          apps={APPS}
-          environment={{ name: 'QA', color: '#22d3ee' }}
-          userRole="internal"
-        />
-      </AppHostProvider>
-    </QueryClientProvider>
+      {/* Add the floating menu - that's it! */}
+      <FloatingMenu
+        apps={TOOLS}
+        environment="dev" // or staging/prod
+        userRole="internal" // or admin/user
+      />
+      <AppOverlay />
+    </AppHostProvider>
   );
 }
 ```
 
-## Release Workflow
+## Build Your Own Tools
 
-- Run `pnpm changeset` for every meaningful change to record the package bump and changelog entry.
-- When you are ready to cut versions, run `pnpm run release:version` to apply the collected changesets and refresh lockfiles.
-- After verifying the repo (builds, tests, docs), publish with `pnpm run release:publish` to push all pending `@react-buoy/*` packages to npm.
-- Prefer the one-shot helper `pnpm run release` locally if you want lint → typecheck → build → version → publish in a single command (it creates the release commit for you).
-- CI mirrors this flow: PRs run lint/typecheck/build automatically, and the "Release Dry Run" workflow (manual trigger) runs the full pipeline with `changeset publish --dry-run` so you can sanity-check npm credentials before doing the real release.
+Any React component can be a tool. Perfect for:
 
-> Only install the dev tool packages you actually list in `APPS`. Remove entries you do not need.
+- Admin dashboards
+- Feature flags toggles
+- User impersonation
+- QA checklists
+- GraphQL explorers
+- Database browsers
+- Push notification testing
+- Analytics dashboards
 
-## Next Steps
-- Installation notes – `docs/codex-docs/framework/react-native/installation.md`
-- Quick start walkthrough – `docs/codex-docs/framework/react-native/quick-start.md`
-- Build your own tool – `docs/codex-docs/guides/building-a-tool.md`
+```tsx
+// Your custom tool - just a React component
+function MyAdminPanel({ onClose }) {
+  return (
+    <View>
+      <Text>Secret Admin Powers 🚀</Text>
+      {/* Your tool UI */}
+    </View>
+  );
+}
 
-## Try the Example App
-```bash
-pnpm install
-pnpm start
+// Register it with the menu
+const TOOLS = [
+  {
+    id: "admin",
+    name: "Admin Panel",
+    icon: <ShieldIcon size={16} />,
+    component: MyAdminPanel,
+    slot: "both", // Show in row AND dial
+    singleton: true, // Only one instance
+    launchMode: "host-modal", // Or "inline", "self-modal"
+  },
+  // ... other tools
+];
 ```
 
-## Release Notes
-- [0.1.1 – Initial React Buoy publish](docs/releases/0.1.1.md)
+## Why Teams Love It
 
-## Useful Scripts
-- `pnpm build`
-- `pnpm typecheck`
-- `pnpm lint`
+### 🎯 **No More Environment Confusion**
+
+Your current environment and role are always visible. No more "wait, am I in prod?" moments.
+
+### 🔄 **Survives Everything**
+
+Hot reload? Crash recovery? The menu persists through it all. Tools stay open, positions are remembered.
+
+### 👥 **Team Consistency**
+
+Every engineer sees the same tools in every environment. Onboard new devs in minutes, not days.
+
+### 🎨 **Not Another Debug Menu**
+
+Beautiful, responsive, and actually pleasant to use. Your team will _want_ to use these tools.
+
+### 🏢 **Production-Safe**
+
+Ship it to production. Tools respect user roles, sensitive features stay hidden from end users.
+
+## Real-World Example
+
+Imagine you're debugging a payment flow issue:
+
+1. **Environment badge** shows you're in staging (not prod! 😅)
+2. **Role pill** confirms you're logged in as "internal"
+3. Tap **Network** to watch API calls in real-time
+4. Open **Storage** to see what's persisted locally
+5. Check **React Query** to inspect cached data
+6. Launch your custom **Payment Debug** panel
+
+All from one floating menu that follows you through every screen.
+
+## Documentation
+
+- [Quick Start Guide](docs/quick-start.md)
+- [Building Custom Tools](docs/building-tools.md)
+- [API Reference](docs/api-reference.md)
+- [Example App](example/)
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## License
-MIT
+
+MIT © React Buoy Team
