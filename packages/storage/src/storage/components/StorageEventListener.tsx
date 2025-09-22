@@ -15,25 +15,6 @@ import {
   isListening as checkIsListening,
 } from "../utils/AsyncStorageListener";
 
-// AsyncStorage will be loaded lazily
-let AsyncStorageModule: unknown = null;
-let asyncStorageLoadPromise: Promise<void> | null = null;
-
-const loadAsyncStorage = async () => {
-  if (asyncStorageLoadPromise) return asyncStorageLoadPromise;
-
-  asyncStorageLoadPromise = (async () => {
-    try {
-      const module = await import("@react-native-async-storage/async-storage");
-      AsyncStorageModule = module.default;
-      // AsyncStorage module loaded successfully
-    } catch (error) {
-      console.warn("[StorageEventListener] AsyncStorage not found", error);
-    }
-  })();
-
-  return asyncStorageLoadPromise;
-};
 
 /**
  * Storage event listener component for monitoring AsyncStorage operations
@@ -45,17 +26,8 @@ export function StorageEventListener() {
   const [isAsyncStorageAvailable, setIsAsyncStorageAvailable] = useState(false);
 
   useEffect(() => {
-    // Component mounted, checking AsyncStorage availability
-
-    // Load AsyncStorage module
-    loadAsyncStorage().then(() => {
-      if (AsyncStorageModule) {
-        setIsAsyncStorageAvailable(true);
-        // AsyncStorage is available
-      } else {
-        console.warn("[StorageEventListener] AsyncStorage not available");
-      }
-    });
+    // Component mounted, AsyncStorage is available
+    setIsAsyncStorageAvailable(true);
 
     // Add listener for AsyncStorage events
     const unsubscribe = addListener((event: AsyncStorageEvent) => {

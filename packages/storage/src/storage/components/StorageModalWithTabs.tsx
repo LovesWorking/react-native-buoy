@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Text, View, TouchableOpacity, StyleSheet, FlatList } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   JsModal,
   type ModalMode,
@@ -95,9 +96,6 @@ export function StorageModalWithTabs({
 
     const loadTabState = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
         const storedTab = await AsyncStorage.getItem(
           devToolsStorageKeys.storage.activeTab()
         );
@@ -119,9 +117,6 @@ export function StorageModalWithTabs({
 
     const loadMonitoringState = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
         const storedMonitoring = await AsyncStorage.getItem(
           devToolsStorageKeys.storage.isMonitoring()
         );
@@ -150,9 +145,6 @@ export function StorageModalWithTabs({
 
     const saveTabState = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
         await AsyncStorage.setItem(
           devToolsStorageKeys.storage.activeTab(),
           activeTab
@@ -171,9 +163,6 @@ export function StorageModalWithTabs({
 
     const saveMonitoringState = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
         await AsyncStorage.setItem(
           devToolsStorageKeys.storage.isMonitoring(),
           isListening.toString()
@@ -192,9 +181,6 @@ export function StorageModalWithTabs({
 
     const loadFilters = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
         const storedFilters = await AsyncStorage.getItem(
           devToolsStorageKeys.storage.eventFilters()
         );
@@ -217,9 +203,6 @@ export function StorageModalWithTabs({
 
     const saveFilters = async () => {
       try {
-        const { default: AsyncStorage } = await import(
-          "@react-native-async-storage/async-storage"
-        );
         const filters = Array.from(ignoredPatterns);
         await AsyncStorage.setItem(
           devToolsStorageKeys.storage.eventFilters(),

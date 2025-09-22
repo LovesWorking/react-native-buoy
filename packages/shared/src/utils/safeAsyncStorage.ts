@@ -18,54 +18,42 @@ const log = (...args: unknown[]) => {
 };
 let warnedMissing = false;
 let cachedAsyncStorage: StorageLike | null = null;
-let loadPromise: Promise<StorageLike | null> | null = null;
+let loadAttempted = false;
 
-async function loadAsyncStorage(): Promise<StorageLike | null> {
+function loadAsyncStorage(): StorageLike | null {
   if (cachedAsyncStorage) {
     return cachedAsyncStorage;
   }
 
-  if (!loadPromise) {
-    loadPromise = (async () => {
-      try {
-        //  @ts-expect-error Cannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.ts(2307)
-        const mod = await import("@react-native-async-storage/async-storage");
-        const AsyncStorage =
-          ((mod as any)?.default || mod) as StorageLike | undefined;
-        if (AsyncStorage && typeof AsyncStorage.getItem === "function") {
-          log("AsyncStorage module loaded successfully");
-          return AsyncStorage;
-        }
-      } catch (err) {
-        log("AsyncStorage import failed", err);
+  if (!loadAttempted) {
+    loadAttempted = true;
+    try {
+      // Use require for better Metro compatibility with optional dependencies
+      const AsyncStorage = require("@react-native-async-storage/async-storage")
+        .default as StorageLike | undefined;
+      if (AsyncStorage && typeof AsyncStorage.getItem === "function") {
+        log("AsyncStorage module loaded successfully");
+        cachedAsyncStorage = AsyncStorage;
+        return cachedAsyncStorage;
       }
-      return null;
-    })();
+    } catch (err) {
+      log("AsyncStorage require failed", err);
+      if (!warnedMissing) {
+        warnedMissing = true;
+        // Keep this as console.warn for visibility across environments
+        console.warn(
+          "@react-native-async-storage/async-storage not found; falling back to in-memory storage."
+        );
+        log("Using in-memory fallback for AsyncStorage");
+      }
+    }
   }
 
-  const storage = await loadPromise;
-  loadPromise = null;
-
-  if (storage) {
-    cachedAsyncStorage = storage;
-    return cachedAsyncStorage;
-  }
-
-  if (!warnedMissing) {
-    warnedMissing = true;
-    // Keep this as console.warn for visibility across environments
-    console.warn(
-      "@react-native-async-storage/async-storage not found; falling back to in-memory storage."
-    );
-    log("Using in-memory fallback for AsyncStorage");
-  }
-
-  cachedAsyncStorage = null;
   return null;
 }
 
 export async function safeGetItem(key: string): Promise<string | null> {
-  const storage = await loadAsyncStorage();
+  const storage = loadAsyncStorage();
   if (storage) {
     try {
       const value = await storage.getItem(key);
@@ -81,7 +69,7 @@ export async function safeGetItem(key: string): Promise<string | null> {
 }
 
 export async function safeSetItem(key: string, value: string): Promise<void> {
-  const storage = await loadAsyncStorage();
+  const storage = loadAsyncStorage();
   if (storage) {
     try {
       await storage.setItem(key, value);
@@ -96,7 +84,7 @@ export async function safeSetItem(key: string, value: string): Promise<void> {
 }
 
 export async function safeRemoveItem(key: string): Promise<void> {
-  const storage = await loadAsyncStorage();
+  const storage = loadAsyncStorage();
   if (storage) {
     try {
       await storage.removeItem(key);
@@ -112,8 +100,8 @@ export async function safeRemoveItem(key: string): Promise<void> {
 
 // Optional hook to know if persistent storage is available.
 // Not required for use, but handy in some UIs.
-export async function isPersistentStorageAvailable(): Promise<boolean> {
-  const storage = await loadAsyncStorage();
+export function isPersistentStorageAvailable(): boolean {
+  const storage = loadAsyncStorage();
   return !!storage;
 }
 
@@ -121,17 +109,8 @@ export function useSafeAsyncStorage() {
   const [isPersistent, setIsPersistent] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    isPersistentStorageAvailable()
-      .then((available) => {
-        if (mounted) setIsPersistent(available);
-      })
-      .catch(() => {
-        if (mounted) setIsPersistent(false);
-      });
-    return () => {
-      mounted = false;
-    };
+    // Synchronously check if persistent storage is available
+    setIsPersistent(isPersistentStorageAvailable());
   }, []);
 
   return useMemo(

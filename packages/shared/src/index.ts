@@ -31,6 +31,9 @@ export {
   truncateText,
   flattenObject,
   formatPath,
+  // Optional module loading utilities
+  loadOptionalModule,
+  getCachedOptionalModule,
 } from "./utils";
 
 // Also export formatting utils
