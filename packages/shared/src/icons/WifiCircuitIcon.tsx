@@ -167,6 +167,3 @@ export const WifiCircuitIcon: FC<WifiIconProps> = ({
 };
 
 export const WifiIcon = WifiCircuitIcon;
-export const WifiOffIcon: FC<WifiIconProps> = (props) => (
-  <WifiCircuitIcon {...props} strength={4} showSlash />
-);

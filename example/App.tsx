@@ -28,6 +28,7 @@ import {
   StorageModalWithTabs,
   type RequiredStorageKey,
 } from "@react-buoy/storage/storage";
+import { WifiToggle } from "@react-buoy/react-query";
 
 export default function App() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -156,6 +157,15 @@ export default function App() {
         props: {
           enableSharedModalDimensions: true,
         },
+      },
+      {
+        id: "query-wifi-toggle",
+        name: "WIFI TOGGLE",
+        description: "React Query WiFi toggle",
+        slot: "both",
+        icon: ({ size }: { size: number }) => <WifiToggle size={size} />,
+        component: () => <></>,
+        props: {},
       },
       {
         id: "network",

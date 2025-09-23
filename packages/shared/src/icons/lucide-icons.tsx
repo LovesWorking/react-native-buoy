@@ -10,7 +10,7 @@ interface IconProps {
   style?: ViewStyle;
 }
 
-interface SvgProps extends Omit<ViewProps, 'style'> {
+interface SvgProps extends Omit<ViewProps, "style"> {
   width: number;
   height: number;
   viewBox: string;
@@ -19,7 +19,14 @@ interface SvgProps extends Omit<ViewProps, 'style'> {
 }
 
 // Optimized helper components
-const Svg = ({ width, height, viewBox, children, style, ...props }: SvgProps) => {
+const Svg = ({
+  width,
+  height,
+  viewBox,
+  children,
+  style,
+  ...props
+}: SvgProps) => {
   const [, , vbWidth, vbHeight] = viewBox.split(" ").map(Number);
   const scaleX = width / vbWidth;
   const scaleY = height / vbHeight;
@@ -1834,7 +1841,6 @@ export const Bug = OriginalIcons.BugIcon;
 export const Database = OriginalIcons.DatabaseIcon;
 export const Globe = OriginalIcons.GlobeIcon;
 export const Wifi = OriginalIcons.WifiIcon;
-export const WifiOff = OriginalIcons.WifiOffIcon;
 export const AlertCircle = OriginalIcons.AlertCircleIcon;
 export const CheckCircle2 = OriginalIcons.CheckCircle2Icon;
 export const Server = OriginalIcons.ServerIcon;
@@ -1882,7 +1888,6 @@ export const BugIcon = OriginalIcons.BugIcon;
 export const DatabaseIcon = OriginalIcons.DatabaseIcon;
 export const GlobeIcon = OriginalIcons.GlobeIcon;
 export const WifiIcon = OriginalIcons.WifiIcon;
-export const WifiOffIcon = OriginalIcons.WifiOffIcon;
 export const AlertCircleIcon = OriginalIcons.AlertCircleIcon;
 export const CheckCircle2Icon = OriginalIcons.CheckCircle2Icon;
 export const ServerIcon = OriginalIcons.ServerIcon;

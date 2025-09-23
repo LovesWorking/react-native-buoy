@@ -6,7 +6,7 @@ import { useWifiState } from "../hooks/useWifiState";
  * Small icon button that toggles React Query’s online manager, allowing developers to simulate
  * offline scenarios directly from the modal header.
  */
-export function WifiToggle() {
+export function WifiToggle({ size = 16 }: { size?: number }) {
   const { isOnline, handleWifiToggle } = useWifiState();
   return (
     <TouchableOpacity
@@ -20,17 +20,16 @@ export function WifiToggle() {
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       activeOpacity={0.7}
       style={{
-        paddingVertical: 6,
         alignItems: "center",
         justifyContent: "center",
-        width: 24,
+        width: 14,
         flexShrink: 0,
       }}
     >
       {isOnline ? (
-        <Wifi size={16} color="#10B981" />
+        <Wifi size={size} color="#10B981" />
       ) : (
-        <WifiOff size={16} color="#DC2626" />
+        <Wifi size={size} color="#DC2626" />
       )}
     </TouchableOpacity>
   );
