@@ -1,5 +1,5 @@
 import { TouchableOpacity } from "react-native";
-import { Wifi, WifiOff } from "@react-buoy/shared-ui";
+import { Wifi } from "@react-buoy/shared-ui";
 import { useWifiState } from "../hooks/useWifiState";
 
 /**
