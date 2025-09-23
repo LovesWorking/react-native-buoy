@@ -42,7 +42,8 @@
     "smoke": "node tests/smoke/imports.cjs",
     "release:version": "pnpm changeset version && pnpm install",
     "release:publish": "pnpm run build:packages && pnpm changeset publish",
-    "release": "bash scripts/release.sh"
+    "release": "bash scripts/release.sh",
+    "release:all": "bash scripts/release-all.sh"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
