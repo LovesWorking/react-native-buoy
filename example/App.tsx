@@ -104,6 +104,7 @@ export default function App() {
       {
         id: "env",
         name: "ENV",
+        description: "Environment variables debugger",
         slot: "both",
         icon: ({ size }: { size: number }) => (
           <EnvLaptopIcon
@@ -122,6 +123,7 @@ export default function App() {
       {
         id: "storage",
         name: "STORAGE",
+        description: "AsyncStorage browser",
         slot: "both",
         icon: ({ size }: { size: number }) => (
           <StorageStackIcon
@@ -138,8 +140,9 @@ export default function App() {
         },
       },
       {
-        id: "react-query",
+        id: "query",
         name: "QUERY",
+        description: "React Query inspector",
         slot: "both",
         icon: ({ size }: { size: number }) => (
           <ReactQueryIcon
@@ -157,6 +160,7 @@ export default function App() {
       {
         id: "network",
         name: "NET",
+        description: "Network request logger",
         slot: "both",
         icon: ({ size }: { size: number }) => (
           <Globe size={size} color="#38bdf8" />
