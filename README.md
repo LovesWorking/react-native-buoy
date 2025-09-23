@@ -1,4 +1,5 @@
 # React Buoy Devtools
+![devtools](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
 
 **The floating devtools menu that every React Native team needs.**
 
