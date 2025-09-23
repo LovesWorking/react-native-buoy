@@ -12,7 +12,58 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@react-buoy/core": [
+        "packages/devtools-floating-menu/lib/typescript/module/index.d.ts",
+        "packages/devtools-floating-menu/src/index.tsx"
+      ],
+      "@react-buoy/core/*": [
+        "packages/devtools-floating-menu/lib/typescript/module/*",
+        "packages/devtools-floating-menu/src/*"
+      ],
+      "@react-buoy/shared-ui": [
+        "packages/shared/lib/typescript/module/index.d.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "@react-buoy/shared-ui/*": [
+        "packages/shared/lib/typescript/module/*",
+        "packages/shared/src/*"
+      ],
+      "@react-buoy/env": [
+        "packages/env-tools/lib/typescript/module/index.d.ts",
+        "packages/env-tools/src/index.tsx"
+      ],
+      "@react-buoy/env/*": [
+        "packages/env-tools/lib/typescript/module/*",
+        "packages/env-tools/src/*"
+      ],
+      "@react-buoy/network": [
+        "packages/network/lib/typescript/module/index.d.ts",
+        "packages/network/src/index.tsx"
+      ],
+      "@react-buoy/network/*": [
+        "packages/network/lib/typescript/module/*",
+        "packages/network/src/*"
+      ],
+      "@react-buoy/storage": [
+        "packages/storage/lib/typescript/module/index.d.ts",
+        "packages/storage/src/index.tsx"
+      ],
+      "@react-buoy/storage/*": [
+        "packages/storage/lib/typescript/module/*",
+        "packages/storage/src/*"
+      ],
+      "@react-buoy/react-query": [
+        "packages/react-query/lib/typescript/module/index.d.ts",
+        "packages/react-query/src/index.tsx"
+      ],
+      "@react-buoy/react-query/*": [
+        "packages/react-query/lib/typescript/module/*",
+        "packages/react-query/src/*"
+      ]
+    }
   },
   "exclude": ["node_modules", "**/lib/**"]
 }
