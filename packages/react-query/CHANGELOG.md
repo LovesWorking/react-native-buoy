@@ -1,5 +1,15 @@
 # @react-buoy/react-query
 
+## 0.1.2
+
+### Patch Changes
+
+- 88dba34: Automated patch release for all packages.
+- Automated patch release for all packages.
+- Updated dependencies [88dba34]
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
