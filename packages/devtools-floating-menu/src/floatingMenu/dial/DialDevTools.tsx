@@ -98,7 +98,13 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   const pulseScale = useRef(new Animated.Value(1)).current;
 
   const availableApps = useMemo(
-    () => apps.map(({ id, name, slot }) => ({ id, name, slot })),
+    () =>
+      apps.map(({ id, name, slot, description }) => ({
+        id,
+        name,
+        slot,
+        description,
+      })),
     [apps]
   );
 
@@ -114,23 +120,8 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   // Map data-driven apps to dial icons, inserting empty slots for disabled items
   const dialApps = apps.filter((a) => (a.slot ?? "both") !== "row");
   const isDialEnabled = (id: string) => {
-    if (!settings) return true;
-    switch (id) {
-      case "query":
-        return settings.dialTools.query;
-      case "env":
-        return settings.dialTools.env;
-      case "sentry":
-        return settings.dialTools.sentry;
-      case "storage":
-        return settings.dialTools.storage;
-      case "wifi":
-        return settings.dialTools.wifi;
-      case "network":
-        return settings.dialTools.network;
-      default:
-        return true;
-    }
+    if (!settings) return false;
+    return settings.dialTools[id] ?? false;
   };
 
   const createEmptySlot = (slotIndex: number | string): IconType => ({

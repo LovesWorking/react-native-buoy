@@ -48,37 +48,57 @@ const enforceDialLimit = (
 };
 
 const sanitizeFloating = (
-  floating: DevToolsSettings["floatingTools"]
+  floating: DevToolsSettings["floatingTools"],
+  allowedKeys?: string[]
 ) => {
-  const { userStatus, ...rest } = floating as Record<string, boolean> & {
+  const { userStatus, environment, ...rest } = floating as Record<
+    string,
+    boolean
+  > & {
     userStatus?: boolean;
+    environment?: boolean;
   };
+
+  const filteredEntries = allowedKeys
+    ? Object.entries(rest).filter(([key]) => allowedKeys.includes(key))
+    : Object.entries(rest);
+
   return {
-    ...rest,
-    environment:
-      floating.environment ??
-      (rest.environment as boolean | undefined) ??
-      true,
+    ...Object.fromEntries(filteredEntries),
+    environment: environment ?? false,
   };
 };
 
 const mergeWithDefaults = (
   defaults: DevToolsSettings,
-  stored?: Partial<DevToolsSettings> | null
+  stored?: Partial<DevToolsSettings> | null,
+  options?: {
+    allowedDialKeys?: string[];
+    allowedFloatingKeys?: string[];
+  }
 ): DevToolsSettings => {
   if (!stored) return defaults;
 
-  const mergedDial = enforceDialLimit({
+  const combinedDial = {
     ...defaults.dialTools,
     ...(stored.dialTools ?? {}),
-  });
+  };
+  const dialEntries = options?.allowedDialKeys
+    ? Object.entries(combinedDial).filter(([key]) =>
+        options.allowedDialKeys?.includes(key)
+      )
+    : Object.entries(combinedDial);
+  const mergedDial = enforceDialLimit(Object.fromEntries(dialEntries));
 
   return {
     dialTools: mergedDial,
-    floatingTools: sanitizeFloating({
-      ...defaults.floatingTools,
-      ...(stored.floatingTools ?? {}),
-    }),
+    floatingTools: sanitizeFloating(
+      {
+        ...defaults.floatingTools,
+        ...(stored.floatingTools ?? {}),
+      },
+      options?.allowedFloatingKeys
+    ),
   };
 };
 
@@ -103,6 +123,7 @@ interface DevToolsSettingsModalProps {
   availableApps?: {
     id: string;
     name: string;
+    description?: string;
     slot?: "dial" | "row" | "both";
   }[];
 }
@@ -112,52 +133,22 @@ const generateDefaultSettings = (
   availableApps: {
     id: string;
     name: string;
+    description?: string;
     slot?: "dial" | "row" | "both";
   }[] = []
 ): DevToolsSettings => {
   const dialDefaults: Record<string, boolean> = {};
   const floatingDefaults: Record<string, boolean> = {};
-  let remainingDialSlots = MAX_DIAL_SLOTS;
-
-  // Default enabled states for known tools
-  const knownDefaults = {
-    dial: {
-      query: true,
-      env: true,
-      sentry: true,
-      storage: true,
-      wifi: true,
-      network: true,
-    },
-    floating: {
-      query: false,
-      env: true,
-      sentry: false,
-      storage: false,
-      wifi: false,
-      network: false,
-    },
-  };
 
   for (const app of availableApps) {
     const { id, slot = "both" } = app;
 
     if (slot === "dial" || slot === "both") {
-      const preferredDefault =
-        knownDefaults.dial[id as keyof typeof knownDefaults.dial] ?? true;
-      const shouldEnable = preferredDefault && remainingDialSlots > 0;
-      dialDefaults[id] = shouldEnable;
-      if (shouldEnable) {
-        remainingDialSlots -= 1;
-      }
-    } else {
       dialDefaults[id] = false;
     }
 
     if (slot === "row" || slot === "both") {
-      floatingDefaults[id] =
-        knownDefaults.floating[id as keyof typeof knownDefaults.floating] ??
-        false;
+      floatingDefaults[id] = false;
     }
   }
 
@@ -165,7 +156,7 @@ const generateDefaultSettings = (
     dialTools: enforceDialLimit(dialDefaults),
     floatingTools: {
       ...floatingDefaults,
-      environment: true, // Special setting for environment indicator
+      environment: false, // Special setting for environment indicator
     },
   };
 };
@@ -185,6 +176,17 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
     () => generateDefaultSettings(availableApps),
     [availableApps]
   );
+  const allowedDialKeys = useMemo(
+    () => Object.keys(defaultSettings.dialTools),
+    [defaultSettings]
+  );
+  const allowedFloatingKeys = useMemo(
+    () =>
+      Object.keys(defaultSettings.floatingTools).filter(
+        (key) => key !== "environment"
+      ),
+    [defaultSettings]
+  );
   const [settings, setSettings] = useState<DevToolsSettings>(
     initialSettings || defaultSettings
   );
@@ -200,7 +202,10 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
       const savedSettings = await safeGetItem(STORAGE_KEY);
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings) as DevToolsSettings;
-        const merged = mergeWithDefaults(defaultSettings, parsed);
+        const merged = mergeWithDefaults(defaultSettings, parsed, {
+          allowedDialKeys,
+          allowedFloatingKeys,
+        });
         setSettings(merged);
         return;
       }
@@ -209,7 +214,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
       console.error("Failed to load dev tools settings:", error);
       setSettings(defaultSettings);
     }
-  }, [defaultSettings]);
+  }, [defaultSettings, allowedDialKeys, allowedFloatingKeys]);
 
   useEffect(() => {
     loadSettings();
@@ -285,16 +290,23 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   };
 
   const getToolDescription = (tool: string): string => {
-    const descriptions: Record<string, string> = {
-      query: "React Query inspector",
-      env: "Environment variables debugger",
-      sentry: "Sentry events viewer",
-      storage: "AsyncStorage browser",
-      wifi: "RQ online toggle",
-      network: "Network request logger",
-      environment: "Environment badge indicator",
-    };
-    return descriptions[tool] || "";
+    // Get description from availableApps
+    const app = availableApps.find((a) => a.id === tool);
+    if (app?.description) {
+      return app.description;
+    }
+    if (tool === "environment") {
+      return "Environment badge.";
+    }
+    return "";
+  };
+
+  const getToolLabel = (tool: string): string => {
+    if (tool === "environment") {
+      return "ENV BADGE";
+    }
+    const app = availableApps.find((a) => a.id === tool);
+    return app?.name ?? tool.toUpperCase().replace(/_/g, " ");
   };
 
   // Glass + Neon Edge card renderer (variant 1 from showcase)
@@ -398,7 +410,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
             {/* Title and description */}
             <View style={styles.toolInfo}>
               <Text style={styles.toolName}>
-                {keyName.toUpperCase().replace("_", " ")}
+                {getToolLabel(keyName)}
                 {disabled ? " (MAX 6)" : ""}
               </Text>
               <Text style={styles.toolDescription} numberOfLines={1}>
@@ -497,7 +509,8 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
                 ]}
                 activeTab={activeTab}
                 onTabChange={(tab: string) =>
-                  setActiveTab(tab as "dial" | "floating")}
+                  setActiveTab(tab as "dial" | "floating")
+                }
               />
             </ModalHeader.Content>
             <ModalHeader.Actions onClose={onClose} />
@@ -523,22 +536,9 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
 
 // Basic default settings for the hook (when apps are not available)
 const basicDefaultSettings: DevToolsSettings = {
-  dialTools: {
-    query: true,
-    env: true,
-    sentry: true,
-    storage: true,
-    wifi: true,
-    network: true,
-  },
+  dialTools: {},
   floatingTools: {
-    query: false,
-    env: true,
-    sentry: false,
-    storage: false,
-    wifi: false,
-    network: false,
-    environment: true,
+    environment: false,
   },
 };
 

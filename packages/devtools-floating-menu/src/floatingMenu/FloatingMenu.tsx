@@ -81,9 +81,9 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 
   // Filter function for floating tools based on settings
   const isFloatingEnabled = (id: string) => {
-    if (!devToolsSettings) return true;
-    // Default to enabled for new tools not in settings
-    return devToolsSettings.floatingTools[id] ?? true;
+    if (!devToolsSettings) return false;
+    // Default to disabled for tools without explicit preferences
+    return devToolsSettings.floatingTools[id] ?? false;
   };
 
   // Dial is the default/only layout

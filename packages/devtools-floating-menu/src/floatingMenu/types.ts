@@ -29,6 +29,8 @@ export interface InstalledApp {
   id: string;
   /** Human readable name shown in accessibility labels and modal headers. */
   name: string;
+  /** Brief description of what this tool does, shown in settings. */
+  description?: string;
   /** Visual or functional icon to render in the floating menu. */
   icon: React.ReactNode | ((ctx: FloatingMenuRenderCtx) => React.ReactNode);
   /** Preferred layout slot; defaults to `"both"` when unspecified. */
