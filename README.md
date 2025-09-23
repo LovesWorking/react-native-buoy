@@ -204,17 +204,6 @@ Imagine you're debugging a payment flow issue:
 
 All from one floating menu that follows you through every screen.
 
-## Documentation
-
-- [Quick Start Guide](docs/quick-start.md)
-- [Building Custom Tools](docs/building-tools.md)
-- [API Reference](docs/api-reference.md)
-- [Example App](example/)
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
 ## License
 
 MIT © React Buoy Team
