@@ -1,17 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 
-// Expanded interface with more useful Pokemon data
+// Slimmed down interface with only the fields actually used in UI
 interface PokemonData {
   id: number;
   name: string;
-  height: number;
-  weight: number;
-  image: string | null; // Main image
-  types: string[]; // Pokemon types (e.g., fire, water)
+  image: string | null;
+  types: string[];
   stats: {
-    name: string;
-    value: number;
-  }[];
+    hp: number;
+    attack: number;
+  };
 }
 
 const fetchPokemon = async (pokemonName: string): Promise<PokemonData> => {
@@ -23,20 +21,22 @@ const fetchPokemon = async (pokemonName: string): Promise<PokemonData> => {
   }
   const data = await response.json();
 
-  // Create a more detailed but still clean data object
+  // Extract only the stats we actually use (hp and attack)
+  const hpStat = data.stats.find((s: any) => s.stat.name === "hp");
+  const attackStat = data.stats.find((s: any) => s.stat.name === "attack");
+
+  // Return a slim data object with only the fields we use in the UI
   return {
     id: data.id,
     name: data.name,
-    height: data.height / 10, // Convert to meters
-    weight: data.weight / 10, // Convert to kg
     image:
       data.sprites.other["official-artwork"].front_default ||
       data.sprites.front_default,
     types: data.types.map((t: any) => t.type.name),
-    stats: data.stats.map((s: any) => ({
-      name: s.stat.name,
-      value: s.base_stat,
-    })),
+    stats: {
+      hp: hpStat?.base_stat || 100,
+      attack: attackStat?.base_stat || 50,
+    },
   };
 };
 

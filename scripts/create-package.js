@@ -70,13 +70,18 @@ const createPackageJson = () => {
     description: `${packageName} package`,
     main: "lib/commonjs/index.js",
     module: "lib/module/index.js",
-    types: "lib/typescript/index.d.ts",
+    types: "lib/typescript/module/index.d.ts",
     exports: {
       ".": {
         source: "./src/index.ts",
-        import: "./lib/module/index.js",
-        require: "./lib/commonjs/index.js",
-        types: "./lib/typescript/index.d.ts",
+        import: {
+          default: "./lib/module/index.js",
+          types: "./lib/typescript/module/index.d.ts",
+        },
+        require: {
+          default: "./lib/commonjs/index.js",
+          types: "./lib/typescript/commonjs/index.d.ts",
+        },
       },
     },
     files: ["src", "lib"],
@@ -97,13 +102,28 @@ const createPackageJson = () => {
       "react-native": "*",
     },
     devDependencies: {
-      "@types/react": "^19.0.14",
+      "@types/react": "^19.1.0",
       "@types/react-native": "^0.73.0",
+      typescript: "~5.8.3",
     },
     "react-native-builder-bob": {
       source: "src",
       output: "lib",
-      targets: ["commonjs", "module", "typescript"],
+      targets: [
+        [
+          "commonjs",
+          {
+            esm: true,
+          },
+        ],
+        [
+          "module",
+          {
+            esm: true,
+          },
+        ],
+        "typescript",
+      ],
     },
   };
 

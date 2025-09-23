@@ -590,9 +590,7 @@ function CardHeader({ data }: { data: any | undefined }) {
       <View style={styles.hpContainer}>
         <Text style={styles.hpText}>HP</Text>
         <Text style={styles.hpValue}>
-          {Array.isArray(data?.stats)
-            ? data.stats.find((s: any) => s?.name === "hp")?.value || 100
-            : 100}
+          {data?.stats?.hp || 100}
         </Text>
       </View>
     </View>
@@ -686,9 +684,7 @@ function TypeBadges({ types }: { types: string[] | undefined }) {
 function AttackMoves({ mainType, data }: any) {
   if (!data) return null;
   const safeMainType = mainType || "normal";
-  const attackValue = Array.isArray(data?.stats)
-    ? data.stats.find((s: any) => s?.name === "attack")?.value || 50
-    : 50;
+  const attackValue = data?.stats?.attack || 50;
 
   return (
     <View style={styles.movesContainer}>
@@ -1262,5 +1258,3 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "-45deg" }],
   },
 });
-
-export default PokemonCardSwipeable;
