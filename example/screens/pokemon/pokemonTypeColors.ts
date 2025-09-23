@@ -22,9 +22,3 @@ export const pokemonTypeColors: Record<string, string> = {
 export function getTypeColor(type: string): string {
   return pokemonTypeColors[type] || "#68A090";
 }
-
-export function getStatBarColor(value: number): string {
-  if (value > 90) return "#78C850";
-  if (value > 50) return "#6890F0";
-  return "#F08030";
-}
