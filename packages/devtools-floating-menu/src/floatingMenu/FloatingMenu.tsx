@@ -12,15 +12,29 @@ import { EnvironmentIndicator, gameUIColors } from "@react-buoy/shared-ui";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
 import { useAppHost } from "./AppHost";
 
+/**
+ * Props for the floating developer tools launcher. Controls which apps are shown and
+ * how the menu integrates with the current host environment.
+ */
 export interface FloatingMenuProps {
+  /** Dev tool apps that can be opened from the floating menu. */
   apps: InstalledApp[];
+  /** Shared state object passed to app renderers (e.g. icons) and the dial. */
   state?: FloatingMenuState;
+  /** Shared action callbacks exposed to app renderers for interacting with the menu. */
   actions?: FloatingMenuActions;
-  hidden?: boolean; // hide bubble when another dev app is open
+  /** When true, hides the floating row (used when another dev app takes focus). */
+  hidden?: boolean;
+  /** Active environment metadata displayed via the environment indicator, if enabled. */
   environment?: Environment;
+  /** Optional role that determines which user status badge is rendered. */
   userRole?: UserRole;
 }
 
+/**
+ * FloatingMenu renders the persistent developer tools entry point. It handles visibility,
+ * integrates with the AppHost, and presents available tools as floating shortcuts and a dial.
+ */
 export const FloatingMenu: FC<FloatingMenuProps> = ({
   apps,
   state,
@@ -176,12 +190,18 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 });
-const MenuLauncherIcon = ({
+
+interface MenuLauncherIconProps {
+  /** Pixel width/height of the square icon. */
+  size?: number;
+  /** Custom color applied to each dot. */
+  color?: string;
+}
+
+/** Minimal 3x3 dot icon used when the user status badge is unavailable. */
+const MenuLauncherIcon: FC<MenuLauncherIconProps> = ({
   size = 14,
   color = gameUIColors.info,
-}: {
-  size?: number;
-  color?: string;
 }) => {
   const dotSize = Math.max(2, Math.floor(size / 4));
   const gap = Math.max(1, Math.floor(size / 16));
