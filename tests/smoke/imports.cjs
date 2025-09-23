@@ -12,15 +12,51 @@ const packages = [
 
 const failures = [];
 
+function normalizeRelativePath(target) {
+  if (typeof target !== 'string') {
+    return null;
+  }
+  return target.startsWith('./') ? target.slice(2) : target;
+}
+
 function verifyRelativeFile(pkgDir, filePath, label) {
-  if (!filePath) {
+  const normalised = normalizeRelativePath(filePath);
+  if (!normalised) {
     failures.push(`${label} missing in package.json exports`);
     return;
   }
-  const fullPath = path.join(pkgDir, filePath);
+  const fullPath = path.join(pkgDir, normalised);
   if (!fs.existsSync(fullPath)) {
     failures.push(`Missing ${label} file: ${fullPath}`);
   }
+}
+
+function verifyExportEntry(pkgDir, entry, label) {
+  if (!entry) {
+    failures.push(`${label} missing in package.json exports`);
+    return;
+  }
+
+  if (typeof entry === 'string') {
+    verifyRelativeFile(pkgDir, entry, label);
+    return;
+  }
+
+  if (typeof entry === 'object') {
+    if (entry.default) {
+      verifyRelativeFile(pkgDir, entry.default, `${label} default`);
+    } else {
+      failures.push(`${label} default missing in package.json exports`);
+    }
+
+    if (entry.types) {
+      verifyRelativeFile(pkgDir, entry.types, `${label} types`);
+    }
+
+    return;
+  }
+
+  failures.push(`${label} entry has unsupported type (${typeof entry})`);
 }
 
 for (const { scope, dir } of packages) {
@@ -38,13 +74,15 @@ for (const { scope, dir } of packages) {
   if (!exportsField) {
     failures.push(`${scope}: exports["."] is missing`);
   } else {
-    verifyRelativeFile(dir, exportsField.import?.replace('./', ''), `${scope} import entry`);
-    verifyRelativeFile(dir, exportsField.require?.replace('./', ''), `${scope} require entry`);
-    verifyRelativeFile(dir, exportsField.types?.replace('./', ''), `${scope} types entry`);
+    verifyExportEntry(dir, exportsField.import, `${scope} import entry`);
+    verifyExportEntry(dir, exportsField.require, `${scope} require entry`);
+    if (exportsField.types) {
+      verifyRelativeFile(dir, exportsField.types, `${scope} types entry`);
+    }
   }
 
   if (pkgJson.types) {
-    verifyRelativeFile(dir, pkgJson.types.replace('./', ''), `${scope} types`);
+    verifyRelativeFile(dir, pkgJson.types, `${scope} types`);
   }
 
   const readmePath = path.join(dir, 'README.md');
