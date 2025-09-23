@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    height: 32,
+    height: 25,
     minWidth: 80,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -118,8 +118,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   dot: {
-    width: 6,
-    height: 6,
+    width: 5,
+    height: 5,
     borderRadius: 3,
     marginRight: 6,
     shadowColor: macOSColors.text.primary,
@@ -128,10 +128,11 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   text: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "600",
     letterSpacing: 0.5,
     textTransform: "uppercase",
     fontFamily: "monospace",
+    height: 12,
   },
 });

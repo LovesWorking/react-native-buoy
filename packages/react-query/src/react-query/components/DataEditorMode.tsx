@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   actionFooter: {
     borderTopWidth: 1,
     borderTopColor: macOSColors.border.default,
-    paddingVertical: 8,
+    paddingTop: 4,
     paddingHorizontal: 12,
     backgroundColor: macOSColors.background.base,
     borderBottomLeftRadius: 14,
@@ -307,6 +307,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 6, // Reduced from 8
     justifyContent: "space-between",
+    paddingBottom: 2,
   },
   // Query Explorer styled container matching QueryDetails
   queryExplorerContainer: {
