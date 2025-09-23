@@ -280,5 +280,8 @@ class NetworkEventStore {
   }
 }
 
-// Export singleton instance
+/**
+ * Singleton store that aggregates captured network traffic. Components and hooks consume this
+ * store to render histories, derive stats, and subscribe to real-time updates.
+ */
 export const networkEventStore = new NetworkEventStore();

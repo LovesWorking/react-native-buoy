@@ -1,6 +1,14 @@
 import { EnvVarInfo, RequiredEnvVar, EnvVarStats } from "../types";
 import { getEnvVarType } from "./envTypeDetector";
 
+/**
+ * Combines the auto-detected runtime environment values with the declared `requiredEnvVars`
+ * configuration and produces categorized metadata for rendering in the UI.
+ *
+ * @param autoCollectedEnvVars - Values discovered via `useDynamicEnv` (key/value string map).
+ * @param requiredEnvVars - Optional list of required variables describing expectations to validate.
+ * @returns Required and optional variable collections annotated with validation status.
+ */
 export const processEnvVars = (
   autoCollectedEnvVars: Record<string, string>,
   requiredEnvVars?: RequiredEnvVar[],
@@ -99,6 +107,15 @@ export const processEnvVars = (
   };
 };
 
+/**
+ * Derives aggregate statistics from the processed environment variable lists for health badges
+ * and summary chips in the modal UI.
+ *
+ * @param requiredVars - Processed required variables with validation state.
+ * @param optionalVars - Processed optional variables discovered at runtime.
+ * @param totalEnvVars - Raw key/value map of every detected environment variable.
+ * @returns Counts related to overall env health for display purposes.
+ */
 export const calculateStats = (
   requiredVars: EnvVarInfo[],
   optionalVars: EnvVarInfo[],
@@ -130,4 +147,3 @@ export const calculateStats = (
     optionalCount,
   };
 };
-

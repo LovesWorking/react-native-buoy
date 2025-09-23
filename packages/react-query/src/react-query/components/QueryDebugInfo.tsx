@@ -1,6 +1,10 @@
 import { View, Text, StyleSheet } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
+/**
+ * Lightweight debug panel that surfaces high-level QueryClient information and recently seen
+ * query keys. Intended primarily for the React Query dev tools modal.
+ */
 export function QueryDebugInfo() {
   try {
     const queryClient = useQueryClient();

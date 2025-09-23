@@ -11,6 +11,10 @@ interface MutationBrowserModeProps {
   activeFilter: string | null;
 }
 
+/**
+ * Layout wrapper that renders the mutation list alongside selection handling glue logic used by
+ * the React Query modal.
+ */
 export function MutationBrowserMode({
   selectedMutation,
   onMutationSelect,

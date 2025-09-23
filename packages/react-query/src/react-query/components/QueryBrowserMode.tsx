@@ -10,6 +10,7 @@ interface QueryBrowserModeProps {
   activeFilter: string | null;
 }
 
+/** Wrapper around the query list experience used inside the modal view. */
 export function QueryBrowserMode({
   selectedQuery,
   onQuerySelect,

@@ -1,3 +1,4 @@
+/** Return a concise string describing the JavaScript type of the provided value. */
 export function getValueTypeLabel(value: unknown): string {
   if (value === null) return "null";
   if (value === undefined) return "undefined";

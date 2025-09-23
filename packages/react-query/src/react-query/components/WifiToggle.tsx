@@ -2,6 +2,10 @@ import { TouchableOpacity } from "react-native";
 import { Wifi, WifiOff } from "@react-buoy/shared-ui";
 import { useWifiState } from "../hooks/useWifiState";
 
+/**
+ * Small icon button that toggles React Query’s online manager, allowing developers to simulate
+ * offline scenarios directly from the modal header.
+ */
 export function WifiToggle() {
   const { isOnline, handleWifiToggle } = useWifiState();
   return (

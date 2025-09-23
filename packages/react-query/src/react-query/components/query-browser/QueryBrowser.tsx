@@ -16,6 +16,9 @@ interface Props {
   queries?: Query[]; // Optional external queries to override useAllQueries
 }
 
+/**
+ * Scrollable list view of cached queries with filtering support and selection handling.
+ */
 export default function QueryBrowser({
   selectedQuery,
   onQuerySelect,

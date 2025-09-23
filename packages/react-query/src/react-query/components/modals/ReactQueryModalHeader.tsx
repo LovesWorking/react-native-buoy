@@ -11,6 +11,10 @@ interface ReactQueryModalHeaderProps {
   onClose?: () => void;
 }
 
+/**
+ * Shared header for all React Query modals. Handles tab switching when browsing and presents
+ * breadcrumbs when a specific query or mutation is selected.
+ */
 export function ReactQueryModalHeader({
   selectedQuery,
   selectedMutation,

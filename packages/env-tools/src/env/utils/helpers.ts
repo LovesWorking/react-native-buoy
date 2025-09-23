@@ -74,12 +74,24 @@ class EnvVarBuilder {
   }
 }
 
+/**
+ * Fluent builder for defining expected environment variables. Helps teams author readable
+ * `requiredEnvVars` arrays by chaining type/value/description requirements while keeping the
+ * final shape compatible with `EnvVarsModal` and related helpers.
+ *
+ * @param key - Environment variable name to validate.
+ * @returns Builder with convenience methods like `.withType()` and `.withValue()`.
+ */
 export function envVar(key: string) {
   return new EnvVarBuilder(key);
 }
 
 /**
- * Helper to create a set of required environment variables with better readability
+ * Normalizes `requiredEnvVars` definitions while documenting intent in code. The helper simply
+ * returns the provided array, but allows teams to co-locate examples and benefit from IDE hovers.
+ *
+ * @param vars - Collection of required environment variable definitions created manually or via `envVar()`.
+ * @returns The original array, unchanged, for ergonomic chaining and inference.
  *
  * @example
  * const requiredEnvVars = createEnvVarConfig([
@@ -93,11 +105,10 @@ export function envVar(key: string) {
  *   { key: "EXPO_PUBLIC_ENVIRONMENT", expectedValue: "development" },
  *
  *   // With descriptions
- *   {
- *     key: "EXPO_PUBLIC_MAX_RETRIES",
- *     expectedType: "number",
- *     description: "Maximum number of API retry attempts"
- *   }
+ *   envVar("EXPO_PUBLIC_MAX_RETRIES")
+ *     .withType("number")
+ *     .withDescription("Maximum number of API retry attempts")
+ *     .build(),
  * ]);
  */
 export function createEnvVarConfig(vars: RequiredEnvVar[]): RequiredEnvVar[] {

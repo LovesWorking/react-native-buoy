@@ -9,6 +9,9 @@ interface ClearCacheButtonProps {
   disabled?: boolean;
 }
 
+/**
+ * Icon-only button for clearing either the query or mutation cache from the dev tools UI.
+ */
 const ClearCacheButton: FC<ClearCacheButtonProps> = ({
   type,
   onClear,

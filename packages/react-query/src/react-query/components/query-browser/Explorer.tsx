@@ -242,6 +242,10 @@ type Props = {
   dataVersion?: number;
 };
 // Optimized Explorer component following rule2 guidelines [[memory:4875251]]
+/**
+ * Recursive data explorer component used for both editable and read-only JSON trees inside the
+ * React Query dev tools.
+ */
 export default function Explorer({
   editable,
   label,

@@ -1,10 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+/** Props accepted by the placeholder storage component. */
 export interface StorageProps {
+  /** Optional heading displayed in the sample view. */
   title?: string;
 }
 
+/**
+ * Placeholder component used for quick smoke tests. Import from the `/storage` subpath for the
+ * full tooling surface.
+ */
 export function StorageComponent({
   title = 'storage Component'
 }: StorageProps) {

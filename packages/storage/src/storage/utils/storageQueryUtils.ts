@@ -2,6 +2,7 @@ import { gameUIColors } from "@react-buoy/shared-ui";
 
 export type StorageType = "mmkv" | "async" | "secure";
 
+/** Determine whether the provided query key represents a storage query. */
 export function isStorageQuery(queryKey: readonly unknown[]): boolean {
   if (!Array.isArray(queryKey) || queryKey.length === 0) {
     return false;
@@ -9,6 +10,7 @@ export function isStorageQuery(queryKey: readonly unknown[]): boolean {
   return queryKey[0] === "#storage";
 }
 
+/** Extract the storage type segment from a storage query key. */
 export function getStorageType(
   queryKey: readonly unknown[],
 ): StorageType | null {
@@ -28,6 +30,7 @@ export function getStorageType(
   return null;
 }
 
+/** Human readable label for a storage type id. */
 export function getStorageTypeLabel(storageType: StorageType): string {
   switch (storageType) {
     case "mmkv":
@@ -41,6 +44,7 @@ export function getStorageTypeLabel(storageType: StorageType): string {
   }
 }
 
+/** Preferred color token for rendering a given storage type. */
 export function getStorageTypeHexColor(storageType: StorageType): string {
   switch (storageType) {
     case "mmkv":
@@ -54,6 +58,7 @@ export function getStorageTypeHexColor(storageType: StorageType): string {
   }
 }
 
+/** Strip the storage metadata and return the underlying key path for display. */
 export function getCleanStorageKey(queryKey: readonly unknown[]): string {
   if (!isStorageQuery(queryKey) || queryKey.length < 3) {
     return "Unknown Storage Key";

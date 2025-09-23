@@ -9,6 +9,9 @@ interface Props {
   setSelectedQuery: Dispatch<SetStateAction<Query | undefined>>;
   selectedQuery: Query | undefined;
 }
+/**
+ * Stacked detail view combining metadata, actions, and explorers for the selected query.
+ */
 export default function QueryInformation({
   selectedQuery,
   setSelectedQuery,

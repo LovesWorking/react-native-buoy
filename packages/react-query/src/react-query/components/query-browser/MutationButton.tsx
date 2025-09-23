@@ -24,6 +24,9 @@ interface Props {
   >;
   selected: Mutation | undefined;
 }
+/**
+ * List-row button for displaying mutation metadata and selecting it for detail inspection.
+ */
 export default function MutationButton({
   mutation,
   setSelectedMutation,

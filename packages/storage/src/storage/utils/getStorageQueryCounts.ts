@@ -14,6 +14,9 @@ export interface StorageTypeCounts {
   total: number;
 }
 
+/**
+ * Count how many storage-related queries exist per backing store (MMKV, AsyncStorage, Secure).
+ */
 export function getStorageQueryCounts(queries: Query[]): StorageTypeCounts {
   const counts: StorageTypeCounts = {
     mmkv: 0,

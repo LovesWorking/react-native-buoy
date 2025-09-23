@@ -14,6 +14,16 @@ export type AppInstance = {
 
 export type OpenDefinition = Omit<AppInstance, "instanceId">;
 
+/**
+ * Computes the new list of open tool instances when a user launches a dev app. Singleton
+ * tools reuse their existing instance while non-singletons create a new entry using the
+ * provided `generateId` helper.
+ *
+ * @param current - Current stack of open app instances.
+ * @param def - Descriptor of the tool to launch (without runtime instance id).
+ * @param generateId - Callback used to generate a unique instance identifier.
+ * @returns Updated instance list alongside the resolved instance id.
+ */
 export const resolveOpenAppsState = (
   current: AppInstance[],
   def: OpenDefinition,

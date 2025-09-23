@@ -46,6 +46,9 @@ type QueryStatus =
   | "error"
   | "inactive";
 
+/**
+ * Chip component used to display small query metadata values (status, observers, etc.).
+ */
 export default function QueryDetailsChip({ query }: Props) {
   const status = getQueryStatusLabel(query) as QueryStatus;
   const backgroundColor = backgroundColors[status];

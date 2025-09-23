@@ -23,6 +23,9 @@ interface QueryRowProps {
   onSelect: (query: Query) => void;
 }
 
+/**
+ * Single row representation of a query for the list view, showing status and observer count.
+ */
 const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
   // Game UI status color mapping
   const getStatusHexColor = (status: string): string => {

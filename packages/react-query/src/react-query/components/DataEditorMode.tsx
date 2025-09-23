@@ -32,6 +32,10 @@ interface DataEditorModeProps {
   disableInternalFooter?: boolean;
 }
 
+/**
+ * Primary data editing surface displayed inside the React Query modal. Couples the editable
+ * explorer, read-only insight panels, and action footer for the selected query.
+ */
 export function DataEditorMode({
   selectedQuery,
   isFloatingMode,
@@ -116,6 +120,10 @@ export function DataEditorMode({
 }
 
 // External footer component for sticky modal footer usage
+/**
+ * Standalone footer variant that can be composed into sticky modal layouts while reusing the
+ * standard action button arrangement.
+ */
 export function DataEditorActionsFooter({
   selectedQuery,
   isFloatingMode,

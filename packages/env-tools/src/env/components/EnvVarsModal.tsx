@@ -21,16 +21,25 @@ import { EnvVarSection } from "./EnvVarSection";
  
 
 interface EnvVarsModalProps {
+  /** Controls the visibility of the modal. */
   visible: boolean;
+  /** Callback executed when the modal is dismissed. */
   onClose: () => void;
+  /** List of required environment variables to validate against the runtime values. */
   requiredEnvVars: RequiredEnvVar[];
+  /** Optional handler fired when navigating back to the parent surface. */
   onBack?: () => void;
+  /**
+   * When true, reuse the shared modal sizing keys so multiple dev tools can
+   * persist their window dimensions in a single location.
+   */
   enableSharedModalDimensions?: boolean;
 }
 
 /**
- * Specialized modal for environment variables
- * Now using filter cards instead of tabs
+ * Full-screen modal for inspecting required environment variables. Handles automatic
+ * discovery, validation, filtering, and rich search so teams can quickly spot missing
+ * or misconfigured values during development sessions.
  */
 export function EnvVarsModal({
   visible,

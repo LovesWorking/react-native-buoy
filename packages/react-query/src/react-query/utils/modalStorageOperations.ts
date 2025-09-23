@@ -37,6 +37,9 @@ export interface ModalVisibilityState {
 }
 
 // Storage operations
+/**
+ * Persist the draggable panel dimensions so future sessions can restore the last window size.
+ */
 export const savePanelDimensions = async (
   storagePrefix: string,
   dimensions: PanelDimensions,
@@ -51,6 +54,7 @@ export const savePanelDimensions = async (
   }
 };
 
+/** Remember the last snap height of the panel for bottom-sheet style layouts. */
 export const savePanelHeight = async (
   storagePrefix: string,
   height: number,
@@ -62,6 +66,9 @@ export const savePanelHeight = async (
   }
 };
 
+/**
+ * Persist whether the panel was in floating mode so we can reopen at the same presentation style.
+ */
 export const saveFloatingMode = async (
   storagePrefix: string,
   isFloating: boolean,
@@ -73,6 +80,10 @@ export const saveFloatingMode = async (
   }
 };
 
+/**
+ * Retrieve persisted panel geometry and presentation mode. Returns null values when nothing was
+ * previously stored so callers can fall back to defaults.
+ */
 export const loadPanelState = async (
   storagePrefix: string,
 ): Promise<PanelState> => {
@@ -95,6 +106,10 @@ export const loadPanelState = async (
 };
 
 // Modal visibility state operations
+/**
+ * Persist the comprehensive modal visibility state (open flags, selected query, etc.). Stored as a
+ * single JSON blob keyed by the provided prefix.
+ */
 export const saveModalVisibilityState = async (
   storagePrefix: string,
   state: ModalVisibilityState,
@@ -109,6 +124,10 @@ export const saveModalVisibilityState = async (
   }
 };
 
+/**
+ * Read previously persisted modal visibility state. Returns null when no entry is stored or the
+ * payload cannot be parsed.
+ */
 export const loadModalVisibilityState = async (
   storagePrefix: string,
 ): Promise<ModalVisibilityState | null> => {
@@ -127,6 +146,10 @@ export const loadModalVisibilityState = async (
   }
 };
 
+/**
+ * Clear the cached modal visibility state. Useful when all modals close so we avoid reopening
+ * unintentionally on the next session.
+ */
 export const clearModalVisibilityState = async (storagePrefix: string) => {
   try {
     // storagePrefix already contains the full key, don't append _modal_state

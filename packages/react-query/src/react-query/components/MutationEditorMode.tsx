@@ -13,6 +13,10 @@ interface MutationEditorModeProps {
   isFloatingMode: boolean;
 }
 
+/**
+ * Mutation-focused editing experience mirroring the query editor layout. Provides mutation detail
+ * panels, data inspector, and action buttons for the selected mutation entry.
+ */
 export function MutationEditorMode({
   selectedMutation,
   isFloatingMode,

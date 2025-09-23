@@ -21,6 +21,9 @@ interface QueryStatusProps {
 
 type ColorName = "green" | "yellow" | "gray" | "blue" | "purple" | "red";
 
+/**
+ * Pill-like status badge used within status filter rows. Displays label, dot, and count.
+ */
 const QueryStatus: FC<QueryStatusProps> = ({
   label,
   color,

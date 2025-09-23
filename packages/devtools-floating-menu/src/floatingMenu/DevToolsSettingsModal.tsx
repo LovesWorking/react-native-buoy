@@ -82,8 +82,14 @@ const mergeWithDefaults = (
   };
 };
 
+/**
+ * Serialized preferences that power the floating dev tools UI. Values persist across sessions
+ * via AsyncStorage so teams can tailor which tools appear in the dial or floating row.
+ */
 export interface DevToolsSettings {
+  /** Map of dial tool ids to enabled state (max slots enforced elsewhere). */
   dialTools: Record<string, boolean>;
+  /** Map of floating tool ids to enabled state plus the environment indicator toggle. */
   floatingTools: Record<string, boolean> & {
     environment: boolean; // Special setting for environment indicator
   };
@@ -164,6 +170,10 @@ const generateDefaultSettings = (
   };
 };
 
+/**
+ * Configurable modal surface that lets engineers pick which dev tools appear in the dial and
+ * floating row. Persists preferences and enforces slot limits for a consistent UX.
+ */
 export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   visible,
   onClose,
@@ -532,7 +542,10 @@ const basicDefaultSettings: DevToolsSettings = {
   },
 };
 
-// Hook to use settings
+/**
+ * Convenience hook for accessing persisted dev tools settings. Subscribes to the internal
+ * event bus so all surfaces stay in sync when the modal saves new preferences.
+ */
 export const useDevToolsSettings = () => {
   const [settings, setSettings] =
     useState<DevToolsSettings>(basicDefaultSettings);

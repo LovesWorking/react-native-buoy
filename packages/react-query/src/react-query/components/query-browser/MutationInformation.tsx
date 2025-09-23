@@ -8,6 +8,7 @@ interface Props {
   selectedMutation: Mutation | undefined;
 }
 
+/** Detailed information block for a selected mutation within the modal experience. */
 export default function MutationInformation({ selectedMutation }: Props) {
   return (
     <ScrollView

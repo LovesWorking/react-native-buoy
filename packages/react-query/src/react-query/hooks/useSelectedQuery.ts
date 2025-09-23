@@ -10,6 +10,11 @@ interface QueryWithVersion {
   version: number;
 }
 
+/**
+ * Returns a single query instance matching the provided key and resubscribes whenever the cache
+ * entry changes. Ideal for detail panes where live updates are required without scanning the
+ * entire query cache.
+ */
 export function useGetQueryByQueryKey(queryKey?: QueryKey) {
   const queryClient = useQueryClient();
   const [queryState, setQueryState] = useState<QueryWithVersion>({

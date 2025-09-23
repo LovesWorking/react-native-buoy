@@ -21,6 +21,10 @@ interface QuerySelectorProps {
   onSelect: (query: Query) => void;
 }
 
+/**
+ * Modal selector that lists all known queries, highlighting status and enabling the user to focus
+ * a specific query within the dev tools experience.
+ */
 export function QuerySelector({
   queries,
   selectedQuery,

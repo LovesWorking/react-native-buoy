@@ -15,6 +15,9 @@ interface Props {
   setSelectedQuery: Dispatch<SetStateAction<Query | undefined>>;
   query: Query | undefined;
 }
+/**
+ * Action panel rendered in query detail views providing mutation simulation and removal controls.
+ */
 export default function QueryActions({ query, setSelectedQuery }: Props) {
   const queryClient = useQueryClient();
   if (query === undefined) {

@@ -21,6 +21,10 @@ interface ActionButtonConfig {
   onPress: () => void;
 }
 
+/**
+ * Derives the default action button configuration for an inspected query. Encapsulates business
+ * rules around when to show refetch, loading, or error simulation actions.
+ */
 export function useActionButtons(
   selectedQuery: Query,
   queryClient: QueryClient

@@ -3,10 +3,18 @@ export * from "./network";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
+/**
+ * Props for the simple placeholder component exported at the package root.
+ */
 export interface NetworkProps {
+  /** Optional heading displayed inside the demo component. */
   title?: string;
 }
 
+/**
+ * Lightweight placeholder that ships with the package for quick smoke testing. Real consumers
+ * should import from `@react-buoy/network/network` for the full dev tools surface.
+ */
 export function NetworkComponent({
   title = "network Component",
 }: NetworkProps) {

@@ -17,6 +17,9 @@ export {
   useAppHost,
 } from "./floatingMenu/AppHost";
 
+/**
+ * Minimal placeholder component used by the example app when the dev tools surface is mocked.
+ */
 export const Package1Component = () => {
   return (
     <View>

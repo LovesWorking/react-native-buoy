@@ -10,6 +10,10 @@ interface QueryStatusCounts {
   inactive: number;
 }
 
+/**
+ * Tracks how many queries fall into each status bucket (fresh, stale, fetching, etc.). Uses
+ * cache subscriptions to stay up to date without polling.
+ */
 function useQueryStatusCounts(): QueryStatusCounts {
   const queryClient = useQueryClient();
   const [counts, setCounts] = useState<QueryStatusCounts>({
@@ -61,6 +65,9 @@ interface MutationStatusCounts {
   idle: number;
 }
 
+/**
+ * Companion hook for query status counts that groups mutations by status and pause state.
+ */
 export function useMutationStatusCounts(): MutationStatusCounts {
   const queryClient = useQueryClient();
   const [counts, setCounts] = useState<MutationStatusCounts>({

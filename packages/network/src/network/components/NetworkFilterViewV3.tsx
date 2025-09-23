@@ -92,6 +92,10 @@ function getMethodColor(method: string) {
   }
 }
 
+/**
+ * Control panel for filtering captured network events by status, method, host, and content type.
+ * Provides quick toggles, stats, and ignored-pattern management reminiscent of desktop tooling.
+ */
 export function NetworkFilterViewV3({
   events,
   filter,

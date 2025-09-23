@@ -8,6 +8,9 @@ import { macOSColors } from "@react-buoy/shared-ui";
 interface Props {
   query: Query | undefined;
 }
+/**
+ * Renders the primary metadata summary for a selected query, including fetch status and timings.
+ */
 export default function QueryDetails({ query }: Props) {
   if (query === undefined) {
     return null;

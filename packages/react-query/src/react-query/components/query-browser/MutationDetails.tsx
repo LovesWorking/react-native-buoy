@@ -8,6 +8,9 @@ interface Props {
   selectedMutation: Mutation | undefined;
 }
 
+/**
+ * Displays high-level mutation metadata such as status, retries, and timestamps.
+ */
 export default function MutationDetails({ selectedMutation }: Props) {
   if (selectedMutation === undefined) {
     return null;

@@ -360,7 +360,10 @@ function NetworkModalInner({
           <TouchableOpacity
             sentry-label="ignore clear events"
             onPress={clearEvents}
-            style={styles.headerActionButton}
+            style={[
+              styles.headerActionButton,
+              events.length === 0 && styles.headerActionButtonDisabled,
+            ]}
             disabled={events.length === 0}
           >
             <Trash2
@@ -368,7 +371,7 @@ function NetworkModalInner({
               color={
                 events.length > 0
                   ? macOSColors.text.muted
-                  : macOSColors.background.hover
+                  : macOSColors.text.disabled
               }
             />
           </TouchableOpacity>
@@ -579,6 +582,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  headerActionButtonDisabled: {
+    opacity: 0.55,
+  },
   // Shared navbar styles (matching React Query modal)
   tabNavigationContainer: {
     flexDirection: "row",
@@ -717,7 +723,10 @@ const styles = StyleSheet.create({
   },
 });
 
-// Export with TickProvider wrapper
+/**
+ * High-level modal surface that wraps the network monitoring experience with shared timing
+ * context. Automatically injects the `TickProvider` so timestamps refresh while the modal is open.
+ */
 export function NetworkModal(props: NetworkModalProps) {
   return (
     <TickProvider>

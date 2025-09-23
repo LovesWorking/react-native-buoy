@@ -52,6 +52,10 @@ function loadAsyncStorage(): StorageLike | null {
   return null;
 }
 
+/**
+ * Read a value from AsyncStorage when available, falling back to an in-memory store if the module
+ * is missing or errors.
+ */
 export async function safeGetItem(key: string): Promise<string | null> {
   const storage = loadAsyncStorage();
   if (storage) {
@@ -68,6 +72,9 @@ export async function safeGetItem(key: string): Promise<string | null> {
   return fallback;
 }
 
+/**
+ * Persist a value to AsyncStorage or the in-memory fallback when AsyncStorage is unavailable.
+ */
 export async function safeSetItem(key: string, value: string): Promise<void> {
   const storage = loadAsyncStorage();
   if (storage) {
@@ -83,6 +90,7 @@ export async function safeSetItem(key: string, value: string): Promise<void> {
   log("setItem fallback", key, value);
 }
 
+/** Remove an item from AsyncStorage or the in-memory fallback store. */
 export async function safeRemoveItem(key: string): Promise<void> {
   const storage = loadAsyncStorage();
   if (storage) {
@@ -100,11 +108,13 @@ export async function safeRemoveItem(key: string): Promise<void> {
 
 // Optional hook to know if persistent storage is available.
 // Not required for use, but handy in some UIs.
+/** Determine whether AsyncStorage was successfully loaded. */
 export function isPersistentStorageAvailable(): boolean {
   const storage = loadAsyncStorage();
   return !!storage;
 }
 
+/** React hook exposing AsyncStorage-like APIs backed by the safe wrappers. */
 export function useSafeAsyncStorage() {
   const [isPersistent, setIsPersistent] = useState(false);
 

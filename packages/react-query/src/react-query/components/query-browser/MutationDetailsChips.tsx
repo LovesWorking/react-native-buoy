@@ -25,6 +25,9 @@ const textColors = {
 interface Props {
   status: Mutation["state"]["status"];
 }
+/**
+ * Small status chip used in mutation detail views that adapts styling to the mutation status.
+ */
 export default function QueryDetailsChip({ status }: Props) {
   const statusToColor = status;
   const backgroundColor = backgroundColors[statusToColor];

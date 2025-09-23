@@ -18,7 +18,9 @@ export type JsonValue =
   | bigint
   | unknown;
 
-// Type guard to check if a value is a plain object (not Date, Array, etc.)
+/**
+ * Type guard that narrows a value to a plain object (excluding arrays, Dates, Maps, etc.).
+ */
 export function isPlainObject(
   value: unknown,
 ): value is { [key: string]: JsonValue } {

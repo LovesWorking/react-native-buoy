@@ -31,6 +31,10 @@ const AppHostContext = createContext<AppHostContextValue | null>(null);
 const STORAGE_KEY_OPEN_APPS = "@apphost_open_apps";
 const PERSISTENCE_DELAY = 500;
 
+/**
+ * Provides the floating dev tools application host. Tracks open tool instances, restores
+ * persisted state, and exposes imperative helpers used by `FloatingMenu` and friends.
+ */
 export const AppHostProvider = ({ children }: { children: ReactNode }) => {
   const [openApps, setOpenApps] = useState<AppInstance[]>([]);
   const [isRestored, setIsRestored] = useState(false);
@@ -175,6 +179,10 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+/**
+ * Accessor hook for the dev tools app host. Components can open/close tools or inspect
+ * the active stack. Falls back to a no-op implementation when rendered outside the provider.
+ */
 export const useAppHost = () => {
   const ctx = useContext(AppHostContext);
   // Return a default value if not in provider (for backwards compatibility)
@@ -190,6 +198,10 @@ export const useAppHost = () => {
   return ctx;
 };
 
+/**
+ * Renders the active dev tool surface on top of the host application. Handles all supported
+ * launch modes (self-managed modals, host-wrapped modal, or inline overlays).
+ */
 export const AppOverlay = () => {
   const { openApps, close } = useAppHost();
   if (openApps.length === 0) return null;

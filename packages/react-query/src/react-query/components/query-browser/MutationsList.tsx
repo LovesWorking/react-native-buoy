@@ -25,6 +25,9 @@ interface Props {
   contentContainerStyle?: ViewStyle;
 }
 
+/**
+ * Virtualized list of mutations with filtering and selection support for the mutation browser.
+ */
 export default function MutationsList({
   selectedMutation,
   setSelectedMutation,

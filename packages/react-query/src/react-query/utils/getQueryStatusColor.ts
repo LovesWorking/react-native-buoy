@@ -1,5 +1,8 @@
 import type { Query } from "@tanstack/react-query";
 
+/**
+ * Maps a query’s runtime state to one of the predefined status color tokens used in the UI.
+ */
 export function getQueryStatusColor({
   queryState,
   observerCount,

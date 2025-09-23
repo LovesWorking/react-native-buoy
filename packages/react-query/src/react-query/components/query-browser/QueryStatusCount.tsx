@@ -13,6 +13,9 @@ interface QueryStatusCountProps {
   onFilterChange?: (filter: string | null) => void;
 }
 
+/**
+ * Horizontal status filter bar for queries with scroll-aware tap handling to prevent misfires.
+ */
 const QueryStatusCount: FC<QueryStatusCountProps> = ({
   activeFilter,
   onFilterChange,

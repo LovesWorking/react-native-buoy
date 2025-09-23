@@ -7,6 +7,9 @@ type QueryStatus =
   | "fresh"
   | "error";
 
+/**
+ * Converts a query object into a human-friendly status string for badge rendering.
+ */
 export function getQueryStatusLabel(query: Query): QueryStatus {
   return query.state.fetchStatus === "fetching"
     ? "fetching"

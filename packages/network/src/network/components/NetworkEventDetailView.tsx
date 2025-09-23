@@ -132,6 +132,10 @@ const UrlBreakdown: FC<{ url: string }> = ({ url }) => {
   );
 };
 
+/**
+ * Detailed inspector rendering request/response metadata for a single network event. Designed to
+ * mimic Sentry’s layout with collapsible sections, diff views, and quick copy affordances.
+ */
 export function NetworkEventDetailView({
   event,
   ignoredPatterns = new Set(),

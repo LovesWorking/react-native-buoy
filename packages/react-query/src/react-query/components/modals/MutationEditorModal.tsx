@@ -17,6 +17,10 @@ interface MutationEditorModalProps {
   enableSharedModalDimensions?: boolean;
 }
 
+/**
+ * Modal variant dedicated to editing a single mutation entry. Restores persisted positioning and
+ * mirrors the behavior of the query editor.
+ */
 export function MutationEditorModal({
   visible,
   selectedMutationId,

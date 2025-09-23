@@ -2,6 +2,9 @@
  * Network monitoring types for React Native dev tools
  */
 
+/**
+ * Canonical shape for network activity captured by the dev tools interceptor.
+ */
 export interface NetworkEvent {
   id: string;
   method:
@@ -33,6 +36,9 @@ export interface NetworkEvent {
   cached?: boolean;
 }
 
+/**
+ * Aggregated counts derived from the currently loaded set of network events.
+ */
 export interface NetworkStats {
   totalRequests: number;
   successfulRequests: number;
@@ -43,6 +49,9 @@ export interface NetworkStats {
   averageDuration: number;
 }
 
+/**
+ * Criteria used when filtering network events in the UI.
+ */
 export interface NetworkFilter {
   method?: string[];
   status?: "success" | "error" | "pending" | "all";
@@ -51,8 +60,12 @@ export interface NetworkFilter {
   host?: string;
 }
 
+/** Human readable status classifications derived from request/response metadata. */
 export type NetworkEventStatus = "pending" | "success" | "error" | "timeout";
 
+/**
+ * Insight surfaces highlight notable traffic patterns or issues for the current session.
+ */
 export interface NetworkInsight {
   type: "performance" | "error" | "security" | "optimization";
   severity: "low" | "medium" | "high";

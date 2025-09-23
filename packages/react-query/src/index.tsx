@@ -10,10 +10,16 @@ export * from "./react-query/types";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
+/** Props accepted by the lightweight placeholder component. */
 export interface ReactQueryProps {
+  /** Optional heading displayed inside the sample view. */
   title?: string;
 }
 
+/**
+ * Placeholder component shipped for quick smoke tests. Real consumers should render the dev tools
+ * exported from the `react-query` subpath instead of this stub.
+ */
 export function ReactQueryComponent({
   title = "React Query Dev Tools",
 }: ReactQueryProps) {

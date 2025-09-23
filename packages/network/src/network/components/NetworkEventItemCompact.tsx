@@ -114,7 +114,10 @@ function SizeIndicators({
   );
 }
 
-// Compact network event item following Sentry pattern
+/**
+ * Compact list-row representation of a network event. Optimized for large lists with memoization
+ * and periodic refresh via `useTickEveryMinute` to keep relative timestamps accurate.
+ */
 export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
   ({ event, onPress }) => {
     const tick = useTickEveryMinute();

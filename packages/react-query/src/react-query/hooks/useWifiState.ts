@@ -2,6 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { onlineManager } from "@tanstack/react-query";
 import { devToolsStorageKeys, safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
 
+/**
+ * Synchronizes a local Wi-Fi toggle with React Query’s `onlineManager`, persisting the selection
+ * so developers can simulate offline mode across reloads.
+ */
 export function useWifiState() {
   const [isOnline, setIsOnline] = useState(() => onlineManager.isOnline());
   const hasLoadedPersistedState = useRef(false);

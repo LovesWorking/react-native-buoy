@@ -2,9 +2,15 @@ import { useCallback, useState } from "react";
 import type { QueryKey } from "@tanstack/react-query";
 import { ReactQueryModal } from "./modals/ReactQueryModal";
 
+/** Configuration options for the high-level React Query dev tools modal wrapper. */
 export interface ReactQueryDevToolsModalProps {
+  /** Controls whether the modal is rendered. */
   visible: boolean;
+  /** Fired when the modal should dismiss (after internal state resets). */
   onClose: () => void;
+  /**
+   * If true, reuse the shared modal dimension keys so sizing is consistent with other dev tools.
+   */
   enableSharedModalDimensions?: boolean;
 }
 
@@ -14,6 +20,10 @@ type OnMutationSelect = NonNullable<ReactQueryModalProps["onMutationSelect"]>;
 type OnFilterChange = NonNullable<ReactQueryModalProps["onFilterChange"]>;
 type OnTabChange = NonNullable<ReactQueryModalProps["onTabChange"]>;
 
+/**
+ * Opinionated wrapper around `ReactQueryModal` that manages selection state and filters so
+ * consumers can drop in the full dev tools experience with a single component.
+ */
 export function ReactQueryDevToolsModal({
   visible,
   onClose,

@@ -8,6 +8,10 @@ interface MutationStatusCountProps {
   onFilterChange?: (filter: string | null) => void;
 }
 
+/**
+ * Horizontal status filter bar tailored for mutations. Integrates scroll detection to avoid
+ * accidental filter toggles while panning.
+ */
 const MutationStatusCount: FC<MutationStatusCountProps> = ({
   activeFilter,
   onFilterChange,

@@ -50,6 +50,7 @@ interface Props {
   disabled: boolean;
 }
 
+/** Generic rectangular action button used throughout the query modal footers. */
 export default function ActionButton({
   onClick,
   text,

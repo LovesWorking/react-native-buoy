@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Mutation, useQueryClient } from "@tanstack/react-query";
 
+/**
+ * Tracks all active React Query mutations with lightweight change detection. Debounces cache
+ * updates so large mutation batches do not thrash the UI thread on mobile.
+ */
 function useAllMutations() {
   const queryClient = useQueryClient();
   const [mutations, setMutations] = useState<Mutation[]>([]);

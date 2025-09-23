@@ -17,6 +17,10 @@ interface ActionButtonConfig {
   onPress: () => void;
 }
 
+/**
+ * Supplies action button metadata for a selected mutation. Currently exposes a remove control but
+ * centralizes logic so future actions stay consistent across the UI.
+ */
 export function useMutationActionButtons(
   selectedMutation: Mutation,
 ): ActionButtonConfig[] {

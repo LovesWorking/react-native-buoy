@@ -8,6 +8,9 @@ interface NetworkToggleButtonProps {
   onToggle: () => void;
 }
 
+/**
+ * Small toggle used in the query browser to mock offline/online behavior.
+ */
 const NetworkToggleButton: FC<NetworkToggleButtonProps> = ({
   isOffline,
   onToggle,

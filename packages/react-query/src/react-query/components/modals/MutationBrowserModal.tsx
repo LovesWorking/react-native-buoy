@@ -23,6 +23,10 @@ interface MutationBrowserModalProps {
   enableSharedModalDimensions?: boolean;
 }
 
+/**
+ * Specialized modal wrapper for browsing mutations. Handles persistence, swipe gestures, and
+ * filter coordination before delegating to the underlying list view.
+ */
 export function MutationBrowserModal({
   visible,
   selectedMutationId,
