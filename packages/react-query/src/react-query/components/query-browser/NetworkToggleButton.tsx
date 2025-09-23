@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
-import { Wifi, WifiOff } from "@react-buoy/shared-ui";
+import { Wifi } from "@react-buoy/shared-ui";
 import { gameUIColors } from "@react-buoy/shared-ui";
 
 interface NetworkToggleButtonProps {
@@ -28,7 +28,7 @@ const NetworkToggleButton: FC<NetworkToggleButtonProps> = ({
       accessibilityState={{ selected: isOffline }}
     >
       {isOffline ? (
-        <WifiOff size={16} color={gameUIColors.error} strokeWidth={2} />
+        <Wifi size={16} color={gameUIColors.error} strokeWidth={2} />
       ) : (
         <Wifi size={16} color={gameUIColors.success} strokeWidth={2} />
       )}

@@ -851,10 +851,13 @@ const JsModalComponent: FC<JsModalProps> = ({
    */
   const createResizeHandler = useCallback(
     (corner: "topLeft" | "topRight" | "bottomLeft" | "bottomRight") => {
+      let didResize = false;
+
       return PanResponder.create({
         onStartShouldSetPanResponder: () => mode === "floating",
         onMoveShouldSetPanResponder: () => mode === "floating",
         onPanResponderGrant: () => {
+          didResize = false;
           const currentDims = currentDimensionsRef.current;
 
           // If any animation is in-flight, stop and capture final XY to keep math consistent
@@ -879,6 +882,7 @@ const JsModalComponent: FC<JsModalProps> = ({
           const { dx, dy } = gestureState;
           if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
 
+          didResize = true;
           // Safe-area–aware bounds
           const minLeft = Math.max(0, insets.left || 0);
           const maxRight =
@@ -991,12 +995,19 @@ const JsModalComponent: FC<JsModalProps> = ({
 
         onPanResponderRelease: () => {
           setIsResizing(false);
+          if (corner === "topRight" && !didResize) {
+            // Treat a tap on the top-right handle as a close action when no resize occurred
+            onClose();
+            return;
+          }
+          didResize = false;
           // currentDimensionsRef already holds the last values
           setDimensions(currentDimensionsRef.current);
         },
 
         onPanResponderTerminate: () => {
           setIsResizing(false);
+          didResize = false;
         },
       });
     },
@@ -1010,6 +1021,7 @@ const JsModalComponent: FC<JsModalProps> = ({
       floatingPosition,
       animatedWidth,
       animatedFloatingHeight,
+      onClose,
     ]
   );
 

@@ -171,8 +171,8 @@ export const WifiIcon = ({
   strokeWidth = 2,
 }: IconProps) => {
   const strength = 4;
-  const scale = 45 / 60;
-  strokeWidth = 3 * scale;
+  const scale = 28 / 60;
+  strokeWidth = 4 * scale;
   return (
     <View style={{ position: "relative", width: size, height: size }}>
       {/* Center dot */}
@@ -264,52 +264,6 @@ export const WifiIcon = ({
     </View>
   );
 };
-
-// SIMPLIFIED WIFI OFF ICON
-export const WifiOffIcon = ({
-  size = 24,
-  color = "currentColor",
-  strokeWidth = 2,
-  ...props
-}: IconProps) => (
-  <PureSvg width={size} height={size} viewBox="0 0 24 24" {...props}>
-    {/* WiFi arcs using simple circles */}
-    <PureCircle
-      cx={12}
-      cy={20}
-      r={8}
-      stroke={color}
-      strokeWidth={strokeWidth}
-    />
-    <PureCircle
-      cx={12}
-      cy={20}
-      r={5}
-      stroke={color}
-      strokeWidth={strokeWidth}
-    />
-    <PureCircle
-      cx={12}
-      cy={20}
-      r={2}
-      stroke={color}
-      strokeWidth={strokeWidth}
-    />
-
-    {/* Signal dot */}
-    <PureCircle cx={12} cy={20} r={1} fill={color} />
-
-    {/* Diagonal line for "off" */}
-    <PureLine
-      x1={3}
-      y1={3}
-      x2={21}
-      y2={21}
-      stroke={color}
-      strokeWidth={strokeWidth}
-    />
-  </PureSvg>
-);
 
 // SIMPLIFIED SETTINGS ICON - Minimal gear
 export const SettingsIcon = ({
@@ -3326,7 +3280,6 @@ export const User = UserIcon;
 export const Users = UsersIcon;
 export const Volume = VolumeIcon;
 export const Wifi = WifiIcon;
-export const WifiOff = WifiOffIcon;
 export const X = XIcon;
 export const XCircle = XCircleIcon;
 export const Zap = ZapIcon;
