@@ -46,20 +46,25 @@ print_step "Running smoke tests"
 pnpm run smoke
 
 print_step "Applying version bumps"
+initial_rev=$(git rev-parse HEAD)
 pnpm changeset version
 
 print_step "Reinstalling to update lockfiles"
 pnpm install
 
-print_step "Creating release commit"
-git add .
-if git diff --cached --quiet; then
+post_version_status=$(git status --porcelain)
+if [ -n "$post_version_status" ]; then
+  print_step "Creating release commit"
+  git add .
+  git commit -m "chore: release all packages"
+fi
+
+post_rev=$(git rev-parse HEAD)
+
+if [ "$initial_rev" = "$post_rev" ]; then
   echo "No version updates detected; skipping publish." >&2
   exit 0
 fi
-
-print_step "Committing release"
-git commit -m "chore: release all packages"
 
 print_step "Publishing packages"
 pnpm changeset publish "$@"
