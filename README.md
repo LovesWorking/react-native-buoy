@@ -2,7 +2,6 @@
 
 ![devtools](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
 
-![devtools4](https://github.com/user-attachments/assets/2e088ae5-786a-413a-8609-53d397954e8e)
 
 
 **The floating devtools menu that every React Native team needs.**
