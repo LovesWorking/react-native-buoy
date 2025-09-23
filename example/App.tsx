@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View } from "react-native";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import {
   AppHostProvider,
   AppOverlay,
@@ -19,7 +19,6 @@ import {
   ReactQueryIcon,
   StorageStackIcon,
   Globe,
-  useSafeAreaInsets,
 } from "@react-buoy/shared-ui";
 import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
 import { NetworkModal } from "@react-buoy/network";
@@ -170,7 +169,6 @@ export default function App() {
     ],
     [requiredEnvVars, storageRequiredKeys]
   );
-  const insets = useSafeAreaInsets();
   return (
     <QueryClientProvider client={queryClientRef.current!}>
       <AppHostProvider>
