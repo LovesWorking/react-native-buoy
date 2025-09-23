@@ -102,7 +102,7 @@ const createPackageJson = () => {
       "react-native": "*",
     },
     devDependencies: {
-      "@types/react": "^19.0.14",
+      "@types/react": "^19.1.0",
       "@types/react-native": "^0.73.0",
       typescript: "~5.8.3",
     },
