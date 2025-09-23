@@ -7,7 +7,7 @@ import deleteItem from "../../utils/actions/deleteItem";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { CopyButton as SharedCopyButton } from "@react-buoy/shared-ui";
 import { gameUIColors } from "@react-buoy/shared-ui";
-import { ChevronRight, ChevronDown, Trash, Minus } from "@react-buoy/shared-ui";
+import { ChevronRight, ChevronDown, Trash } from "@react-buoy/shared-ui";
 import { CyberpunkInput } from "@react-buoy/shared-ui/dataViewer";
 
 // Stable constants to prevent re-renders [[memory:4875251]]
@@ -169,11 +169,14 @@ const ClearArrayButton = memo(
         hitSlop={HIT_SLOP_OPTIMIZED}
         activeOpacity={0.7}
       >
-        <Minus
-          size={14}
-          strokeWidth={2}
-          color={isFocused ? gameUIColors.warning : gameUIColors.warning + "CC"}
-        />
+        <Text
+          style={[
+            styles.clearButtonText,
+            { color: isFocused ? gameUIColors.warning : gameUIColors.warning + "CC" }
+          ]}
+        >
+          []
+        </Text>
       </TouchableOpacity>
     );
   }
@@ -681,6 +684,11 @@ const styles = StyleSheet.create({
     backgroundColor: gameUIColors.warning + "33",
     shadowOpacity: 0.3,
     shadowRadius: 5,
+  },
+  clearButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    fontFamily: "monospace",
   },
   expanderIcon: {
     width: 18,
