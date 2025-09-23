@@ -1,21 +1,12 @@
 # React Buoy Devtools
+
 ![devtools](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
 
 **The floating devtools menu that every React Native team needs.**
 
-A persistent floating row that shows your current environment (dev/staging/prod) and user role (admin/internal/user) at all times, with instant access to the tools your team uses every day.
+A persistent floating row that shows your current environment (dev/staging/prod) and user role (admin/internal/user) at all times, with instant access to tools your team will use every day.
 
-## The Problem
-
-Most React Native teams build similiar internal tools:
-
-- Admin panels hidden behind secret taps
-
-Your engineers waste time hunting for tools, forget what environment they're in, and everyone's setup looks different.
-
-## The Solution
-
-One floating menu that:
+## One floating menu that:
 
 - **Always visible** – Shows environment & user role in a draggable row that survives reloads
 - **Consistent everywhere** – Same tools in dev, staging, and production
@@ -32,22 +23,22 @@ A draggable status bar that docks to screen edges, remembers its position, and c
 
 Tap the role badge to open a radial menu with your tools. Beautiful neon transitions, enforced slot limits, automatic sync between row and dial views.
 
-### 🏗️ Production-Ready Architecture
+### 🏗️ Production Ready
 
 - **AppHost lifecycle** – Tools stay open after reload, singleton enforcement, hardware back button support
 - **Smart persistence** – Per-device settings that sync instantly without code changes
-- **Launch modes** – Choose between modal, inline, or custom presentation for each tool
+- **Launch modes** – Pick per-tool presentation: `self-modal` (tool controls its own modal), `host-modal` (App Host wraps it), or `inline` (rendered directly in the overlay)
 - **TypeScript throughout** – Full type safety and IntelliSense support
 
-## Built-in Professional Tools
+## Professional Tools Already Built!
 
 ### 🌍 Environment Inspector
 
 Visual health check for your app config. Required/optional variables, auto-detection, search, filters. Know instantly if your app is misconfigured.
 
-### 📡 Network Monitor
+### 📡 Network inspector
 
-Production-grade request inspector. Timeline view, capture toggle, ignore patterns, detailed headers/body inspection, performance stats.
+Timeline view, capture toggle, ignore patterns, detailed headers/body inspection, performance stats.
 
 ### 💾 Storage Explorer
 
@@ -184,7 +175,7 @@ Your current environment and role are always visible. No more "wait, am I in pro
 
 ### 🔄 **Survives Everything**
 
-Hot reload? Crash recovery? The menu persists through it all. Tools stay open, positions are remembered.
+Hot reload? Crash recovery? The tools persists through it all. Tools stay open, positions are remembered.
 
 ### 👥 **Team Consistency**
 
@@ -196,17 +187,17 @@ Beautiful, responsive, and actually pleasant to use. Your team will _want_ to us
 
 ### 🏢 **Production-Safe**
 
-Ship it to production. Tools respect user roles, sensitive features stay hidden from end users.
+Ship it to production—just wire in your own access checks!
 
 ## Real-World Example
 
 Imagine you're debugging a payment flow issue:
 
 1. **Environment badge** shows you're in staging (not prod! 😅)
-2. **Role pill** confirms you're logged in as "internal"
+2. **Role pill** confirms you're logged in as "Admin"
 3. Tap **Network** to watch API calls in real-time
 4. Open **Storage** to see what's persisted locally
-5. Check **React Query** to inspect cached data
+5. Check **React Query** to inspect data
 6. Launch your custom **Payment Debug** panel
 
 All from one floating menu that follows you through every screen.
