@@ -1,0 +1,18 @@
+diff --git a/dist/changesets-cli.cjs.js b/dist/changesets-cli.cjs.js
+index 53fc925f8aa492e7333033483e9f3e45839963ad..369f8e35b681bb2eab8fac3c27d9677d1662053d 100644
+--- a/dist/changesets-cli.cjs.js
++++ b/dist/changesets-cli.cjs.js
+@@ -856,10 +856,11 @@ async function publishPackages({
+     otp,
+     publicPackages
+   });
+-  return Promise.all(unpublishedPackagesInfo.map(pkgInfo => {
++  const publishLimit = pLimit__default["default"](1);
++  return Promise.all(unpublishedPackagesInfo.map(pkgInfo => publishLimit(() => {
+     let pkg = packagesByName.get(pkgInfo.name);
+     return publishAPackage(pkg, access, twoFactorState, getReleaseTag(pkgInfo, preState, tag));
+-  }));
++  })));
+ }
+ async function publishAPackage(pkg, access, twoFactorState, tag) {
+   const {
