@@ -2,21 +2,15 @@
   "name": "@react-buoy/core",
   "version": "0.1.6",
   "description": "Floating dev tools launcher and AppHost",
-  "main": "lib/commonjs/index.js",
-  "module": "lib/module/index.js",
-  "types": "lib/typescript/module/index.d.ts",
+  "main": "./lib/module/index.js",
+  "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
       "source": "./src/index.tsx",
-      "import": {
-        "default": "./lib/module/index.js",
-        "types": "./lib/typescript/module/index.d.ts"
-      },
-      "require": {
-        "default": "./lib/commonjs/index.js",
-        "types": "./lib/typescript/commonjs/index.d.ts"
-      }
-    }
+      "types": "./lib/typescript/src/index.d.ts",
+      "default": "./lib/module/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
@@ -42,18 +36,17 @@
     "output": "lib",
     "targets": [
       [
-        "commonjs",
-        {
-          "esm": true
-        }
-      ],
-      [
         "module",
         {
           "esm": true
         }
       ],
-      "typescript"
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
     ]
   },
   "devDependencies": {
