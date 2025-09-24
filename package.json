@@ -28,7 +28,7 @@
     "android": "pnpm --filter example android",
     "typecheck": "lerna run typecheck --stream",
     "typecheck:all": "pnpm run typecheck && tsc --noEmit",
-    "lint": "eslint \"packages/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
+    "lint": "eslint --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map' \"packages/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
     "test": "pnpm run build && pnpm run typecheck && pnpm run lint",
     "test:packages": "lerna run test --stream",
     "fresh": "pnpm run clean && pnpm install && pnpm run build",
