@@ -7,16 +7,6 @@
   "types": "lib/typescript/index.d.ts",
   "react-native": "src/index.tsx",
   "source": "src/index.tsx",
-  "typesVersions": {
-    "*": {
-      "storage": [
-        "lib/typescript/storage/index.d.ts"
-      ],
-      "storage/*": [
-        "lib/typescript/storage/*"
-      ]
-    }
-  },
   "files": [
     "src",
     "lib"
