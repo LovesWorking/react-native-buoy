@@ -3,11 +3,7 @@ import { loadOptionalModule, getCachedOptionalModule } from "../utils/loadOption
 // Define the clipboard function type locally
 export type ClipboardFunction = (text: string) => Promise<boolean>;
 
-const log = (...args: unknown[]) => {
-  if (typeof __DEV__ !== "undefined" && __DEV__) {
-    console.log("[RnBetterDevTools][clipboard]", ...args);
-  }
-};
+// Debug logging removed for production
 
 let cachedClipboard: ClipboardFunction | null = null;
 let loadPromise: Promise<ClipboardFunction | null> | null = null;
@@ -22,14 +18,13 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
     loadPromise = (async () => {
       const expoClipboard = await loadOptionalModule<any>("expo-clipboard", {
         logger: {
-          log,
-          warn: (...args) => log("expo-clipboard", ...args),
-          error: (...args) => console.error("[RnBetterDevTools]", ...args),
+          log: () => {}, // Debug logging removed
+          warn: (...args: unknown[]) => console.warn("[RnBetterDevTools]", ...args),
+          error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
         },
       });
 
       if (expoClipboard?.setStringAsync) {
-        log("Detected expo-clipboard module");
         return async (text: string) => {
           try {
             await expoClipboard.setStringAsync(text);
@@ -48,16 +43,14 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
         "@react-native-clipboard/clipboard",
         {
           logger: {
-            log,
-            warn: (...args) =>
-              log("@react-native-clipboard/clipboard", ...args),
-            error: (...args) => console.error("[RnBetterDevTools]", ...args),
+            log: () => {}, // Debug logging removed
+            warn: (...args: unknown[]) => console.warn("[RnBetterDevTools]", ...args),
+            error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
           },
         }
       );
 
       if (rnClipboard?.setString) {
-        log("Detected @react-native-clipboard/clipboard module");
         return async (text: string) => {
           try {
             await rnClipboard.setString(text);

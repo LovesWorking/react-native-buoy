@@ -195,11 +195,9 @@ class AsyncStorageListener {
   private emit(event: AsyncStorageEvent) {
     // Skip emitting if there are no listeners
     if (this.listeners.length === 0) {
-      console.log("[AsyncStorageListener] No listeners registered, skipping event:", event.action);
       return;
     }
 
-    console.log(`[AsyncStorageListener] Emitting ${event.action} to ${this.listeners.length} listener(s)`);
 
     this.listeners.forEach((listener) => {
       try {
@@ -249,18 +247,15 @@ class AsyncStorageListener {
 
     // Swizzle setItem
     const swizzled_setItem = async (key: string, value: string) => {
-      console.log("[AsyncStorageListener] Intercepted setItem:", key);
 
       // Only emit event if key is not ignored
       if (!this.shouldIgnoreKey(key)) {
-        console.log("[AsyncStorageListener] Emitting setItem event for:", key);
         this.emit({
           action: "setItem",
           timestamp: new Date(),
           data: { key, value },
         });
       } else {
-        console.log("[AsyncStorageListener] Ignoring setItem for:", key);
       }
 
       return this.originalSetItem ? this.originalSetItem(key, value) : Promise.resolve();
@@ -465,7 +460,6 @@ class AsyncStorageListener {
    * ```
    */
   addListener(listener: AsyncStorageEventListener) {
-    console.log("[AsyncStorageListener] Adding new listener, total will be:", this.listeners.length + 1);
     this.listeners.push(listener);
 
     // Return unsubscribe function
@@ -473,7 +467,6 @@ class AsyncStorageListener {
       const index = this.listeners.indexOf(listener);
       if (index > -1) {
         this.listeners.splice(index, 1);
-        console.log("[AsyncStorageListener] Removed listener, total now:", this.listeners.length);
       }
     };
   }
