@@ -13,8 +13,6 @@ type AsyncStorageMultiMerge = (
   keyValuePairs: readonly (readonly [string, string])[]
 ) => Promise<void>;
 
-
-
 // Event types for AsyncStorage operations
 export interface AsyncStorageEvent {
   action:
@@ -134,15 +132,15 @@ class AsyncStorageListener {
 
     // Store original methods (these should be the real AsyncStorage methods)
     this.originalSetItem = AsyncStorage.setItem.bind(AsyncStorage);
-    this.originalRemoveItem =
-      AsyncStorage.removeItem.bind(AsyncStorage);
-    this.originalMergeItem =
-      AsyncStorage.mergeItem.bind(AsyncStorage);
+    this.originalRemoveItem = AsyncStorage.removeItem.bind(AsyncStorage);
+    this.originalMergeItem = AsyncStorage.mergeItem.bind(AsyncStorage);
     this.originalClear = AsyncStorage.clear.bind(AsyncStorage);
-    this.originalMultiSet =
-      AsyncStorage.multiSet.bind(AsyncStorage) as AsyncStorageMultiSet;
-    this.originalMultiRemove =
-      AsyncStorage.multiRemove.bind(AsyncStorage) as AsyncStorageMultiRemove;
+    this.originalMultiSet = AsyncStorage.multiSet.bind(
+      AsyncStorage
+    ) as AsyncStorageMultiSet;
+    this.originalMultiRemove = AsyncStorage.multiRemove.bind(
+      AsyncStorage
+    ) as AsyncStorageMultiRemove;
     this.originalMultiMerge = AsyncStorage.multiMerge
       ? (AsyncStorage.multiMerge.bind(AsyncStorage) as AsyncStorageMultiMerge)
       : null;
@@ -198,7 +196,6 @@ class AsyncStorageListener {
       return;
     }
 
-
     this.listeners.forEach((listener) => {
       try {
         listener(event);
@@ -247,7 +244,6 @@ class AsyncStorageListener {
 
     // Swizzle setItem
     const swizzled_setItem = async (key: string, value: string) => {
-
       // Only emit event if key is not ignored
       if (!this.shouldIgnoreKey(key)) {
         this.emit({
@@ -255,10 +251,11 @@ class AsyncStorageListener {
           timestamp: new Date(),
           data: { key, value },
         });
-      } else {
       }
 
-      return this.originalSetItem ? this.originalSetItem(key, value) : Promise.resolve();
+      return this.originalSetItem
+        ? this.originalSetItem(key, value)
+        : Promise.resolve();
     };
     Object.defineProperty(swizzled_setItem, "name", {
       value: "swizzled_setItem",
@@ -283,38 +280,42 @@ class AsyncStorageListener {
           // Ignoring removeItem for ignored key
         }
 
-        return this.originalRemoveItem ? this.originalRemoveItem(key) : Promise.resolve();
+        return this.originalRemoveItem
+          ? this.originalRemoveItem(key)
+          : Promise.resolve();
       };
     }
 
     // Swizzle mergeItem
     if (AsyncStorage) {
       AsyncStorage.mergeItem = async (key: string, value: string) => {
-      // Intercepted mergeItem operation
+        // Intercepted mergeItem operation
 
-      // Only emit event if key is not ignored
-      if (!this.shouldIgnoreKey(key)) {
-        this.emit({
-          action: "mergeItem",
-          timestamp: new Date(),
-          data: { key, value },
-        });
-      } else {
-        // Ignoring mergeItem for ignored key
-      }
+        // Only emit event if key is not ignored
+        if (!this.shouldIgnoreKey(key)) {
+          this.emit({
+            action: "mergeItem",
+            timestamp: new Date(),
+            data: { key, value },
+          });
+        } else {
+          // Ignoring mergeItem for ignored key
+        }
 
-        return this.originalMergeItem ? this.originalMergeItem(key, value) : Promise.resolve();
+        return this.originalMergeItem
+          ? this.originalMergeItem(key, value)
+          : Promise.resolve();
       };
     }
 
     // Swizzle clear
     if (AsyncStorage) {
       AsyncStorage.clear = async () => {
-      // Intercepted clear operation
-      this.emit({
-        action: "clear",
-        timestamp: new Date(),
-      });
+        // Intercepted clear operation
+        this.emit({
+          action: "clear",
+          timestamp: new Date(),
+        });
         return this.originalClear ? this.originalClear() : Promise.resolve();
       };
     }
@@ -322,48 +323,52 @@ class AsyncStorageListener {
     // Swizzle multiSet
     if (AsyncStorage) {
       AsyncStorage.multiSet = async (
-      keyValuePairs: readonly (readonly [string, string])[]
-    ) => {
-      // Intercepted multiSet operation with multiple pairs
+        keyValuePairs: readonly (readonly [string, string])[]
+      ) => {
+        // Intercepted multiSet operation with multiple pairs
 
-      // Filter out ignored keys
-      const filteredPairs = keyValuePairs.filter(
-        ([key]) => !this.shouldIgnoreKey(key)
-      );
+        // Filter out ignored keys
+        const filteredPairs = keyValuePairs.filter(
+          ([key]) => !this.shouldIgnoreKey(key)
+        );
 
-      if (filteredPairs.length > 0) {
-        this.emit({
-          action: "multiSet",
-          timestamp: new Date(),
-          data: { pairs: filteredPairs as [string, string][] },
-        });
-      } else {
-        // All keys in multiSet are ignored
-      }
+        if (filteredPairs.length > 0) {
+          this.emit({
+            action: "multiSet",
+            timestamp: new Date(),
+            data: { pairs: filteredPairs as [string, string][] },
+          });
+        } else {
+          // All keys in multiSet are ignored
+        }
 
-        return this.originalMultiSet ? this.originalMultiSet(keyValuePairs as [string, string][]) : Promise.resolve();
+        return this.originalMultiSet
+          ? this.originalMultiSet(keyValuePairs as [string, string][])
+          : Promise.resolve();
       };
     }
 
     // Swizzle multiRemove
     if (AsyncStorage) {
       AsyncStorage.multiRemove = async (keys: readonly string[]) => {
-      // Intercepted multiRemove operation with multiple keys
+        // Intercepted multiRemove operation with multiple keys
 
-      // Filter out ignored keys
-      const filteredKeys = keys.filter((key) => !this.shouldIgnoreKey(key));
+        // Filter out ignored keys
+        const filteredKeys = keys.filter((key) => !this.shouldIgnoreKey(key));
 
-      if (filteredKeys.length > 0) {
-        this.emit({
-          action: "multiRemove",
-          timestamp: new Date(),
-          data: { keys: filteredKeys as string[] },
-        });
-      } else {
-        // All keys in multiRemove are ignored
-      }
+        if (filteredKeys.length > 0) {
+          this.emit({
+            action: "multiRemove",
+            timestamp: new Date(),
+            data: { keys: filteredKeys as string[] },
+          });
+        } else {
+          // All keys in multiRemove are ignored
+        }
 
-        return this.originalMultiRemove ? this.originalMultiRemove(keys as string[]) : Promise.resolve();
+        return this.originalMultiRemove
+          ? this.originalMultiRemove(keys as string[])
+          : Promise.resolve();
       };
     }
 
@@ -389,7 +394,9 @@ class AsyncStorageListener {
           // All keys in multiMerge are ignored
         }
 
-        return this.originalMultiMerge ? this.originalMultiMerge(keyValuePairs as [string, string][]) : Promise.resolve();
+        return this.originalMultiMerge
+          ? this.originalMultiMerge(keyValuePairs as [string, string][])
+          : Promise.resolve();
       };
     }
 
