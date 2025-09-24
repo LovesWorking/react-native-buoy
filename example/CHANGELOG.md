@@ -1,5 +1,17 @@
 # example
 
+## 1.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @react-buoy/core@0.1.6
+  - @react-buoy/env@0.1.6
+  - @react-buoy/network@0.1.6
+  - @react-buoy/react-query@0.1.6
+  - @react-buoy/shared-ui@0.1.6
+  - @react-buoy/storage@0.1.6
+
 ## 1.0.5
 
 ### Patch Changes
