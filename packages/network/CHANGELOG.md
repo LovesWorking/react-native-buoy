@@ -1,5 +1,16 @@
 # @react-buoy/network
 
+## 0.1.7
+
+### Patch Changes
+
+- b280b95: Automated patch release for all packages.
+- Automated patch release for all packages.
+- Updated dependencies [b280b95]
+- Updated dependencies
+  - @react-buoy/react-query@0.1.7
+  - @react-buoy/shared-ui@0.1.7
+
 ## 0.1.6
 
 ### Patch Changes

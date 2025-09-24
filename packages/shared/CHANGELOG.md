@@ -1,5 +1,12 @@
 # @react-buoy/shared-ui
 
+## 0.1.7
+
+### Patch Changes
+
+- b280b95: Automated patch release for all packages.
+- Automated patch release for all packages.
+
 ## 0.1.6
 
 ### Patch Changes
