@@ -2,28 +2,18 @@
   "name": "@react-buoy/storage",
   "version": "0.1.9",
   "description": "storage package",
-  "main": "./lib/module/index.js",
-  "types": "./lib/typescript/src/index.d.ts",
-  "exports": {
-    ".": {
-      "source": "./src/index.tsx",
-      "types": "./lib/typescript/src/index.d.ts",
-      "default": "./lib/module/index.js"
-    },
-    "./storage": {
-      "source": "./src/storage/index.ts",
-      "types": "./lib/typescript/src/storage/index.d.ts",
-      "default": "./lib/module/storage/index.js"
-    },
-    "./package.json": "./package.json"
-  },
+  "main": "lib/commonjs/index",
+  "module": "lib/module/index",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.tsx",
+  "source": "src/index.tsx",
   "typesVersions": {
     "*": {
       "storage": [
-        "lib/typescript/src/storage/index.d.ts"
+        "lib/typescript/storage/index.d.ts"
       ],
       "storage/*": [
-        "lib/typescript/src/storage/*"
+        "lib/typescript/storage/*"
       ]
     }
   },
@@ -58,18 +48,9 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      [
-        "module",
-        {
-          "esm": true
-        }
-      ],
-      [
-        "typescript",
-        {
-          "project": "tsconfig.build.json"
-        }
-      ]
+      "commonjs",
+      "module",
+      "typescript"
     ]
   },
   "repository": {
