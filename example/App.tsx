@@ -2,12 +2,6 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View } from "react-native";
 import { useMemo, useRef } from "react";
 import {
-  AppHostProvider,
-  AppOverlay,
-  FloatingMenu,
-  type InstalledApp,
-} from "@react-buoy/core";
-import {
   EnvVarsModal,
   createEnvVarConfig,
   envVar,
@@ -27,8 +21,9 @@ import { PokemonScreen } from "./screens/pokemon/Pokemon";
 import {
   StorageModalWithTabs,
   type RequiredStorageKey,
-} from "@react-buoy/storage/storage";
+} from "@react-buoy/storage";
 import { WifiToggle } from "@react-buoy/react-query";
+import { FloatingDevTools, InstalledApp } from "@react-buoy/core";
 
 export default function App() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -185,19 +180,16 @@ export default function App() {
   );
   return (
     <QueryClientProvider client={queryClientRef.current!}>
-      <AppHostProvider>
-        <View style={styles.container}>
-          <FloatingMenu
-            apps={installedApps}
-            actions={{}}
-            environment={environment}
-            userRole={userRole}
-          />
-          <AppOverlay />
-          <PokemonScreen />
-          <StatusBar style="dark" />
-        </View>
-      </AppHostProvider>
+      <View style={styles.container}>
+        <FloatingDevTools
+          apps={installedApps}
+          actions={{}}
+          environment={environment}
+          userRole={userRole}
+        />
+        <PokemonScreen />
+        <StatusBar style="dark" />
+      </View>
     </QueryClientProvider>
   );
 }
