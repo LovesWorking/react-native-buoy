@@ -103,11 +103,7 @@ const STORAGE_KEYS = {
   BUBBLE_POSITION_Y: "@floating_tools_bubble_position_y",
 } as const;
 
-const debugLog = (...args: unknown[]) => {
-  if (__DEV__) {
-    console.log("[FloatingTools]", ...args);
-  }
-};
+// Debug logging removed for production
 
 // =============================
 // Position persistence hook
@@ -155,13 +151,11 @@ function useFloatingToolsPosition({
   const savePosition = useCallback(
     async (x: number, y: number) => {
       if (!enabled) return;
-      debugLog("Saving bubble position", { x, y });
       try {
         await Promise.all([
           safeSetItem(STORAGE_KEYS.BUBBLE_POSITION_X, x.toString()),
           safeSetItem(STORAGE_KEYS.BUBBLE_POSITION_Y, y.toString()),
         ]);
-        debugLog("Position persisted");
       } catch (error) {
         console.warn("[FloatingTools] Failed to save position:", error);
       }
@@ -173,7 +167,6 @@ function useFloatingToolsPosition({
     (x: number, y: number) => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => savePosition(x, y), 500);
-      debugLog("Scheduled debounced position save", { x, y });
     },
     [savePosition]
   );
@@ -183,7 +176,6 @@ function useFloatingToolsPosition({
     y: number;
   } | null> => {
     if (!enabled) return null;
-    debugLog("Attempting to load persisted position");
     try {
       const [xStr, yStr] = await Promise.all([
         safeGetItem(STORAGE_KEYS.BUBBLE_POSITION_X),
@@ -197,7 +189,6 @@ function useFloatingToolsPosition({
     } catch (error) {
       console.warn("[FloatingTools] Failed to load position:", error);
     }
-    debugLog("No persisted position found");
     return null;
   }, [enabled]);
 
@@ -236,14 +227,9 @@ function useFloatingToolsPosition({
         if (wasOutOfBounds) {
           // Save the corrected position
           await savePosition(validated.x, validated.y);
-          debugLog("Adjusted out-of-bounds position", {
-            original: saved,
-            corrected: validated,
-          });
         }
 
         animatedPosition.setValue(validated);
-        debugLog("Restored persisted position", validated);
       } else {
         const { width: screenWidth, height: screenHeight } =
           Dimensions.get("window");
@@ -255,10 +241,6 @@ function useFloatingToolsPosition({
         animatedPosition.setValue({
           x: screenWidth - bubbleWidth - 20,
           y: defaultY, // Ensure it's within safe area bounds
-        });
-        debugLog("Using default position", {
-          x: screenWidth - bubbleWidth - 20,
-          y: defaultY,
         });
       }
       isInitialized.current = true;
@@ -575,12 +557,6 @@ export function FloatingTools({
       const bubbleMidpoint = currentX + bubbleSize.width / 2;
       const shouldHide = bubbleMidpoint > screenWidth;
 
-      debugLog("Drag ended", {
-        finalPosition,
-        shouldHide,
-        bubbleMidpoint,
-        screenWidth,
-      });
 
       if (shouldHide) {
         // Animate to hidden position (only grabber visible)

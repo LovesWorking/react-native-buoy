@@ -6,11 +6,7 @@ interface LoadModuleLogger {
 }
 
 const defaultLogger: Required<LoadModuleLogger> = {
-  log: (...args) => {
-    if (typeof __DEV__ !== "undefined" && __DEV__) {
-      console.log("[optional-module]", ...args);
-    }
-  },
+  log: () => {}, // Debug logging removed for production
   warn: (...args) => {
     console.warn("[optional-module]", ...args);
   },
