@@ -1,5 +1,13 @@
 # @react-buoy/core
 
+## 0.1.12
+
+### Patch Changes
+
+- Automated patch release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.12
+
 ## 0.1.11
 
 ### Patch Changes

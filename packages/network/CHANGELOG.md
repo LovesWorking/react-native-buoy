@@ -1,5 +1,14 @@
 # @react-buoy/network
 
+## 0.1.12
+
+### Patch Changes
+
+- Automated patch release for all packages.
+- Updated dependencies
+  - @react-buoy/react-query@0.1.12
+  - @react-buoy/shared-ui@0.1.12
+
 ## 0.1.11
 
 ### Patch Changes
