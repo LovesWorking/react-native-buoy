@@ -66,8 +66,38 @@ if [ "$initial_rev" = "$post_rev" ]; then
   exit 0
 fi
 
-print_step "Publishing packages"
-pnpm changeset publish "$@"
+print_step "Publishing packages sequentially"
+
+# Order matters: shared UI first so dependents see fresh type output
+ordered_dirs=(
+  "packages/shared"
+  "packages/devtools-floating-menu"
+  "packages/env-tools"
+  "packages/network"
+  "packages/storage"
+  "packages/react-query"
+)
+
+for dir in "${ordered_dirs[@]}"; do
+  pkg_json="$dir/package.json"
+  if [ ! -f "$pkg_json" ]; then
+    continue
+  fi
+
+  pkg_name=$(node -p "require('./$pkg_json').name")
+  pkg_version=$(node -p "require('./$pkg_json').version")
+
+  if npm view "$pkg_name@$pkg_version" version >/dev/null 2>&1; then
+    print_step "Skipping $pkg_name@$pkg_version (already on npm)"
+    continue
+  fi
+
+  print_step "Building $pkg_name"
+  pnpm --filter "$pkg_name" run build
+
+  print_step "Publishing $pkg_name@$pkg_version"
+  pnpm publish --filter "$pkg_name" --access public --no-git-checks "$@"
+done
 
 print_step "Pushing commit and tags"
 git push
