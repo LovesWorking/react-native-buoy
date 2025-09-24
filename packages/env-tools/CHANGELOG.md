@@ -1,5 +1,13 @@
 # @react-buoy/env
 
+## 0.1.10
+
+### Patch Changes
+
+- Automated patch release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.10
+
 ## 0.1.9
 
 ### Patch Changes
