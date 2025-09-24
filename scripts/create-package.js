@@ -68,22 +68,11 @@ const createPackageJson = () => {
     name: `@react-buoy/${packageName}`,
     version: "0.1.0",
     description: `${packageName} package`,
-    main: "lib/commonjs/index.js",
-    module: "lib/module/index.js",
-    types: "lib/typescript/module/index.d.ts",
-    exports: {
-      ".": {
-        source: "./src/index.ts",
-        import: {
-          default: "./lib/module/index.js",
-          types: "./lib/typescript/module/index.d.ts",
-        },
-        require: {
-          default: "./lib/commonjs/index.js",
-          types: "./lib/typescript/commonjs/index.d.ts",
-        },
-      },
-    },
+    main: "lib/commonjs/index",
+    module: "lib/module/index",
+    types: "lib/typescript/index.d.ts",
+    "react-native": "src/index.tsx",
+    source: "src/index.tsx",
     files: ["src", "lib"],
     sideEffects: false,
     scripts: {
@@ -91,7 +80,6 @@ const createPackageJson = () => {
       typecheck: "tsc --noEmit",
       clean: "rimraf lib",
       test: "pnpm run typecheck",
-      // Note: 'prepare' script will be added after first install
       postinstall: 'echo "Run pnpm build to compile this package"',
     },
     dependencies: {
@@ -110,20 +98,23 @@ const createPackageJson = () => {
       source: "src",
       output: "lib",
       targets: [
-        [
-          "commonjs",
-          {
-            esm: true,
-          },
-        ],
-        [
-          "module",
-          {
-            esm: true,
-          },
-        ],
+        "commonjs",
+        "module",
         "typescript",
       ],
+    },
+    repository: {
+      type: "git",
+      url: "https://github.com/LovesWorking/react-native-buoy.git",
+      directory: `packages/${packageName}`,
+    },
+    bugs: {
+      url: "https://github.com/LovesWorking/react-native-buoy/issues",
+    },
+    homepage: `https://github.com/LovesWorking/react-native-buoy/tree/main/packages/${packageName}#readme`,
+    publishConfig: {
+      access: "public",
+      tag: "latest",
     },
   };
 
@@ -133,7 +124,7 @@ const createPackageJson = () => {
   );
 };
 
-// Create tsconfig.json
+// Create tsconfig.json and tsconfig.build.json
 const createTsConfig = () => {
   console.log("📝 Creating tsconfig.json...");
 
@@ -150,6 +141,23 @@ const createTsConfig = () => {
   fs.writeFileSync(
     path.join(packageDir, "tsconfig.json"),
     JSON.stringify(tsConfig, null, 2) + "\n"
+  );
+
+  console.log("📝 Creating tsconfig.build.json...");
+
+  const tsBuildConfig = {
+    extends: "./tsconfig.json",
+    compilerOptions: {
+      rootDir: "./src",
+      outDir: "./lib/typescript",
+    },
+    include: ["src"],
+    exclude: ["example", "lib", "**/__tests__", "**/__fixtures__", "**/__mocks__"],
+  };
+
+  fs.writeFileSync(
+    path.join(packageDir, "tsconfig.build.json"),
+    JSON.stringify(tsBuildConfig, null, 2) + "\n"
   );
 };
 
@@ -421,6 +429,23 @@ ${packageName}/
   fs.writeFileSync(path.join(packageDir, "README.md"), readmeContent);
 };
 
+// Create CHANGELOG
+const createChangelog = () => {
+  console.log("📝 Creating CHANGELOG.md...");
+
+  const changelogContent = `# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [0.1.0] - ${new Date().toISOString().split('T')[0]}
+
+### Added
+- Initial release of @react-buoy/${packageName}
+`;
+
+  fs.writeFileSync(path.join(packageDir, "CHANGELOG.md"), changelogContent);
+};
+
 // Create .gitignore
 const createGitignore = () => {
   console.log("📝 Creating .gitignore...");
@@ -519,6 +544,7 @@ try {
   createIndexFile();
   createTypeSpecificFiles();
   createReadme();
+  createChangelog();
   createGitignore();
   addToExampleApp();
 

@@ -10,9 +10,9 @@
     "reload": "expo run:ios --no-build-cache"
   },
   "dependencies": {
-    "@react-buoy/network": "workspace:*",
     "@react-buoy/core": "workspace:*",
     "@react-buoy/env": "workspace:*",
+    "@react-buoy/network": "workspace:*",
     "@react-buoy/react-query": "workspace:*",
     "@react-buoy/shared-ui": "workspace:*",
     "@react-buoy/storage": "workspace:*",
