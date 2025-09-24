@@ -2,7 +2,7 @@ import { useState, useMemo, FC } from "react";
 import { View, StyleSheet } from "react-native";
 import { VirtualizedDataExplorer } from "./VirtualizedDataExplorer";
 import { JsonValue, isPlainObject } from "../types/types";
-import { TypeLegend } from ".";
+import { TypeLegend } from "./TypeLegend";
 
 interface DataViewerProps {
   title: string;

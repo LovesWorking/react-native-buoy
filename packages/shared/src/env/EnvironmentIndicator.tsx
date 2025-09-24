@@ -5,8 +5,8 @@ import {
   Bug,
   Zap,
   type LucideIcon,
-  gameUIColors,
-} from "../index";
+} from "../icons";
+import { gameUIColors } from "../ui/gameUI/constants/gameUIColors";
 
 import { Environment } from "../types/types";
 interface EnvironmentIndicatorProps {

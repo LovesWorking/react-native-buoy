@@ -1,4 +1,4 @@
-import { loadOptionalModule, getCachedOptionalModule } from "../utils/loadOptionalModule";
+import { loadOptionalModule } from "../utils/loadOptionalModule";
 
 // Define the clipboard function type locally
 export type ClipboardFunction = (text: string) => Promise<boolean>;
