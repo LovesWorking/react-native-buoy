@@ -31,32 +31,42 @@ function verifyRelativeFile(pkgDir, filePath, label) {
   }
 }
 
-function verifyExportEntry(pkgDir, entry, label) {
-  if (!entry) {
-    failures.push(`${label} missing in package.json exports`);
-    return;
-  }
-
-  if (typeof entry === 'string') {
-    verifyRelativeFile(pkgDir, entry, label);
-    return;
-  }
-
-  if (typeof entry === 'object') {
-    if (entry.default) {
-      verifyRelativeFile(pkgDir, entry.default, `${label} default`);
-    } else {
-      failures.push(`${label} default missing in package.json exports`);
+function verifyTraditionalStructure(pkgDir, pkgJson, scope) {
+  // Check main field
+  if (pkgJson.main) {
+    const mainPath = path.join(pkgDir, pkgJson.main.endsWith('.js') ? pkgJson.main : pkgJson.main + '.js');
+    if (!fs.existsSync(mainPath)) {
+      failures.push(`${scope}: main field points to missing file: ${mainPath}`);
     }
-
-    if (entry.types) {
-      verifyRelativeFile(pkgDir, entry.types, `${label} types`);
-    }
-
-    return;
+  } else {
+    failures.push(`${scope}: main field missing`);
   }
 
-  failures.push(`${label} entry has unsupported type (${typeof entry})`);
+  // Check module field
+  if (pkgJson.module) {
+    const modulePath = path.join(pkgDir, pkgJson.module.endsWith('.js') ? pkgJson.module : pkgJson.module + '.js');
+    if (!fs.existsSync(modulePath)) {
+      failures.push(`${scope}: module field points to missing file: ${modulePath}`);
+    }
+  }
+
+  // Check types field
+  if (pkgJson.types) {
+    const typesPath = path.join(pkgDir, pkgJson.types);
+    if (!fs.existsSync(typesPath)) {
+      failures.push(`${scope}: types field points to missing file: ${typesPath}`);
+    }
+  } else {
+    failures.push(`${scope}: types field missing`);
+  }
+
+  // Check source field
+  if (pkgJson.source) {
+    const sourcePath = path.join(pkgDir, pkgJson.source);
+    if (!fs.existsSync(sourcePath)) {
+      failures.push(`${scope}: source field points to missing file: ${sourcePath}`);
+    }
+  }
 }
 
 for (const { scope, dir } of packages) {
@@ -67,29 +77,27 @@ for (const { scope, dir } of packages) {
   }
 
   const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-  const exportsField = pkgJson.exports?.['.'];
 
   console.log(`\nChecking ${scope}`);
 
-  if (!exportsField) {
-    failures.push(`${scope}: exports["."] is missing`);
-  } else {
-    // Check for modern flat export structure
-    if (exportsField.default) {
-      verifyRelativeFile(dir, exportsField.default, `${scope} default entry`);
+  // Check for traditional package structure (main, module, types)
+  // shared-ui still uses exports, so handle both cases
+  if (pkgJson.exports && scope === '@react-buoy/shared-ui') {
+    const exportsField = pkgJson.exports?.['.'];
+    if (!exportsField) {
+      failures.push(`${scope}: exports["."] is missing`);
     } else {
-      // Fall back to legacy import/require structure
-      verifyExportEntry(dir, exportsField.import, `${scope} import entry`);
-      verifyExportEntry(dir, exportsField.require, `${scope} require entry`);
+      // Check exports structure for shared-ui
+      if (exportsField.import && exportsField.require) {
+        verifyRelativeFile(dir, exportsField.import.default, `${scope} import entry`);
+        verifyRelativeFile(dir, exportsField.require.default, `${scope} require entry`);
+        verifyRelativeFile(dir, exportsField.import.types, `${scope} import types`);
+        verifyRelativeFile(dir, exportsField.require.types, `${scope} require types`);
+      }
     }
-
-    if (exportsField.types) {
-      verifyRelativeFile(dir, exportsField.types, `${scope} types entry`);
-    }
-  }
-
-  if (pkgJson.types) {
-    verifyRelativeFile(dir, pkgJson.types, `${scope} types`);
+  } else {
+    // Use traditional structure verification for other packages
+    verifyTraditionalStructure(dir, pkgJson, scope);
   }
 
   const readmePath = path.join(dir, 'README.md');
