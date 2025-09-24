@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/react-query",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "react-query package",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
