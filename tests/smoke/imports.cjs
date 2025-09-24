@@ -74,8 +74,15 @@ for (const { scope, dir } of packages) {
   if (!exportsField) {
     failures.push(`${scope}: exports["."] is missing`);
   } else {
-    verifyExportEntry(dir, exportsField.import, `${scope} import entry`);
-    verifyExportEntry(dir, exportsField.require, `${scope} require entry`);
+    // Check for modern flat export structure
+    if (exportsField.default) {
+      verifyRelativeFile(dir, exportsField.default, `${scope} default entry`);
+    } else {
+      // Fall back to legacy import/require structure
+      verifyExportEntry(dir, exportsField.import, `${scope} import entry`);
+      verifyExportEntry(dir, exportsField.require, `${scope} require entry`);
+    }
+
     if (exportsField.types) {
       verifyRelativeFile(dir, exportsField.types, `${scope} types entry`);
     }
