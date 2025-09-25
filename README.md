@@ -12,6 +12,7 @@ A persistent floating row that shows your current environment (dev/staging/prod)
 - **Consistent everywhere** – Same tools in dev, staging, and production
 - **Bring your own tools** – Drop in any React component as a tool
 - **Team-friendly** – Each engineer can show/hide the tools they need
+- **Smart interactions** – Double-tap to switch between bottom sheet and floating modal, triple-tap to close, swipe down to dismiss
 
  ## 🧩 JSON Viewer & Diff
 
