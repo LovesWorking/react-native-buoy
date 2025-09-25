@@ -13,33 +13,24 @@ A persistent floating row that shows your current environment (dev/staging/prod)
 - **Bring your own tools** – Drop in any React component as a tool
 - **Team-friendly** – Each engineer can show/hide the tools they need
 
-  🧩 JSON Viewer & Diff
+ ## 🧩 JSON Viewer & Diff
 
 React Buoy includes optimized JSON viewers and comparison tools:
 
-Tree view – Like Redux DevTools for exploring nested objects
-
-Side-by-side diff view – Like VS Code for comparing payloads
-
-Type filtering – Quickly find exactly what you need in large payloads:
-
-string
-
-number
-
-boolean
-
-undefined
-
-null
-
-object
-
-array
-
-function
+- **Tree view** – Like Redux DevTools for exploring nested objects  
+- **Side-by-side diff view** – Like VS Code for comparing payloads  
+- **Type filtering** – Quickly find exactly what you need in large payloads:  
+  - string  
+  - number  
+  - boolean  
+  - undefined  
+  - null  
+  - object  
+  - array  
+  - function  
 
 Example: debugging a large response payload → filter only booleans to check feature flags, or search for undefined keys to spot missing data instantly.
+
 
 ## 🚀 Step 1: Basic Setup (2 minutes)
 
