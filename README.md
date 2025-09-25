@@ -769,3 +769,14 @@ All from one floating menu that follows you through every screen.
 ## 📄 License
 
 MIT © React Buoy Team
+
+## 🚀 More
+
+**Take a shortcut from web developer to mobile development fluency with guided learning**
+
+Big thanks to [galaxies.dev](https://galaxies.dev) — their content helped me get up to speed with React Native early on, and I strongly recommend it as a resource for anyone making the jump from web to mobile.  
+
+<a href="https://galaxies.dev">
+  <img src="https://github.com/Galaxies-dev/react-native-ecommerce/blob/main/banner.png?raw=true" width="100%" />
+</a>
+
