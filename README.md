@@ -553,9 +553,16 @@ const TOOLS = [
 
 </details>
 
----
-### Dev Tool Settings Menu
+<details>
+<summary><strong>Dev Tool Settings Menu</strong></summary>
+
+###
+
 ![set](https://github.com/user-attachments/assets/f8033982-e802-48f8-bd07-824121d557a2)
+
+</details>
+
+---
 
 ## 🔥 Complete Example
 
