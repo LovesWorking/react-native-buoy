@@ -24,8 +24,8 @@ import {
 import { pokemonNames, searchPokemon } from "./pokemonNames";
 import { PokemonCardSwipeable } from "./PokemonCardSwipeable";
 import { PokedexTrainerCollection } from "./PokedexTrainerCollection";
-import { useSafeAreaInsets } from "@react-buoy/shared-ui/hooks";
-import { safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
+import { useSafeAreaInsets } from "../../utils/hooks";
+import { safeGetItem, safeSetItem } from "../../utils/storage";
 import { usePokemon } from "./usePokemon";
 import { PokemonTheme } from "./constants/PokemonTheme";
 
