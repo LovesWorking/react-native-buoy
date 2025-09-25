@@ -1,10 +1,11 @@
 # React Buoy Devtools
 
+**The floating control panel for your entire mobile app team.**
+
+A persistent, draggable menu that’s always available—showing your current environment and role, while giving instant access to the tools anyone in your org needs. From impersonating users in production for customer support, to debugging storage, network, or cache issues across environments, to testing feature flags or building entirely custom workflows—React Buoy makes it easy to create and share powerful tools with your whole team.
+
 ![devtools](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
 
-**The floating devtools menu that every React Native team needs.**
-
-A persistent floating row that shows your current environment (dev/staging/prod) and user role (admin/internal/user) at all times, with instant access to tools your team will use every day.
 
 ## ✨ Features
 
