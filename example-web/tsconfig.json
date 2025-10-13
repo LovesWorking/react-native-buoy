@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@react-buoy/core": ["../packages/devtools-floating-menu/src"],
+      "@react-buoy/core/*": ["../packages/devtools-floating-menu/src/*"],
+      "@react-buoy/env": ["../packages/env-tools/src"],
+      "@react-buoy/network": ["../packages/network/src"],
+      "@react-buoy/react-query": ["../packages/react-query/src"],
+      "@react-buoy/shared-ui": ["../packages/shared/src"],
+      "@react-buoy/storage": ["../packages/storage/src"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

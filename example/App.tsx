@@ -155,7 +155,7 @@ export default function App() {
       },
       {
         id: "query-wifi-toggle",
-        name: "WIFI TOGGLE",
+        name: "WIFI",
         description: "React Query WiFi toggle",
         slot: "both",
         icon: ({ size }: { size: number }) => <WifiToggle size={size} />,

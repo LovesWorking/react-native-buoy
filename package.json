@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "example"
+    "example",
+    "example-web"
   ],
   "packageManager": "pnpm@10.10.0",
   "repository": {
@@ -23,6 +24,9 @@
     "clean:packages": "lerna run clean",
     "create:package": "node scripts/create-package.js",
     "dev": "pnpm start",
+    "dev:web": "pnpm --filter example-web dev",
+    "dev:rn": "pnpm --filter example dev",
+    "build:web": "pnpm --filter example-web build",
     "start": "pnpm --filter example start",
     "ios": "pnpm --filter example ios",
     "android": "pnpm --filter example android",
