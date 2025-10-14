@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./lib/typescript",
     "rootDir": "./src",
-    "jsx": "react-native"
+    "jsx": "react-native",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "lib"]

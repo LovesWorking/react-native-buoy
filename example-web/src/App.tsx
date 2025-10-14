@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { TestAdapters } from './TestAdapters'
+import { FloatingTools } from '../../packages/devtools-floating-menu/src/web'
 
 const queryClient = new QueryClient()
 
@@ -8,6 +10,31 @@ export const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <FloatingTools enablePositionPersistence>
+        <button
+          style={{
+            padding: '4px 8px',
+            background: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+          }}
+          onClick={() => alert('Hello from FloatingTools!')}
+        >
+          Test
+        </button>
+        <div style={{
+          padding: '4px 8px',
+          color: '#9f6',
+          fontSize: '0.875rem',
+          fontWeight: '600',
+        }}>
+          ENV
+        </div>
+      </FloatingTools>
+
       <div style={{
         padding: '2rem',
         fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -22,6 +49,8 @@ export const App = () => {
         }}>
           React Buoy Web - Floating Menu Test
         </h1>
+
+        <TestAdapters />
 
         <div style={{
           marginBottom: '2rem',
@@ -78,8 +107,11 @@ export const App = () => {
             <li style={{ marginBottom: '0.5rem', fontSize: '1rem' }}>
               ✅ Workspace packages linked
             </li>
+            <li style={{ marginBottom: '0.5rem', fontSize: '1rem' }}>
+              ✅ Adapters working
+            </li>
             <li style={{ fontSize: '1rem', color: '#856404' }}>
-              ⏳ Waiting for FloatingDevTools web implementation
+              ⏳ Building core hooks and FloatingTools
             </li>
           </ul>
         </div>
@@ -93,8 +125,7 @@ export const App = () => {
           fontSize: '0.875rem',
           color: '#856404'
         }}>
-          <strong>Next Step:</strong> Once the headless refactor is complete,
-          FloatingDevTools will be imported and tested here.
+          <strong>In Progress:</strong> Headless refactor underway - adapters created and tested!
         </div>
       </div>
     </QueryClientProvider>
