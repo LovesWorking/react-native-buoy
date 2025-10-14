@@ -129,7 +129,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     name: `empty-${slotIndex}`,
     icon: null,
     color: "transparent",
-    onPress: () => {},
+    onPress: () => { },
   });
 
   const enabledIcons: IconType[] = [];
@@ -150,6 +150,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
           : app.icon,
       color: app.color ?? gameUIColors.primary,
       onPress: () => {
+        app?.onPress?.();
         open({
           id: app.id,
           title: app.name,
@@ -167,8 +168,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     const totalEnabled = dialApps.filter((app) => isDialEnabled(app.id)).length;
     if (totalEnabled > MAX_DIAL_SLOTS) {
       console.warn(
-        `[DialDevTools] Only ${MAX_DIAL_SLOTS} dial tools can be shown at once. ${
-          totalEnabled - MAX_DIAL_SLOTS
+        `[DialDevTools] Only ${MAX_DIAL_SLOTS} dial tools can be shown at once. ${totalEnabled - MAX_DIAL_SLOTS
         } tool(s) were hidden. Adjust dial defaults to avoid this warning.`
       );
     }
