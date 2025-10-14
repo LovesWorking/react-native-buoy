@@ -65,5 +65,13 @@
       ]
     }
   },
-  "exclude": ["node_modules", "**/lib/**"]
+  "exclude": [
+    "node_modules",
+    "**/lib/**",
+    "example-web",
+    "packages/devtools-floating-menu/src/web",
+    "packages/devtools-floating-menu/src/adapters/dimensions/web.dimensions.ts",
+    "packages/devtools-floating-menu/src/adapters/storage/web.storage.ts",
+    "packages/devtools-floating-menu/src/core/hooks/useFloatingPosition.ts"
+  ]
 }
