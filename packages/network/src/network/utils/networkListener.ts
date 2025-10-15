@@ -90,6 +90,9 @@ class NetworkListener {
   private originalXHROpen: typeof XMLHttpRequest.prototype.open;
   private originalXHRSend: typeof XMLHttpRequest.prototype.send;
   private originalXHRSetRequestHeader: typeof XMLHttpRequest.prototype.setRequestHeader;
+  private originalXHROnLoad: typeof XMLHttpRequest.prototype.onload;
+  private originalXHROnError: typeof XMLHttpRequest.prototype.onerror;
+  private originalXHROnAbort: typeof XMLHttpRequest.prototype.onabort;
 
   constructor() {
     // Store original methods
@@ -98,6 +101,9 @@ class NetworkListener {
     this.originalXHRSend = XMLHttpRequest.prototype.send;
     this.originalXHRSetRequestHeader =
       XMLHttpRequest.prototype.setRequestHeader;
+    this.originalXHROnLoad = XMLHttpRequest.prototype.onload;
+    this.originalXHROnError = XMLHttpRequest.prototype.onerror;
+    this.originalXHROnAbort = XMLHttpRequest.prototype.onabort;
   }
 
   /**
@@ -170,6 +176,160 @@ class NetworkListener {
       }
     }
     return 0;
+  }
+
+  /**
+   * Handle XMLHttpRequest response processing
+   * This method processes the response and emits appropriate events
+   */
+  private handleXHRResponse(
+    xhr: XMLHttpRequest,
+    requestId: string,
+    cleanUrl: string,
+    method: string,
+    requestHeaders: Record<string, string>,
+    requestData: unknown,
+    params: Record<string, string> | null,
+    startTime: number,
+    isError = false
+  ) {
+    const duration = startTime ? Date.now() - startTime : 0;
+
+    if (isError || xhr.status === 0) {
+      // Network error or aborted request
+      this.emit({
+        type: "error",
+        timestamp: new Date(),
+        duration,
+        request: {
+          id: requestId || "unknown",
+          url: cleanUrl,
+          method,
+          headers: requestHeaders,
+          data: requestData,
+          params: params || undefined,
+        },
+        error: {
+          message: isError ? "Request failed" : "Network error or request aborted",
+        },
+      });
+      return;
+    }
+
+    // Parse response
+    let body;
+    let responseSize = 0;
+
+    try {
+      // Try different ways to get response
+      if (xhr.responseType === "json" && xhr.response) {
+        body = xhr.response;
+        responseSize = JSON.stringify(xhr.response).length;
+      } else if (
+        xhr.responseType === "" ||
+        xhr.responseType === "text"
+      ) {
+        // Only access responseText when responseType allows it
+        if (xhr.responseText) {
+          responseSize = xhr.responseText.length;
+          try {
+            body = JSON.parse(xhr.responseText);
+          } catch {
+            body = xhr.responseText;
+          }
+        }
+      } else if (
+        xhr.responseType === "blob" ||
+        xhr.responseType === "arraybuffer"
+      ) {
+        // For blob/arraybuffer responses, just note the type
+        body = `[${xhr.responseType} response]`;
+        responseSize =
+          xhr.response?.size || xhr.response?.byteLength || 0;
+      } else if (xhr.response) {
+        if (typeof xhr.response === "string") {
+          body = xhr.response;
+          responseSize = xhr.response.length;
+        } else {
+          body = xhr.response;
+          responseSize = JSON.stringify(xhr.response).length;
+        }
+      }
+    } catch (error) {
+      console.warn(
+        "[NetworkListener] Failed to parse response:",
+        error
+      );
+      body = "~~~ unable to read body ~~~";
+    }
+
+    // Parse response headers
+    const responseHeaders: Record<string, string> = {};
+    try {
+      const headerString = xhr.getAllResponseHeaders();
+      if (headerString) {
+        headerString.split("\r\n").forEach((line) => {
+          if (line) {
+            const colonIndex = line.indexOf(": ");
+            if (colonIndex > 0) {
+              const key = line.substring(0, colonIndex).toLowerCase();
+              const value = line.substring(colonIndex + 2);
+              responseHeaders[key] = value;
+            }
+          }
+        });
+      }
+    } catch {
+      // Ignore header parsing errors
+    }
+
+    // Emit response or error based on status
+    if (xhr.status >= 200 && xhr.status < 400) {
+      this.emit({
+        type: "response",
+        timestamp: new Date(),
+        duration,
+        request: {
+          id: requestId || "unknown",
+          url: cleanUrl,
+          method,
+          headers: requestHeaders,
+          data: requestData,
+          params: params || undefined,
+        },
+        response: {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          headers: responseHeaders,
+          body,
+          size: responseSize,
+        },
+      });
+    } else {
+      this.emit({
+        type: "error",
+        timestamp: new Date(),
+        duration,
+        request: {
+          id: requestId || "unknown",
+          url: cleanUrl,
+          method,
+          headers: requestHeaders,
+          data: requestData,
+          params: params || undefined,
+        },
+        response: {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          headers: responseHeaders,
+          body,
+          size: responseSize,
+        },
+        error: {
+          message: `HTTP ${xhr.status}: ${xhr.statusText}`,
+        },
+      });
+    }
   }
 
   /**
@@ -415,153 +575,70 @@ class NetworkListener {
         },
       });
 
-      // Store original onreadystatechange
+      // Store original event handlers
       const originalOnReadyStateChange = this.onreadystatechange;
+      const originalOnLoad = this.onload;
+      const originalOnError = this.onerror;
+      const originalOnAbort = this.onabort;
 
+      // Track if we've already processed this request to avoid duplicate events
+      let processed = false;
+
+      const processResponse = (isError = false) => {
+        if (processed) return;
+        processed = true;
+        self.handleXHRResponse(
+          this,
+          requestId || "unknown",
+          cleanUrl,
+          method,
+          requestHeaders,
+          requestData,
+          params,
+          startTime || 0,
+          isError
+        );
+      };
+
+      // Handle onreadystatechange (for compatibility with older code)
       this.onreadystatechange = function (this: XMLHttpRequest, ev: Event) {
         if (this.readyState === 4) {
-          // DONE
-          const duration = startTime ? Date.now() - startTime : 0;
-
-          if (this.status === 0) {
-            // Network error
-            self.emit({
-              type: "error",
-              timestamp: new Date(),
-              duration,
-              request: {
-                id: requestId || "unknown",
-                url: cleanUrl,
-                method,
-                headers: requestHeaders,
-                data: requestData,
-                params: params || undefined,
-              },
-              error: {
-                message: "Network error or request aborted",
-              },
-            });
-          } else {
-            // Parse response
-            let body;
-            let responseSize = 0;
-
-            try {
-              // Try different ways to get response
-              if (this.responseType === "json" && this.response) {
-                body = this.response;
-                responseSize = JSON.stringify(this.response).length;
-              } else if (
-                this.responseType === "" ||
-                this.responseType === "text"
-              ) {
-                // Only access responseText when responseType allows it
-                if (this.responseText) {
-                  responseSize = this.responseText.length;
-                  try {
-                    body = JSON.parse(this.responseText);
-                  } catch {
-                    body = this.responseText;
-                  }
-                }
-              } else if (
-                this.responseType === "blob" ||
-                this.responseType === "arraybuffer"
-              ) {
-                // For blob/arraybuffer responses, just note the type
-                body = `[${this.responseType} response]`;
-                responseSize =
-                  this.response?.size || this.response?.byteLength || 0;
-              } else if (this.response) {
-                if (typeof this.response === "string") {
-                  body = this.response;
-                  responseSize = this.response.length;
-                } else {
-                  body = this.response;
-                  responseSize = JSON.stringify(this.response).length;
-                }
-              }
-            } catch (error) {
-              console.warn(
-                "[NetworkListener] Failed to parse response:",
-                error
-              );
-              body = "~~~ unable to read body ~~~";
-            }
-
-            // Parse response headers
-            const responseHeaders: Record<string, string> = {};
-            try {
-              const headerString = this.getAllResponseHeaders();
-              if (headerString) {
-                headerString.split("\r\n").forEach((line) => {
-                  if (line) {
-                    const colonIndex = line.indexOf(": ");
-                    if (colonIndex > 0) {
-                      const key = line.substring(0, colonIndex).toLowerCase();
-                      const value = line.substring(colonIndex + 2);
-                      responseHeaders[key] = value;
-                    }
-                  }
-                });
-              }
-            } catch {
-              // Ignore header parsing errors
-            }
-
-            // Emit response or error based on status
-            if (this.status >= 200 && this.status < 400) {
-              self.emit({
-                type: "response",
-                timestamp: new Date(),
-                duration,
-                request: {
-                  id: requestId || "unknown",
-                  url: cleanUrl,
-                  method,
-                  headers: requestHeaders,
-                  data: requestData,
-                  params: params || undefined,
-                },
-                response: {
-                  status: this.status,
-                  statusText: this.statusText,
-                  headers: responseHeaders,
-                  body,
-                  size: responseSize,
-                },
-              });
-            } else {
-              self.emit({
-                type: "error",
-                timestamp: new Date(),
-                duration,
-                request: {
-                  id: requestId || "unknown",
-                  url: cleanUrl,
-                  method,
-                  headers: requestHeaders,
-                  data: requestData,
-                  params: params || undefined,
-                },
-                response: {
-                  status: this.status,
-                  statusText: this.statusText,
-                  headers: responseHeaders,
-                  body,
-                  size: responseSize,
-                },
-                error: {
-                  message: `HTTP ${this.status}: ${this.statusText}`,
-                },
-              });
-            }
-          }
+          processResponse();
         }
 
         // Call original handler if it exists
         if (originalOnReadyStateChange) {
           originalOnReadyStateChange.call(this, ev);
+        }
+      };
+
+      // Handle onload (used by axios and modern libraries)
+      this.onload = function (this: XMLHttpRequest, ev: ProgressEvent) {
+        processResponse();
+
+        // Call original handler if it exists
+        if (originalOnLoad) {
+          originalOnLoad.call(this, ev);
+        }
+      };
+
+      // Handle onerror (used by axios and modern libraries)
+      this.onerror = function (this: XMLHttpRequest, ev: ProgressEvent) {
+        processResponse(true);
+
+        // Call original handler if it exists
+        if (originalOnError) {
+          originalOnError.call(this, ev);
+        }
+      };
+
+      // Handle onabort (used by axios and modern libraries)
+      this.onabort = function (this: XMLHttpRequest, ev: ProgressEvent) {
+        processResponse(true);
+
+        // Call original handler if it exists
+        if (originalOnAbort) {
+          originalOnAbort.call(this, ev);
         }
       };
 
@@ -592,6 +669,9 @@ class NetworkListener {
     XMLHttpRequest.prototype.send = this.originalXHRSend;
     XMLHttpRequest.prototype.setRequestHeader =
       this.originalXHRSetRequestHeader;
+    XMLHttpRequest.prototype.onload = this.originalXHROnLoad;
+    XMLHttpRequest.prototype.onerror = this.originalXHROnError;
+    XMLHttpRequest.prototype.onabort = this.originalXHROnAbort;
 
     this.isListening = false;
     if (__DEV__) {
