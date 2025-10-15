@@ -51,4 +51,6 @@ export interface InstalledApp {
   launchMode?: "self-modal" | "host-modal" | "inline";
   /** Prevent more than one instance of this app at a time. */
   singleton?: boolean;
+  /** Optional callback invoked when the app icon is pressed. */
+  onPress?: () => void;
 }
