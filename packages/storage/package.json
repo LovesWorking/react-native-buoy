@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/storage",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "storage package",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
