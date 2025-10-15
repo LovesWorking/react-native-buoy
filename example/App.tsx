@@ -115,6 +115,11 @@ export default function App() {
           requiredEnvVars,
           enableSharedModalDimensions: true,
         },
+        onPress: () => {
+          console.log(
+            "🚀 ENV tool icon pressed! onPress callback fired before modal opens"
+          );
+        },
       },
       {
         id: "storage",
@@ -155,7 +160,7 @@ export default function App() {
       },
       {
         id: "query-wifi-toggle",
-        name: "WIFI TOGGLE",
+        name: "WIFI",
         description: "React Query WiFi toggle",
         slot: "both",
         icon: ({ size }: { size: number }) => <WifiToggle size={size} />,
@@ -173,6 +178,10 @@ export default function App() {
         component: NetworkModal,
         props: {
           enableSharedModalDimensions: true,
+        },
+        onPress: () => {
+          console.log("📡 Network tool opened - tracking analytics event");
+          // This could be used for analytics tracking in a real app
         },
       },
     ],

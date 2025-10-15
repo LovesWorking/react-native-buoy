@@ -152,7 +152,7 @@ export function BubbleSettingsDetail({
     },
     {
       key: "showWifiToggle" as keyof BubbleVisibilitySettings,
-      label: "WiFi Toggle",
+      label: "WiFi",
       description: "Toggle WiFi for testing offline scenarios",
       icon: <View style={[styles.indicator, { backgroundColor: "#8B5CF6" }]} />,
     },

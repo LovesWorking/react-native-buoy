@@ -6,7 +6,6 @@ A persistent, draggable menu that’s always available—showing your current en
 
 ![devtools](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
 
-
 ## ✨ Features
 
 - **Always visible** – Shows environment & user role in a draggable row that survives reloads
@@ -15,24 +14,23 @@ A persistent, draggable menu that’s always available—showing your current en
 - **Team-friendly** – Each engineer can show/hide the tools they need
 - **Smart interactions** – Double-tap to switch between bottom sheet and floating modal, triple-tap to close, swipe down to dismiss
 
- ## 🧩 JSON Viewer & Diff
+## 🧩 JSON Viewer & Diff
 
 React Buoy includes optimized JSON viewers and comparison tools:
 
-- **Tree view** – Like Redux DevTools for exploring nested objects  
-- **Side-by-side diff view** – Like VS Code for comparing payloads  
-- **Type filtering** – Quickly find exactly what you need in large payloads:  
-  - string  
-  - number  
-  - boolean  
-  - undefined  
-  - null  
-  - object  
-  - array  
-  - function  
+- **Tree view** – Like Redux DevTools for exploring nested objects
+- **Side-by-side diff view** – Like VS Code for comparing payloads
+- **Type filtering** – Quickly find exactly what you need in large payloads:
+  - string
+  - number
+  - boolean
+  - undefined
+  - null
+  - object
+  - array
+  - function
 
 Example: debugging a large response payload → filter only booleans to check feature flags, or search for undefined keys to spot missing data instantly.
-
 
 ## 🚀 Step 1: Basic Setup (2 minutes)
 
@@ -230,10 +228,7 @@ const config = createEnvVarConfig([
 
 Real-time network request monitoring with timeline view, detailed inspection, and performance stats.
 
-
-
 ![net1](https://github.com/user-attachments/assets/473ddf83-03cd-4bd1-8dc3-0f66eda9fa8a)
-
 
 ### Install
 
@@ -535,7 +530,7 @@ const TOOLS = [
   // Optional: Add WiFi toggle for offline testing
   {
     id: "wifi-toggle",
-    name: "WIFI TOGGLE",
+    name: "WIFI",
     description: "Toggle offline mode",
     slot: "both",
     icon: ({ size }) => <WifiToggle size={size} />,
@@ -776,9 +771,8 @@ MIT © React Buoy Team
 
 **Take a shortcut from web developer to mobile development fluency with guided learning**
 
-Big thanks to [galaxies.dev](https://galaxies.dev) — their content helped me get up to speed with React Native early on, and I strongly recommend it as a resource for anyone making the jump from web to mobile.  
+Big thanks to [galaxies.dev](https://galaxies.dev) — their content helped me get up to speed with React Native early on, and I strongly recommend it as a resource for anyone making the jump from web to mobile.
 
 <a href="https://galaxies.dev">
   <img src="https://github.com/Galaxies-dev/react-native-ecommerce/blob/main/banner.png?raw=true" width="100%" />
 </a>
-

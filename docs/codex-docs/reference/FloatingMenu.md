@@ -48,6 +48,7 @@ interface InstalledApp {
   props?: Record<string, unknown>;
   launchMode?: 'self-modal' | 'host-modal' | 'inline';
   singleton?: boolean;
+  onPress?: () => void;
 }
 ```
 
@@ -62,6 +63,9 @@ interface InstalledApp {
   - `inline` – Renders in-place in the overlay layer.
 - `singleton`
   - Ensures only one instance exists. Repeat `open` calls bring the same instance to the front.
+- `onPress`
+  - Optional callback invoked when the app icon is pressed, before the app modal opens.
+  - Useful for side effects like analytics, toggling state, or triggering custom behavior.
 
 ## `FloatingMenuRenderCtx`
 

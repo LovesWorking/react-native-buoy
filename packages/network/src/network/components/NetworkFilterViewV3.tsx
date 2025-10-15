@@ -159,7 +159,8 @@ export function NetworkFilterViewV3({
       try {
         if (event.url) {
           const parsed = new URL(event.url);
-          if (parsed.host) domains.add(parsed.host);
+          const host = String(parsed.host || "");
+          if (host) domains.add(host);
         }
       } catch {
         // Ignore relative URLs
@@ -178,7 +179,9 @@ export function NetworkFilterViewV3({
       if (!event.url) return;
       try {
         const parsed = new URL(event.url);
-        const normalized = `${parsed.origin}${parsed.pathname}`;
+        const origin = String(parsed.origin || "");
+        const pathname = String(parsed.pathname || "");
+        const normalized = `${origin}${pathname}`;
         urls.add(normalized);
       } catch {
         // URL constructor fails for relative paths - fall back to raw value

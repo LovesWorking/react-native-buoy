@@ -73,18 +73,24 @@ const UrlBreakdown: FC<{ url: string }> = ({ url }) => {
   const parseUrl = (urlString: string) => {
     try {
       const urlObj = new URL(urlString);
-      const isSecure = urlObj.protocol === "https:";
+      const protocol = String(urlObj.protocol || "");
+      const host = String(urlObj.host || "");
+      const pathname = String(urlObj.pathname || "");
+      const isSecure = protocol === "https:";
 
       // Parse query parameters
       const params: Record<string, string> = {};
-      urlObj.searchParams.forEach((value, key) => {
-        params[key] = value;
-      });
+      const searchParams = urlObj.searchParams;
+      if (searchParams && typeof searchParams.forEach === "function") {
+        searchParams.forEach((value: string, key: string) => {
+          params[key] = value;
+        });
+      }
 
       return {
-        protocol: urlObj.protocol.replace(":", ""),
-        host: urlObj.host,
-        pathname: urlObj.pathname,
+        protocol: protocol.replace(":", ""),
+        host,
+        pathname,
         params: Object.keys(params).length > 0 ? params : null,
         isSecure,
       };
