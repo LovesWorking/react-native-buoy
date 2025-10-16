@@ -1,5 +1,13 @@
 # @react-buoy/storage
 
+## 0.1.14
+
+### Patch Changes
+
+- Automated patch release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.14
+
 ## 0.1.13
 
 ### Patch Changes

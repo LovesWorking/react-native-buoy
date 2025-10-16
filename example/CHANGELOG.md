@@ -1,5 +1,18 @@
 # example
 
+## 1.0.14
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies [5f9e386]
+  - @react-buoy/core@0.1.14
+  - @react-buoy/env@0.1.14
+  - @react-buoy/network@0.1.14
+  - @react-buoy/react-query@0.1.14
+  - @react-buoy/shared-ui@0.1.14
+  - @react-buoy/storage@0.1.14
+
 ## 1.0.13
 
 ### Patch Changes

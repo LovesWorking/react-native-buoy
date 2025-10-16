@@ -1,5 +1,15 @@
 # @react-buoy/network
 
+## 0.1.14
+
+### Patch Changes
+
+- Automated patch release for all packages.
+- 5f9e386: support axios usage
+- Updated dependencies
+  - @react-buoy/react-query@0.1.14
+  - @react-buoy/shared-ui@0.1.14
+
 ## 0.1.13
 
 ### Patch Changes
