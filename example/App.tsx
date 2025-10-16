@@ -13,9 +13,11 @@ import {
   ReactQueryIcon,
   StorageStackIcon,
   Globe,
+  Route,
 } from "@react-buoy/shared-ui";
 import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
 import { NetworkModal } from "@react-buoy/network";
+import { RouteEventsModal } from "@react-buoy/route-events";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PokemonScreen } from "./screens/pokemon/Pokemon";
 import {
@@ -182,6 +184,19 @@ export default function App() {
         onPress: () => {
           console.log("📡 Network tool opened - tracking analytics event");
           // This could be used for analytics tracking in a real app
+        },
+      },
+      {
+        id: "route-events",
+        name: "ROUTES",
+        description: "Route event tracker",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <Route size={size} color="#a78bfa" />
+        ),
+        component: RouteEventsModal,
+        props: {
+          enableSharedModalDimensions: true,
         },
       },
     ],
