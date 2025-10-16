@@ -57,6 +57,7 @@ class NetworkEventStore {
         requestData: request.data,
         requestSize: this.getDataSize(request.data),
         responseHeaders: {},
+        requestClient: request.client,
       };
 
       // Store as pending

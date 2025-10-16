@@ -10,15 +10,16 @@
     "reload": "expo run:ios --no-build-cache"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
     "@react-buoy/core": "workspace:*",
     "@react-buoy/env": "workspace:*",
     "@react-buoy/network": "workspace:*",
     "@react-buoy/react-query": "workspace:*",
     "@react-buoy/shared-ui": "workspace:*",
     "@react-buoy/storage": "workspace:*",
-    "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@tanstack/react-query": "^5.89.0",
+    "axios": "^1.12.2",
     "expo": "~54.0.7",
     "expo-blur": "^15.0.7",
     "expo-haptics": "^15.0.7",

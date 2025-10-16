@@ -142,9 +142,36 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
         onPress={() => onPress(event)}
         style={[styles.container, { borderLeftColor: statusColor }]}
       >
-        {/* Left section: Method badge and size indicators */}
+        {/* Left section: Method badge, client badge, and size indicators */}
         <View style={styles.leftSection}>
           <MethodBadge method={event.method} size="small" />
+          {event.requestClient && (
+            <View
+              style={[
+                styles.clientBadge,
+                {
+                  backgroundColor:
+                    event.requestClient === "fetch"
+                      ? "rgba(74, 144, 226, 0.15)"
+                      : "rgba(147, 51, 234, 0.15)",
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.clientText,
+                  {
+                    color:
+                      event.requestClient === "fetch"
+                        ? "#4A90E2"
+                        : "#9333EA",
+                  },
+                ]}
+              >
+                {event.requestClient}
+              </Text>
+            </View>
+          )}
           <SizeIndicators
             requestSize={event.requestSize}
             responseSize={event.responseSize}
@@ -295,5 +322,17 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: macOSColors.text.secondary,
     fontFamily: "monospace",
+  },
+  clientBadge: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 3,
+    marginTop: 4,
+  },
+  clientText: {
+    fontSize: 8,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
 });

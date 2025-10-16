@@ -25,6 +25,7 @@ export interface NetworkingEvent {
     headers?: Record<string, string>;
     data?: unknown;
     params?: Record<string, string>;
+    client?: "fetch" | "axios";
   };
   response?: {
     status: number;
@@ -208,6 +209,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
+          client: "axios",
         },
         error: {
           message: isError ? "Request failed" : "Network error or request aborted",
@@ -296,6 +298,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
+          client: "axios",
         },
         response: {
           status: xhr.status,
@@ -317,6 +320,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
+          client: "axios",
         },
         response: {
           status: xhr.status,
@@ -411,6 +415,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
+          client: "fetch",
         },
       });
 
@@ -453,6 +458,7 @@ class NetworkListener {
             headers: requestHeaders,
             data: requestData,
             params: params || undefined,
+            client: "fetch",
           },
           response: {
             status: response.status,
@@ -479,6 +485,7 @@ class NetworkListener {
             headers: requestHeaders,
             data: requestData,
             params: params || undefined,
+            client: "fetch",
           },
           error: {
             message: error instanceof Error ? error.message : "Network error",
@@ -572,6 +579,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
+          client: "axios",
         },
       });
 

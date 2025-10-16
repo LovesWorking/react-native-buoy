@@ -16,11 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { pokemonNames, searchPokemon } from "./pokemonNames";
 import { PokemonCardSwipeable } from "./PokemonCardSwipeable";
 import { PokedexTrainerCollection } from "./PokedexTrainerCollection";
@@ -28,6 +24,7 @@ import { useSafeAreaInsets } from "@react-buoy/shared-ui/hooks";
 import { safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
 import { usePokemon } from "./usePokemon";
 import { PokemonTheme } from "./constants/PokemonTheme";
+import { useRequestMethod } from "./useRequestMethod";
 
 const { width, height } = Dimensions.get("window");
 
@@ -62,6 +59,9 @@ export function PokemonScreen() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // Request method toggle (fetch vs axios)
+  const { requestMethod, toggleRequestMethod, isFetch } = useRequestMethod();
+
   // Auto-scrolling carousel animation
   const scrollX = useRef(new Animated.Value(0)).current;
 
@@ -75,7 +75,9 @@ export function PokemonScreen() {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          return parsed.filter((name): name is string => typeof name === "string");
+          return parsed.filter(
+            (name): name is string => typeof name === "string"
+          );
         }
       } catch (error) {
         console.warn("Failed to parse saved Pokémon from storage", error);
@@ -99,7 +101,9 @@ export function PokemonScreen() {
         try {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            savedList = parsed.filter((name): name is string => typeof name === "string");
+            savedList = parsed.filter(
+              (name): name is string => typeof name === "string"
+            );
           }
         } catch (error) {
           console.warn("Failed to parse saved Pokémon list", error);
@@ -107,12 +111,12 @@ export function PokemonScreen() {
       }
 
       const normalized = pokemonId.toLowerCase();
-      const uniqueList = [normalized, ...savedList.filter((name) => name !== normalized)];
+      const uniqueList = [
+        normalized,
+        ...savedList.filter((name) => name !== normalized),
+      ];
       const trimmedList = uniqueList.slice(0, 24);
-      await safeSetItem(
-        SAVED_POKEMON_STORAGE_KEY,
-        JSON.stringify(trimmedList)
-      );
+      await safeSetItem(SAVED_POKEMON_STORAGE_KEY, JSON.stringify(trimmedList));
 
       return { pokemonId: normalized, savedList: trimmedList };
     },
@@ -146,7 +150,9 @@ export function PokemonScreen() {
         try {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            savedList = parsed.filter((name): name is string => typeof name === "string");
+            savedList = parsed.filter(
+              (name): name is string => typeof name === "string"
+            );
           }
         } catch (error) {
           console.warn("Failed to parse saved Pokémon list", error);
@@ -166,8 +172,7 @@ export function PokemonScreen() {
       queryClient.setQueryData(SAVED_POKEMON_QUERY_KEY, savedList);
       queryClient.invalidateQueries({ queryKey: SAVED_POKEMON_QUERY_KEY });
     },
-    onError: () => {
-    },
+    onError: () => {},
   });
 
   // Only keep essential animations for effects
@@ -322,6 +327,12 @@ export function PokemonScreen() {
     ]).start();
   }, [cardGlowAnim]);
 
+  // Toggle request method with haptic feedback
+  const handleToggleRequestMethod = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    toggleRequestMethod();
+  }, [toggleRequestMethod]);
+
   // Refill stack when getting low
   useEffect(() => {
     if (pokemonStack.length - currentIndex < 5) {
@@ -359,15 +370,16 @@ export function PokemonScreen() {
 
   const savedPokemon = savedPokemonQuery.data ?? [];
   // Duplicate the array for infinite scroll effect
-  const displayPokemon = savedPokemon.length > 0
-    ? [...savedPokemon, ...savedPokemon, ...savedPokemon]
-    : [];
+  const displayPokemon =
+    savedPokemon.length > 0
+      ? [...savedPokemon, ...savedPokemon, ...savedPokemon]
+      : [];
 
   // Auto-scroll animation for Pokemon collection
   useEffect(() => {
     if (displayPokemon.length > 3) {
       const itemWidth = 84; // 72px circle + 12px margin
-      const totalWidth = displayPokemon.length * itemWidth / 3; // Divided by 3 for tripled array
+      const totalWidth = (displayPokemon.length * itemWidth) / 3; // Divided by 3 for tripled array
 
       Animated.loop(
         Animated.timing(scrollX, {
@@ -390,7 +402,6 @@ export function PokemonScreen() {
         colors={["#0A0E27", "#1a1f3a", "#2d1b69"]}
         style={StyleSheet.absoluteFillObject}
       />
-
 
       {/* Animated Background Orbs */}
       <Animated.View
@@ -686,16 +697,35 @@ export function PokemonScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      onPress={() => {}}
+                      onPress={handleToggleRequestMethod}
                       activeOpacity={0.7}
                       style={styles.actionButton}
                     >
-                      <LinearGradient
-                        colors={["#10B981", "#059669"]}
-                        style={styles.gradientButton}
+                      <Animated.View
+                        style={{
+                          transform: [
+                            {
+                              rotate: shimmerAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ["0deg", "360deg"],
+                              }),
+                            },
+                          ],
+                        }}
                       >
-                        <Ionicons name="flask" size={18} color="#FFFFFF" />
-                      </LinearGradient>
+                        <LinearGradient
+                          colors={
+                            isFetch
+                              ? ["#4A90E2", "#357ABD"]
+                              : ["#9333EA", "#7C3AED"]
+                          }
+                          style={styles.gradientButton}
+                        >
+                          <Text style={styles.methodToggleTextCompact}>
+                            {isFetch ? "fetch" : "axios"}
+                          </Text>
+                        </LinearGradient>
+                      </Animated.View>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -785,6 +815,7 @@ export function PokemonScreen() {
                     shimmerAnim={shimmerAnim}
                     floatAnim={floatAnim}
                     cardGlowAnim={cardGlowAnim}
+                    requestMethod={requestMethod}
                   />
                 );
               })
@@ -961,6 +992,13 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: "center",
     alignItems: "center",
+  },
+  methodToggleTextCompact: {
+    fontSize: 8,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
   stackIndicator: {
     flexDirection: "row",

@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 import { usePokemon } from "./usePokemon";
 import { PokemonTheme } from "./constants/PokemonTheme";
 import { getTypeColor } from "./pokemonTypeColors";
+import type { RequestMethod } from "./apiClient";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width - 60;
@@ -32,6 +33,7 @@ interface PokemonCardSwipeableProps {
   floatAnim: any;
   cardGlowAnim: any;
   onTypeChange?: (type: string) => void;
+  requestMethod?: RequestMethod;
 }
 
 export function PokemonCardSwipeable({
@@ -43,8 +45,9 @@ export function PokemonCardSwipeable({
   floatAnim,
   cardGlowAnim,
   onTypeChange,
+  requestMethod = "fetch",
 }: PokemonCardSwipeableProps) {
-  const { data, isLoading } = usePokemon(pokemonId);
+  const { data, isLoading } = usePokemon(pokemonId, requestMethod);
 
   // Use React Native Animated Values
   const translateX = useRef(new Animated.Value(0)).current;
