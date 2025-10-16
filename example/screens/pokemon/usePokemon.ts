@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { get, type RequestMethod } from "./apiClient";
 
 // Slimmed down interface with only the fields actually used in UI
 interface PokemonData {
@@ -12,14 +13,16 @@ interface PokemonData {
   };
 }
 
-const fetchPokemon = async (pokemonName: string): Promise<PokemonData> => {
-  const response = await fetch(
-    `https://pokeapi.co/api/v2/pokemon/${pokemonName}`
+const fetchPokemon = async (
+  pokemonName: string,
+  requestMethod: RequestMethod
+): Promise<PokemonData> => {
+  const response = await get<any>(
+    `https://pokeapi.co/api/v2/pokemon/${pokemonName}`,
+    requestMethod
   );
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
-  }
-  const data = await response.json();
+
+  const data = response.data;
 
   // Extract only the stats we actually use (hp and attack)
   const hpStat = data.stats.find((s: any) => s.stat.name === "hp");
@@ -40,10 +43,10 @@ const fetchPokemon = async (pokemonName: string): Promise<PokemonData> => {
   };
 };
 
-export const usePokemon = (pokemonName: string) => {
+export const usePokemon = (pokemonName: string, requestMethod: RequestMethod = "fetch") => {
   return useQuery({
-    queryKey: ["pokemon", pokemonName],
-    queryFn: () => fetchPokemon(pokemonName),
+    queryKey: ["pokemon", pokemonName, requestMethod],
+    queryFn: () => fetchPokemon(pokemonName, requestMethod),
     enabled: pokemonName.length > 0,
     // Keep data in cache longer
     gcTime: 1000 * 60 * 10, // 10 minutes
