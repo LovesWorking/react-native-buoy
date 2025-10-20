@@ -5,9 +5,9 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
+    "ios": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios",
     "web": "expo start --web",
-    "reload": "expo run:ios --no-build-cache"
+    "reload": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios"
   },
   "dependencies": {
     "@react-buoy/core": "workspace:*",
