@@ -58,46 +58,35 @@ jobs:
       - name: Smoke tests
         run: pnpm run smoke
 
-      - name: Generate changeset for all packages
+      - name: Bump all package versions (patch)
+        id: bump_versions
         run: |
-          mkdir -p .changeset
-          cat > .changeset/auto-release.md << 'EOF'
-          ---
-          "@react-buoy/shared-ui": patch
-          "@react-buoy/core": patch
-          "@react-buoy/env": patch
-          "@react-buoy/network": patch
-          "@react-buoy/storage": patch
-          "@react-buoy/react-query": patch
-          ---
+          # Bump patch version for all packages
+          for pkg_json in packages/*/package.json; do
+            if [ -f "$pkg_json" ]; then
+              echo "Bumping version in $pkg_json"
+              # Use node to increment patch version
+              node -e "
+                const fs = require('fs');
+                const pkg = JSON.parse(fs.readFileSync('$pkg_json', 'utf8'));
+                const [major, minor, patch] = pkg.version.split('.').map(Number);
+                pkg.version = \`\${major}.\${minor}.\${patch + 1}\`;
+                fs.writeFileSync('$pkg_json', JSON.stringify(pkg, null, 2) + '\n');
+                console.log(\`Bumped \${pkg.name} to \${pkg.version}\`);
+              "
+            fi
+          done
 
-          Automated patch release for all packages.
-          EOF
+          # Mark that we made changes
+          echo "versions_bumped=true" >> $GITHUB_OUTPUT
 
-      - name: Apply version bumps
-        run: pnpm changeset version
+      - name: Update lockfile
+        run: pnpm install --no-frozen-lockfile
 
-      - name: Reinstall to update lockfile
-        run: pnpm install
-
-      - name: Check for version changes
-        id: version_check
-        run: |
-          # Check if package.json files changed (version bumps)
-          if git diff --quiet HEAD -- packages/*/package.json; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No version changes detected"
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Version changes detected"
-          fi
-
-      - name: Build packages with new versions
-        if: steps.version_check.outputs.has_changes == 'true'
+      - name: Rebuild packages with new versions
         run: pnpm run build:packages
 
       - name: Publish packages to npm
-        if: steps.version_check.outputs.has_changes == 'true'
         id: publish
         run: |
           # Track publish results
@@ -128,7 +117,7 @@ jobs:
 
             # Attempt to publish
             if pnpm --filter "$pkg" publish --access public --no-git-checks; then
-              echo "✅ Successfully published $pkg"
+              echo "✅ Successfully published $pkg@$PKG_VERSION"
               PUBLISH_RESULTS+=("$pkg: success")
             else
               echo "❌ Failed to publish $pkg"
@@ -157,23 +146,22 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit version changes
-        if: steps.version_check.outputs.has_changes == 'true' && steps.publish.outcome == 'success'
+        if: steps.publish.outcome == 'success'
         run: |
           # Add specific files only
           git add packages/*/package.json
-          git add packages/*/CHANGELOG.md
           git add pnpm-lock.yaml
 
           # Commit
-          git commit -m "chore: release all packages"
+          git commit -m "chore: release all packages [skip ci]"
 
-      - name: Push changes and tags
-        if: steps.version_check.outputs.has_changes == 'true' && steps.publish.outcome == 'success'
+      - name: Push changes
+        if: steps.publish.outcome == 'success'
         run: |
           git push origin main --follow-tags
 
       - name: Rollback on failure
-        if: steps.version_check.outputs.has_changes == 'true' && steps.publish.outcome == 'failure'
+        if: steps.publish.outcome == 'failure'
         run: |
           echo "⚠️  Publishing failed! Version changes will NOT be pushed to GitHub."
           echo "The repository remains in a clean state."
