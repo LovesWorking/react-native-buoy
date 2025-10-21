@@ -124,7 +124,7 @@ export default function App() {
       {
         id: "storage",
         name: "STORAGE",
-        description: "AsyncStorage browser",
+        description: "Storage browser",
         slot: "both",
         icon: ({ size }: { size: number }) => (
           <StorageStackIcon
