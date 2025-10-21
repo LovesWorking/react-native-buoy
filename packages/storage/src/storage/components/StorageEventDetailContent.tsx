@@ -25,6 +25,7 @@ import { ThemedSplitView } from "./DiffViewer/modes/ThemedSplitView";
 import { diffThemes } from "./DiffViewer/themes/diffThemes";
 import { computeLineDiff, DiffType } from "../utils/lineDiff";
 import { TreeDiffViewer } from "./DiffViewer/TreeDiffViewer";
+import { translateStorageAction } from "../utils/storageActionHelpers";
 
 interface StorageKeyConversation {
   key: string;
@@ -130,7 +131,28 @@ export function StorageEventDetailContent({
     }
   }, []);
 
-  const renderValueContent = (value: unknown, label: string) => {
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case "setItem":
+      case "multiSet":
+        return macOSColors.semantic.success;
+      case "removeItem":
+      case "multiRemove":
+      case "clear":
+        return macOSColors.semantic.error;
+      case "mergeItem":
+      case "multiMerge":
+        return macOSColors.semantic.info;
+      default:
+        return macOSColors.text.muted;
+    }
+  };
+
+  const renderValueContent = (
+    value: unknown,
+    label: string,
+    action?: string
+  ) => {
     const parsed = parseValue(value);
     const type =
       parsed === null
@@ -145,8 +167,24 @@ export function StorageEventDetailContent({
       <View style={styles.valueContent}>
         <View style={styles.valueHeader}>
           <Text style={styles.valueLabel}>{label}</Text>
-          <View style={[styles.typeBadge]}>
-            <Text style={styles.typeText}>{type.toUpperCase()}</Text>
+          <View style={styles.valueHeaderBadges}>
+            {action && (
+              <View
+                style={[
+                  styles.actionBadge,
+                  { backgroundColor: `${getActionColor(action)}20` },
+                ]}
+              >
+                <Text
+                  style={[styles.actionText, { color: getActionColor(action) }]}
+                >
+                  {translateStorageAction(action)}
+                </Text>
+              </View>
+            )}
+            <View style={[styles.typeBadge]}>
+              <Text style={styles.typeText}>{type.toUpperCase()}</Text>
+            </View>
           </View>
         </View>
         <View style={styles.valueBox}>
@@ -218,11 +256,12 @@ export function StorageEventDetailContent({
   const renderCurrentValue = () => {
     const selectedEvent = navigationItems[selectedEventIndex];
     const valueToShow = selectedEvent?.data?.value ?? conversation.currentValue;
+    const action = selectedEvent?.action;
 
     return (
       <View style={styles.fullPageSection}>
         <View style={styles.contentCard}>
-          {renderValueContent(valueToShow, "CURRENT VALUE")}
+          {renderValueContent(valueToShow, "CURRENT VALUE", action)}
         </View>
       </View>
     );
@@ -289,14 +328,33 @@ export function StorageEventDetailContent({
           <View style={styles.compareBar}>
             {/* PREV side */}
             <View style={styles.compareSide}>
-              <Text
-                style={[
-                  styles.compareLabel,
-                  { color: macOSColors.semantic.debug },
-                ]}
-              >
-                PREV
-              </Text>
+              <View style={styles.compareLabelRow}>
+                <Text
+                  style={[
+                    styles.compareLabel,
+                    { color: macOSColors.semantic.debug },
+                  ]}
+                >
+                  PREV
+                </Text>
+                <View
+                  style={[
+                    styles.compareActionBadge,
+                    {
+                      backgroundColor: `${getActionColor(leftEvent.action)}20`,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.compareActionText,
+                      { color: getActionColor(leftEvent.action) },
+                    ]}
+                  >
+                    {translateStorageAction(leftEvent.action)}
+                  </Text>
+                </View>
+              </View>
               <View style={styles.compareControls}>
                 <TouchableOpacity
                   onPress={() => bumpLeft(-1)}
@@ -354,14 +412,33 @@ export function StorageEventDetailContent({
 
             {/* CUR side */}
             <View style={styles.compareSide}>
-              <Text
-                style={[
-                  styles.compareLabel,
-                  { color: macOSColors.semantic.success },
-                ]}
-              >
-                CUR
-              </Text>
+              <View style={styles.compareLabelRow}>
+                <Text
+                  style={[
+                    styles.compareLabel,
+                    { color: macOSColors.semantic.success },
+                  ]}
+                >
+                  CUR
+                </Text>
+                <View
+                  style={[
+                    styles.compareActionBadge,
+                    {
+                      backgroundColor: `${getActionColor(rightEvent.action)}20`,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.compareActionText,
+                      { color: getActionColor(rightEvent.action) },
+                    ]}
+                  >
+                    {translateStorageAction(rightEvent.action)}
+                  </Text>
+                </View>
+              </View>
               <View style={styles.compareControls}>
                 <TouchableOpacity
                   onPress={() => bumpRight(-1)}
@@ -945,6 +1022,24 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textTransform: "uppercase",
   },
+  valueHeaderBadges: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  actionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  actionText: {
+    fontSize: 9,
+    fontWeight: "700",
+    fontFamily: "monospace",
+    letterSpacing: 0.3,
+  },
   typeBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -1027,13 +1122,29 @@ const styles = StyleSheet.create({
   compareSide: {
     flex: 1,
   },
+  compareLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 2,
+  },
   compareLabel: {
     fontSize: 10,
     fontFamily: "monospace",
     fontWeight: "700",
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    marginBottom: 2,
+  },
+  compareActionBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  compareActionText: {
+    fontSize: 8,
+    fontWeight: "700",
+    fontFamily: "monospace",
+    letterSpacing: 0.3,
   },
   compareControls: {
     flexDirection: "row",
