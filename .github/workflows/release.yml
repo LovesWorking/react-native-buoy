@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Automated Release
+    runs-on: ubuntu-latest
+    # Only run if the commit is not a release commit (prevent loop)
+    if: "!startsWith(github.event.head_commit.message, 'chore: release')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Use a PAT or the GITHUB_TOKEN with write permissions
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build packages
+        run: pnpm run build:packages
+
+      - name: Smoke tests
+        run: pnpm run smoke
+
+      - name: Generate changeset for all packages
+        run: |
+          mkdir -p .changeset
+          cat > .changeset/auto-release.md << 'EOF'
+          ---
+          "@react-buoy/shared-ui": patch
+          "@react-buoy/core": patch
+          "@react-buoy/env": patch
+          "@react-buoy/network": patch
+          "@react-buoy/storage": patch
+          "@react-buoy/react-query": patch
+          ---
+
+          Automated patch release for all packages.
+          EOF
+
+      - name: Apply version bumps
+        run: pnpm changeset version
+
+      - name: Reinstall to update lockfiles
+        run: pnpm install
+
+      - name: Check for version changes
+        id: version_check
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit version changes
+        if: steps.version_check.outputs.has_changes == 'true'
+        run: |
+          git add .
+          git commit -m "chore: release all packages"
+
+      - name: Publish to npm
+        if: steps.version_check.outputs.has_changes == 'true'
+        run: |
+          # Publish in dependency order
+          pnpm --filter @react-buoy/shared-ui run build && pnpm --filter @react-buoy/shared-ui publish --access public --no-git-checks
+          pnpm --filter @react-buoy/core run build && pnpm --filter @react-buoy/core publish --access public --no-git-checks
+          pnpm --filter @react-buoy/env run build && pnpm --filter @react-buoy/env publish --access public --no-git-checks
+          pnpm --filter @react-buoy/network run build && pnpm --filter @react-buoy/network publish --access public --no-git-checks
+          pnpm --filter @react-buoy/storage run build && pnpm --filter @react-buoy/storage publish --access public --no-git-checks
+          pnpm --filter @react-buoy/react-query run build && pnpm --filter @react-buoy/react-query publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Push changes
+        if: steps.version_check.outputs.has_changes == 'true'
+        run: |
+          git push
+          git push --tags
