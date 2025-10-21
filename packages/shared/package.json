@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/shared-ui",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Shared UI components, hooks, and utilities",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
