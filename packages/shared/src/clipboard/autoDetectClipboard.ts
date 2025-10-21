@@ -16,11 +16,20 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
 
   if (!loadPromise) {
     loadPromise = (async () => {
+      // Try expo-clipboard with static import loader
       const expoClipboard = await loadOptionalModule<any>("expo-clipboard", {
         logger: {
           log: () => {}, // Debug logging removed
           warn: (...args: unknown[]) => console.warn("[RnBetterDevTools]", ...args),
           error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
+        },
+        loader: async () => {
+          try {
+            // Static import that Metro can analyze at build time
+            return await import("expo-clipboard");
+          } catch (error) {
+            return null;
+          }
         },
       });
 
@@ -39,6 +48,7 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
         };
       }
 
+      // Try @react-native-clipboard/clipboard with static import loader
       const rnClipboard = await loadOptionalModule<any>(
         "@react-native-clipboard/clipboard",
         {
@@ -46,6 +56,14 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
             log: () => {}, // Debug logging removed
             warn: (...args: unknown[]) => console.warn("[RnBetterDevTools]", ...args),
             error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
+          },
+          loader: async () => {
+            try {
+              // Static import that Metro can analyze at build time
+              return await import("@react-native-clipboard/clipboard");
+            } catch (error) {
+              return null;
+            }
           },
         }
       );
