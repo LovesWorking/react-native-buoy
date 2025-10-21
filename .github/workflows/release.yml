@@ -5,22 +5,25 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   release:
-    name: Automated Release
+    name: Release All Packages
     runs-on: ubuntu-latest
-    # Only run if the commit is not a release commit (prevent loop)
+    # Skip if commit message starts with "chore: release" to prevent loops
     if: "!startsWith(github.event.head_commit.message, 'chore: release')"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Use a PAT or the GITHUB_TOKEN with write permissions
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup pnpm
@@ -32,7 +35,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Configure Git
@@ -74,39 +77,105 @@ jobs:
       - name: Apply version bumps
         run: pnpm changeset version
 
-      - name: Reinstall to update lockfiles
+      - name: Reinstall to update lockfile
         run: pnpm install
 
       - name: Check for version changes
         id: version_check
         run: |
-          if git diff --quiet; then
+          # Check if package.json files changed (version bumps)
+          if git diff --quiet HEAD -- packages/*/package.json; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No version changes detected"
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Version changes detected"
           fi
 
-      - name: Commit version changes
+      - name: Build packages with new versions
         if: steps.version_check.outputs.has_changes == 'true'
-        run: |
-          git add .
-          git commit -m "chore: release all packages"
+        run: pnpm run build:packages
 
-      - name: Publish to npm
+      - name: Publish packages to npm
         if: steps.version_check.outputs.has_changes == 'true'
+        id: publish
         run: |
-          # Publish in dependency order
-          pnpm --filter @react-buoy/shared-ui run build && pnpm --filter @react-buoy/shared-ui publish --access public --no-git-checks
-          pnpm --filter @react-buoy/core run build && pnpm --filter @react-buoy/core publish --access public --no-git-checks
-          pnpm --filter @react-buoy/env run build && pnpm --filter @react-buoy/env publish --access public --no-git-checks
-          pnpm --filter @react-buoy/network run build && pnpm --filter @react-buoy/network publish --access public --no-git-checks
-          pnpm --filter @react-buoy/storage run build && pnpm --filter @react-buoy/storage publish --access public --no-git-checks
-          pnpm --filter @react-buoy/react-query run build && pnpm --filter @react-buoy/react-query publish --access public --no-git-checks
+          # Track publish results
+          declare -a PUBLISH_RESULTS=()
+          FAILED=false
+
+          # Publish each package and track results
+          for pkg in "@react-buoy/shared-ui" "@react-buoy/core" "@react-buoy/env" "@react-buoy/network" "@react-buoy/storage" "@react-buoy/react-query"; do
+            echo "Publishing $pkg..."
+
+            # Get package directory name from package name
+            pkg_dir=$(echo "$pkg" | sed 's/@react-buoy\///')
+            case "$pkg_dir" in
+              "shared-ui") pkg_dir="shared" ;;
+              "core") pkg_dir="devtools-floating-menu" ;;
+              "env") pkg_dir="env-tools" ;;
+            esac
+
+            # Check if version already exists on npm
+            PKG_VERSION=$(node -p "require('./packages/$pkg_dir/package.json').version" 2>/dev/null || echo "")
+            if [ -n "$PKG_VERSION" ]; then
+              if npm view "$pkg@$PKG_VERSION" version >/dev/null 2>&1; then
+                echo "⏭️  $pkg@$PKG_VERSION already published, skipping"
+                PUBLISH_RESULTS+=("$pkg: skipped (already published)")
+                continue
+              fi
+            fi
+
+            # Attempt to publish
+            if pnpm --filter "$pkg" publish --access public --no-git-checks; then
+              echo "✅ Successfully published $pkg"
+              PUBLISH_RESULTS+=("$pkg: success")
+            else
+              echo "❌ Failed to publish $pkg"
+              PUBLISH_RESULTS+=("$pkg: failed")
+              FAILED=true
+              # Continue to try other packages instead of failing immediately
+            fi
+          done
+
+          # Print summary
+          echo "============================================"
+          echo "Publish Summary:"
+          for result in "${PUBLISH_RESULTS[@]}"; do
+            echo "  $result"
+          done
+          echo "============================================"
+
+          # Fail the step if any package failed
+          if [ "$FAILED" = true ]; then
+            echo "❌ Some packages failed to publish"
+            exit 1
+          fi
+
+          echo "✅ All packages published successfully"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Push changes
-        if: steps.version_check.outputs.has_changes == 'true'
+      - name: Commit version changes
+        if: steps.version_check.outputs.has_changes == 'true' && steps.publish.outcome == 'success'
         run: |
-          git push
-          git push --tags
+          # Add specific files only
+          git add packages/*/package.json
+          git add packages/*/CHANGELOG.md
+          git add pnpm-lock.yaml
+
+          # Commit
+          git commit -m "chore: release all packages"
+
+      - name: Push changes and tags
+        if: steps.version_check.outputs.has_changes == 'true' && steps.publish.outcome == 'success'
+        run: |
+          git push origin main --follow-tags
+
+      - name: Rollback on failure
+        if: steps.version_check.outputs.has_changes == 'true' && steps.publish.outcome == 'failure'
+        run: |
+          echo "⚠️  Publishing failed! Version changes will NOT be pushed to GitHub."
+          echo "The repository remains in a clean state."
+          echo "Fix the publishing issue and try again."
+          exit 1
