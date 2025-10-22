@@ -52,6 +52,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Fetch base branch for comparison
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -68,4 +70,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check pending changesets
-        run: pnpm changeset status --verbose
+        run: pnpm changeset status --verbose --since=origin/${{ github.base_ref }}

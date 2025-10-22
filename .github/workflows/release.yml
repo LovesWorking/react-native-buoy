@@ -1,0 +1,169 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release All Packages
+    runs-on: ubuntu-latest
+    # Skip if commit message starts with "chore: release" to prevent loops
+    if: "!startsWith(github.event.head_commit.message, 'chore: release')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build packages
+        run: pnpm run build:packages
+
+      - name: Smoke tests
+        run: pnpm run smoke
+
+      - name: Bump all package versions (patch)
+        id: bump_versions
+        run: |
+          # Bump patch version for all packages
+          for pkg_json in packages/*/package.json; do
+            if [ -f "$pkg_json" ]; then
+              echo "Bumping version in $pkg_json"
+              # Use node to increment patch version
+              node -e "
+                const fs = require('fs');
+                const pkg = JSON.parse(fs.readFileSync('$pkg_json', 'utf8'));
+                const [major, minor, patch] = pkg.version.split('.').map(Number);
+                pkg.version = \`\${major}.\${minor}.\${patch + 1}\`;
+                fs.writeFileSync('$pkg_json', JSON.stringify(pkg, null, 2) + '\n');
+                console.log(\`Bumped \${pkg.name} to \${pkg.version}\`);
+              "
+            fi
+          done
+
+          # Mark that we made changes
+          echo "versions_bumped=true" >> $GITHUB_OUTPUT
+
+      - name: Update lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Rebuild packages with new versions
+        run: pnpm run build:packages
+
+      - name: Publish packages to npm
+        id: publish
+        run: |
+          # Track publish results
+          declare -a PUBLISH_RESULTS=()
+          FAILED=false
+
+          # Publish each package and track results
+          for pkg in "@react-buoy/shared-ui" "@react-buoy/core" "@react-buoy/env" "@react-buoy/network" "@react-buoy/storage" "@react-buoy/react-query"; do
+            echo "Publishing $pkg..."
+
+            # Get package directory name from package name
+            pkg_dir=$(echo "$pkg" | sed 's/@react-buoy\///')
+            case "$pkg_dir" in
+              "shared-ui") pkg_dir="shared" ;;
+              "core") pkg_dir="devtools-floating-menu" ;;
+              "env") pkg_dir="env-tools" ;;
+            esac
+
+            # Check if version already exists on npm
+            PKG_VERSION=$(node -p "require('./packages/$pkg_dir/package.json').version" 2>/dev/null || echo "")
+            if [ -n "$PKG_VERSION" ]; then
+              if npm view "$pkg@$PKG_VERSION" version >/dev/null 2>&1; then
+                echo "⏭️  $pkg@$PKG_VERSION already published, skipping"
+                PUBLISH_RESULTS+=("$pkg: skipped (already published)")
+                continue
+              fi
+            fi
+
+            # Attempt to publish
+            if pnpm --filter "$pkg" publish --access public --no-git-checks; then
+              echo "✅ Successfully published $pkg@$PKG_VERSION"
+              PUBLISH_RESULTS+=("$pkg: success")
+            else
+              echo "❌ Failed to publish $pkg"
+              PUBLISH_RESULTS+=("$pkg: failed")
+              FAILED=true
+              # Continue to try other packages instead of failing immediately
+            fi
+          done
+
+          # Print summary
+          echo "============================================"
+          echo "Publish Summary:"
+          for result in "${PUBLISH_RESULTS[@]}"; do
+            echo "  $result"
+          done
+          echo "============================================"
+
+          # Fail the step if any package failed
+          if [ "$FAILED" = true ]; then
+            echo "❌ Some packages failed to publish"
+            exit 1
+          fi
+
+          echo "✅ All packages published successfully"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit version changes
+        if: steps.publish.outcome == 'success'
+        run: |
+          # Add specific files only
+          git add packages/*/package.json
+          git add pnpm-lock.yaml
+
+          # Commit
+          git commit -m "chore: release all packages [skip ci]"
+
+      - name: Push changes
+        if: steps.publish.outcome == 'success'
+        run: |
+          git push origin main --follow-tags
+
+      - name: Rollback on failure
+        if: steps.publish.outcome == 'failure'
+        run: |
+          echo "⚠️  Publishing failed! Version changes will NOT be pushed to GitHub."
+          echo "The repository remains in a clean state."
+          echo "Fix the publishing issue and try again."
+          exit 1
