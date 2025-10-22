@@ -14,6 +14,7 @@ import {
   AsyncStorageEvent,
   isListening as checkIsListening,
 } from "../utils/AsyncStorageListener";
+import { translateStorageAction } from "../utils/storageActionHelpers";
 
 
 /**
@@ -198,7 +199,7 @@ export function StorageEventListener() {
                     { color: getActionColor(event.action) },
                   ]}
                 >
-                  {event.action}
+                  {translateStorageAction(event.action)}
                 </Text>
                 <Text style={styles.eventData} numberOfLines={1}>
                   {formatEventData(event)}

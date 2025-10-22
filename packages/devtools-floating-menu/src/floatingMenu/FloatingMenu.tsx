@@ -102,8 +102,16 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   return (
     <>
       <View
-        pointerEvents={isHidden ? "none" : "auto"}
-        style={{ opacity: isHidden ? 0 : 1 }}
+        pointerEvents={isHidden ? "none" : "box-none"}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+          opacity: isHidden ? 0 : 1
+        }}
       >
         <FloatingTools enablePositionPersistence>
           {/* Environment badge (if enabled in settings) */}

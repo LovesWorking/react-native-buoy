@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { Text, View, TouchableOpacity, StyleSheet, FlatList } from "react-native";
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   JsModal,
@@ -32,6 +38,7 @@ import {
   StorageEventDetailFooter,
 } from "./StorageEventDetailContent";
 import { StorageFilterViewV2 } from "./StorageFilterViewV2";
+import { translateStorageAction } from "../utils/storageActionHelpers";
 
 interface StorageModalWithTabsProps {
   visible: boolean;
@@ -135,7 +142,7 @@ export function StorageModalWithTabs({
 
     loadMonitoringState();
   }, [visible]);
-  
+
   // Note: Conversations will appear when storage events are triggered
   // Click on any conversation to see the unified view with toggle cards
 
@@ -281,7 +288,6 @@ export function StorageModalWithTabs({
     setShowFilters(!showFilters);
   }, [showFilters]);
 
-
   const getValueType = (
     value: unknown
   ): StorageKeyConversation["valueType"] => {
@@ -411,7 +417,7 @@ export function StorageModalWithTabs({
                 { color: getActionColor(item.lastEvent.action) },
               ]}
             >
-              {item.lastEvent.action}
+              {translateStorageAction(item.lastEvent.action)}
             </Text>
           </View>
           <View style={styles.conversationDetails}>
