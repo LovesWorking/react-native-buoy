@@ -117,6 +117,24 @@ export const devToolsStorageKeys = {
     preferences: () =>
       `${devToolsStorageKeys.network.root()}_preferences` as const,
   },
+
+  /**
+   * Route events-related storage keys
+   */
+  routeEvents: {
+    root: () => `${devToolsStorageKeys.base}_route_events` as const,
+    modal: () => `${devToolsStorageKeys.routeEvents.root()}_modal` as const,
+    eventFilters: () =>
+      `${devToolsStorageKeys.routeEvents.root()}_event_filters` as const,
+    activeTab: () =>
+      `${devToolsStorageKeys.routeEvents.root()}_active_tab` as const,
+    isMonitoring: () =>
+      `${devToolsStorageKeys.routeEvents.root()}_is_monitoring` as const,
+    detailView: () =>
+      `${devToolsStorageKeys.routeEvents.root()}_detail_view` as const, // 'current' | 'diff'
+    diffViewerMode: () =>
+      `${devToolsStorageKeys.routeEvents.root()}_diff_viewer_mode` as const, // 'split' | 'tree'
+  },
 } as const;
 
 /**

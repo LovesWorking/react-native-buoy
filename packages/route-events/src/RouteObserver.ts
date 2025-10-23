@@ -61,3 +61,9 @@ export class RouteObserver {
     });
   }
 }
+
+/**
+ * Singleton instance of RouteObserver
+ * Use this for all route tracking to ensure events are centralized
+ */
+export const routeObserver = new RouteObserver();

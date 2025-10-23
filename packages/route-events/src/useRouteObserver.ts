@@ -1,27 +1,33 @@
 /**
  * useRouteObserver - React hook for observing route changes
  *
- * Uses public Expo Router hooks to track route changes
+ * Uses public Expo Router hooks to track route changes and emits them
+ * to the global RouteObserver singleton
  */
 
 import { useEffect, useRef } from 'react';
 import { usePathname, useSegments, useGlobalSearchParams } from 'expo-router';
-import type { RouteChangeEvent } from './RouteObserver';
+import { routeObserver, type RouteChangeEvent } from './RouteObserver';
 
 /**
  * Hook to observe route changes in Expo Router
+ * Automatically emits events to the global RouteObserver
  *
- * @param callback - Function to call on route changes
+ * @param callback - Optional function to call on route changes (in addition to the observer)
  *
  * @example
  * ```tsx
+ * // Just track routes (no custom callback)
+ * useRouteObserver();
+ *
+ * // Track routes with custom callback
  * useRouteObserver((event) => {
  *   console.log('Route changed:', event.pathname);
  * });
  * ```
  */
 export function useRouteObserver(
-  callback: (event: RouteChangeEvent) => void
+  callback?: (event: RouteChangeEvent) => void
 ) {
   const pathname = usePathname();
   const segments = useSegments();
@@ -33,7 +39,7 @@ export function useRouteObserver(
     callbackRef.current = callback;
   }, [callback]);
 
-  // Trigger callback whenever route changes
+  // Trigger observer and callback whenever route changes
   useEffect(() => {
     const event: RouteChangeEvent = {
       pathname,
@@ -42,6 +48,12 @@ export function useRouteObserver(
       timestamp: Date.now(),
     };
 
-    callbackRef.current(event);
+    // Emit to the global observer (this notifies the modal)
+    routeObserver.emit(event);
+
+    // Also call the custom callback if provided
+    if (callbackRef.current) {
+      callbackRef.current(event);
+    }
   }, [pathname, segments, params]);
 }
