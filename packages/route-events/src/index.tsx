@@ -7,6 +7,11 @@ import {
   devToolsStorageKeys,
 } from "@react-buoy/shared-ui";
 
+// Export route tracking utilities
+export { RouteObserver } from './RouteObserver';
+export { useRouteObserver } from './useRouteObserver';
+export type { RouteChangeEvent } from './RouteObserver';
+
 export interface RouteEventsModalProps {
   visible: boolean;
   onClose: () => void;

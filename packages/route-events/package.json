@@ -24,11 +24,13 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "expo-router": "*"
   },
   "devDependencies": {
     "@types/react": "^19.1.0",
     "@types/react-native": "^0.73.0",
+    "expo-router": "~5.0.7",
     "typescript": "~5.8.3"
   },
   "react-native-builder-bob": {
