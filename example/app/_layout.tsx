@@ -1,6 +1,7 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, View } from "react-native";
-import { useMemo, useRef } from "react";
+import { Slot } from "expo-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useRef, useMemo } from "react";
+import { useRouteObserver } from "@react-buoy/route-events";
 import {
   EnvVarsModal,
   createEnvVarConfig,
@@ -13,64 +14,75 @@ import {
   ReactQueryIcon,
   StorageStackIcon,
   Globe,
+  Route,
 } from "@react-buoy/shared-ui";
 import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
 import { NetworkModal } from "@react-buoy/network";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PokemonScreen } from "./screens/pokemon/Pokemon";
+import { RouteEventsModalWithTabs, routeObserver } from "@react-buoy/route-events";
 import {
   StorageModalWithTabs,
   type RequiredStorageKey,
 } from "@react-buoy/storage";
 import { WifiToggle } from "@react-buoy/react-query";
-import { FloatingDevTools, InstalledApp } from "@react-buoy/core";
+import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
 
-export default function App() {
+export default function RootLayout() {
   const queryClientRef = useRef<QueryClient | null>(null);
   if (!queryClientRef.current) {
     queryClientRef.current = new QueryClient({});
   }
+
   const userRole: UserRole = "admin";
   const environment: Environment = "local";
-  const requiredEnvVars = createEnvVarConfig([
-    // 🟢 GREEN - Valid variables
-    envVar("EXPO_PUBLIC_API_URL").exists(), // ✓ Exists
 
-    envVar("EXPO_PUBLIC_DEBUG_MODE")
-      .withType("boolean")
-      .withDescription("Enable debug logging")
-      .build(), // ✓ Correct type
+  // Track route changes
+  useRouteObserver((event) => {
+    console.log("🚀 [Route Tracking] Route changed:", event.pathname);
+  });
 
-    envVar("EXPO_PUBLIC_MAX_RETRIES").withType("number").build(), // ✓ Correct type
+  const requiredEnvVars = useMemo(
+    () =>
+      createEnvVarConfig([
+        // 🟢 GREEN - Valid variables
+        envVar("EXPO_PUBLIC_API_URL").exists(), // ✓ Exists
 
-    envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(), // ✓ Correct value
+        envVar("EXPO_PUBLIC_DEBUG_MODE")
+          .withType("boolean")
+          .withDescription("Enable debug logging")
+          .build(), // ✓ Correct type
 
-    // 🟠 ORANGE - Wrong values (exists but incorrect)
-    envVar("EXPO_PUBLIC_API_VERSION")
-      .withValue("v2")
-      .withDescription("API version (should be v2)")
-      .build(), // ⚠ Wrong value
+        envVar("EXPO_PUBLIC_MAX_RETRIES").withType("number").build(), // ✓ Correct type
 
-    envVar("EXPO_PUBLIC_REGION").withValue("us-east-1").build(), // ⚠ Wrong value
+        envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(), // ✓ Correct value
 
-    // 🔴 RED - Wrong types (exists but wrong type)
-    envVar("EXPO_PUBLIC_FEATURE_FLAGS")
-      .withDescription("Feature flags configuration object")
-      .withType("object")
-      .build(), // ⚠ Wrong type
+        // 🟠 ORANGE - Wrong values (exists but incorrect)
+        envVar("EXPO_PUBLIC_API_VERSION")
+          .withValue("v2")
+          .withDescription("API version (should be v2)")
+          .build(), // ⚠ Wrong value
 
-    envVar("EXPO_PUBLIC_PORT").withType("number").build(), // ⚠ Wrong type
+        envVar("EXPO_PUBLIC_REGION").withValue("us-east-1").build(), // ⚠ Wrong value
 
-    // 🔴 RED - Missing variables
-    envVar("EXPO_PUBLIC_SENTRY_DSN").exists(), // ⚠ Missing
+        // 🔴 RED - Wrong types (exists but wrong type)
+        envVar("EXPO_PUBLIC_FEATURE_FLAGS")
+          .withDescription("Feature flags configuration object")
+          .withType("object")
+          .build(), // ⚠ Wrong type
 
-    envVar("EXPO_PUBLIC_ANALYTICS_KEY")
-      .withDescription("Analytics service API key")
-      .withType("string")
-      .build(), // ⚠ Missing
+        envVar("EXPO_PUBLIC_PORT").withType("number").build(), // ⚠ Wrong type
 
-    envVar("EXPO_PUBLIC_ENABLE_TELEMETRY").withType("boolean").build(), // ⚠ Missing
-  ]);
+        // 🔴 RED - Missing variables
+        envVar("EXPO_PUBLIC_SENTRY_DSN").exists(), // ⚠ Missing
+
+        envVar("EXPO_PUBLIC_ANALYTICS_KEY")
+          .withDescription("Analytics service API key")
+          .withType("string")
+          .build(), // ⚠ Missing
+
+        envVar("EXPO_PUBLIC_ENABLE_TELEMETRY").withType("boolean").build(), // ⚠ Missing
+      ]),
+    []
+  );
 
   const storageRequiredKeys = useMemo<RequiredStorageKey[]>(
     () => [
@@ -184,70 +196,33 @@ export default function App() {
           // This could be used for analytics tracking in a real app
         },
       },
+      {
+        id: "route-events",
+        name: "ROUTES",
+        description: "Route event tracker",
+        slot: "both",
+        icon: ({ size }: { size: number }) => (
+          <Route size={size} color="#a78bfa" />
+        ),
+        component: RouteEventsModalWithTabs,
+        props: {
+          enableSharedModalDimensions: true,
+          routeObserver: routeObserver,
+        },
+      },
     ],
     [requiredEnvVars, storageRequiredKeys]
   );
+
   return (
     <QueryClientProvider client={queryClientRef.current!}>
-      <View style={styles.container}>
-        <FloatingDevTools
-          apps={installedApps}
-          actions={{}}
-          environment={environment}
-          userRole={userRole}
-        />
-        <PokemonScreen />
-        <StatusBar style="dark" />
-      </View>
+      <FloatingDevTools
+        apps={installedApps}
+        actions={{}}
+        environment={environment}
+        userRole={userRole}
+      />
+      <Slot />
     </QueryClientProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F3F4F6",
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  navBar: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 16,
-    backgroundColor: "#111827",
-    borderRadius: 999,
-    padding: 4,
-  },
-  navButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 2,
-  },
-  navButtonActive: {
-    backgroundColor: "#F9FAFB",
-  },
-  navButtonText: {
-    color: "#E5E7EB",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  navButtonTextActive: {
-    color: "#111827",
-  },
-  screenContainer: {
-    flex: 1,
-  },
-});

@@ -17,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
 import { usePokemon } from "./usePokemon";
 import { PokemonTheme } from "./constants/PokemonTheme";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
@@ -56,6 +57,7 @@ interface PokemonLogEntryProps {
   onEnterDeleteMode: (pokemonName: string) => void;
   onCancelDeleteMode: () => void;
   onConfirmDelete: (pokemonName: string) => void;
+  onNavigate: (pokemonName: string) => void;
 }
 
 function PokemonLogEntry({
@@ -68,6 +70,7 @@ function PokemonLogEntry({
   onEnterDeleteMode,
   onCancelDeleteMode,
   onConfirmDelete,
+  onNavigate,
 }: PokemonLogEntryProps) {
   const { data, isLoading } = usePokemon(pokemonName);
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -171,7 +174,8 @@ function PokemonLogEntry({
     if (isDeleteMode) {
       onConfirmDelete(pokemonName);
     } else {
-      onEnterDeleteMode(pokemonName);
+      // Navigate to Pokemon detail page
+      onNavigate(pokemonName);
     }
   };
 
@@ -350,6 +354,7 @@ export function PokedexTrainerCollection({
   floatAnim,
 }: PokedexTrainerCollectionProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [activeDeleteId, setActiveDeleteId] = useState<string | null>(null);
   const [deletingPokemonId, setDeletingPokemonId] = useState<string | null>(
     null
@@ -487,6 +492,12 @@ export function PokedexTrainerCollection({
     setActiveDeleteId(null);
   }, [deletingPokemonId]);
 
+  const handleNavigate = useCallback((pokemonName: string) => {
+    console.log(`🔍 Navigating to Pokemon: ${pokemonName}`);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push(`/pokemon/${pokemonName}`);
+  }, [router]);
+
   const keyExtractor = useCallback((item: string) => item, []);
 
   const renderPokemonItem = useCallback(
@@ -501,6 +512,7 @@ export function PokedexTrainerCollection({
         onEnterDeleteMode={handleEnterDeleteMode}
         onCancelDeleteMode={handleCancelDeleteMode}
         onConfirmDelete={handleConfirmDelete}
+        onNavigate={handleNavigate}
       />
     ),
     [
@@ -511,6 +523,7 @@ export function PokedexTrainerCollection({
       handleEnterDeleteMode,
       handleCancelDeleteMode,
       handleConfirmDelete,
+      handleNavigate,
     ]
   );
 
