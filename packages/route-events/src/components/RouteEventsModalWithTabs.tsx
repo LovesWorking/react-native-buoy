@@ -27,6 +27,8 @@ import {
   RouteEventDetailFooter,
 } from "./RouteEventDetailContent";
 import { RouteFilterViewV2 } from "./RouteFilterViewV2";
+import { RoutesSitemap } from "./RoutesSitemap";
+import { NavigationStack } from "./NavigationStack";
 
 interface RouteEventsModalWithTabsProps {
   visible: boolean;
@@ -43,7 +45,7 @@ interface RouteConversation {
   totalNavigations: number;
 }
 
-type TabType = "routes" | "events";
+type TabType = "routes" | "events" | "stack";
 
 export function RouteEventsModalWithTabs({
   visible,
@@ -367,15 +369,11 @@ export function RouteEventsModalWithTabs({
 
   const renderContent = () => {
     if (activeTab === "routes") {
-      return (
-        <View style={styles.emptyState}>
-          <Navigation size={48} color={macOSColors.text.muted} />
-          <Text style={styles.emptyTitle}>Routes Tab</Text>
-          <Text style={styles.emptySubtitle}>
-            Application sitemap will appear here
-          </Text>
-        </View>
-      );
+      return <RoutesSitemap style={styles.contentWrapper} />;
+    }
+
+    if (activeTab === "stack") {
+      return <NavigationStack style={styles.contentWrapper} />;
     }
 
     // Events tab content
@@ -478,6 +476,10 @@ export function RouteEventsModalWithTabs({
                         ? ` (${events.length})`
                         : ""
                     }`,
+                  },
+                  {
+                    key: "stack",
+                    label: "Stack",
                   },
                 ]}
                 activeTab={activeTab}
