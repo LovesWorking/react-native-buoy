@@ -22,8 +22,6 @@ import {
   Trash2,
   Filter,
   SearchBar,
-  InlineCopyButton,
-  Download,
 } from "@react-buoy/shared-ui";
 import { RouteObserver, type RouteChangeEvent } from "../RouteObserver";
 import {
@@ -264,56 +262,6 @@ export function RouteEventsModalWithTabs({
     return Array.from(pathnames).sort();
   }, [events]);
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    if (events.length === 0) {
-      return null;
-    }
-
-    const uniqueRoutes = new Set(events.map(e => e.pathname)).size;
-    const oldestEvent = events[events.length - 1];
-    const newestEvent = events[0];
-    const timeSpanMs = newestEvent.timestamp - oldestEvent.timestamp;
-    const isAtLimit = events.length >= 500;
-
-    // Format time span for display
-    let timeSpanLabel = '';
-    if (timeSpanMs < 60000) {
-      // Less than 1 minute
-      const seconds = Math.floor(timeSpanMs / 1000);
-      timeSpanLabel = `Last ${seconds}s`;
-    } else if (timeSpanMs < 3600000) {
-      // Less than 1 hour
-      const minutes = Math.floor(timeSpanMs / 60000);
-      timeSpanLabel = `Last ${minutes}m`;
-    } else {
-      // 1 hour or more
-      const hours = Math.floor(timeSpanMs / 3600000);
-      const minutes = Math.floor((timeSpanMs % 3600000) / 60000);
-      if (minutes > 0) {
-        timeSpanLabel = `Last ${hours}h ${minutes}m`;
-      } else {
-        timeSpanLabel = `Last ${hours}h`;
-      }
-    }
-
-    return {
-      totalEvents: events.length,
-      uniqueRoutes,
-      timeSpan: timeSpanLabel,
-      isAtLimit,
-    };
-  }, [events]);
-
-  // Prepare export data
-  const exportData = useMemo(() => {
-    return JSON.stringify({
-      exportedAt: new Date().toISOString(),
-      totalEvents: events.length,
-      events: events,
-    }, null, 2);
-  }, [events]);
-
   // Filter events based on ignored patterns and search query
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
@@ -412,18 +360,6 @@ export function RouteEventsModalWithTabs({
     // Show chronological timeline of events
     return (
       <View style={styles.contentWrapper}>
-        {/* Statistics bar */}
-        {stats && (
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsText}>
-              {stats.totalEvents} events | {stats.uniqueRoutes} unique | {stats.timeSpan}
-              {stats.isAtLimit && (
-                <Text style={styles.statsWarning}> | ⚠️ At limit (500)</Text>
-              )}
-            </Text>
-          </View>
-        )}
-
         {/* Search bar */}
         <View style={styles.searchContainer}>
           <SearchBar
@@ -483,12 +419,6 @@ export function RouteEventsModalWithTabs({
             <ModalHeader.Actions onClose={onClose}>
               {activeTab === "events" && (
                 <>
-                  <InlineCopyButton
-                    value={exportData}
-                    buttonStyle={styles.iconButton}
-                  >
-                    <Download size={14} color={macOSColors.text.secondary} />
-                  </InlineCopyButton>
                   <TouchableOpacity
                     onPress={handleToggleFilters}
                     style={[
