@@ -33,6 +33,8 @@ export function useRouteObserver(
   const segments = useSegments();
   const params = useGlobalSearchParams();
   const callbackRef = useRef(callback);
+  const previousPathnameRef = useRef<string | undefined>(undefined);
+  const previousTimestampRef = useRef<number | undefined>(undefined);
 
   // Update ref when callback changes
   useEffect(() => {
@@ -41,12 +43,23 @@ export function useRouteObserver(
 
   // Trigger observer and callback whenever route changes
   useEffect(() => {
+    const now = Date.now();
+    const timeSincePrevious = previousTimestampRef.current
+      ? now - previousTimestampRef.current
+      : undefined;
+
     const event: RouteChangeEvent = {
       pathname,
       params: params as Record<string, string | string[]>,
       segments: segments as string[],
-      timestamp: Date.now(),
+      timestamp: now,
+      previousPathname: previousPathnameRef.current,
+      timeSincePrevious,
     };
+
+    // Update refs for next navigation
+    previousPathnameRef.current = pathname;
+    previousTimestampRef.current = now;
 
     // Emit to the global observer (this notifies the modal)
     routeObserver.emit(event);

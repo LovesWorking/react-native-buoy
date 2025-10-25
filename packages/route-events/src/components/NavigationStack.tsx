@@ -5,7 +5,7 @@
  * and provides controls to manipulate the stack.
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,8 +19,11 @@ import {
   ChevronDown,
   ChevronRight,
   Copy,
+  Info,
+  InlineCopyButton,
   copyToClipboard,
 } from "@react-buoy/shared-ui";
+import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 import { useNavigationStack } from "../useNavigationStack";
 import { useRouter } from "expo-router";
 
@@ -51,6 +54,7 @@ export function NavigationStack({ style }: NavigationStackProps) {
 
   const router = useRouter();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Loading state
   if (!isLoaded) {
@@ -122,22 +126,16 @@ export function NavigationStack({ style }: NavigationStackProps) {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const handleCopyStack = async () => {
+  // Prepare stack data for copying
+  const stackDataForCopy = useMemo(() => {
     const stackData = stack.map((item) => ({
       pathname: item.pathname,
       name: item.name,
       params: item.params,
       isFocused: item.isFocused,
     }));
-
-    const stackText = JSON.stringify(stackData, null, 2);
-    const success = await copyToClipboard(stackText);
-
-    if (!success) {
-      Alert.alert("Error", "Failed to copy stack to clipboard");
-    }
-    return success;
-  };
+    return JSON.stringify(stackData, null, 2);
+  }, [stack]);
 
   const handleGoHome = () => {
     try {
@@ -147,16 +145,48 @@ export function NavigationStack({ style }: NavigationStackProps) {
     }
   };
 
+  const handlePush = (pathname: string) => {
+    try {
+      router.push(pathname as any);
+    } catch (error) {
+      Alert.alert("Navigation Error", String(error));
+    }
+  };
+
+  const handleReplace = (pathname: string) => {
+    try {
+      router.replace(pathname as any);
+    } catch (error) {
+      Alert.alert("Navigation Error", String(error));
+    }
+  };
+
+  const handleDismiss = (count?: number) => {
+    try {
+      if (count && count > 1) {
+        router.dismiss(count);
+      } else {
+        router.dismiss();
+      }
+    } catch (error) {
+      Alert.alert("Navigation Error", String(error));
+    }
+  };
+
   return (
     <View style={[styles.container, style]}>
-      {/* Compact header with just copy button */}
+      {/* Compact header with copy and info buttons */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.copyIconButton}
-          onPress={handleCopyStack}
+          style={[styles.iconButton, showHelp && styles.iconButtonActive]}
+          onPress={() => setShowHelp(!showHelp)}
         >
-          <Copy size={16} color={macOSColors.text.secondary} />
+          <Info size={16} color={showHelp ? macOSColors.semantic.info : macOSColors.text.secondary} />
         </TouchableOpacity>
+        <InlineCopyButton
+          value={stackDataForCopy}
+          buttonStyle={styles.iconButton}
+        />
       </View>
 
       {/* Stack visualization */}
@@ -235,11 +265,12 @@ export function NavigationStack({ style }: NavigationStackProps) {
 
                     {/* Params display */}
                     {hasParams && (
-                      <View style={styles.paramsContainer}>
-                        <Text style={styles.paramsLabel}>Parameters:</Text>
-                        <Text style={styles.paramsText} numberOfLines={10}>
-                          {JSON.stringify(item.params, null, 2)}
-                        </Text>
+                      <View style={styles.dataViewerContainer}>
+                        <DataViewer
+                          title="Parameters"
+                          data={item.params}
+                          showTypeFilter={false}
+                        />
                       </View>
                     )}
 
@@ -262,44 +293,103 @@ export function NavigationStack({ style }: NavigationStackProps) {
         })}
       </ScrollView>
 
-      {/* Compact action buttons */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.actionButton, isAtRoot && styles.actionButtonDisabled]}
-          onPress={handleGoBack}
-          disabled={isAtRoot}
-        >
-          <Text
-            style={[
-              styles.actionButtonText,
-              isAtRoot && styles.actionButtonTextDisabled,
-            ]}
-          >
-            Back
-          </Text>
-        </TouchableOpacity>
+      {/* Navigation action buttons */}
+      <View style={styles.actionsContainer}>
+        {/* Row 1: Basic Navigation */}
+        <View style={styles.actionsRow}>
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={[styles.actionButton, isAtRoot && styles.actionButtonDisabled]}
+              onPress={handleGoBack}
+              disabled={isAtRoot}
+            >
+              <Text style={[styles.actionButtonText, isAtRoot && styles.actionButtonTextDisabled]}>
+                Back
+              </Text>
+            </TouchableOpacity>
+            {showHelp && (
+              <Text style={styles.helpText}>
+                Go back one screen
+              </Text>
+            )}
+          </View>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleGoHome}
-        >
-          <Text style={styles.actionButtonText}>Home</Text>
-        </TouchableOpacity>
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleGoHome}
+            >
+              <Text style={styles.actionButtonText}>Home</Text>
+            </TouchableOpacity>
+            {showHelp && (
+              <Text style={styles.helpText}>
+                Navigate to / (root route)
+              </Text>
+            )}
+          </View>
 
-        <TouchableOpacity
-          style={[styles.actionButton, isAtRoot && styles.actionButtonDisabled]}
-          onPress={handlePopToTop}
-          disabled={isAtRoot}
-        >
-          <Text
-            style={[
-              styles.actionButtonText,
-              isAtRoot && styles.actionButtonTextDisabled,
-            ]}
-          >
-            Root
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={[styles.actionButton, isAtRoot && styles.actionButtonDisabled]}
+              onPress={handlePopToTop}
+              disabled={isAtRoot}
+            >
+              <Text style={[styles.actionButtonText, isAtRoot && styles.actionButtonTextDisabled]}>
+                Root
+              </Text>
+            </TouchableOpacity>
+            {showHelp && (
+              <Text style={styles.helpText}>
+                Pop to bottom of stack
+              </Text>
+            )}
+          </View>
+        </View>
+
+        {/* Row 2: Advanced Navigation */}
+        <View style={styles.actionsRow}>
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => focusedRoute && handlePush(focusedRoute.pathname)}
+            >
+              <Text style={styles.actionButtonText}>Push</Text>
+            </TouchableOpacity>
+            {showHelp && (
+              <Text style={styles.helpText}>
+                Always add duplicate of current route
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => focusedRoute && handleReplace(focusedRoute.pathname)}
+            >
+              <Text style={styles.actionButtonText}>Replace</Text>
+            </TouchableOpacity>
+            {showHelp && (
+              <Text style={styles.helpText}>
+                Replace current, can't go back
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleDismiss(1)}
+            >
+              <Text style={styles.actionButtonText}>Dismiss</Text>
+            </TouchableOpacity>
+            {showHelp && (
+              <Text style={styles.helpText}>
+                Dismiss current screen
+              </Text>
+            )}
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -373,15 +463,22 @@ const styles = StyleSheet.create({
   },
 
   header: {
+    flexDirection: "row",
     padding: 8,
+    gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: macOSColors.border.default,
-    alignItems: "flex-end",
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
 
-  copyIconButton: {
+  iconButton: {
     padding: 6,
     borderRadius: 4,
+  },
+
+  iconButtonActive: {
+    backgroundColor: macOSColors.background.input,
   },
 
   stackScroll: {
@@ -483,25 +580,10 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
   },
 
-  paramsContainer: {
+  dataViewerContainer: {
     marginTop: 4,
-    marginBottom: 12,
-  },
-
-  paramsLabel: {
-    fontSize: 10,
-    color: macOSColors.text.secondary,
-    fontFamily: "monospace",
-    marginBottom: 4,
-  },
-
-  paramsText: {
-    fontSize: 11,
-    color: macOSColors.text.primary,
-    fontFamily: "monospace",
-    backgroundColor: macOSColors.background.input,
-    padding: 8,
-    borderRadius: 4,
+    marginHorizontal: -12,
+    marginBottom: 8,
   },
 
   navigateButton: {
@@ -519,16 +601,25 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
   },
 
-  actions: {
-    flexDirection: "row",
-    padding: 8,
-    gap: 6,
+  actionsContainer: {
     borderTopWidth: 1,
     borderTopColor: macOSColors.border.default,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+
+  actionsRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 6,
+  },
+
+  actionWrapper: {
+    flex: 1,
   },
 
   actionButton: {
-    flex: 1,
     backgroundColor: macOSColors.background.input,
     paddingVertical: 8,
     paddingHorizontal: 8,
@@ -549,5 +640,14 @@ const styles = StyleSheet.create({
 
   actionButtonTextDisabled: {
     color: macOSColors.text.muted,
+  },
+
+  helpText: {
+    fontSize: 9,
+    color: macOSColors.text.secondary,
+    fontFamily: "monospace",
+    textAlign: "center",
+    marginTop: 4,
+    lineHeight: 12,
   },
 });

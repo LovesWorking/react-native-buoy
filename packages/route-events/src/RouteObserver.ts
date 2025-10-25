@@ -10,6 +10,8 @@ export interface RouteChangeEvent {
   params: Record<string, string | string[]>;
   segments: string[];
   timestamp: number;
+  previousPathname?: string;
+  timeSincePrevious?: number; // milliseconds since previous event
 }
 
 export class RouteObserver {

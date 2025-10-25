@@ -9,7 +9,7 @@
  * - Navigation
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,11 +18,17 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { macOSColors, Search, Copy, ChevronDown, ChevronRight, copyToClipboard } from '@react-buoy/shared-ui';
-import { useRouteSitemap } from '../useRouteSitemap';
-import type { RouteInfo, RouteGroup } from '../RouteParser';
+} from "react-native";
+import { useRouter } from "expo-router";
+import {
+  macOSColors,
+  Search,
+  ChevronDown,
+  ChevronRight,
+  InlineCopyButton,
+} from "@react-buoy/shared-ui";
+import { useRouteSitemap } from "../useRouteSitemap";
+import type { RouteInfo, RouteGroup } from "../RouteParser";
 
 // ============================================================================
 // Types
@@ -36,14 +42,12 @@ interface RouteGroupViewProps {
   group: RouteGroup;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  onCopyPath: (path: string) => void;
   onNavigate: (route: RouteInfo) => void;
 }
 
 interface RouteItemViewProps {
   route: RouteInfo;
   depth?: number;
-  onCopyPath: (path: string) => void;
   onNavigate: (route: RouteInfo) => void;
 }
 
@@ -52,20 +56,21 @@ interface RouteItemViewProps {
 // ============================================================================
 
 export function RoutesSitemap({ style }: RoutesSitemapProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(['Root Routes', 'Dynamic Routes'])
+    new Set(["Root Routes", "Dynamic Routes"])
   );
 
   const router = useRouter();
 
   const { groups, stats, isLoaded, filteredRoutes } = useRouteSitemap({
     searchQuery,
-    sortBy: 'path',
+    sortBy: "path",
   });
 
   const handleToggleGroup = useCallback((groupTitle: string) => {
-    setExpandedGroups(prev => {
+    setExpandedGroups((prev) => {
       const next = new Set(prev);
       if (next.has(groupTitle)) {
         next.delete(groupTitle);
@@ -76,110 +81,115 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
     });
   }, []);
 
-  const handleCopyPath = useCallback(async (path: string) => {
-    const success = await copyToClipboard(path);
-    if (success) {
-      Alert.alert('Copied', `Path "${path}" copied to clipboard`);
-    } else {
-      Alert.alert('Error', 'Failed to copy path');
-    }
-  }, []);
+  const promptForParams = useCallback(
+    (
+      route: RouteInfo,
+      paramIndex: number = 0,
+      collectedParams: Record<string, string> = {}
+    ) => {
+      const params = route.params;
 
-  const promptForParams = useCallback((
-    route: RouteInfo,
-    paramIndex: number = 0,
-    collectedParams: Record<string, string> = {}
-  ) => {
-    const params = route.params;
+      if (paramIndex >= params.length) {
+        // All parameters collected, build path and navigate
+        let finalPath = route.path;
 
-    if (paramIndex >= params.length) {
-      // All parameters collected, build path and navigate
-      let finalPath = route.path;
+        // Replace each parameter in the path
+        Object.entries(collectedParams).forEach(([param, value]) => {
+          if (route.type === "catch-all") {
+            // For catch-all routes, replace [...param] with the value
+            finalPath = finalPath.replace(`[...${param}]`, value);
+          } else {
+            // For regular dynamic routes, replace [param] with the value
+            finalPath = finalPath.replace(`[${param}]`, value);
+          }
+        });
 
-      // Replace each parameter in the path
-      Object.entries(collectedParams).forEach(([param, value]) => {
-        if (route.type === 'catch-all') {
-          // For catch-all routes, replace [...param] with the value
-          finalPath = finalPath.replace(`[...${param}]`, value);
-        } else {
-          // For regular dynamic routes, replace [param] with the value
-          finalPath = finalPath.replace(`[${param}]`, value);
-        }
-      });
-
-      // Navigate
-      try {
-        router.push(finalPath as any);
-      } catch (error) {
-        Alert.alert('Navigation Error', String(error));
-      }
-      return;
-    }
-
-    const currentParam = params[paramIndex];
-    const paramDisplay = route.type === 'catch-all' ? `[...${currentParam}]` : `[${currentParam}]`;
-
-    Alert.prompt(
-      'Enter Parameter Value',
-      `Enter value for ${paramDisplay}:\n\nRoute: ${route.path}`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: paramIndex < params.length - 1 ? 'Next' : 'Navigate',
-          onPress: (value?: string) => {
-            if (value && value.trim()) {
-              const newParams = {
-                ...collectedParams,
-                [currentParam]: value.trim(),
-              };
-              promptForParams(route, paramIndex + 1, newParams);
-            } else {
-              Alert.alert('Invalid Value', 'Please enter a value for the parameter');
-            }
-          },
-        },
-      ],
-      'plain-text'
-    );
-  }, [router]);
-
-  const handleNavigate = useCallback((route: RouteInfo) => {
-    // Don't navigate to layouts or groups
-    if (route.type === 'layout' || route.type === 'group') {
-      Alert.alert(
-        'Cannot Navigate',
-        `${route.type === 'layout' ? 'Layouts' : 'Route groups'} are not navigable routes`
-      );
-      return;
-    }
-
-    // For dynamic routes, prompt for parameters
-    if (route.type === 'dynamic' || route.type === 'catch-all') {
-      if (route.params.length === 0) {
-        // No parameters despite being dynamic? Just navigate
+        // Navigate
         try {
-          router.push(route.path as any);
+          router.push(finalPath as any);
         } catch (error) {
-          Alert.alert('Navigation Error', String(error));
+          Alert.alert("Navigation Error", String(error));
         }
         return;
       }
 
-      // Start the parameter prompting flow
-      promptForParams(route);
-      return;
-    }
+      const currentParam = params[paramIndex];
+      const paramDisplay =
+        route.type === "catch-all"
+          ? `[...${currentParam}]`
+          : `[${currentParam}]`;
 
-    // Navigate to static route
-    try {
-      router.push(route.path as any);
-    } catch (error) {
-      Alert.alert('Navigation Error', String(error));
-    }
-  }, [router, promptForParams]);
+      Alert.prompt(
+        "Enter Parameter Value",
+        `Enter value for ${paramDisplay}:\n\nRoute: ${route.path}`,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: paramIndex < params.length - 1 ? "Next" : "Navigate",
+            onPress: (value?: string) => {
+              if (value && value.trim()) {
+                const newParams = {
+                  ...collectedParams,
+                  [currentParam]: value.trim(),
+                };
+                promptForParams(route, paramIndex + 1, newParams);
+              } else {
+                Alert.alert(
+                  "Invalid Value",
+                  "Please enter a value for the parameter"
+                );
+              }
+            },
+          },
+        ],
+        "plain-text"
+      );
+    },
+    [router]
+  );
+
+  const handleNavigate = useCallback(
+    (route: RouteInfo) => {
+      // Don't navigate to layouts or groups
+      if (route.type === "layout" || route.type === "group") {
+        Alert.alert(
+          "Cannot Navigate",
+          `${
+            route.type === "layout" ? "Layouts" : "Route groups"
+          } are not navigable routes`
+        );
+        return;
+      }
+
+      // For dynamic routes, prompt for parameters
+      if (route.type === "dynamic" || route.type === "catch-all") {
+        if (route.params.length === 0) {
+          // No parameters despite being dynamic? Just navigate
+          try {
+            router.push(route.path as any);
+          } catch (error) {
+            Alert.alert("Navigation Error", String(error));
+          }
+          return;
+        }
+
+        // Start the parameter prompting flow
+        promptForParams(route);
+        return;
+      }
+
+      // Navigate to static route
+      try {
+        router.push(route.path as any);
+      } catch (error) {
+        Alert.alert("Navigation Error", String(error));
+      }
+    },
+    [router, promptForParams]
+  );
 
   // When searching, show filtered routes, otherwise show groups
   const displayGroups = useMemo(() => {
@@ -187,8 +197,8 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
       // Create a single "Search Results" group
       return [
         {
-          title: 'Search Results',
-          icon: '',
+          title: "Search Results",
+          icon: "",
           routes: filteredRoutes,
         },
       ];
@@ -208,35 +218,55 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
 
   return (
     <View style={[styles.container, style]}>
-      {/* Header with stats */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Routes Sitemap</Text>
-        <View style={styles.statsRow}>
-          <StatItem value={stats.total} label="Total" />
-          <StatItem value={stats.static} label="Static" />
-          <StatItem value={stats.dynamic} label="Dynamic" />
-          <StatItem value={stats.layouts} label="Layouts" />
-        </View>
-      </View>
-
-      {/* Search bar */}
-      <View style={styles.searchContainer}>
-        <Search size={16} color={macOSColors.text.muted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search routes..."
-          placeholderTextColor={macOSColors.text.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Text style={styles.clearButton}>✕</Text>
+      {/* Compact header with stats and search button */}
+      {!isSearching ? (
+        <View style={styles.header}>
+          <View style={styles.statsRow}>
+            <StatItem value={stats.total} label="Total" />
+            <StatItem value={stats.static} label="Static" />
+            <StatItem value={stats.dynamic} label="Dynamic" />
+            <StatItem value={stats.layouts} label="Layouts" />
+          </View>
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={() => setIsSearching(true)}
+          >
+            <Search size={16} color={macOSColors.text.secondary} />
           </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      ) : (
+        /* Search mode - full width search bar */
+        <View style={styles.searchContainer}>
+          <Search size={16} color={macOSColors.text.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search routes..."
+            placeholderTextColor={macOSColors.text.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoFocus
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              style={styles.clearButton}
+            >
+              <Text style={styles.clearButtonText}>✕</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.closeSearchButton}
+            onPress={() => {
+              setIsSearching(false);
+              setSearchQuery("");
+            }}
+          >
+            <Text style={styles.closeSearchText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Route groups */}
       <ScrollView
@@ -248,7 +278,7 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
             <Text style={styles.emptyText}>No routes found</Text>
           </View>
         ) : (
-          displayGroups.map(group => (
+          displayGroups.map((group) => (
             <RouteGroupView
               key={group.title}
               group={group}
@@ -256,7 +286,6 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
                 searchQuery.length > 0 || expandedGroups.has(group.title)
               }
               onToggleExpand={() => handleToggleGroup(group.title)}
-              onCopyPath={handleCopyPath}
               onNavigate={handleNavigate}
             />
           ))
@@ -283,7 +312,6 @@ function RouteGroupView({
   group,
   isExpanded,
   onToggleExpand,
-  onCopyPath,
   onNavigate,
 }: RouteGroupViewProps) {
   return (
@@ -312,7 +340,6 @@ function RouteGroupView({
             <RouteItemView
               key={`${route.path}-${index}`}
               route={route}
-              onCopyPath={onCopyPath}
               onNavigate={onNavigate}
             />
           ))}
@@ -325,85 +352,87 @@ function RouteGroupView({
 function RouteItemView({
   route,
   depth = 0,
-  onCopyPath,
   onNavigate,
 }: RouteItemViewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasChildren = route.children.length > 0;
+  const hasParams = route.params.length > 0;
 
   const typeColor = getRouteTypeColor(route.type);
+  const canNavigate = route.type !== "layout" && route.type !== "group";
 
   return (
-    <View style={[styles.routeItem, { marginLeft: depth * 16 }]}>
-      <TouchableOpacity
-        style={styles.routeHeader}
-        onPress={() => hasChildren && setIsExpanded(!isExpanded)}
-        activeOpacity={hasChildren ? 0.7 : 1}
-      >
-        <View style={styles.routeHeaderLeft}>
-          {hasChildren && (
-            isExpanded ? (
-              <ChevronDown size={12} color={macOSColors.text.muted} />
+    <View style={[styles.routeItem, { marginLeft: depth * 12 }]}>
+      {/* Compact header - always visible */}
+      <View style={styles.routeCard}>
+        <TouchableOpacity
+          style={styles.routeHeaderLeft}
+          onPress={() => setIsExpanded(!isExpanded)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.expandIndicator}>
+            {isExpanded ? (
+              <ChevronDown size={14} color={macOSColors.text.secondary} />
             ) : (
-              <ChevronRight size={12} color={macOSColors.text.muted} />
-            )
-          )}
+              <ChevronRight size={14} color={macOSColors.text.secondary} />
+            )}
+          </View>
           <Text style={styles.routePath} numberOfLines={1}>
             {route.path}
           </Text>
-        </View>
-        <View style={styles.routeActions}>
-          <View style={[styles.typeTag, { backgroundColor: typeColor }]}>
-            <Text style={styles.typeText}>{route.type}</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
 
-      {/* Route details */}
-      <View style={styles.routeDetails}>
-        {route.params.length > 0 && (
-          <View style={styles.paramsContainer}>
-            <Text style={styles.paramsLabel}>Params:</Text>
-            {route.params.map(param => (
-              <View key={param} style={styles.paramTag}>
-                <Text style={styles.paramText}>{param}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+        {/* Action buttons */}
+        <View style={styles.routeHeaderActions}>
+          <InlineCopyButton
+            value={route.path}
+            buttonStyle={styles.compactButton}
+          />
 
-        <View style={styles.routeButtons}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => onCopyPath(route.path)}
-          >
-            <Copy size={12} color={macOSColors.text.secondary} />
-            <Text style={styles.actionButtonText}>Copy</Text>
-          </TouchableOpacity>
-
-          {route.type !== 'layout' && route.type !== 'group' && (
+          {canNavigate && (
             <TouchableOpacity
-              style={[styles.actionButton, styles.navigateButton]}
+              style={[styles.compactButton, styles.compactNavigateButton]}
               onPress={() => onNavigate(route)}
             >
-              <Text style={styles.navigateButtonText}>Navigate</Text>
+              <Text style={styles.compactButtonText}>Go</Text>
             </TouchableOpacity>
           )}
+
+          <View style={[styles.typeTag, { backgroundColor: typeColor }]}>
+            <Text style={styles.typeText}>{route.type.toUpperCase()}</Text>
+          </View>
         </View>
       </View>
 
-      {/* Children routes */}
-      {isExpanded && hasChildren && (
-        <View style={styles.childrenContainer}>
-          {route.children.map((child, index) => (
-            <RouteItemView
-              key={`${child.path}-${index}`}
-              route={child}
-              depth={depth + 1}
-              onCopyPath={onCopyPath}
-              onNavigate={onNavigate}
-            />
-          ))}
+      {/* Expanded details - only show if there are params or children */}
+      {isExpanded && (hasParams || hasChildren) && (
+        <View style={styles.routeDetails}>
+          {hasParams && (
+            <View style={styles.paramsContainer}>
+              <Text style={styles.paramsLabel}>Parameters:</Text>
+              <View style={styles.paramsRow}>
+                {route.params.map((param) => (
+                  <View key={param} style={styles.paramTag}>
+                    <Text style={styles.paramText}>{param}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Children routes */}
+          {hasChildren && (
+            <View style={styles.childrenContainer}>
+              {route.children.map((child, index) => (
+                <RouteItemView
+                  key={`${child.path}-${index}`}
+                  route={child}
+                  depth={depth + 1}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -414,24 +443,24 @@ function RouteItemView({
 // Helpers
 // ============================================================================
 
-function getRouteTypeColor(type: RouteInfo['type']): string {
+function getRouteTypeColor(type: RouteInfo["type"]): string {
   switch (type) {
-    case 'static':
-      return macOSColors.semantic.infoBackground;
-    case 'dynamic':
-      return macOSColors.semantic.warningBackground;
-    case 'catch-all':
-      return macOSColors.semantic.errorBackground;
-    case 'index':
-      return macOSColors.semantic.successBackground;
-    case 'layout':
-      return macOSColors.background.input;
-    case 'group':
-      return macOSColors.background.input;
-    case 'not-found':
-      return macOSColors.semantic.errorBackground;
+    case "static":
+      return macOSColors.semantic.info; // Blue
+    case "dynamic":
+      return "#F59E0B"; // Vibrant Orange
+    case "catch-all":
+      return "#EC4899"; // Pink
+    case "index":
+      return macOSColors.semantic.success; // Green
+    case "layout":
+      return "#8B5CF6"; // Purple
+    case "group":
+      return "#6366F1"; // Indigo
+    case "not-found":
+      return macOSColors.semantic.error; // Red
     default:
-      return macOSColors.background.input;
+      return macOSColors.text.secondary;
   }
 }
 
@@ -447,61 +476,64 @@ const styles = StyleSheet.create({
 
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   loadingText: {
     color: macOSColors.text.secondary,
     fontSize: 14,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
 
   header: {
-    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 8,
     borderBottomWidth: 1,
     borderBottomColor: macOSColors.border.default,
   },
 
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: macOSColors.text.primary,
-    marginBottom: 12,
-    fontFamily: 'monospace',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-
   statsRow: {
-    flexDirection: 'row',
-    gap: 12,
+    flexDirection: "row",
+    gap: 8,
   },
 
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
+    backgroundColor: macOSColors.background.card,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    minWidth: 50,
   },
 
   statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: macOSColors.text.primary,
-    fontFamily: 'monospace',
+    fontSize: 16,
+    fontWeight: "800",
+    color: macOSColors.semantic.info,
+    fontFamily: "monospace",
   },
 
   statLabel: {
-    fontSize: 10,
+    fontSize: 8,
     color: macOSColors.text.muted,
     marginTop: 2,
-    fontFamily: 'monospace',
-    textTransform: 'uppercase',
+    fontFamily: "monospace",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  searchButton: {
+    padding: 6,
+    borderRadius: 4,
   },
 
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
     gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: macOSColors.border.default,
@@ -511,13 +543,28 @@ const styles = StyleSheet.create({
     flex: 1,
     color: macOSColors.text.primary,
     fontSize: 14,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
 
   clearButton: {
+    padding: 4,
+  },
+
+  clearButtonText: {
     color: macOSColors.text.muted,
     fontSize: 18,
+  },
+
+  closeSearchButton: {
     paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+
+  closeSearchText: {
+    color: macOSColors.semantic.info,
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "monospace",
   },
 
   scrollView: {
@@ -530,13 +577,13 @@ const styles = StyleSheet.create({
 
   emptyState: {
     padding: 32,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   emptyText: {
     color: macOSColors.text.secondary,
     fontSize: 14,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
 
   groupContainer: {
@@ -544,42 +591,49 @@ const styles = StyleSheet.create({
   },
 
   groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 12,
     paddingHorizontal: 16,
     backgroundColor: macOSColors.background.card,
+    borderLeftWidth: 3,
+    borderLeftColor: macOSColors.semantic.info,
   },
 
   groupHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     flex: 1,
   },
 
   groupTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: "700",
     color: macOSColors.text.primary,
-    fontFamily: 'monospace',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontFamily: "monospace",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
 
   groupBadge: {
-    backgroundColor: macOSColors.background.input,
+    backgroundColor: macOSColors.semantic.info,
     borderRadius: 10,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
 
   groupCount: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: macOSColors.text.secondary,
-    fontFamily: 'monospace',
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    fontFamily: "monospace",
   },
 
   routesList: {
@@ -587,114 +641,179 @@ const styles = StyleSheet.create({
   },
 
   routeItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: macOSColors.border.input,
+    marginBottom: 6,
   },
 
-  routeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    paddingHorizontal: 16,
+  routeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+
+  expandIndicator: {
+    width: 20,
+    alignItems: "center",
   },
 
   routeHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     flex: 1,
   },
 
   routePath: {
     fontSize: 13,
+    fontWeight: "600",
     color: macOSColors.text.primary,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     flex: 1,
   },
 
-  routeActions: {
-    flexDirection: 'row',
-    gap: 8,
+  routeHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  compactButton: {
+    padding: 6,
+    borderRadius: 4,
+    backgroundColor: macOSColors.background.input,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  compactNavigateButton: {
+    backgroundColor: "transparent",
+    borderColor: macOSColors.border.default,
+    paddingHorizontal: 8,
+  },
+
+  compactButtonText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: macOSColors.text.secondary,
+    fontFamily: "monospace",
   },
 
   typeTag: {
     borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
 
   typeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: macOSColors.text.primary,
-    fontFamily: 'monospace',
-    textTransform: 'uppercase',
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    fontFamily: "monospace",
   },
 
   routeDetails: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingTop: 8,
     paddingBottom: 12,
-    gap: 8,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: macOSColors.border.default,
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    marginTop: -6,
   },
 
   paramsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 6,
-    flexWrap: 'wrap',
   },
 
   paramsLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: macOSColors.text.secondary,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
+    marginBottom: 4,
+  },
+
+  paramsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
   },
 
   paramTag: {
-    backgroundColor: macOSColors.background.input,
+    backgroundColor: "#F59E0B",
     borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
 
   paramText: {
-    fontSize: 11,
-    color: macOSColors.text.primary,
-    fontFamily: 'monospace',
+    fontSize: 10,
+    color: "#FFFFFF",
+    fontFamily: "monospace",
+    fontWeight: "700",
   },
 
   routeButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
 
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     backgroundColor: macOSColors.background.input,
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
   },
 
   actionButtonText: {
     fontSize: 11,
     color: macOSColors.text.secondary,
-    fontFamily: 'monospace',
-    fontWeight: '600',
+    fontFamily: "monospace",
+    fontWeight: "600",
   },
 
   navigateButton: {
-    backgroundColor: macOSColors.semantic.infoBackground,
+    backgroundColor: macOSColors.semantic.info,
+    borderColor: macOSColors.semantic.info,
   },
 
   navigateButtonText: {
     fontSize: 11,
-    color: macOSColors.text.primary,
-    fontFamily: 'monospace',
-    fontWeight: '600',
+    color: "#FFFFFF",
+    fontFamily: "monospace",
+    fontWeight: "600",
   },
 
   childrenContainer: {

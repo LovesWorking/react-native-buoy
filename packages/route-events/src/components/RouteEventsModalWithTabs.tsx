@@ -20,6 +20,7 @@ import {
   Play,
   Trash2,
   Filter,
+  SearchBar,
 } from "@react-buoy/shared-ui";
 import { RouteObserver, type RouteChangeEvent } from "../RouteObserver";
 import {
@@ -29,6 +30,7 @@ import {
 import { RouteFilterViewV2 } from "./RouteFilterViewV2";
 import { RoutesSitemap } from "./RoutesSitemap";
 import { NavigationStack } from "./NavigationStack";
+import { RouteEventsTimeline } from "./RouteEventsTimeline";
 
 interface RouteEventsModalWithTabsProps {
   visible: boolean;
@@ -36,13 +38,6 @@ interface RouteEventsModalWithTabsProps {
   onBack?: () => void;
   enableSharedModalDimensions?: boolean;
   routeObserver: RouteObserver;
-}
-
-interface RouteConversation {
-  pathname: string;
-  lastEvent: RouteChangeEvent;
-  events: RouteChangeEvent[];
-  totalNavigations: number;
 }
 
 type TabType = "routes" | "events" | "stack";
@@ -59,11 +54,8 @@ export function RouteEventsModalWithTabs({
   // Event Listener state
   const [events, setEvents] = useState<RouteChangeEvent[]>([]);
   const [isListening, setIsListening] = useState(false);
-  const [selectedConversationKey, setSelectedConversationKey] = useState<
-    string | null
-  >(null);
-  const [selectedEventIndex, setSelectedEventIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(
     new Set(["/_sitemap", "/api", "/__dev"])
   );
@@ -220,16 +212,7 @@ export function RouteEventsModalWithTabs({
 
   const handleClearEvents = useCallback(() => {
     setEvents([]);
-    setSelectedConversationKey(null);
   }, []);
-
-  const handleConversationPress = useCallback(
-    (conversation: RouteConversation) => {
-      setSelectedConversationKey(conversation.pathname);
-      setSelectedEventIndex(0);
-    },
-    []
-  );
 
   const handleTogglePattern = useCallback((pattern: string) => {
     setIgnoredPatterns((prev) => {
@@ -262,96 +245,37 @@ export function RouteEventsModalWithTabs({
     return Array.from(pathnames).sort();
   }, [events]);
 
-  // Group events by pathname and create conversations
-  const conversations = useMemo(() => {
-    const pathnameMap = new Map<string, RouteConversation>();
-
-    events.forEach((event) => {
-      if (!event.pathname) return;
-
-      const pathname = event.pathname;
+  // Filter events based on ignored patterns and search query
+  const filteredEvents = useMemo(() => {
+    return events.filter((event) => {
+      if (!event.pathname) return false;
 
       // Filter out pathnames that match ignored patterns
       const shouldIgnore = Array.from(ignoredPatterns).some((pattern) =>
-        pathname.includes(pattern)
+        event.pathname.includes(pattern)
       );
 
-      if (shouldIgnore) return;
+      if (shouldIgnore) return false;
 
-      const existing = pathnameMap.get(pathname);
-
-      if (!existing) {
-        pathnameMap.set(pathname, {
-          pathname,
-          lastEvent: event,
-          events: [event],
-          totalNavigations: 1,
-        });
-      } else {
-        existing.events.push(event);
-        existing.totalNavigations++;
-
-        // Update last event if this one is newer
-        if (event.timestamp > existing.lastEvent.timestamp) {
-          existing.lastEvent = event;
-        }
+      // Filter by search query (search in pathname and param values)
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const pathnameMatch = event.pathname.toLowerCase().includes(query);
+        const paramsMatch = Object.entries(event.params || {}).some(
+          ([key, value]) => {
+            const valueStr = Array.isArray(value) ? value.join(" ") : value;
+            return (
+              key.toLowerCase().includes(query) ||
+              valueStr.toLowerCase().includes(query)
+            );
+          }
+        );
+        return pathnameMatch || paramsMatch;
       }
+
+      return true;
     });
-
-    // Convert to array and sort by last updated
-    return Array.from(pathnameMap.values()).sort(
-      (a, b) =>
-        b.lastEvent.timestamp - a.lastEvent.timestamp
-    );
-  }, [events, ignoredPatterns]);
-
-  // Get the live selected conversation from the current conversations array
-  const selectedConversation = useMemo(() => {
-    if (!selectedConversationKey) return null;
-    return conversations.find((c) => c.pathname === selectedConversationKey) || null;
-  }, [selectedConversationKey, conversations]);
-
-  // FlatList optimization constants
-  const END_REACHED_THRESHOLD = 0.8;
-
-  // Stable keyExtractor for FlatList
-  const keyExtractor = useCallback((item: RouteConversation) => {
-    return item.pathname;
-  }, []);
-
-  // Create stable ref for event handler
-  const selectConversationRef = useRef<
-    ((conversation: RouteConversation) => void) | undefined
-  >(undefined);
-  selectConversationRef.current = handleConversationPress;
-
-  // Stable renderItem with ref pattern
-  const renderConversationItem = useCallback(
-    ({ item }: { item: RouteConversation }) => {
-      return (
-        <TouchableOpacity
-          onPress={() => selectConversationRef.current?.(item)}
-          style={styles.conversationItem}
-        >
-          <View style={styles.conversationHeader}>
-            <Text style={styles.pathnameText} numberOfLines={1}>
-              {item.pathname}
-            </Text>
-          </View>
-          <View style={styles.conversationDetails}>
-            <Text style={styles.operationCount}>
-              {item.totalNavigations} navigation
-              {item.totalNavigations !== 1 ? "s" : ""}
-            </Text>
-            <Text style={styles.timestamp}>
-              {formatRelativeTime(new Date(item.lastEvent.timestamp))}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      );
-    },
-    []
-  );
+  }, [events, ignoredPatterns, searchQuery]);
 
   if (!visible) return null;
 
@@ -359,13 +283,8 @@ export function RouteEventsModalWithTabs({
     ? devToolsStorageKeys.modal.root()
     : devToolsStorageKeys.routeEvents.modal();
 
-  const footerNode = selectedConversation ? (
-    <RouteEventDetailFooter
-      conversation={selectedConversation}
-      selectedEventIndex={selectedEventIndex}
-      onEventIndexChange={setSelectedEventIndex}
-    />
-  ) : null;
+  // No footer needed since we're showing a timeline
+  const footerNode = null;
 
   const renderContent = () => {
     if (activeTab === "routes") {
@@ -377,19 +296,6 @@ export function RouteEventsModalWithTabs({
     }
 
     // Events tab content
-    if (selectedConversation) {
-      return (
-        <View style={styles.contentWrapper}>
-          <RouteEventDetailContent
-            conversation={selectedConversation}
-            selectedEventIndex={selectedEventIndex}
-            onEventIndexChange={setSelectedEventIndex}
-            disableInternalFooter={true}
-          />
-        </View>
-      );
-    }
-
     if (showFilters) {
       return (
         <RouteFilterViewV2
@@ -401,7 +307,7 @@ export function RouteEventsModalWithTabs({
       );
     }
 
-    if (conversations.length === 0) {
+    if (filteredEvents.length === 0) {
       return (
         <View style={styles.emptyState}>
           <Navigation size={48} color={macOSColors.text.muted} />
@@ -417,19 +323,18 @@ export function RouteEventsModalWithTabs({
       );
     }
 
+    // Show chronological timeline of events
     return (
-      <FlatList
-        data={conversations}
-        renderItem={renderConversationItem}
-        keyExtractor={keyExtractor}
-        onEndReachedThreshold={END_REACHED_THRESHOLD}
-        contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={10}
-        scrollEnabled={false}
-      />
+      <View style={styles.contentWrapper}>
+        <View style={styles.searchContainer}>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search pathname or params..."
+          />
+        </View>
+        <RouteEventsTimeline events={filteredEvents} />
+      </View>
     );
   };
 
@@ -447,17 +352,6 @@ export function RouteEventsModalWithTabs({
               onClose={onClose}
             />
             <ModalHeader.Content title="Filters" />
-          </ModalHeader>
-        ) : selectedConversation ? (
-          <ModalHeader>
-            <ModalHeader.Navigation
-              onBack={() => {
-                setSelectedConversationKey(null);
-                setSelectedEventIndex(0);
-              }}
-              onClose={onClose}
-            />
-            <ModalHeader.Content title={selectedConversation.pathname} />
           </ModalHeader>
         ) : (
           <ModalHeader>
@@ -558,56 +452,6 @@ const styles = StyleSheet.create({
     backgroundColor: macOSColors.semantic.infoBackground,
   },
 
-  conversationItem: {
-    padding: 12,
-    backgroundColor: macOSColors.background.card,
-    borderRadius: 8,
-    marginHorizontal: 16,
-  },
-
-  conversationHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-
-  pathnameText: {
-    color: macOSColors.text.primary,
-    fontSize: 14,
-    fontWeight: "600",
-    flex: 1,
-    marginRight: 8,
-    fontFamily: "monospace",
-  },
-
-  conversationDetails: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  operationCount: {
-    color: macOSColors.text.secondary,
-    fontSize: 11,
-    flex: 1,
-    fontFamily: "monospace",
-  },
-
-  timestamp: {
-    color: macOSColors.text.muted,
-    fontSize: 11,
-    fontFamily: "monospace",
-  },
-
-  separator: {
-    height: 8,
-  },
-
-  listContent: {
-    paddingVertical: 16,
-  },
-
   emptyState: {
     flex: 1,
     justifyContent: "center",
@@ -635,5 +479,11 @@ const styles = StyleSheet.create({
 
   contentWrapper: {
     flex: 1,
+  },
+
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: macOSColors.background.base,
   },
 });
