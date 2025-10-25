@@ -26,19 +26,7 @@ import type { RouteChangeEvent } from "../RouteObserver";
 
 interface RouteEventsTimelineProps {
   events: RouteChangeEvent[];
-}
-
-// Get icon and color for different navigation types
-function getEventIcon(event: RouteChangeEvent) {
-  const { pathname } = event;
-
-  // Going to home/root
-  if (pathname === "/") {
-    return { icon: Navigation, color: macOSColors.semantic.success };
-  }
-
-  // Default navigation
-  return { icon: Navigation, color: macOSColors.semantic.info };
+  visitCounts: Map<number, number>;
 }
 
 // Get event type label
@@ -65,8 +53,68 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
+// Infer route template from pathname and segments
+function getRouteTemplate(pathname: string, segments: string[]): string | null {
+  if (!segments || segments.length === 0) return null;
+
+  // Build template by checking if each segment is a dynamic parameter
+  const templateParts = segments.map((segment) => {
+    // Check if this segment appears to be a dynamic parameter
+    // (e.g., a number, uuid, or doesn't match the pathname segment exactly)
+    if (/^\d+$/.test(segment)) {
+      return "[id]";
+    }
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment)) {
+      return "[id]";
+    }
+    return segment;
+  });
+
+  const template = "/" + templateParts.join("/");
+
+  // Only return if template differs from actual pathname
+  return template !== pathname ? template : null;
+}
+
+// Get route type for color coding
+type RouteType = "home" | "dynamic" | "with-params" | "default";
+
+function getRouteType(event: RouteChangeEvent): RouteType {
+  // Home route
+  if (event.pathname === "/") {
+    return "home";
+  }
+
+  // Dynamic route (has template)
+  if (getRouteTemplate(event.pathname, event.segments)) {
+    return "dynamic";
+  }
+
+  // Route with params
+  if (event.params && Object.keys(event.params).length > 0) {
+    return "with-params";
+  }
+
+  return "default";
+}
+
+// Get border color for route type
+function getRouteTypeColor(routeType: RouteType): string {
+  switch (routeType) {
+    case "home":
+      return macOSColors.semantic.success; // Green for home
+    case "dynamic":
+      return macOSColors.semantic.debug; // Blue for dynamic
+    case "with-params":
+      return macOSColors.semantic.warning; // Orange for params
+    default:
+      return macOSColors.border.default; // Default gray
+  }
+}
+
 export function RouteEventsTimeline({
   events,
+  visitCounts,
 }: RouteEventsTimelineProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -75,17 +123,20 @@ export function RouteEventsTimeline({
   }, []);
 
   const renderEventItem = (item: RouteChangeEvent, index: number) => {
-      const { icon: Icon, color } = getEventIcon(item);
       const eventType = getEventType(item);
       const hasParams = item.params && Object.keys(item.params).length > 0;
       const isExpanded = expandedIndex === index;
+      const visitNumber = visitCounts.get(index) || 1;
+      const routeTemplate = getRouteTemplate(item.pathname, item.segments);
+      const routeTypeCategory = getRouteType(item);
+      const borderColor = getRouteTypeColor(routeTypeCategory);
 
       return (
         <View style={styles.eventItem}>
           {/* Compact row - always visible */}
           <TouchableOpacity
             onPress={() => handleToggleExpand(index)}
-            style={styles.eventRow}
+            style={[styles.eventRow, { borderLeftColor: borderColor, borderLeftWidth: 3 }]}
             activeOpacity={0.7}
           >
             {/* Expand indicator */}
@@ -95,11 +146,6 @@ export function RouteEventsTimeline({
               ) : (
                 <ChevronRight size={14} color={macOSColors.text.secondary} />
               )}
-            </View>
-
-            {/* Icon */}
-            <View style={[styles.iconCircle, { backgroundColor: color + "15" }]}>
-              <Icon size={12} color={color} />
             </View>
 
             {/* Pathname with copy button */}
@@ -113,15 +159,6 @@ export function RouteEventsTimeline({
               />
             </View>
 
-            {/* Param count badge */}
-            {hasParams && (
-              <View style={styles.paramBadge}>
-                <Text style={styles.paramBadgeText}>
-                  {Object.keys(item.params).length} param{Object.keys(item.params).length !== 1 ? 's' : ''}
-                </Text>
-              </View>
-            )}
-
             {/* Timestamp */}
             <Text style={styles.timestamp}>
               {formatRelativeTime(new Date(item.timestamp))}
@@ -130,7 +167,29 @@ export function RouteEventsTimeline({
 
           {/* Expanded details */}
           {isExpanded && (
-            <View style={styles.expandedContent}>
+            <View style={[styles.expandedContent, { borderLeftColor: borderColor, borderLeftWidth: 3 }]}>
+              {/* Visit count */}
+              {visitNumber > 1 && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Visited:</Text>
+                  <Text style={styles.detailValue}>
+                    {visitNumber} time{visitNumber !== 1 ? 's' : ''}
+                  </Text>
+                </View>
+              )}
+
+              {/* Route template */}
+              {routeTemplate && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Template:</Text>
+                  <Text style={styles.detailValue}>{routeTemplate}</Text>
+                  <InlineCopyButton
+                    value={routeTemplate}
+                    buttonStyle={styles.copyButton}
+                  />
+                </View>
+              )}
+
               {/* Previous pathname */}
               {item.previousPathname && (
                 <View style={styles.detailRow}>
@@ -266,14 +325,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  iconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
   pathnameContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -292,21 +343,6 @@ const styles = StyleSheet.create({
   copyButton: {
     padding: 4,
     borderRadius: 4,
-  },
-
-  paramBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: macOSColors.semantic.infoBackground,
-  },
-
-  paramBadgeText: {
-    fontSize: 9,
-    fontWeight: "600",
-    color: macOSColors.semantic.info,
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
   },
 
   timestamp: {

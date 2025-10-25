@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -21,6 +22,8 @@ import {
   Trash2,
   Filter,
   SearchBar,
+  InlineCopyButton,
+  Download,
 } from "@react-buoy/shared-ui";
 import { RouteObserver, type RouteChangeEvent } from "../RouteObserver";
 import {
@@ -211,8 +214,24 @@ export function RouteEventsModalWithTabs({
   }, []);
 
   const handleClearEvents = useCallback(() => {
-    setEvents([]);
-  }, []);
+    if (events.length === 0) return;
+
+    Alert.alert(
+      "Clear Events",
+      `Clear ${events.length} event${events.length !== 1 ? 's' : ''}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: () => setEvents([]),
+        },
+      ]
+    );
+  }, [events.length]);
 
   const handleTogglePattern = useCallback((pattern: string) => {
     setIgnoredPatterns((prev) => {
@@ -243,6 +262,56 @@ export function RouteEventsModalWithTabs({
       }
     });
     return Array.from(pathnames).sort();
+  }, [events]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    if (events.length === 0) {
+      return null;
+    }
+
+    const uniqueRoutes = new Set(events.map(e => e.pathname)).size;
+    const oldestEvent = events[events.length - 1];
+    const newestEvent = events[0];
+    const timeSpanMs = newestEvent.timestamp - oldestEvent.timestamp;
+    const isAtLimit = events.length >= 500;
+
+    // Format time span for display
+    let timeSpanLabel = '';
+    if (timeSpanMs < 60000) {
+      // Less than 1 minute
+      const seconds = Math.floor(timeSpanMs / 1000);
+      timeSpanLabel = `Last ${seconds}s`;
+    } else if (timeSpanMs < 3600000) {
+      // Less than 1 hour
+      const minutes = Math.floor(timeSpanMs / 60000);
+      timeSpanLabel = `Last ${minutes}m`;
+    } else {
+      // 1 hour or more
+      const hours = Math.floor(timeSpanMs / 3600000);
+      const minutes = Math.floor((timeSpanMs % 3600000) / 60000);
+      if (minutes > 0) {
+        timeSpanLabel = `Last ${hours}h ${minutes}m`;
+      } else {
+        timeSpanLabel = `Last ${hours}h`;
+      }
+    }
+
+    return {
+      totalEvents: events.length,
+      uniqueRoutes,
+      timeSpan: timeSpanLabel,
+      isAtLimit,
+    };
+  }, [events]);
+
+  // Prepare export data
+  const exportData = useMemo(() => {
+    return JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      totalEvents: events.length,
+      events: events,
+    }, null, 2);
   }, [events]);
 
   // Filter events based on ignored patterns and search query
@@ -276,6 +345,23 @@ export function RouteEventsModalWithTabs({
       return true;
     });
   }, [events, ignoredPatterns, searchQuery]);
+
+  // Calculate visit counts for each route (for duplicate detection)
+  const visitCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    const eventVisitNumbers = new Map<number, number>();
+
+    // Iterate from oldest to newest to assign visit numbers correctly
+    for (let i = events.length - 1; i >= 0; i--) {
+      const event = events[i];
+      const currentCount = counts.get(event.pathname) || 0;
+      const visitNumber = currentCount + 1;
+      counts.set(event.pathname, visitNumber);
+      eventVisitNumbers.set(i, visitNumber);
+    }
+
+    return eventVisitNumbers;
+  }, [events]);
 
   if (!visible) return null;
 
@@ -326,6 +412,19 @@ export function RouteEventsModalWithTabs({
     // Show chronological timeline of events
     return (
       <View style={styles.contentWrapper}>
+        {/* Statistics bar */}
+        {stats && (
+          <View style={styles.statsContainer}>
+            <Text style={styles.statsText}>
+              {stats.totalEvents} events | {stats.uniqueRoutes} unique | {stats.timeSpan}
+              {stats.isAtLimit && (
+                <Text style={styles.statsWarning}> | ⚠️ At limit (500)</Text>
+              )}
+            </Text>
+          </View>
+        )}
+
+        {/* Search bar */}
         <View style={styles.searchContainer}>
           <SearchBar
             value={searchQuery}
@@ -333,7 +432,8 @@ export function RouteEventsModalWithTabs({
             placeholder="Search pathname or params..."
           />
         </View>
-        <RouteEventsTimeline events={filteredEvents} />
+
+        <RouteEventsTimeline events={filteredEvents} visitCounts={visitCounts} />
       </View>
     );
   };
@@ -383,6 +483,12 @@ export function RouteEventsModalWithTabs({
             <ModalHeader.Actions onClose={onClose}>
               {activeTab === "events" && (
                 <>
+                  <InlineCopyButton
+                    value={exportData}
+                    buttonStyle={styles.iconButton}
+                  >
+                    <Download size={14} color={macOSColors.text.secondary} />
+                  </InlineCopyButton>
                   <TouchableOpacity
                     onPress={handleToggleFilters}
                     style={[
@@ -479,6 +585,26 @@ const styles = StyleSheet.create({
 
   contentWrapper: {
     flex: 1,
+  },
+
+  statsContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: macOSColors.background.card,
+    borderBottomWidth: 1,
+    borderBottomColor: macOSColors.border.default,
+  },
+
+  statsText: {
+    fontSize: 11,
+    color: macOSColors.text.secondary,
+    fontFamily: "monospace",
+    textAlign: "center",
+  },
+
+  statsWarning: {
+    color: macOSColors.semantic.warning,
+    fontWeight: "600",
   },
 
   searchContainer: {
