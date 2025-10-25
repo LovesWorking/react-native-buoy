@@ -122,15 +122,6 @@ export function RouteEventsTimeline({
               </View>
             )}
 
-            {/* Time since previous badge */}
-            {item.timeSincePrevious !== undefined && (
-              <View style={styles.timeSinceBadge}>
-                <Text style={styles.timeSinceBadgeText}>
-                  +{formatDuration(item.timeSincePrevious)}
-                </Text>
-              </View>
-            )}
-
             {/* Timestamp */}
             <Text style={styles.timestamp}>
               {formatRelativeTime(new Date(item.timestamp))}
@@ -316,20 +307,6 @@ const styles = StyleSheet.create({
     color: macOSColors.semantic.info,
     textTransform: "uppercase",
     letterSpacing: 0.3,
-  },
-
-  timeSinceBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: macOSColors.semantic.successBackground,
-  },
-
-  timeSinceBadgeText: {
-    fontSize: 9,
-    fontWeight: "600",
-    color: macOSColors.semantic.success,
-    fontFamily: "monospace",
   },
 
   timestamp: {
