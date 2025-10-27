@@ -56,6 +56,32 @@ export function NavigationStack({ style }: NavigationStackProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
+  // ✅ All hooks must be called BEFORE any conditional returns
+  // Prepare stack data for copying
+  const stackDataForCopy = useMemo(() => {
+    const stackData = stack.map((item) => ({
+      pathname: item.pathname,
+      name: item.name,
+      params: item.params,
+      isFocused: item.isFocused,
+    }));
+    return JSON.stringify(stackData, null, 2);
+  }, [stack]);
+
+  // Determine which route actions should operate on
+  // If a stack item is expanded, actions target that route
+  // Otherwise, actions target the focused (visible) route
+  const selectedRoute = useMemo(() => {
+    if (expandedIndex !== null && stack[expandedIndex]) {
+      return stack[expandedIndex];
+    }
+    return focusedRoute;
+  }, [expandedIndex, stack, focusedRoute]);
+
+  const isNonFocusedSelected = useMemo(() => {
+    return expandedIndex !== null && stack[expandedIndex] && !stack[expandedIndex].isFocused;
+  }, [expandedIndex, stack]);
+
   // Loading state
   if (!isLoaded) {
     return (
@@ -94,10 +120,6 @@ export function NavigationStack({ style }: NavigationStackProps) {
   }
 
   // Handlers
-  const handleNavigate = (index: number) => {
-    navigateToIndex(index);
-  };
-
   const handleGoBack = () => {
     if (isAtRoot) {
       Alert.alert("Cannot Go Back", "Already at the root of the stack");
@@ -126,51 +148,51 @@ export function NavigationStack({ style }: NavigationStackProps) {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  // Prepare stack data for copying
-  const stackDataForCopy = useMemo(() => {
-    const stackData = stack.map((item) => ({
-      pathname: item.pathname,
-      name: item.name,
-      params: item.params,
-      isFocused: item.isFocused,
-    }));
-    return JSON.stringify(stackData, null, 2);
-  }, [stack]);
+  const handleGo = () => {
+    if (!selectedRoute) return;
 
-  const handleGoHome = () => {
-    try {
-      router.push("/");
-    } catch (error) {
-      Alert.alert("Navigation Error", String(error));
+    // If the selected route is already focused, do nothing
+    if (selectedRoute.isFocused) {
+      Alert.alert("Already There", "This route is already visible");
+      return;
     }
+
+    // Navigate to the selected route
+    navigateToIndex(selectedRoute.index);
   };
 
-  const handlePush = (pathname: string) => {
-    try {
-      router.push(pathname as any);
-    } catch (error) {
-      Alert.alert("Navigation Error", String(error));
-    }
-  };
+  const handlePopTo = () => {
+    if (!selectedRoute) return;
 
-  const handleReplace = (pathname: string) => {
-    try {
-      router.replace(pathname as any);
-    } catch (error) {
-      Alert.alert("Navigation Error", String(error));
+    // If selected route is the focused one, we can't pop to it
+    if (selectedRoute.isFocused) {
+      Alert.alert("Cannot Pop", "Selected route is already visible");
+      return;
     }
-  };
 
-  const handleDismiss = (count?: number) => {
-    try {
-      if (count && count > 1) {
-        router.dismiss(count);
-      } else {
-        router.dismiss();
-      }
-    } catch (error) {
-      Alert.alert("Navigation Error", String(error));
+    // If selected route is at the top of stack, nothing to pop
+    if (selectedRoute.index === stackDepth - 1) {
+      Alert.alert("Cannot Pop", "No screens above selected route");
+      return;
     }
+
+    const screensToRemove = stackDepth - 1 - selectedRoute.index;
+
+    Alert.alert(
+      "Pop to Route",
+      `Remove ${screensToRemove} screen${screensToRemove !== 1 ? 's' : ''} above ${selectedRoute.pathname}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Pop",
+          style: "destructive",
+          onPress: () => {
+            // Navigate to the selected route, which effectively pops everything above it
+            navigateToIndex(selectedRoute.index);
+          }
+        },
+      ]
+    );
   };
 
   return (
@@ -206,7 +228,7 @@ export function NavigationStack({ style }: NavigationStackProps) {
               <View
                 style={[
                   styles.stackItem,
-                  item.isFocused && styles.stackItemFocused,
+                  isExpanded && styles.stackItemSelected,
                 ]}
               >
                 {/* Compact Header - Always Visible */}
@@ -273,18 +295,6 @@ export function NavigationStack({ style }: NavigationStackProps) {
                         />
                       </View>
                     )}
-
-                    {/* Navigate Action */}
-                    {!item.isFocused && (
-                      <TouchableOpacity
-                        style={styles.navigateButton}
-                        onPress={() => handleNavigate(actualIndex)}
-                      >
-                        <Text style={styles.navigateButtonText}>
-                          Navigate Here
-                        </Text>
-                      </TouchableOpacity>
-                    )}
                   </View>
                 )}
               </View>
@@ -295,7 +305,19 @@ export function NavigationStack({ style }: NavigationStackProps) {
 
       {/* Navigation action buttons */}
       <View style={styles.actionsContainer}>
-        {/* Row 1: Basic Navigation */}
+        {/* Visual indicator for selected route */}
+        {selectedRoute && (
+          <View style={styles.actionContext}>
+            <Text style={styles.actionContextLabel}>
+              {isNonFocusedSelected ? "Selected:" : "Current:"}
+            </Text>
+            <Text style={styles.actionContextValue} numberOfLines={1}>
+              {selectedRoute.pathname}
+            </Text>
+          </View>
+        )}
+
+        {/* Action buttons */}
         <View style={styles.actionsRow}>
           <View style={styles.actionWrapper}>
             <TouchableOpacity
@@ -316,76 +338,46 @@ export function NavigationStack({ style }: NavigationStackProps) {
 
           <View style={styles.actionWrapper}>
             <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleGoHome}
+              style={[
+                styles.actionButton,
+                selectedRoute?.isFocused && styles.actionButtonDisabled
+              ]}
+              onPress={handleGo}
+              disabled={selectedRoute?.isFocused}
             >
-              <Text style={styles.actionButtonText}>Home</Text>
+              <Text style={[
+                styles.actionButtonText,
+                selectedRoute?.isFocused && styles.actionButtonTextDisabled
+              ]}>
+                Go
+              </Text>
             </TouchableOpacity>
             {showHelp && (
               <Text style={styles.helpText}>
-                Navigate to / (root route)
+                Navigate to selected route
               </Text>
             )}
           </View>
 
           <View style={styles.actionWrapper}>
             <TouchableOpacity
-              style={[styles.actionButton, isAtRoot && styles.actionButtonDisabled]}
-              onPress={handlePopToTop}
-              disabled={isAtRoot}
+              style={[
+                styles.actionButton,
+                (selectedRoute?.isFocused || selectedRoute?.index === stackDepth - 1) && styles.actionButtonDisabled
+              ]}
+              onPress={handlePopTo}
+              disabled={selectedRoute?.isFocused || selectedRoute?.index === stackDepth - 1}
             >
-              <Text style={[styles.actionButtonText, isAtRoot && styles.actionButtonTextDisabled]}>
-                Root
+              <Text style={[
+                styles.actionButtonText,
+                (selectedRoute?.isFocused || selectedRoute?.index === stackDepth - 1) && styles.actionButtonTextDisabled
+              ]}>
+                Pop To
               </Text>
             </TouchableOpacity>
             {showHelp && (
               <Text style={styles.helpText}>
-                Pop to bottom of stack
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {/* Row 2: Advanced Navigation */}
-        <View style={styles.actionsRow}>
-          <View style={styles.actionWrapper}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => focusedRoute && handlePush(focusedRoute.pathname)}
-            >
-              <Text style={styles.actionButtonText}>Push</Text>
-            </TouchableOpacity>
-            {showHelp && (
-              <Text style={styles.helpText}>
-                Always add duplicate of current route
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.actionWrapper}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => focusedRoute && handleReplace(focusedRoute.pathname)}
-            >
-              <Text style={styles.actionButtonText}>Replace</Text>
-            </TouchableOpacity>
-            {showHelp && (
-              <Text style={styles.helpText}>
-                Replace current, can't go back
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.actionWrapper}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => handleDismiss(1)}
-            >
-              <Text style={styles.actionButtonText}>Dismiss</Text>
-            </TouchableOpacity>
-            {showHelp && (
-              <Text style={styles.helpText}>
-                Dismiss current screen
+                Remove screens above selected
               </Text>
             )}
           </View>
@@ -501,8 +493,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  stackItemFocused: {
-    borderColor: macOSColors.semantic.success,
+  stackItemSelected: {
+    borderColor: macOSColors.semantic.info,
     borderWidth: 2,
   },
 
@@ -586,27 +578,39 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  navigateButton: {
-    backgroundColor: macOSColors.semantic.info,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: "center",
-  },
-
-  navigateButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: macOSColors.background.base,
-    fontFamily: "monospace",
-  },
-
   actionsContainer: {
     borderTopWidth: 1,
     borderTopColor: macOSColors.border.default,
     paddingHorizontal: 8,
     paddingTop: 8,
     paddingBottom: 8,
+  },
+
+  actionContext: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginBottom: 6,
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 4,
+  },
+
+  actionContextLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: macOSColors.text.secondary,
+    fontFamily: "monospace",
+    textTransform: "uppercase",
+  },
+
+  actionContextValue: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: macOSColors.text.primary,
+    fontFamily: "monospace",
+    flex: 1,
   },
 
   actionsRow: {

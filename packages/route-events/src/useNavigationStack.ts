@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
 
 // ============================================================================
 // Type Definitions
@@ -151,8 +151,8 @@ export function useNavigationStack(): UseNavigationStackResult {
   const [error, setError] = useState<Error | null>(null);
   const navigation = useNavigation();
 
-  // Get the root navigation state
-  const navigationState = navigation.getState();
+  // Subscribe to navigation state changes - this will cause re-renders when state updates
+  const navigationState = useNavigationState(state => state);
 
   // Mark as loaded once we have navigation
   useEffect(() => {
