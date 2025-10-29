@@ -12,6 +12,7 @@ import {
   Image,
   Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
@@ -39,6 +40,7 @@ function getRandomPokemonNames(count: number): string[] {
 
 export function PokemonScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const [pokemonStack, setPokemonStack] = useState(() => [
     "pikachu",
@@ -851,6 +853,27 @@ export function PokemonScreen() {
           shimmerAnim={shimmerAnim}
           floatAnim={floatAnim}
         />
+
+        {/* Route Test Button */}
+        <View style={styles.routeTestContainer}>
+          <TouchableOpacity
+            style={styles.routeTestButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/route-test');
+            }}
+          >
+            <BlurView intensity={30} tint="dark" style={styles.routeTestBlur}>
+              <LinearGradient
+                colors={["rgba(255,255,255,0.1)", "rgba(255,255,255,0.05)"]}
+                style={styles.routeTestGradient}
+              >
+                <Ionicons name="navigate-circle" size={20} color="#FFD700" />
+                <Text style={styles.routeTestText}>Test Route DevTools</Text>
+              </LinearGradient>
+            </BlurView>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -1603,5 +1626,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#FF6B6B",
     letterSpacing: 0.3,
+  },
+  routeTestContainer: {
+    marginTop: 32,
+    marginBottom: 40,
+    paddingHorizontal: 40,
+    alignItems: "center",
+  },
+  routeTestButton: {
+    width: "100%",
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,215,0,0.3)",
+  },
+  routeTestBlur: {
+    width: "100%",
+    overflow: "hidden",
+  },
+  routeTestGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  routeTestText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFD700",
+    letterSpacing: 0.5,
   },
 });
