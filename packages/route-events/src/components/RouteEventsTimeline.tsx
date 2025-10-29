@@ -24,11 +24,13 @@ import { RouteEventItemCompact } from "./RouteEventItemCompact";
 interface RouteEventsTimelineProps {
   events: RouteChangeEvent[];
   visitCounts: Map<number, number>;
+  onNavigate?: (pathname: string) => void;
 }
 
 export function RouteEventsTimeline({
   events,
   visitCounts,
+  onNavigate,
 }: RouteEventsTimelineProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -57,6 +59,7 @@ export function RouteEventsTimeline({
           visitNumber={visitCounts.get(index) || 1}
           isExpanded={expandedIndex === index}
           onPress={() => handleItemPress(index)}
+          onNavigate={onNavigate}
         />
       ))}
     </ScrollView>

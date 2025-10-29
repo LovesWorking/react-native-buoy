@@ -336,6 +336,11 @@ function RouteGroupView({
 
       {isExpanded && (
         <View style={styles.routesList}>
+          {group.description && (
+            <View style={styles.groupDescription}>
+              <Text style={styles.groupDescriptionText}>{group.description}</Text>
+            </View>
+          )}
           {group.routes.map((route, index) => (
             <RouteItemView
               key={`${route.path}-${index}`}
@@ -384,6 +389,12 @@ function RouteItemView({
 
         {/* Action buttons */}
         <View style={styles.routeHeaderActions}>
+          {hasChildren && (
+            <View style={styles.childCountBadge}>
+              <Text style={styles.childCountText}>{route.children.length}</Text>
+            </View>
+          )}
+
           <InlineCopyButton
             value={route.path}
             buttonStyle={styles.compactButton}
@@ -398,8 +409,18 @@ function RouteItemView({
             </TouchableOpacity>
           )}
 
-          <View style={[styles.typeTag, { backgroundColor: typeColor }]}>
-            <Text style={styles.typeText}>{route.type.toUpperCase()}</Text>
+          <View
+            style={[
+              styles.typeTag,
+              {
+                backgroundColor: `${typeColor}15`,
+                borderColor: `${typeColor}40`,
+              },
+            ]}
+          >
+            <Text style={[styles.typeText, { color: typeColor }]}>
+              {route.type.toUpperCase()}
+            </Text>
           </View>
         </View>
       </View>
@@ -446,21 +467,21 @@ function RouteItemView({
 function getRouteTypeColor(type: RouteInfo["type"]): string {
   switch (type) {
     case "static":
-      return macOSColors.semantic.info; // Blue
+      return "#3B82F6"; // Blue
     case "dynamic":
-      return "#F59E0B"; // Vibrant Orange
+      return "#F59E0B"; // Orange
     case "catch-all":
       return "#EC4899"; // Pink
     case "index":
-      return macOSColors.semantic.success; // Green
+      return "#10B981"; // Green
     case "layout":
       return "#8B5CF6"; // Purple
     case "group":
       return "#6366F1"; // Indigo
     case "not-found":
-      return macOSColors.semantic.error; // Red
+      return "#EF4444"; // Red
     default:
-      return macOSColors.text.secondary;
+      return "#6B7280"; // Gray
   }
 }
 
@@ -618,26 +639,42 @@ const styles = StyleSheet.create({
   },
 
   groupBadge: {
-    backgroundColor: macOSColors.semantic.info,
-    borderRadius: 10,
+    backgroundColor: "#3B82F615",
+    borderColor: "#3B82F640",
+    borderWidth: 1,
+    borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
+    minWidth: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   groupCount: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#3B82F6",
     fontFamily: "monospace",
   },
 
   routesList: {
     backgroundColor: macOSColors.background.base,
+  },
+
+  groupDescription: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 8,
+    backgroundColor: macOSColors.background.input,
+    borderLeftWidth: 3,
+    borderLeftColor: macOSColors.semantic.info,
+  },
+
+  groupDescriptionText: {
+    fontSize: 11,
+    color: macOSColors.text.secondary,
+    fontFamily: "monospace",
+    lineHeight: 16,
   },
 
   routeItem: {
@@ -687,6 +724,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
 
+  childCountBadge: {
+    backgroundColor: "#6B728015",
+    borderColor: "#6B728040",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    minWidth: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  childCountText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#6B7280",
+    fontFamily: "monospace",
+  },
+
   compactButton: {
     padding: 6,
     borderRadius: 4,
@@ -712,19 +768,14 @@ const styles = StyleSheet.create({
 
   typeTag: {
     borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
   },
 
   typeText: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "600",
     fontFamily: "monospace",
   },
 
@@ -762,22 +813,19 @@ const styles = StyleSheet.create({
   },
 
   paramTag: {
-    backgroundColor: "#F59E0B",
+    backgroundColor: "#F59E0B15",
+    borderColor: "#F59E0B40",
+    borderWidth: 1,
     borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
 
   paramText: {
     fontSize: 10,
-    color: "#FFFFFF",
+    color: "#F59E0B",
     fontFamily: "monospace",
-    fontWeight: "700",
+    fontWeight: "600",
   },
 
   routeButtons: {

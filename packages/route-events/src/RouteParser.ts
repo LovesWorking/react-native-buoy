@@ -72,6 +72,7 @@ export interface RouteInfo {
 export interface RouteGroup {
   title: string;
   icon: string;
+  description?: string;
   routes: RouteInfo[];
 }
 
@@ -241,6 +242,7 @@ export class RouteParser {
       groups.push({
         title: 'Dynamic Routes',
         icon: '',
+        description: 'Routes that accept parameters',
         routes: dynamicRoutes,
       });
     }
@@ -249,6 +251,7 @@ export class RouteParser {
       groups.push({
         title: 'Layouts',
         icon: '',
+        description: 'Shared UI for nested screens',
         routes: layoutRoutes,
       });
     }

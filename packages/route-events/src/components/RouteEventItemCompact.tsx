@@ -5,6 +5,7 @@
  */
 
 import { useMemo } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { CompactRow, formatRelativeTime, macOSColors } from "@react-buoy/shared-ui";
 import type { RouteChangeEvent } from "../RouteObserver";
 import { RouteEventExpandedContent } from "./RouteEventExpandedContent";
@@ -14,6 +15,7 @@ export interface RouteEventItemCompactProps {
   visitNumber: number;
   isExpanded: boolean;
   onPress: () => void;
+  onNavigate?: (pathname: string) => void;
 }
 
 // Route type for color coding
@@ -102,6 +104,7 @@ export function RouteEventItemCompact({
   visitNumber,
   isExpanded,
   onPress,
+  onNavigate,
 }: RouteEventItemCompactProps) {
   const routeType = useMemo(() => getRouteType(event), [event]);
   const routeTemplate = useMemo(() => getRouteTemplate(event.pathname, event.segments), [event.pathname, event.segments]);
@@ -122,14 +125,36 @@ export function RouteEventItemCompact({
     );
   }, [isExpanded, event, visitNumber, routeTemplate]);
 
+  const customBadge = useMemo(() => {
+    if (!onNavigate) {
+      return (
+        <Text style={styles.timeText}>{timeLabel}</Text>
+      );
+    }
+
+    return (
+      <View style={styles.badgeContainer}>
+        <Text style={styles.timeText}>{timeLabel}</Text>
+        <TouchableOpacity
+          style={styles.goButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            onNavigate(event.pathname);
+          }}
+        >
+          <Text style={styles.goButtonText}>Go</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [timeLabel, onNavigate, event.pathname]);
+
   return (
     <CompactRow
       statusDotColor={statusColor}
       statusLabel={statusLabel}
       primaryText={event.pathname}
       secondaryText={secondaryText}
-      badgeText={timeLabel}
-      badgeColor={macOSColors.text.muted}
+      customBadge={customBadge}
       showChevron
       expandedContent={expandedContent}
       isExpanded={isExpanded}
@@ -138,3 +163,31 @@ export function RouteEventItemCompact({
     />
   );
 }
+
+const styles = StyleSheet.create({
+  badgeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  timeText: {
+    fontSize: 10,
+    color: macOSColors.text.muted,
+    fontFamily: "monospace",
+  },
+
+  goButton: {
+    backgroundColor: macOSColors.semantic.info,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+
+  goButtonText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    fontFamily: "monospace",
+  },
+});

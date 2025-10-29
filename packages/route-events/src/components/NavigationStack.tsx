@@ -195,6 +195,11 @@ export function NavigationStack({ style }: NavigationStackProps) {
     );
   };
 
+  const handleCopyStack = () => {
+    copyToClipboard(stackDataForCopy);
+    Alert.alert("Copied", "Navigation stack copied to clipboard");
+  };
+
   return (
     <View style={[styles.container, style]}>
       {/* Compact header with copy and info buttons */}
@@ -305,18 +310,6 @@ export function NavigationStack({ style }: NavigationStackProps) {
 
       {/* Navigation action buttons */}
       <View style={styles.actionsContainer}>
-        {/* Visual indicator for selected route */}
-        {selectedRoute && (
-          <View style={styles.actionContext}>
-            <Text style={styles.actionContextLabel}>
-              {isNonFocusedSelected ? "Selected:" : "Current:"}
-            </Text>
-            <Text style={styles.actionContextValue} numberOfLines={1}>
-              {selectedRoute.pathname}
-            </Text>
-          </View>
-        )}
-
         {/* Action buttons */}
         <View style={styles.actionsRow}>
           <View style={styles.actionWrapper}>
@@ -378,6 +371,22 @@ export function NavigationStack({ style }: NavigationStackProps) {
             {showHelp && (
               <Text style={styles.helpText}>
                 Remove screens above selected
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleCopyStack}
+            >
+              <Text style={styles.actionButtonText}>
+                Copy
+              </Text>
+            </TouchableOpacity>
+            {showHelp && (
+              <Text style={styles.helpText}>
+                Copy stack to clipboard
               </Text>
             )}
           </View>
@@ -584,33 +593,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingTop: 8,
     paddingBottom: 8,
-  },
-
-  actionContext: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    marginBottom: 6,
-    backgroundColor: macOSColors.background.input,
-    borderRadius: 4,
-  },
-
-  actionContextLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: macOSColors.text.secondary,
-    fontFamily: "monospace",
-    textTransform: "uppercase",
-  },
-
-  actionContextValue: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: macOSColors.text.primary,
-    fontFamily: "monospace",
-    flex: 1,
   },
 
   actionsRow: {

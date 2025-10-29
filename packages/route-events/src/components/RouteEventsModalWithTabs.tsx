@@ -8,6 +8,7 @@ import {
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import {
   JsModal,
   type ModalMode,
@@ -50,6 +51,7 @@ export function RouteEventsModalWithTabs({
   enableSharedModalDimensions = false,
   routeObserver,
 }: RouteEventsModalWithTabsProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("events");
 
   // Event Listener state
@@ -68,6 +70,14 @@ export function RouteEventsModalWithTabs({
   const handleModeChange = useCallback((_mode: ModalMode) => {
     // Mode changes handled by JsModal
   }, []);
+
+  const handleNavigate = useCallback((pathname: string) => {
+    try {
+      router.push(pathname as any);
+    } catch (error) {
+      Alert.alert("Navigation Error", String(error));
+    }
+  }, [router]);
 
   // Load persisted tab state on mount
   useEffect(() => {
@@ -369,7 +379,11 @@ export function RouteEventsModalWithTabs({
           />
         </View>
 
-        <RouteEventsTimeline events={filteredEvents} visitCounts={visitCounts} />
+        <RouteEventsTimeline
+          events={filteredEvents}
+          visitCounts={visitCounts}
+          onNavigate={handleNavigate}
+        />
       </View>
     );
   };
