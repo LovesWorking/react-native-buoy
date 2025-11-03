@@ -19,7 +19,7 @@
     "test": "pnpm run typecheck"
   },
   "dependencies": {
-    "@react-buoy/shared-ui": "^0.1.19"
+    "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5.0.0",

@@ -19,8 +19,8 @@
     "test": "pnpm run typecheck"
   },
   "dependencies": {
-    "@react-buoy/react-query": "^0.1.21",
-    "@react-buoy/shared-ui": "^0.1.19"
+    "@react-buoy/react-query": "workspace:*",
+    "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "*",
