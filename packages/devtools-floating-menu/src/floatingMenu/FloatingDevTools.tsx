@@ -12,17 +12,17 @@ import { DevToolsVisibilityProvider } from "./DevToolsVisibilityContext";
 
 /**
  * Environment variable configuration
- * 
+ *
  * This type is compatible with RequiredEnvVar from @react-buoy/env
- * 
+ *
  * @example
  * ```tsx
  * // Simple string (just check existence)
  * "API_URL"
- * 
+ *
  * // Check for specific type
  * { key: "DEBUG_MODE", expectedType: "boolean" }
- * 
+ *
  * // Check for specific value
  * { key: "ENVIRONMENT", expectedValue: "development" }
  * ```
@@ -36,7 +36,13 @@ export type EnvVarConfig =
     }
   | {
       key: string;
-      expectedType: "string" | "number" | "boolean" | "object" | "array" | "url";
+      expectedType:
+        | "string"
+        | "number"
+        | "boolean"
+        | "object"
+        | "array"
+        | "url";
       description?: string;
     };
 
@@ -95,7 +101,7 @@ export interface FloatingDevToolsProps extends Omit<FloatingMenuProps, "apps"> {
    * ```
    */
   requiredStorageKeys?: StorageKeyConfig[];
-  
+
   /**
    * Optional children to render within the DevToolsVisibilityProvider context.
    * Useful for tools that need to react to DevTools visibility (like DebugBordersStandaloneOverlay).
@@ -205,6 +211,19 @@ export const FloatingDevTools = ({
     ? autoDiscoverPresetsWithCustom(userApps)
     : autoDiscoverPresets();
 
+  // Check if debug-borders is installed and auto-render the overlay
+  const DebugBordersOverlay = useMemo(() => {
+    try {
+      // @ts-ignore - Dynamic import that may not exist
+      const {
+        DebugBordersStandaloneOverlay,
+      } = require("@react-buoy/debug-borders");
+      return DebugBordersStandaloneOverlay;
+    } catch {
+      return null;
+    }
+  }, []);
+
   return (
     <View style={styles.container} pointerEvents="box-none">
       <DevToolsVisibilityProvider>
@@ -213,6 +232,7 @@ export const FloatingDevTools = ({
           <AppOverlay />
         </AppHostProvider>
         {children}
+        {DebugBordersOverlay && <DebugBordersOverlay />}
       </DevToolsVisibilityProvider>
     </View>
   );

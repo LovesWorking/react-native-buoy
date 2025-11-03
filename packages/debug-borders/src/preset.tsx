@@ -122,6 +122,13 @@ export function createDebugBordersTool(options?: {
     onPress: () => {
       console.log("[DebugBorders] Toggle pressed");
       DebugBordersManager.toggle();
+      manager?.notify();
     },
   };
 }
+
+/**
+ * Export the standalone overlay for manual integration
+ * Use this if you want to control debug borders outside of FloatingDevTools
+ */
+export { DebugBordersStandaloneOverlay } from "./debug-borders/components/DebugBordersStandaloneOverlay";

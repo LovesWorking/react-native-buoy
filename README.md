@@ -455,6 +455,95 @@ const TOOLS = [routeEventsToolPreset];
 </details>
 
 <details>
+<summary><strong>🎨 Debug Borders (@react-buoy/debug-borders)</strong></summary>
+
+Visual debugging tool that adds colored borders around all React Native components to help identify layout issues, nesting problems, and component boundaries.
+
+### Install
+
+**npm**
+
+```bash
+npm install @react-buoy/debug-borders
+```
+
+**pnpm**
+
+```bash
+pnpm add @react-buoy/debug-borders
+```
+
+**yarn**
+
+```bash
+yarn add @react-buoy/debug-borders
+```
+
+**bun**
+
+```bash
+bun add @react-buoy/debug-borders
+```
+
+### Quick Setup
+
+**Zero Configuration - Auto-Discovery (Recommended)**
+
+Just install the package and it automatically integrates with FloatingDevTools:
+
+```tsx
+import { FloatingDevTools } from "@react-buoy/core";
+
+function App() {
+  return <FloatingDevTools environment="local" userRole="admin" />;
+}
+```
+
+**That's it!** Debug borders will automatically:
+
+- ✅ Appear as a "BORDERS" button in the dial and floating menu
+- ✅ Tap the icon to toggle borders on/off (no modal!)
+- ✅ Icon changes color: gray when off, green when on
+- ✅ Overlay automatically renders when package is installed
+
+**Alternative: Standalone (without FloatingDevTools)**
+
+If you want to use debug borders without the full FloatingDevTools:
+
+```tsx
+import { DebugBordersStandaloneOverlay } from "@react-buoy/debug-borders";
+
+function App() {
+  return (
+    <>
+      {/* Your app content */}
+      <DebugBordersStandaloneOverlay />
+    </>
+  );
+}
+```
+
+### What you get:
+
+- 🎨 **Visual Borders** - Colored borders around all components
+- 🎯 **Layout Debugging** - Identify component boundaries instantly
+- 🔍 **Nesting Visualization** - See component hierarchy visually
+- 🎭 **Direct Toggle** - Tap the icon to toggle on/off (no modal needed!)
+- 💚 **Visual Feedback** - Icon changes from gray (off) to green (on)
+- ⚡ **Zero Performance Impact** - Only active when enabled
+
+### Controls:
+
+- **Tap to Toggle** - Click the BORDERS icon in dial/floating menu to toggle on/off
+- **No Modal** - Direct toggle action, no popup needed
+- **Visual State** - Icon color shows current state (gray = off, green = on)
+- Automatically integrated with FloatingDevTools when installed
+- Overlay renders automatically when enabled
+- Can be used standalone if needed
+
+</details>
+
+<details>
 <summary><strong>Dev Tool Settings Menu</strong></summary>
 
 ###
@@ -528,7 +617,7 @@ export default function App() {
 }
 ```
 
-**That's it!** Just ~40 lines of setup for 6 complete dev tools, all imported from `@react-buoy/core`! ✨
+**That's it!** Just ~40 lines of setup for all dev tools (ENV, Network, Storage, React Query, Routes, and Debug Borders), all imported from `@react-buoy/core`! ✨
 
 </details>
 
@@ -707,7 +796,7 @@ Just install the packages you want to use:
 pnpm add @react-buoy/env @react-buoy/network @react-buoy/react-query
 
 # Or install everything
-pnpm add @react-buoy/env @react-buoy/network @react-buoy/storage @react-buoy/react-query @react-buoy/route-events
+pnpm add @react-buoy/env @react-buoy/network @react-buoy/storage @react-buoy/react-query @react-buoy/route-events @react-buoy/debug-borders
 ```
 
 All installed packages will automatically appear in your dev tools. No imports, no configuration!
