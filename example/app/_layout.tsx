@@ -12,6 +12,7 @@ import {
   EnvLaptopIcon,
   ReactQueryIcon,
   StorageStackIcon,
+  WifiCircuitIcon,
   Globe,
 } from "@react-buoy/shared-ui";
 import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
@@ -21,7 +22,6 @@ import {
   StorageModalWithTabs,
   type RequiredStorageKey,
 } from "@react-buoy/storage";
-import { WifiToggle } from "@react-buoy/react-query";
 import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
 
 export default function RootLayout() {
@@ -168,7 +168,14 @@ export default function RootLayout() {
         name: "WIFI",
         description: "React Query WiFi toggle",
         slot: "both",
-        icon: ({ size }: { size: number }) => <WifiToggle size={size} />,
+        icon: ({ size }: { size: number }) => (
+          <WifiCircuitIcon
+            size={size}
+            colorPreset="cyan"
+            strength={4}
+            noBackground
+          />
+        ),
         component: () => <></>,
         props: {},
       },
