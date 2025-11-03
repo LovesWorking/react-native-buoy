@@ -24,7 +24,8 @@ import {
   Filter,
   SearchBar,
 } from "@react-buoy/shared-ui";
-import { RouteObserver, type RouteChangeEvent } from "../RouteObserver";
+import { routeObserver as defaultRouteObserver, type RouteChangeEvent } from "../RouteObserver";
+import { useRouteObserver } from "../useRouteObserver";
 import {
   RouteEventDetailContent,
   RouteEventDetailFooter,
@@ -34,12 +35,16 @@ import { RoutesSitemap } from "./RoutesSitemap";
 import { NavigationStack } from "./NavigationStack";
 import { RouteEventsTimeline } from "./RouteEventsTimeline";
 
-interface RouteEventsModalWithTabsProps {
+export interface RouteEventsModalWithTabsProps {
   visible: boolean;
   onClose: () => void;
   onBack?: () => void;
   enableSharedModalDimensions?: boolean;
-  routeObserver: RouteObserver;
+  /**
+   * Optional route observer instance. If not provided, uses the default singleton.
+   * Route tracking will start automatically when the modal is opened.
+   */
+  routeObserver?: typeof defaultRouteObserver;
 }
 
 type TabType = "routes" | "events" | "stack";
@@ -49,10 +54,14 @@ export function RouteEventsModalWithTabs({
   onClose,
   onBack,
   enableSharedModalDimensions = false,
-  routeObserver,
+  routeObserver = defaultRouteObserver,
 }: RouteEventsModalWithTabsProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("events");
+
+  // Automatically start route tracking when modal is visible
+  // This eliminates the need for users to manually call useRouteObserver in their app
+  useRouteObserver();
 
   // Event Listener state
   const [events, setEvents] = useState<RouteChangeEvent[]>([]);
@@ -71,13 +80,16 @@ export function RouteEventsModalWithTabs({
     // Mode changes handled by JsModal
   }, []);
 
-  const handleNavigate = useCallback((pathname: string) => {
-    try {
-      router.push(pathname as any);
-    } catch (error) {
-      Alert.alert("Navigation Error", String(error));
-    }
-  }, [router]);
+  const handleNavigate = useCallback(
+    (pathname: string) => {
+      try {
+        router.push(pathname as any);
+      } catch (error) {
+        Alert.alert("Navigation Error", String(error));
+      }
+    },
+    [router]
+  );
 
   // Load persisted tab state on mount
   useEffect(() => {
@@ -226,7 +238,7 @@ export function RouteEventsModalWithTabs({
 
     Alert.alert(
       "Clear Events",
-      `Clear ${events.length} event${events.length !== 1 ? 's' : ''}?`,
+      `Clear ${events.length} event${events.length !== 1 ? "s" : ""}?`,
       [
         {
           text: "Cancel",

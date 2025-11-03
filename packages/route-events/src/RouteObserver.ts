@@ -22,15 +22,12 @@ export class RouteObserver {
    * Called by the useRouteObserver hook
    */
   emit(event: RouteChangeEvent) {
-    // Log to console
-    this.logEvent(event);
-
     // Notify all listeners
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(event);
       } catch (error) {
-        console.error('[RouteObserver] Error in listener:', error);
+        console.error("[RouteObserver] Error in listener:", error);
       }
     });
   }
@@ -49,18 +46,6 @@ export class RouteObserver {
    */
   removeListener(callback: (event: RouteChangeEvent) => void) {
     this.listeners.delete(callback);
-  }
-
-  /**
-   * Log route change event to console
-   */
-  private logEvent(event: RouteChangeEvent) {
-    console.log('📍 [Route Change]', {
-      pathname: event.pathname,
-      params: event.params,
-      segments: event.segments,
-      timestamp: new Date(event.timestamp).toISOString(),
-    });
   }
 }
 

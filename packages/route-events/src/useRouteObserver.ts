@@ -5,9 +5,9 @@
  * to the global RouteObserver singleton
  */
 
-import { useEffect, useRef } from 'react';
-import { usePathname, useSegments, useGlobalSearchParams } from 'expo-router';
-import { routeObserver, type RouteChangeEvent } from './RouteObserver';
+import { useEffect, useRef } from "react";
+import { usePathname, useSegments, useGlobalSearchParams } from "expo-router";
+import { routeObserver, type RouteChangeEvent } from "./RouteObserver";
 
 /**
  * Hook to observe route changes in Expo Router
@@ -22,13 +22,12 @@ import { routeObserver, type RouteChangeEvent } from './RouteObserver';
  *
  * // Track routes with custom callback
  * useRouteObserver((event) => {
- *   console.log('Route changed:', event.pathname);
+ *   // Handle route change
+ *   analytics.trackPageView(event.pathname);
  * });
  * ```
  */
-export function useRouteObserver(
-  callback?: (event: RouteChangeEvent) => void
-) {
+export function useRouteObserver(callback?: (event: RouteChangeEvent) => void) {
   const pathname = usePathname();
   const segments = useSegments();
   const params = useGlobalSearchParams();

@@ -34,7 +34,7 @@ import type { RouteInfo, RouteGroup } from "../RouteParser";
 // Types
 // ============================================================================
 
-interface RoutesSitemapProps {
+export interface RoutesSitemapProps {
   style?: any;
 }
 
@@ -387,26 +387,12 @@ function RouteItemView({
           </Text>
         </TouchableOpacity>
 
-        {/* Action buttons */}
+        {/* Header badges only */}
         <View style={styles.routeHeaderActions}>
           {hasChildren && (
             <View style={styles.childCountBadge}>
               <Text style={styles.childCountText}>{route.children.length}</Text>
             </View>
-          )}
-
-          <InlineCopyButton
-            value={route.path}
-            buttonStyle={styles.compactButton}
-          />
-
-          {canNavigate && (
-            <TouchableOpacity
-              style={[styles.compactButton, styles.compactNavigateButton]}
-              onPress={() => onNavigate(route)}
-            >
-              <Text style={styles.compactButtonText}>Go</Text>
-            </TouchableOpacity>
           )}
 
           <View
@@ -425,9 +411,26 @@ function RouteItemView({
         </View>
       </View>
 
-      {/* Expanded details - only show if there are params or children */}
-      {isExpanded && (hasParams || hasChildren) && (
+      {/* Expanded details */}
+      {isExpanded && (
         <View style={styles.routeDetails}>
+          {/* Action buttons in expanded content */}
+          <View style={styles.routeButtons}>
+            <InlineCopyButton
+              value={route.path}
+              buttonStyle={styles.actionButton}
+            />
+
+            {canNavigate && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.navigateButton]}
+                onPress={() => onNavigate(route)}
+              >
+                <Text style={styles.navigateButtonText}>Go</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           {hasParams && (
             <View style={styles.paramsContainer}>
               <Text style={styles.paramsLabel}>Parameters:</Text>
@@ -743,29 +746,6 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
   },
 
-  compactButton: {
-    padding: 6,
-    borderRadius: 4,
-    backgroundColor: macOSColors.background.input,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  compactNavigateButton: {
-    backgroundColor: "transparent",
-    borderColor: macOSColors.border.default,
-    paddingHorizontal: 8,
-  },
-
-  compactButtonText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: macOSColors.text.secondary,
-    fontFamily: "monospace",
-  },
-
   typeTag: {
     borderRadius: 4,
     paddingHorizontal: 6,
@@ -830,7 +810,8 @@ const styles = StyleSheet.create({
 
   routeButtons: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
+    marginBottom: 12,
   },
 
   actionButton: {
@@ -838,28 +819,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     backgroundColor: macOSColors.background.input,
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    borderRadius: 4,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
     borderColor: macOSColors.border.default,
   },
 
   actionButtonText: {
-    fontSize: 11,
+    fontSize: 12,
     color: macOSColors.text.secondary,
     fontFamily: "monospace",
     fontWeight: "600",
   },
 
   navigateButton: {
-    backgroundColor: macOSColors.semantic.info,
-    borderColor: macOSColors.semantic.info,
+    backgroundColor: "#3B82F615",
+    borderColor: "#3B82F640",
   },
 
   navigateButtonText: {
-    fontSize: 11,
-    color: "#FFFFFF",
+    fontSize: 12,
+    color: "#3B82F6",
     fontFamily: "monospace",
     fontWeight: "600",
   },

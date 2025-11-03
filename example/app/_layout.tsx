@@ -1,7 +1,6 @@
 import { Slot } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRef, useMemo } from "react";
-import { useRouteObserver } from "@react-buoy/route-events";
 import {
   EnvVarsModal,
   createEnvVarConfig,
@@ -14,11 +13,10 @@ import {
   ReactQueryIcon,
   StorageStackIcon,
   Globe,
-  Route,
 } from "@react-buoy/shared-ui";
 import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
 import { NetworkModal } from "@react-buoy/network";
-import { RouteEventsModalWithTabs, routeObserver } from "@react-buoy/route-events";
+import { routeEventsToolPreset } from "@react-buoy/route-events";
 import {
   StorageModalWithTabs,
   type RequiredStorageKey,
@@ -34,11 +32,6 @@ export default function RootLayout() {
 
   const userRole: UserRole = "admin";
   const environment: Environment = "local";
-
-  // Track route changes
-  useRouteObserver((event) => {
-    console.log("🚀 [Route Tracking] Route changed:", event.pathname);
-  });
 
   const requiredEnvVars = useMemo(
     () =>
@@ -196,20 +189,7 @@ export default function RootLayout() {
           // This could be used for analytics tracking in a real app
         },
       },
-      {
-        id: "route-events",
-        name: "ROUTES",
-        description: "Route event tracker",
-        slot: "both",
-        icon: ({ size }: { size: number }) => (
-          <Route size={size} color="#a78bfa" />
-        ),
-        component: RouteEventsModalWithTabs,
-        props: {
-          enableSharedModalDimensions: true,
-          routeObserver: routeObserver,
-        },
-      },
+      routeEventsToolPreset, // Simplest way - just add the preset!
     ],
     [requiredEnvVars, storageRequiredKeys]
   );

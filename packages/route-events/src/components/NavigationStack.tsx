@@ -31,7 +31,7 @@ import { useRouter } from "expo-router";
 // Types
 // ============================================================================
 
-interface NavigationStackProps {
+export interface NavigationStackProps {
   style?: any;
 }
 
