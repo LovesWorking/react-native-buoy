@@ -8,17 +8,35 @@ import {
   autoDiscoverPresetsWithCustom,
 } from "./autoDiscoverPresets";
 import type { InstalledApp } from "./types";
+import { DevToolsVisibilityProvider } from "./DevToolsVisibilityContext";
 
 /**
  * Environment variable configuration
- * Can be a simple string (just check existence) or an object with validation rules
+ * 
+ * This type is compatible with RequiredEnvVar from @react-buoy/env
+ * 
+ * @example
+ * ```tsx
+ * // Simple string (just check existence)
+ * "API_URL"
+ * 
+ * // Check for specific type
+ * { key: "DEBUG_MODE", expectedType: "boolean" }
+ * 
+ * // Check for specific value
+ * { key: "ENVIRONMENT", expectedValue: "development" }
+ * ```
  */
 export type EnvVarConfig =
   | string
   | {
       key: string;
-      expectedValue?: string;
-      expectedType?: "string" | "number" | "boolean" | "object" | "array";
+      expectedValue: string;
+      description?: string;
+    }
+  | {
+      key: string;
+      expectedType: "string" | "number" | "boolean" | "object" | "array" | "url";
       description?: string;
     };
 
@@ -77,6 +95,19 @@ export interface FloatingDevToolsProps extends Omit<FloatingMenuProps, "apps"> {
    * ```
    */
   requiredStorageKeys?: StorageKeyConfig[];
+  
+  /**
+   * Optional children to render within the DevToolsVisibilityProvider context.
+   * Useful for tools that need to react to DevTools visibility (like DebugBordersStandaloneOverlay).
+   *
+   * @example
+   * ```tsx
+   * <FloatingDevTools>
+   *   <DebugBordersStandaloneOverlay />
+   * </FloatingDevTools>
+   * ```
+   */
+  children?: React.ReactNode;
 }
 
 /**
@@ -124,6 +155,7 @@ export const FloatingDevTools = ({
   apps,
   requiredEnvVars,
   requiredStorageKeys,
+  children,
   ...props
 }: FloatingDevToolsProps) => {
   // Build config overrides if requiredEnvVars or requiredStorageKeys are provided
@@ -175,10 +207,13 @@ export const FloatingDevTools = ({
 
   return (
     <View style={styles.container} pointerEvents="box-none">
-      <AppHostProvider>
-        <FloatingMenu {...props} apps={finalApps} />
-        <AppOverlay />
-      </AppHostProvider>
+      <DevToolsVisibilityProvider>
+        <AppHostProvider>
+          <FloatingMenu {...props} apps={finalApps} />
+          <AppOverlay />
+        </AppHostProvider>
+        {children}
+      </DevToolsVisibilityProvider>
     </View>
   );
 };

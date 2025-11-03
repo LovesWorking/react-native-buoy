@@ -47,8 +47,9 @@ export interface InstalledApp {
    * - self-modal: component expects visible/onClose; we supply them.
    * - host-modal: we wrap your component in a simple RN Modal.
    * - inline: full-screen overlay, absolutely positioned.
+   * - toggle-only: no modal/overlay, only calls onPress callback.
    */
-  launchMode?: "self-modal" | "host-modal" | "inline";
+  launchMode?: "self-modal" | "host-modal" | "inline" | "toggle-only";
   /** Prevent more than one instance of this app at a time. */
   singleton?: boolean;
   /** Optional callback invoked when the app icon is pressed. */

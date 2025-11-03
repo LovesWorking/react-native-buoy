@@ -756,6 +756,46 @@ function App() {
 - ✅ Custom configs override auto-discovered presets
 - ✅ Everything imports from `@react-buoy/core`
 
+### Using Helper Functions for Environment Variables
+
+The `@react-buoy/env` package provides helper functions to make defining environment variable configurations more ergonomic:
+
+```tsx
+import { FloatingDevTools, type EnvVarConfig } from "@react-buoy/core";
+import { createEnvVarConfig, envVar } from "@react-buoy/env";
+
+function App() {
+  // Using helper functions for better DX
+  const requiredEnvVars: EnvVarConfig[] = createEnvVarConfig([
+    envVar("EXPO_PUBLIC_API_URL").exists(),
+    envVar("EXPO_PUBLIC_DEBUG_MODE").withType("boolean").build(),
+    envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(),
+  ]);
+
+  return (
+    <FloatingDevTools requiredEnvVars={requiredEnvVars} environment="local" />
+  );
+}
+```
+
+**Helper Function API:**
+
+```tsx
+// Just check if it exists
+envVar("API_URL").exists();
+
+// Check for specific type
+envVar("DEBUG_MODE").withType("boolean").build();
+
+// Check for specific value
+envVar("ENVIRONMENT").withValue("production").build();
+
+// Add description
+envVar("API_URL").withType("string").withDescription("Backend API").build();
+```
+
+**Note:** `createEnvVarConfig()` returns `RequiredEnvVar[]` which is fully compatible with `EnvVarConfig[]` from `@react-buoy/core`. You can use either the helper functions or the object syntax shown in previous examples.
+
 ### When to Use Each Approach
 
 | Approach                                | Best For                                     |

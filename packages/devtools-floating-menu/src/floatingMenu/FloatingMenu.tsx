@@ -11,6 +11,8 @@ import type { Environment } from "@react-buoy/shared-ui";
 import { EnvironmentIndicator, gameUIColors } from "@react-buoy/shared-ui";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
 import { useAppHost } from "./AppHost";
+import { useDevToolsVisibility } from "./DevToolsVisibilityContext";
+import { toggleStateManager } from "./ToggleStateManager";
 
 /**
  * Props for the floating developer tools launcher. Controls which apps are shown and
@@ -45,14 +47,43 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 }) => {
   const [internalHidden, setInternalHidden] = useState(false);
   const [showDial, setShowDial] = useState(false);
+  const [, forceUpdate] = useState(0); // Used to force re-render when toggle states change
 
   const { isAnyOpen, open, registerApps } = useAppHost();
   const wasAppOpenRef = useRef(isAnyOpen);
+  const { setDialOpen, setToolOpen } = useDevToolsVisibility();
 
-  const isHidden = useMemo(
-    () => Boolean(hidden ?? (internalHidden || showDial || isAnyOpen)),
-    [hidden, internalHidden, showDial, isAnyOpen]
+  // Subscribe to toggle state changes to update icon colors
+  useEffect(() => {
+    const unsubscribe = toggleStateManager.subscribe(() => {
+      // Force re-render when any toggle state changes
+      forceUpdate((prev) => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Sync dial state with visibility context
+  useEffect(() => {
+    setDialOpen(showDial);
+  }, [showDial, setDialOpen]);
+
+  // Sync tool open state with visibility context
+  useEffect(() => {
+    setToolOpen(isAnyOpen);
+  }, [isAnyOpen, setToolOpen]);
+
+  // When an app is open or dial is shown, push the menu to the side instead of hiding completely
+  const shouldPushToSide = useMemo(
+    () => Boolean(showDial || isAnyOpen),
+    [showDial, isAnyOpen]
   );
+
+  // Use external hidden prop or internal hidden state for complete hiding
+  const isCompletelyHidden = useMemo(
+    () => Boolean(hidden ?? internalHidden),
+    [hidden, internalHidden]
+  );
+
   const { settings: devToolsSettings } = useDevToolsSettings();
 
   // Register apps with AppHost for persistence
@@ -89,31 +120,38 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   // Dial is the default/only layout
 
   const handlePress = (app: InstalledApp) => {
-    open({
-      id: app.id,
-      title: app.name,
-      component: app.component,
-      props: app.props,
-      launchMode: app.launchMode ?? "self-modal",
-      singleton: app.singleton ?? true,
-    });
+    // Call the app's onPress callback if provided
+    app?.onPress?.();
+
+    // Only open modal if not a toggle-only tool
+    if (app.launchMode !== "toggle-only") {
+      open({
+        id: app.id,
+        title: app.name,
+        component: app.component,
+        props: app.props,
+        launchMode: app.launchMode ?? "self-modal",
+        singleton: app.singleton ?? true,
+      });
+    }
   };
 
   return (
     <>
       <View
-        pointerEvents={isHidden ? "none" : "box-none"}
+        nativeID="floating-devtools-root"
+        pointerEvents={isCompletelyHidden ? "none" : "box-none"}
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
           zIndex: 9999,
-          opacity: isHidden ? 0 : 1
+          opacity: isCompletelyHidden ? 0 : 1,
         }}
       >
-        <FloatingTools enablePositionPersistence>
+        <FloatingTools enablePositionPersistence pushToSide={shouldPushToSide}>
           {/* Environment badge (if enabled in settings) */}
           {devToolsSettings?.floatingTools?.environment && environment ? (
             <EnvironmentIndicator environment={environment} />

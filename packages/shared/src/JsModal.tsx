@@ -1114,6 +1114,7 @@ const JsModalComponent: FC<JsModalProps> = ({
   if (mode === "floating") {
     return (
       <Animated.View
+        nativeID="jsmodal-root"
         style={[
           styles.floatingModal,
           {
@@ -1216,6 +1217,7 @@ const JsModalComponent: FC<JsModalProps> = ({
   return (
     <View style={styles.fullScreenContainer} pointerEvents="box-none">
       <Animated.View
+        nativeID="jsmodal-root"
         style={[
           styles.bottomSheetWrapper,
           {

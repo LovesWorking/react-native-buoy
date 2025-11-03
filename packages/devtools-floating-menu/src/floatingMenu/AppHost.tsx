@@ -165,7 +165,8 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo<AppHostContextValue>(
     () => ({
       openApps,
-      isAnyOpen: openApps.length > 0,
+      // Only count non-toggle-only tools as "open" (toggle-only tools don't show modals)
+      isAnyOpen: openApps.filter(app => app.launchMode !== "toggle-only").length > 0,
       open,
       close,
       closeAll,
@@ -207,6 +208,12 @@ export const AppOverlay = () => {
   if (openApps.length === 0) return null;
 
   const top = openApps[openApps.length - 1];
+  
+  // Skip rendering for toggle-only tools (they don't need a modal/overlay)
+  if (top.launchMode === "toggle-only") {
+    return null;
+  }
+  
   const Comp = top.component as any;
 
   if (top.launchMode === "self-modal") {
