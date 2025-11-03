@@ -16,8 +16,7 @@
     "build": "bob build",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf lib",
-    "test": "pnpm run typecheck",
-    "postinstall": "echo \"Run pnpm build to compile this package\""
+    "test": "pnpm run typecheck"
   },
   "dependencies": {
     "@react-buoy/shared-ui": "workspace:*"

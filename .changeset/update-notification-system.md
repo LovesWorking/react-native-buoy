@@ -5,16 +5,12 @@
 "@react-buoy/env": patch
 "@react-buoy/react-query": patch
 "@react-buoy/route-events": patch
+"@react-buoy/debug-borders": patch
 ---
 
-Add unified update notification system with automatic package manager detection
+Improvements to package compatibility and type system
 
-- **Update Notifications**: Automatically notify users when new versions are available
-  - Detects package manager (npm, pnpm, yarn, bun) and shows appropriate command
-  - Version-locked across all packages for consistency
-  - Smart deduplication to show notification only once
-  - Perfect box alignment with proper ANSI code handling
-  - Clear, user-friendly messaging
+- **Removed postinstall scripts**: Modern package managers (pnpm v10+) block postinstall scripts by default for security. Removed all postinstall scripts to prevent installation warnings.
 
 - **Network Icon Fix**: Changed network tool icon from WifiCircuitIcon to Globe icon
   - Now consistent across dial menu, floating menu, and settings
@@ -31,9 +27,4 @@ Add unified update notification system with automatic package manager detection
   - All typecheck errors resolved
   - Added "toggle-only" to `LaunchMode` type
   - Cleaner import structure for better monorepo compatibility
-
-- **Testing**: Added comprehensive test suite for update notifications
-  - 21 automated tests covering all functionality
-  - Single command for complete verification
-  - Visual demo to preview notification appearance
 
