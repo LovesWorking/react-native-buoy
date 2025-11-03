@@ -15,7 +15,7 @@
  * ```
  */
 
-import { WifiCircuitIcon } from "@react-buoy/shared-ui";
+import { Globe } from "@react-buoy/shared-ui";
 import { NetworkModal } from "./network/components/NetworkModal";
 
 /**
@@ -31,9 +31,7 @@ export const networkToolPreset = {
   name: "NET",
   description: "Network request logger",
   slot: "both" as const,
-  icon: ({ size }: { size: number }) => (
-    <WifiCircuitIcon size={size} colorPreset="cyan" strength={4} noBackground />
-  ),
+  icon: ({ size }: { size: number }) => <Globe size={size} color="#00D4FF" />,
   component: NetworkModal,
   props: {
     enableSharedModalDimensions: true,
@@ -50,7 +48,7 @@ export const networkToolPreset = {
  *
  * const myNetworkTool = createNetworkTool({
  *   name: "REQUESTS",
- *   colorPreset: "purple",
+ *   iconColor: "#9945FF", // Purple color
  *   enableSharedModalDimensions: true,
  * });
  * ```
@@ -60,8 +58,8 @@ export function createNetworkTool(options?: {
   name?: string;
   /** Tool description */
   description?: string;
-  /** Icon color preset (default: "cyan") */
-  colorPreset?: "orange" | "cyan" | "purple" | "pink" | "yellow" | "green";
+  /** Icon color (default: cyan "#00D4FF") */
+  iconColor?: string;
   /** Custom tool ID (default: "network") */
   id?: string;
   /** Enable shared modal dimensions */
@@ -70,23 +68,17 @@ export function createNetworkTool(options?: {
   return {
     id: options?.id || "network",
     name: options?.name || "NET",
-    description:
-      options?.description || "Network request logger",
+    description: options?.description || "Network request logger",
     slot: "both" as const,
     icon: ({ size }: { size: number }) => (
-      <WifiCircuitIcon
-        size={size}
-        colorPreset={options?.colorPreset || "cyan"}
-        strength={4}
-        noBackground
-      />
+      <Globe size={size} color={options?.iconColor || "#00D4FF"} />
     ),
     component: NetworkModal,
     props: {
-      enableSharedModalDimensions: options?.enableSharedModalDimensions !== undefined
-        ? options.enableSharedModalDimensions
-        : true,
+      enableSharedModalDimensions:
+        options?.enableSharedModalDimensions !== undefined
+          ? options.enableSharedModalDimensions
+          : true,
     },
   };
 }
-
