@@ -551,6 +551,104 @@ const TOOLS = [
 </details>
 
 <details>
+<summary><strong>🧭 Route Events (@react-buoy/route-events)</strong></summary>
+
+Comprehensive route tracking and visualization for Expo Router applications. Monitor route changes, explore your app's sitemap, and visualize the navigation stack in real-time.
+
+**Zero Configuration Required** - Just add the component and everything works automatically!
+
+### Install
+
+**npm**
+
+```bash
+npm install @react-buoy/route-events
+npm install expo-router @react-navigation/native  # peer dependencies
+```
+
+**pnpm**
+
+```bash
+pnpm add @react-buoy/route-events
+pnpm add expo-router @react-navigation/native  # peer dependencies
+```
+
+**yarn**
+
+```bash
+yarn add @react-buoy/route-events
+yarn add expo-router @react-navigation/native  # peer dependencies
+```
+
+**bun**
+
+```bash
+bun add @react-buoy/route-events
+bun add expo-router @react-navigation/native  # peer dependencies
+```
+
+### Import & Use
+
+**Simplest way - just import the preset:**
+
+```tsx
+import { routeEventsToolPreset } from "@react-buoy/route-events";
+
+// Add to your apps array
+const TOOLS = [
+  routeEventsToolPreset, // One line - that's it!
+  // ...other tools
+];
+```
+
+**Or customize it:**
+
+```tsx
+import { createRouteEventsTool } from "@react-buoy/route-events";
+import { Navigation } from "@react-buoy/shared-ui";
+
+const TOOLS = [
+  createRouteEventsTool({
+    name: "MY ROUTES",
+    color: "#a78bfa",
+    enableSharedModalDimensions: true,
+  }),
+];
+```
+
+### What you get:
+
+- 🗺️ **Route Sitemap** - Browse all routes in your app with search and navigation
+- 📊 **Event Timeline** - View chronological timeline of all route changes
+- 🏗️ **Navigation Stack** - Real-time visualization of the navigation stack
+- 🔍 **Event Inspection** - Detailed view of route params, segments, and timing
+- 🎯 **Filtering** - Filter events by pathname patterns
+- 📋 **Copy Support** - Copy route data for debugging
+- ⏱️ **Performance Metrics** - Track navigation timing and performance
+- ✨ **Zero Config** - Route tracking starts automatically when you open the modal
+
+### Advanced: Custom Analytics
+
+Only if you need custom analytics tracking, you can use the hook:
+
+```tsx
+import { useRouteObserver } from "@react-buoy/route-events";
+
+export default function RootLayout() {
+  useRouteObserver((event) => {
+    analytics.trackPageView({
+      path: event.pathname,
+      params: event.params,
+    });
+  });
+
+  return <Stack />;
+}
+```
+
+</details>
+
+<details>
 <summary><strong>Dev Tool Settings Menu</strong></summary>
 
 ###
@@ -576,11 +674,13 @@ import { EnvVarsModal, createEnvVarConfig, envVar } from "@react-buoy/env";
 import { NetworkModal } from "@react-buoy/network";
 import { StorageModalWithTabs } from "@react-buoy/storage";
 import { ReactQueryDevToolsModal, WifiToggle } from "@react-buoy/react-query";
+import { routeEventsToolPreset } from "@react-buoy/route-events";
 import {
   EnvLaptopIcon,
   ReactQueryIcon,
   StorageStackIcon,
   Globe,
+  Navigation,
 } from "@react-buoy/shared-ui";
 
 export default function App() {
@@ -655,6 +755,7 @@ export default function App() {
         component: ReactQueryDevToolsModal,
         props: {},
       },
+      routeEventsToolPreset, // Simplest way - one line!
       {
         id: "wifi-toggle",
         name: "WIFI TOGGLE",
