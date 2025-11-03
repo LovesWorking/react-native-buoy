@@ -15,7 +15,7 @@
  * ```
  */
 
-import { Route } from "@react-buoy/shared-ui";
+import { RouteMapIcon } from "@react-buoy/shared-ui";
 import { RouteEventsModalWithTabs } from "./components/RouteEventsModalWithTabs";
 
 /**
@@ -31,7 +31,9 @@ export const routeEventsToolPreset = {
   name: "ROUTES",
   description: "Route tracking & navigation inspector",
   slot: "both" as const,
-  icon: ({ size }: { size: number }) => <Route size={size} color="#f59e0b" />,
+  icon: ({ size }: { size: number }) => (
+    <RouteMapIcon size={size} colorPreset="orange" noBackground />
+  ),
   component: RouteEventsModalWithTabs,
   props: {},
 };
@@ -56,8 +58,8 @@ export function createRouteEventsTool(options?: {
   name?: string;
   /** Tool description */
   description?: string;
-  /** Icon color (default: "#f59e0b") */
-  color?: string;
+  /** Icon color preset (default: "orange") */
+  colorPreset?: "orange" | "cyan" | "purple" | "pink" | "yellow" | "green";
   /** Custom tool ID (default: "route-events") */
   id?: string;
   /** Enable shared modal dimensions */
@@ -70,7 +72,11 @@ export function createRouteEventsTool(options?: {
       options?.description || "Route tracking & navigation inspector",
     slot: "both" as const,
     icon: ({ size }: { size: number }) => (
-      <Route size={size} color={options?.color || "#f59e0b"} />
+      <RouteMapIcon
+        size={size}
+        colorPreset={options?.colorPreset || "orange"}
+        noBackground
+      />
     ),
     component: RouteEventsModalWithTabs,
     props: {
