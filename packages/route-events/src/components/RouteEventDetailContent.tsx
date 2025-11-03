@@ -64,7 +64,7 @@ export function RouteEventDetailContent({
 
         hasLoadedPreferences.current = true;
       } catch (error) {
-        console.warn("Failed to load view preferences:", error);
+        // Failed to load view preferences
       }
     };
 
@@ -80,7 +80,7 @@ export function RouteEventDetailContent({
         view
       );
     } catch (error) {
-      console.warn("Failed to save detail view preference:", error);
+      // Failed to save detail view preference
     }
   }, []);
 

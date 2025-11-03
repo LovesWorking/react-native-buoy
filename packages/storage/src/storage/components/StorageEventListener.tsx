@@ -16,7 +16,6 @@ import {
 } from "../utils/AsyncStorageListener";
 import { translateStorageAction } from "../utils/storageActionHelpers";
 
-
 /**
  * Storage event listener component for monitoring AsyncStorage operations
  * Follows the Sentry component pattern for consistency
@@ -58,7 +57,6 @@ export function StorageEventListener() {
 
   const handleToggleListening = useCallback(async () => {
     if (!isAsyncStorageAvailable) {
-      console.warn("[StorageEventListener] AsyncStorage not available");
       return;
     }
 

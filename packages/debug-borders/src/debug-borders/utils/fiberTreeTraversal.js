@@ -30,9 +30,6 @@ function getReactDevToolsHook() {
   const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
   if (!hook) {
-    console.warn(
-      "[DebugBorders] React DevTools hook not found. Make sure you are in DEV mode."
-    );
     return null;
   }
 
@@ -52,9 +49,6 @@ function getFiberRoots() {
   // The hook maintains a Map of rendererID -> Set of fiber roots
   // For React Native, the rendererID is typically 1
   if (!hook.getFiberRoots) {
-    console.warn(
-      "[DebugBorders] getFiberRoots not available on React DevTools hook"
-    );
     return [];
   }
 
@@ -67,7 +61,6 @@ function getFiberRoots() {
 
     return Array.from(rootsSet);
   } catch (error) {
-    console.warn("[DebugBorders] Error getting fiber roots:", error);
     return [];
   }
 }
@@ -127,7 +120,6 @@ function traverseFiberTree(fiber, callback, depth = 0, visited = new Set()) {
 
   // Protect against excessive depth (probably indicates a problem)
   if (depth > 500) {
-    console.warn("[DebugBorders] Maximum traversal depth reached, stopping");
     return;
   }
 
@@ -155,7 +147,6 @@ function getAllHostComponentInstances() {
   const roots = getFiberRoots();
 
   if (roots.length === 0) {
-    console.log("[DebugBorders] No fiber roots found");
     return [];
   }
 
@@ -221,15 +212,6 @@ function getAllHostComponentInstances() {
     });
   });
 
-  // Only log if this is the first call or component count changed significantly
-  const prevCount = getAllHostComponentInstances.lastCount || 0;
-  if (prevCount === 0 || Math.abs(instances.length - prevCount) > 10) {
-    console.log(
-      `[DebugBorders] Found ${instances.length} host component instances`
-    );
-    getAllHostComponentInstances.lastCount = instances.length;
-  }
-
   return instances;
 }
 
@@ -246,9 +228,6 @@ function isReactDevToolsAvailable() {
   }
 
   if (!hook.getFiberRoots) {
-    console.warn(
-      "[DebugBorders] React DevTools hook exists but getFiberRoots is not available"
-    );
     return false;
   }
 

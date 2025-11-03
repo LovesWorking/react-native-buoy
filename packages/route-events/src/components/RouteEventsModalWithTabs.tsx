@@ -24,7 +24,10 @@ import {
   Filter,
   SearchBar,
 } from "@react-buoy/shared-ui";
-import { routeObserver as defaultRouteObserver, type RouteChangeEvent } from "../RouteObserver";
+import {
+  routeObserver as defaultRouteObserver,
+  type RouteChangeEvent,
+} from "../RouteObserver";
 import { useRouteObserver } from "../useRouteObserver";
 import {
   RouteEventDetailContent,
@@ -105,7 +108,7 @@ export function RouteEventsModalWithTabs({
         }
         hasLoadedTabState.current = true;
       } catch (error) {
-        console.warn("Failed to load route events tab state:", error);
+        // Failed to load tab state
       }
     };
 
@@ -127,7 +130,7 @@ export function RouteEventsModalWithTabs({
         }
         hasLoadedMonitoringState.current = true;
       } catch (error) {
-        console.warn("Failed to load monitoring state:", error);
+        // Failed to load monitoring state
       }
     };
 
@@ -145,7 +148,7 @@ export function RouteEventsModalWithTabs({
           activeTab
         );
       } catch (error) {
-        console.warn("Failed to save tab state:", error);
+        // Failed to save tab state
       }
     };
 
@@ -163,7 +166,7 @@ export function RouteEventsModalWithTabs({
           isListening.toString()
         );
       } catch (error) {
-        console.warn("Failed to save monitoring state:", error);
+        // Failed to save monitoring state
       }
     };
 
@@ -185,7 +188,7 @@ export function RouteEventsModalWithTabs({
         }
         hasLoadedFilters.current = true;
       } catch (error) {
-        console.warn("Failed to load route event filters:", error);
+        // Failed to load filters
       }
     };
 
@@ -204,7 +207,7 @@ export function RouteEventsModalWithTabs({
           JSON.stringify(filters)
         );
       } catch (error) {
-        console.warn("Failed to save route event filters:", error);
+        // Failed to save filters
       }
     };
 

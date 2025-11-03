@@ -34,10 +34,7 @@ function loadAsyncStorage(): StorageLike | null {
     } catch (err) {
       if (!warnedMissing) {
         warnedMissing = true;
-        // Keep this as console.warn for visibility across environments
-        console.warn(
-          "@react-native-async-storage/async-storage not found; falling back to in-memory storage."
-        );
+        // AsyncStorage not found - using in-memory fallback
       }
     }
   }
@@ -56,7 +53,7 @@ export async function safeGetItem(key: string): Promise<string | null> {
       const value = await storage.getItem(key);
       return value;
     } catch (e) {
-      console.warn("AsyncStorage.getItem failed; using memory fallback", e);
+      // AsyncStorage.getItem failed - using memory fallback
     }
   }
   const fallback = memoryStore.has(key) ? memoryStore.get(key)! : null;
@@ -73,7 +70,7 @@ export async function safeSetItem(key: string, value: string): Promise<void> {
       await storage.setItem(key, value);
       return;
     } catch (e) {
-      console.warn("AsyncStorage.setItem failed; using memory fallback", e);
+      // AsyncStorage.setItem failed - using memory fallback
     }
   }
   memoryStore.set(key, value);
@@ -87,7 +84,7 @@ export async function safeRemoveItem(key: string): Promise<void> {
       await storage.removeItem(key);
       return;
     } catch (e) {
-      console.warn("AsyncStorage.removeItem failed; using memory fallback", e);
+      // AsyncStorage.removeItem failed - using memory fallback
     }
   }
   memoryStore.delete(key);

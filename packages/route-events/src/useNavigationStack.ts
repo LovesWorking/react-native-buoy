@@ -7,8 +7,8 @@
  * Data source: @react-navigation/native
  */
 
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigation, useNavigationState } from '@react-navigation/native';
+import { useState, useEffect, useMemo } from "react";
+import { useNavigation, useNavigationState } from "@react-navigation/native";
 
 // ============================================================================
 // Type Definitions
@@ -61,10 +61,9 @@ export interface UseNavigationStackResult {
 function getRouter() {
   try {
     // @ts-ignore - Dynamic require for runtime resolution
-    const expoRouter = require('expo-router');
+    const expoRouter = require("expo-router");
     return expoRouter.router || null;
   } catch (error) {
-    console.warn('Could not access expo-router:', error);
     return null;
   }
 }
@@ -79,7 +78,7 @@ function getRouter() {
 function collectRoutesFromState(
   state: any,
   depth: number = 0,
-  parentPath: string = ''
+  parentPath: string = ""
 ): RouteStackItem[] {
   if (!state || !state.routes) return [];
 
@@ -91,14 +90,14 @@ function collectRoutesFromState(
 
     // Build the path
     let pathname = route.name;
-    if (route.name === 'index') {
-      pathname = '/';
-    } else if (!pathname.startsWith('/')) {
+    if (route.name === "index") {
+      pathname = "/";
+    } else if (!pathname.startsWith("/")) {
       pathname = `/${pathname}`;
     }
 
     // Add parent path
-    if (parentPath && parentPath !== '/') {
+    if (parentPath && parentPath !== "/") {
       pathname = `${parentPath}${pathname}`;
     }
 
@@ -106,9 +105,12 @@ function collectRoutesFromState(
     if (route.params) {
       const paramEntries = Object.entries(route.params);
       if (paramEntries.length > 0) {
-        pathname = pathname.replace(/\[([^\]]+)\]/g, (match: string, param: string) => {
-          return route.params[param] || match;
-        });
+        pathname = pathname.replace(
+          /\[([^\]]+)\]/g,
+          (match: string, param: string) => {
+            return route.params[param] || match;
+          }
+        );
       }
     }
 
@@ -122,7 +124,11 @@ function collectRoutesFromState(
 
     // If this route has nested state and is focused, recurse
     if (isFocused && route.state) {
-      const nestedRoutes = collectRoutesFromState(route.state, depth + 1, pathname);
+      const nestedRoutes = collectRoutesFromState(
+        route.state,
+        depth + 1,
+        pathname
+      );
       routes.push(...nestedRoutes);
     }
   }
@@ -152,7 +158,7 @@ export function useNavigationStack(): UseNavigationStackResult {
   const navigation = useNavigation();
 
   // Subscribe to navigation state changes - this will cause re-renders when state updates
-  const navigationState = useNavigationState(state => state);
+  const navigationState = useNavigationState((state) => state);
 
   // Mark as loaded once we have navigation
   useEffect(() => {
@@ -167,25 +173,26 @@ export function useNavigationStack(): UseNavigationStackResult {
       const routes = collectRoutesFromState(navigationState);
 
       // Filter out internal Expo Router routes (layouts, __root, etc.)
-      const filteredRoutes = routes.filter(route => {
+      const filteredRoutes = routes.filter((route) => {
         // Remove __root and other internal routes
-        if (route.name.startsWith('__')) return false;
-        if (route.name.includes('_layout')) return false;
-        if (route.name.startsWith('+not-found')) return false;
+        if (route.name.startsWith("__")) return false;
+        if (route.name.includes("_layout")) return false;
+        if (route.name.startsWith("+not-found")) return false;
         return true;
       });
 
       // If we filtered everything out, just keep the last route
-      const finalRoutes = filteredRoutes.length > 0 ? filteredRoutes : routes.slice(-1);
+      const finalRoutes =
+        filteredRoutes.length > 0 ? filteredRoutes : routes.slice(-1);
 
       // The last route in the collected list is the focused one
       return finalRoutes.map((route, index) => {
         // Clean up pathname by removing /__root prefix
         let cleanPath = route.path || `/${route.name}`;
-        cleanPath = cleanPath.replace(/^\/__root/, '');
+        cleanPath = cleanPath.replace(/^\/__root/, "");
         // Ensure we always have at least a /
-        if (!cleanPath || cleanPath === '') {
-          cleanPath = '/';
+        if (!cleanPath || cleanPath === "") {
+          cleanPath = "/";
         }
 
         return {
@@ -199,14 +206,14 @@ export function useNavigationStack(): UseNavigationStackResult {
         };
       });
     } catch (err) {
-      console.error('Error transforming navigation state:', err);
+      console.error("Error transforming navigation state:", err);
       return [];
     }
   }, [navigationState]);
 
   // Get focused route
   const focusedRoute = useMemo(() => {
-    return stack.find(item => item.isFocused) || null;
+    return stack.find((item) => item.isFocused) || null;
   }, [stack]);
 
   // Helper properties
@@ -221,32 +228,28 @@ export function useNavigationStack(): UseNavigationStackResult {
   // Navigation actions
   const navigateToIndex = (index: number) => {
     if (index >= stack.length || index < 0) {
-      console.warn('Invalid stack index:', index);
       return;
     }
 
     const targetRoute = stack[index];
     if (!targetRoute) {
-      console.warn('Route not found at index:', index);
       return;
     }
 
     const router = getRouter();
     if (!router) {
-      console.warn('Router not available');
       return;
     }
 
     try {
       router.navigate(targetRoute.pathname);
     } catch (err) {
-      console.error('Failed to navigate:', err);
+      console.error("Failed to navigate:", err);
     }
   };
 
   const popToIndex = (index: number) => {
     if (index >= stack.length || index < 0) {
-      console.warn('Invalid stack index:', index);
       return;
     }
 
@@ -254,13 +257,11 @@ export function useNavigationStack(): UseNavigationStackResult {
     const popCount = currentIndex - index;
 
     if (popCount <= 0) {
-      console.warn('Cannot pop to higher index');
       return;
     }
 
     const router = getRouter();
     if (!router) {
-      console.warn('Router not available');
       return;
     }
 
@@ -270,32 +271,29 @@ export function useNavigationStack(): UseNavigationStackResult {
         router.back();
       }
     } catch (err) {
-      console.error('Failed to pop:', err);
+      console.error("Failed to pop:", err);
     }
   };
 
   const goBack = () => {
     if (isAtRoot) {
-      console.warn('Already at root, cannot go back');
       return;
     }
 
     const router = getRouter();
     if (!router) {
-      console.warn('Router not available');
       return;
     }
 
     try {
       router.back();
     } catch (err) {
-      console.error('Failed to go back:', err);
+      console.error("Failed to go back:", err);
     }
   };
 
   const popToTop = () => {
     if (isAtRoot) {
-      console.warn('Already at root');
       return;
     }
 

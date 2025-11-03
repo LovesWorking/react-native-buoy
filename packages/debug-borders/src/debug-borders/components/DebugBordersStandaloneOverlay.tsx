@@ -23,9 +23,6 @@ try {
   useDevToolsVisibility = coreModule.useDevToolsVisibility;
 } catch (e) {
   // DevToolsVisibility not available, that's ok - borders will always work
-  console.log(
-    "[DebugBorders] DevToolsVisibility not available, borders will not auto-hide"
-  );
 }
 
 export function DebugBordersStandaloneOverlay() {
@@ -38,16 +35,6 @@ export function DebugBordersStandaloneOverlay() {
 
   // Effective enabled state: user enabled AND no DevTools active
   const effectivelyEnabled = enabled && !isDevToolsActive;
-
-  // Debug logging
-  useEffect(() => {
-    console.log("[DebugBorders] State:", {
-      enabled,
-      isDevToolsActive,
-      effectivelyEnabled,
-      rectanglesCount: rectangles.length,
-    });
-  }, [enabled, isDevToolsActive, effectivelyEnabled, rectangles.length]);
 
   // Subscribe to manager
   useEffect(() => {
@@ -75,7 +62,6 @@ export function DebugBordersStandaloneOverlay() {
       try {
         const instances = getAllHostComponentInstances();
         if (instances.length === 0) {
-          console.warn("[DebugBorders] No instances found");
           measuringRef.current = false;
           return;
         }
@@ -84,15 +70,6 @@ export function DebugBordersStandaloneOverlay() {
 
         if (mounted) {
           setRectangles(measurements);
-          // Only log on first render or when component count changes significantly
-          if (
-            rectangles.length === 0 ||
-            Math.abs(measurements.length - rectangles.length) > 10
-          ) {
-            console.log(
-              `[DebugBorders] Updated measurements: ${measurements.length} components`
-            );
-          }
         }
       } catch (error) {
         console.error("[DebugBorders] Error updating measurements:", error);
@@ -100,9 +77,6 @@ export function DebugBordersStandaloneOverlay() {
         measuringRef.current = false;
       }
     };
-
-    // Log when borders are enabled
-    console.log("[DebugBorders] Debug borders enabled");
 
     // Initial measurement with delay to let UI settle
     const initialTimer = setTimeout(() => {
@@ -113,7 +87,6 @@ export function DebugBordersStandaloneOverlay() {
     timer = setInterval(updateMeasurements, 2000);
 
     return () => {
-      console.log("[DebugBorders] Debug borders disabled");
       mounted = false;
       clearTimeout(initialTimer);
       clearInterval(timer);

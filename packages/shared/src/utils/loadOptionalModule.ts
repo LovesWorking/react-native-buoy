@@ -7,9 +7,7 @@ interface LoadModuleLogger {
 
 const defaultLogger: Required<LoadModuleLogger> = {
   log: () => {}, // Debug logging removed for production
-  warn: (...args) => {
-    console.warn("[optional-module]", ...args);
-  },
+  warn: () => {}, // Warnings disabled in production
   error: (...args) => {
     console.error("[optional-module]", ...args);
   },

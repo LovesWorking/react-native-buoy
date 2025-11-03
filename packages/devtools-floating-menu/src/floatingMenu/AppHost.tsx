@@ -48,8 +48,10 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
     let resolvedId = "";
 
     setOpenApps((current) => {
-      const { apps, instanceId } = resolveOpenAppsState(current, def, () =>
-        `${def.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const { apps, instanceId } = resolveOpenAppsState(
+        current,
+        def,
+        () => `${def.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`
       );
       resolvedId = instanceId;
       return apps;
@@ -71,7 +73,9 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
     pendingRestoreRef.current = null;
 
     pendingIds.forEach((appId) => {
-      const appDef = installedAppsRef.current.find((app: any) => app.id === appId);
+      const appDef = installedAppsRef.current.find(
+        (app: any) => app.id === appId
+      );
       if (appDef) {
         open({
           id: appDef.id,
@@ -101,7 +105,7 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       } catch (error) {
-        console.warn("Failed to restore open apps:", error);
+        // Failed to restore open apps - continue with fresh state
       }
 
       setIsRestored(true);
@@ -166,7 +170,8 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       openApps,
       // Only count non-toggle-only tools as "open" (toggle-only tools don't show modals)
-      isAnyOpen: openApps.filter(app => app.launchMode !== "toggle-only").length > 0,
+      isAnyOpen:
+        openApps.filter((app) => app.launchMode !== "toggle-only").length > 0,
       open,
       close,
       closeAll,
@@ -208,12 +213,12 @@ export const AppOverlay = () => {
   if (openApps.length === 0) return null;
 
   const top = openApps[openApps.length - 1];
-  
+
   // Skip rendering for toggle-only tools (they don't need a modal/overlay)
   if (top.launchMode === "toggle-only") {
     return null;
   }
-  
+
   const Comp = top.component as any;
 
   if (top.launchMode === "self-modal") {

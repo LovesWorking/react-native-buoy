@@ -40,7 +40,7 @@ const saveWifiState = async (enabled: boolean) => {
       enabled.toString()
     );
   } catch (error) {
-    console.warn("Failed to save WiFi state:", error);
+    // Failed to save WiFi state
   }
 };
 
@@ -151,7 +151,6 @@ export const wifiTogglePreset = {
     const newState = !currentState;
     onlineManager.setOnline(newState);
     saveWifiState(newState);
-    console.log(`[WiFi] Toggled ${currentState ? "OFF" : "ON"}`);
     // Notify FloatingMenu to re-render and update icon
     manager?.notify();
   },
@@ -207,7 +206,6 @@ export function createWifiToggleTool(options?: {
       const newState = !currentState;
       onlineManager.setOnline(newState);
       saveWifiState(newState);
-      console.log(`[WiFi] Toggled ${currentState ? "OFF" : "ON"}`);
       // Notify FloatingMenu to re-render and update icon
       manager?.notify();
     },

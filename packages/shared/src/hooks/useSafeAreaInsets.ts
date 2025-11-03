@@ -109,9 +109,7 @@ try {
     // react-native-safe-area-context package found - using native implementation
   }
 } catch {
-  console.warn(
-    "⚠️ react-native-safe-area-context not found - using pure JS fallback implementation"
-  );
+  // react-native-safe-area-context not found - using pure JS fallback
 }
 
 // Create a wrapper hook that always exists

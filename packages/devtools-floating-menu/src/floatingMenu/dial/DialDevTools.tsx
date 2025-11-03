@@ -174,11 +174,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   if (__DEV__) {
     const totalEnabled = dialApps.filter((app) => isDialEnabled(app.id)).length;
     if (totalEnabled > MAX_DIAL_SLOTS) {
-      console.warn(
-        `[DialDevTools] Only ${MAX_DIAL_SLOTS} dial tools can be shown at once. ${
-          totalEnabled - MAX_DIAL_SLOTS
-        } tool(s) were hidden. Adjust dial defaults to avoid this warning.`
-      );
+      // More tools enabled than can be shown - they will be hidden
     }
   }
 

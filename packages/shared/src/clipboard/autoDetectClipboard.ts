@@ -20,7 +20,7 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
       const expoClipboard = await loadOptionalModule<any>("expo-clipboard", {
         logger: {
           log: () => {}, // Debug logging removed
-          warn: (...args: unknown[]) => console.warn("[RnBetterDevTools]", ...args),
+          warn: () => {}, // Warnings disabled in production
           error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
         },
         loader: async () => {
@@ -54,7 +54,7 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
         {
           logger: {
             log: () => {}, // Debug logging removed
-            warn: (...args: unknown[]) => console.warn("[RnBetterDevTools]", ...args),
+            warn: () => {}, // Warnings disabled in production
             error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
           },
           loader: async () => {
@@ -97,13 +97,7 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
 
   if (!warnedMissing) {
     warnedMissing = true;
-    console.warn(
-      "[RnBetterDevTools] No clipboard library detected. Copy functionality will be disabled.\n" +
-        "To enable copy functionality, install one of the following:\n" +
-        "- For Expo: expo install expo-clipboard\n" +
-        "- For React Native CLI: npm install @react-native-clipboard/clipboard\n" +
-        "Or provide a custom onCopy function to RnBetterDevToolsBubble",
-    );
+    // Clipboard library not found - copy functionality disabled
   }
 
   return null;

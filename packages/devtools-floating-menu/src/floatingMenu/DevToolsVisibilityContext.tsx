@@ -1,11 +1,19 @@
 /**
  * DevToolsVisibilityContext
- * 
+ *
  * Tracks when DevTools UI is visible (dial menu, modals, etc.)
  * Used by other tools (like debug borders) to hide when DevTools are active
  */
 
-import { createContext, useContext, ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 
 interface DevToolsVisibilityContextValue {
   /** True when dial menu is open */
@@ -20,9 +28,14 @@ interface DevToolsVisibilityContextValue {
   setToolOpen: (open: boolean) => void;
 }
 
-const DevToolsVisibilityContext = createContext<DevToolsVisibilityContextValue | null>(null);
+const DevToolsVisibilityContext =
+  createContext<DevToolsVisibilityContextValue | null>(null);
 
-export function DevToolsVisibilityProvider({ children }: { children: ReactNode }) {
+export function DevToolsVisibilityProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [isDialOpen, setDialOpen] = useState(false);
   const [isToolOpen, setToolOpen] = useState(false);
 
@@ -30,15 +43,6 @@ export function DevToolsVisibilityProvider({ children }: { children: ReactNode }
     () => isDialOpen || isToolOpen,
     [isDialOpen, isToolOpen]
   );
-
-  // Debug logging
-  useEffect(() => {
-    console.log('[DevToolsVisibility] State changed:', {
-      isDialOpen,
-      isToolOpen,
-      isDevToolsActive,
-    });
-  }, [isDialOpen, isToolOpen, isDevToolsActive]);
 
   const value = useMemo(
     () => ({
@@ -72,4 +76,3 @@ export function useDevToolsVisibility() {
   }
   return context;
 }
-

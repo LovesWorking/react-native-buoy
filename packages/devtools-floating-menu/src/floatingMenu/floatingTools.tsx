@@ -157,7 +157,7 @@ function useFloatingToolsPosition({
           safeSetItem(STORAGE_KEYS.BUBBLE_POSITION_Y, y.toString()),
         ]);
       } catch (error) {
-        console.warn("[FloatingTools] Failed to save position:", error);
+        // Failed to save position - continue without persistence
       }
     },
     [enabled]
@@ -187,7 +187,7 @@ function useFloatingToolsPosition({
         if (!Number.isNaN(x) && !Number.isNaN(y)) return { x, y };
       }
     } catch (error) {
-      console.warn("[FloatingTools] Failed to load position:", error);
+      // Failed to load position - use default
     }
     return null;
   }, [enabled]);
@@ -435,10 +435,10 @@ export function FloatingTools({
 
   // Store the position before hiding to restore when showing
   const savedPositionRef = useRef<{ x: number; y: number } | null>(null);
-  
+
   // Track if the hide state was triggered by pushToSide prop vs user toggle
   const isPushedBySideRef = useRef(false);
-  
+
   // Track if user has explicitly chosen to show the menu (overriding pushToSide)
   const userWantsVisibleRef = useRef(false);
 
@@ -462,14 +462,23 @@ export function FloatingTools({
     // 2. Not currently hidden
     // 3. Not being dragged
     // 4. User hasn't manually restored (userWantsVisibleRef)
-    if (pushToSide && !isHidden && !isDragging && !userWantsVisibleRef.current) {
+    if (
+      pushToSide &&
+      !isHidden &&
+      !isDragging &&
+      !userWantsVisibleRef.current
+    ) {
       // Push to side
-      const currentX = (animatedPosition.x as Animated.Value & { __getValue(): number }).__getValue();
-      const currentY = (animatedPosition.y as Animated.Value & { __getValue(): number }).__getValue();
-      
+      const currentX = (
+        animatedPosition.x as Animated.Value & { __getValue(): number }
+      ).__getValue();
+      const currentY = (
+        animatedPosition.y as Animated.Value & { __getValue(): number }
+      ).__getValue();
+
       // Save current position
       savedPositionRef.current = { x: currentX, y: currentY };
-      
+
       const hiddenX = screenWidth - 32; // Show only the grabber
       isPushedBySideRef.current = true;
       setIsHidden(true);
@@ -496,7 +505,14 @@ export function FloatingTools({
         });
       }
     }
-  }, [pushToSide, isHidden, isDragging, screenWidth, animatedPosition, savePosition]);
+  }, [
+    pushToSide,
+    isHidden,
+    isDragging,
+    screenWidth,
+    animatedPosition,
+    savePosition,
+  ]);
 
   // Check if bubble is in hidden position on load
   useEffect(() => {
@@ -587,7 +603,7 @@ export function FloatingTools({
     } else {
       // Hide the bubble - save current position before hiding
       savedPositionRef.current = { x: currentX, y: currentY };
-      
+
       // User explicitly wants the menu hidden
       userWantsVisibleRef.current = false;
 
@@ -614,7 +630,6 @@ export function FloatingTools({
       // Check if bubble is more than 50% over the right edge
       const bubbleMidpoint = currentX + bubbleSize.width / 2;
       const shouldHide = bubbleMidpoint > screenWidth;
-
 
       if (shouldHide) {
         // Animate to hidden position (only grabber visible)

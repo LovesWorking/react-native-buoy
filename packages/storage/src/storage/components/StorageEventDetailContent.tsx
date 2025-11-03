@@ -79,7 +79,6 @@ export function StorageEventDetailContent({
 
     const loadPreferences = async () => {
       try {
-
         // Load detail view preference (current/diff)
         const savedDetailView = await AsyncStorage.getItem(
           devToolsStorageKeys.storage.detailView()
@@ -98,7 +97,7 @@ export function StorageEventDetailContent({
 
         hasLoadedPreferences.current = true;
       } catch (error) {
-        console.warn("Failed to load view preferences:", error);
+        // Failed to load view preferences
       }
     };
 
@@ -114,7 +113,7 @@ export function StorageEventDetailContent({
         view
       );
     } catch (error) {
-      console.warn("Failed to save detail view preference:", error);
+      // Failed to save detail view preference
     }
   }, []);
 
@@ -127,7 +126,7 @@ export function StorageEventDetailContent({
         mode
       );
     } catch (error) {
-      console.warn("Failed to save diff viewer mode preference:", error);
+      // Failed to save diff viewer mode preference
     }
   }, []);
 

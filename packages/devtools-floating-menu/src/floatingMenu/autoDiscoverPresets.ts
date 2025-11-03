@@ -127,7 +127,9 @@ export function autoDiscoverPresets(): InstalledApp[] {
       loader: () => {
         try {
           // @ts-ignore - Dynamic import that may not exist
-          const { debugBordersToolPreset } = require("@react-buoy/debug-borders");
+          const {
+            debugBordersToolPreset,
+          } = require("@react-buoy/debug-borders");
           return debugBordersToolPreset;
         } catch {
           return null;
@@ -150,7 +152,6 @@ export function autoDiscoverPresets(): InstalledApp[] {
     } catch (error) {
       // Silently skip packages that aren't installed
       // This is expected behavior - not all packages will be installed
-      console.debug(`[DevTools] Skipping ${name} - not installed`);
     }
   }
 

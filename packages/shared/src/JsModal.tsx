@@ -85,7 +85,7 @@ class ModalStorage {
       this.memoryCache[key] = value;
       await safeSetItem(`@modal_state_${key}`, JSON.stringify(value));
     } catch (error) {
-      console.warn("Failed to save modal state:", error);
+      // Failed to save modal state
     }
   }
 
@@ -110,7 +110,7 @@ class ModalStorage {
         return parsed;
       }
     } catch (error) {
-      console.warn("Failed to load modal state:", error);
+      // Failed to load modal state
     }
     return null;
   }

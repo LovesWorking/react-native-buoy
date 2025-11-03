@@ -1,6 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { onlineManager } from "@tanstack/react-query";
-import { devToolsStorageKeys, safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
+import {
+  devToolsStorageKeys,
+  safeGetItem,
+  safeSetItem,
+} from "@react-buoy/shared-ui";
 
 /**
  * Synchronizes a local Wi-Fi toggle with React Query’s `onlineManager`, persisting the selection
@@ -17,7 +21,7 @@ export function useWifiState() {
     const loadPersistedState = async () => {
       try {
         const savedState = await safeGetItem(
-          devToolsStorageKeys.settings.wifiEnabled(),
+          devToolsStorageKeys.settings.wifiEnabled()
         );
 
         if (savedState !== null) {
@@ -28,7 +32,7 @@ export function useWifiState() {
 
         hasLoadedPersistedState.current = true;
       } catch (error) {
-        console.warn("Failed to load WiFi state:", error);
+        // Failed to load WiFi state
       }
     };
 
@@ -40,10 +44,10 @@ export function useWifiState() {
     try {
       await safeSetItem(
         devToolsStorageKeys.settings.wifiEnabled(),
-        enabled.toString(),
+        enabled.toString()
       );
     } catch (error) {
-      console.warn("Failed to save WiFi state:", error);
+      // Failed to save WiFi state
     }
   };
 

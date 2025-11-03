@@ -5,8 +5,13 @@
  * and search capabilities.
  */
 
-import { useState, useEffect, useMemo } from 'react';
-import { RouteParser, type RouteInfo, type RouteGroup, type RouteStats } from './RouteParser';
+import { useState, useEffect, useMemo } from "react";
+import {
+  RouteParser,
+  type RouteInfo,
+  type RouteGroup,
+  type RouteStats,
+} from "./RouteParser";
 
 // Type-only definition to avoid Metro resolution issues
 type RouteNode = any;
@@ -19,10 +24,9 @@ function getRouterStore() {
   try {
     // Try the build path first (more reliable)
     // @ts-ignore - Dynamic require for runtime resolution
-    const routerStore = require('expo-router/build/global-state/router-store');
+    const routerStore = require("expo-router/build/global-state/router-store");
     return routerStore?.store || null;
   } catch (error) {
-    console.warn('Could not access expo-router store:', error);
     return null;
   }
 }
@@ -45,7 +49,6 @@ function getRouteNode(): RouteNode | null {
 
     return store.routeNode || null;
   } catch (error) {
-    console.warn('Could not get route node:', error);
     return null;
   }
 }
@@ -63,7 +66,7 @@ export interface UseRouteSitemapOptions {
   /**
    * How to sort routes
    */
-  sortBy?: 'path' | 'type' | 'name';
+  sortBy?: "path" | "type" | "name";
 
   /**
    * Auto-refresh when route tree changes
@@ -140,8 +143,8 @@ export function useRouteSitemap(
   options: UseRouteSitemapOptions = {}
 ): UseRouteSitemapResult {
   const {
-    searchQuery = '',
-    sortBy = 'path',
+    searchQuery = "",
+    sortBy = "path",
     autoRefresh = false,
     refreshInterval = 1000,
   } = options;
@@ -200,7 +203,8 @@ export function useRouteSitemap(
 
   // Helper functions
   const findRoute = (path: string) => RouteParser.findRouteByPath(routes, path);
-  const getParents = (path: string) => RouteParser.getParentRoutes(routes, path);
+  const getParents = (path: string) =>
+    RouteParser.getParentRoutes(routes, path);
 
   return {
     routes: sortedRoutes,

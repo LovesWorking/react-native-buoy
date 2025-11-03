@@ -111,7 +111,7 @@ export function StorageModalWithTabs({
         }
         hasLoadedTabState.current = true;
       } catch (error) {
-        console.warn("Failed to load storage tab state:", error);
+        // Failed to load tab state
       }
     };
 
@@ -136,7 +136,7 @@ export function StorageModalWithTabs({
         }
         hasLoadedMonitoringState.current = true;
       } catch (error) {
-        console.warn("Failed to load monitoring state:", error);
+        // Failed to load monitoring state
       }
     };
 
@@ -157,7 +157,7 @@ export function StorageModalWithTabs({
           activeTab
         );
       } catch (error) {
-        console.warn("Failed to save tab state:", error);
+        // Failed to save tab state
       }
     };
 
@@ -175,7 +175,7 @@ export function StorageModalWithTabs({
           isListening.toString()
         );
       } catch (error) {
-        console.warn("Failed to save monitoring state:", error);
+        // Failed to save monitoring state
       }
     };
 
@@ -197,7 +197,7 @@ export function StorageModalWithTabs({
         }
         hasLoadedFilters.current = true;
       } catch (error) {
-        console.warn("Failed to load storage event filters:", error);
+        // Failed to load filters
       }
     };
 
@@ -216,7 +216,7 @@ export function StorageModalWithTabs({
           JSON.stringify(filters)
         );
       } catch (error) {
-        console.warn("Failed to save storage event filters:", error);
+        // Failed to save filters
       }
     };
 

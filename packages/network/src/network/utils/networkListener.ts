@@ -126,7 +126,7 @@ class NetworkListener {
       try {
         listener(event);
       } catch (error) {
-        console.warn("[NetworkListener] Error in event listener:", error);
+        // Error in event listener - continuing with others
       }
     });
   }
@@ -258,10 +258,7 @@ class NetworkListener {
         }
       }
     } catch (error) {
-      console.warn(
-        "[NetworkListener] Failed to parse response:",
-        error
-      );
+      // Failed to parse response
       body = "~~~ unable to read body ~~~";
     }
 
@@ -349,7 +346,6 @@ class NetworkListener {
    */
   startListening() {
     if (this.isListening) {
-      console.warn("[NetworkListener] Already listening");
       return;
     }
 
@@ -667,7 +663,6 @@ class NetworkListener {
    */
   stopListening() {
     if (!this.isListening) {
-      console.warn("[NetworkListener] Not currently listening");
       return;
     }
 

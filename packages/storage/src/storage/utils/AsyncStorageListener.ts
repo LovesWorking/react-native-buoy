@@ -200,7 +200,7 @@ class AsyncStorageListener {
       try {
         listener(event);
       } catch (error) {
-        console.warn("[AsyncStorageListener] Error in event listener:", error);
+        // Error in event listener - continuing with others
       }
     });
   }
@@ -218,25 +218,16 @@ class AsyncStorageListener {
    */
   async startListening() {
     if (this.isListening) {
-      console.warn(
-        "[AsyncStorageListener] Already listening - skipping re-initialization"
-      );
       return;
     }
 
     const initialized = await this.initialize();
     if (!initialized) {
-      console.error(
-        "[AsyncStorageListener] Failed to initialize - AsyncStorage not available"
-      );
       return;
     }
 
     // Check if methods are already swizzled (this can happen if initialize was called twice somehow)
     if (AsyncStorage && AsyncStorage.setItem.name === "swizzled_setItem") {
-      console.warn(
-        "[AsyncStorageListener] Methods already swizzled - restoring originals first"
-      );
       this.restoreOriginalMethods();
     }
 
@@ -412,12 +403,10 @@ class AsyncStorageListener {
    */
   stopListening() {
     if (!this.isListening) {
-      console.warn("[AsyncStorageListener] Not currently listening");
       return;
     }
 
     if (!AsyncStorage) {
-      console.warn("[AsyncStorageListener] AsyncStorage module not loaded");
       return;
     }
 

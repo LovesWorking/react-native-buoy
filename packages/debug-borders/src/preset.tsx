@@ -65,7 +65,6 @@ export const debugBordersToolPreset = {
   props: {},
   launchMode: "toggle-only" as const,
   onPress: () => {
-    console.log("[DebugBorders] Toggle pressed");
     DebugBordersManager.toggle();
     // Notify FloatingMenu to re-render and update icon
     manager?.notify();
@@ -120,7 +119,6 @@ export function createDebugBordersTool(options?: {
     props: {},
     launchMode: "toggle-only" as const,
     onPress: () => {
-      console.log("[DebugBorders] Toggle pressed");
       DebugBordersManager.toggle();
       manager?.notify();
     },
