@@ -406,6 +406,9 @@ function App() {
 
 Comprehensive route tracking and visualization for Expo Router applications. Monitor route changes, explore your app's sitemap, and visualize the navigation stack in real-time.
 
+![routes](https://github.com/user-attachments/assets/90e55dc7-f8ab-423a-9770-84b9ff9c8446)
+
+
 **Zero Configuration Required** - Just add the component and everything works automatically!
 
 ### Install
@@ -456,7 +459,11 @@ bun add expo-router @react-navigation/native  # peer dependencies
 <details>
 <summary><strong>🎨 Debug Borders (@react-buoy/debug-borders)</strong></summary>
 
+
 Visual debugging tool that adds colored borders around all React Native components to help identify layout issues, nesting problems, and component boundaries.
+
+![border s](https://github.com/user-attachments/assets/945fdb5d-2546-442d-98e7-ef73231abbba)
+
 
 ### Install
 
