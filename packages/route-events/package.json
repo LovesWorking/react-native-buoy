@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/route-events",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "route-events package",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
