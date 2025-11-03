@@ -1,13 +1,9 @@
 import { Slot } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRef } from "react";
-import {
-  FloatingDevTools,
-  type EnvVarConfig,
-  type StorageKeyConfig,
-  type Environment,
-  type UserRole,
-} from "@react-buoy/core";
+import { FloatingDevTools } from "@react-buoy/core";
+import type { Environment, UserRole } from "@react-buoy/env";
+import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
 
 export default function RootLayout() {
   const queryClientRef = useRef<QueryClient | null>(null);

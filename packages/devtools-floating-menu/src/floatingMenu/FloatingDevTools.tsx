@@ -133,7 +133,6 @@ export const FloatingDevTools = ({
     // If requiredEnvVars provided, create ENV tool config
     if (requiredEnvVars && requiredEnvVars.length > 0) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const {
           createEnvTool,
           createEnvVarConfig,
@@ -152,7 +151,6 @@ export const FloatingDevTools = ({
     // If requiredStorageKeys provided, create Storage tool config
     if (requiredStorageKeys && requiredStorageKeys.length > 0) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { createStorageTool } = require("@react-buoy/storage");
         overrides.push(createStorageTool({ requiredStorageKeys }));
       } catch (error) {
