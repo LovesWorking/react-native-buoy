@@ -8,9 +8,22 @@
 "@react-buoy/debug-borders": patch
 ---
 
-Improvements to package compatibility and type system
+Improvements to package compatibility, type system, and documentation
 
 - **Removed postinstall scripts**: Modern package managers (pnpm v10+) block postinstall scripts by default for security. Removed all postinstall scripts to prevent installation warnings.
+
+- **Debug Borders Auto-Discovery**: `@react-buoy/debug-borders` now auto-discovers and integrates automatically
+  - No manual import or setup required
+  - Automatically appears in DevTools Settings menu when installed
+  - Automatically renders the overlay when enabled
+  - Works seamlessly with FloatingDevTools visibility context
+  - Added `debugBordersToolPreset` and `createDebugBordersTool` exports
+
+- **Documentation Updates**: 
+  - Added `@react-buoy/debug-borders` to README with auto-discovery setup
+  - Updated all package installation examples to include debug-borders
+  - Clarified zero-config integration pattern
+  - Updated example app to demonstrate auto-discovery
 
 - **Network Icon Fix**: Changed network tool icon from WifiCircuitIcon to Globe icon
   - Now consistent across dial menu, floating menu, and settings
@@ -25,6 +38,6 @@ Improvements to package compatibility and type system
 - **TypeScript Improvements**: 
   - Removed problematic re-exports that caused `rootDir` conflicts
   - All typecheck errors resolved
-  - Added "toggle-only" to `LaunchMode` type
+  - Added "toggle-only" and "settings-only" to `LaunchMode` type
   - Cleaner import structure for better monorepo compatibility
 
