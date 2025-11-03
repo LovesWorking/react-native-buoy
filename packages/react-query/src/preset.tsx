@@ -15,9 +15,40 @@
  * ```
  */
 
-import { ReactQueryIcon, WifiCircuitIcon } from "@react-buoy/shared-ui";
+import { ReactQueryIcon, WifiCircuitIcon, Wifi } from "@react-buoy/shared-ui";
 import { ReactQueryDevToolsModal } from "./react-query/components/ReactQueryDevToolsModal";
-import { WifiToggleModal } from "./react-query/components/WifiToggleModal";
+import { onlineManager } from "@tanstack/react-query";
+import { devToolsStorageKeys, safeSetItem } from "@react-buoy/shared-ui";
+
+// Empty component for toggle-only mode
+const EmptyComponent = () => null;
+
+// Get the toggle state manager if available
+let manager: any = null;
+try {
+  const coreModule = require("@react-buoy/core");
+  manager = coreModule.toggleStateManager;
+} catch (e) {
+  // Manager not available, that's ok - icons just won't update
+}
+
+// Save WiFi state to storage
+const saveWifiState = async (enabled: boolean) => {
+  try {
+    await safeSetItem(
+      devToolsStorageKeys.settings.wifiEnabled(),
+      enabled.toString()
+    );
+  } catch (error) {
+    console.warn("Failed to save WiFi state:", error);
+  }
+};
+
+// WiFi icon that changes based on online state (no hooks!)
+function WifiIcon({ size }: { size: number }) {
+  const isOnline = onlineManager.isOnline();
+  return <Wifi size={size} color={isOnline ? "#10B981" : "#DC2626"} />;
+}
 
 /**
  * Pre-configured React Query devtools for FloatingDevTools.
@@ -72,8 +103,7 @@ export function createReactQueryTool(options?: {
   return {
     id: options?.id || "query",
     name: options?.name || "QUERY",
-    description:
-      options?.description || "React Query inspector",
+    description: options?.description || "React Query inspector",
     slot: "both" as const,
     icon: ({ size }: { size: number }) => (
       <ReactQueryIcon
@@ -84,9 +114,10 @@ export function createReactQueryTool(options?: {
     ),
     component: ReactQueryDevToolsModal,
     props: {
-      enableSharedModalDimensions: options?.enableSharedModalDimensions !== undefined 
-        ? options.enableSharedModalDimensions 
-        : true,
+      enableSharedModalDimensions:
+        options?.enableSharedModalDimensions !== undefined
+          ? options.enableSharedModalDimensions
+          : true,
     },
   };
 }
@@ -94,6 +125,7 @@ export function createReactQueryTool(options?: {
 /**
  * Pre-configured WiFi toggle tool for FloatingDevTools.
  * Allows toggling React Query's online state to simulate offline scenarios.
+ * Simple toggle - no modal needed!
  *
  * @example
  * ```tsx
@@ -108,18 +140,21 @@ export function createReactQueryTool(options?: {
 export const wifiTogglePreset = {
   id: "query-wifi-toggle",
   name: "WIFI",
-  description: "React Query WiFi toggle",
+  description: "Toggle React Query online/offline state",
   slot: "both" as const,
-  icon: ({ size }: { size: number }) => (
-    <WifiCircuitIcon
-      size={size}
-      colorPreset="cyan"
-      strength={4}
-      noBackground
-    />
-  ),
-  component: WifiToggleModal,
+  icon: WifiIcon,
+  component: EmptyComponent,
   props: {},
+  launchMode: "toggle-only" as const,
+  onPress: () => {
+    const currentState = onlineManager.isOnline();
+    const newState = !currentState;
+    onlineManager.setOnline(newState);
+    saveWifiState(newState);
+    console.log(`[WiFi] Toggled ${currentState ? "OFF" : "ON"}`);
+    // Notify FloatingMenu to re-render and update icon
+    manager?.notify();
+  },
 };
 
 /**
@@ -132,7 +167,8 @@ export const wifiTogglePreset = {
  *
  * const myWifiTool = createWifiToggleTool({
  *   name: "OFFLINE",
- *   colorPreset: "purple",
+ *   onColor: "#10B981",
+ *   offColor: "#DC2626",
  * });
  * ```
  */
@@ -141,27 +177,39 @@ export function createWifiToggleTool(options?: {
   name?: string;
   /** Tool description */
   description?: string;
-  /** Icon color preset (default: "cyan") */
-  colorPreset?: "orange" | "cyan" | "purple" | "pink" | "yellow" | "green";
+  /** Icon color when online (default: "#10B981" - green) */
+  onColor?: string;
+  /** Icon color when offline (default: "#DC2626" - red) */
+  offColor?: string;
   /** Custom tool ID (default: "query-wifi-toggle") */
   id?: string;
 }) {
+  const onColor = options?.onColor || "#10B981";
+  const offColor = options?.offColor || "#DC2626";
+
+  const CustomWifiIcon = ({ size }: { size: number }) => {
+    const isOnline = onlineManager.isOnline();
+    return <Wifi size={size} color={isOnline ? onColor : offColor} />;
+  };
+
   return {
     id: options?.id || "query-wifi-toggle",
     name: options?.name || "WIFI",
     description:
-      options?.description || "React Query WiFi toggle",
+      options?.description || "Toggle React Query online/offline state",
     slot: "both" as const,
-    icon: ({ size }: { size: number }) => (
-      <WifiCircuitIcon
-        size={size}
-        colorPreset={options?.colorPreset || "cyan"}
-        strength={4}
-        noBackground
-      />
-    ),
-    component: WifiToggleModal,
+    icon: CustomWifiIcon,
+    component: EmptyComponent,
     props: {},
+    launchMode: "toggle-only" as const,
+    onPress: () => {
+      const currentState = onlineManager.isOnline();
+      const newState = !currentState;
+      onlineManager.setOnline(newState);
+      saveWifiState(newState);
+      console.log(`[WiFi] Toggled ${currentState ? "OFF" : "ON"}`);
+      // Notify FloatingMenu to re-render and update icon
+      manager?.notify();
+    },
   };
 }
-

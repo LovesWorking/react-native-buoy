@@ -33,3 +33,6 @@ export {
   DevToolsVisibilityProvider,
   useDevToolsVisibility,
 } from "./floatingMenu/DevToolsVisibilityContext";
+
+// Export toggle state manager
+export { toggleStateManager } from "./floatingMenu/ToggleStateManager";

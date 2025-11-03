@@ -19,6 +19,15 @@ import { Layers } from "@react-buoy/shared-ui";
 
 const DebugBordersManager = require("./debug-borders/utils/DebugBordersManager");
 
+// Get the toggle state manager if available
+let manager: any = null;
+try {
+  const coreModule = require("@react-buoy/core");
+  manager = coreModule.toggleStateManager;
+} catch (e) {
+  // Manager not available, that's ok - icons just won't update
+}
+
 /**
  * Icon component that changes color based on enabled state
  * Uses a simple function that checks state synchronously (no hooks)
@@ -38,7 +47,7 @@ function EmptyComponent() {
 /**
  * Pre-configured debug borders tool for FloatingDevTools.
  * Tap the icon to toggle borders on/off - no modal needed!
- * 
+ *
  * Features:
  * - Visual layout debugging with colored borders
  * - Automatic component tracking
@@ -56,8 +65,10 @@ export const debugBordersToolPreset = {
   props: {},
   launchMode: "toggle-only" as const,
   onPress: () => {
-    console.log('[DebugBorders] Toggle pressed');
+    console.log("[DebugBorders] Toggle pressed");
     DebugBordersManager.toggle();
+    // Notify FloatingMenu to re-render and update icon
+    manager?.notify();
   },
 };
 
@@ -93,22 +104,24 @@ export function createDebugBordersTool(options?: {
 
   const CustomBordersIcon = ({ size }: { size: number }) => {
     const enabled = DebugBordersManager.isEnabled();
-    return <Layers size={size} color={enabled ? enabledColor : disabledColor} />;
+    return (
+      <Layers size={size} color={enabled ? enabledColor : disabledColor} />
+    );
   };
 
   return {
     id: options?.id || "debug-borders",
     name: options?.name || "BORDERS",
-    description: options?.description || "Visual layout debugger - tap to toggle",
+    description:
+      options?.description || "Visual layout debugger - tap to toggle",
     slot: "both" as const,
     icon: CustomBordersIcon,
     component: EmptyComponent,
     props: {},
     launchMode: "toggle-only" as const,
     onPress: () => {
-      console.log('[DebugBorders] Toggle pressed');
+      console.log("[DebugBorders] Toggle pressed");
       DebugBordersManager.toggle();
     },
   };
 }
-

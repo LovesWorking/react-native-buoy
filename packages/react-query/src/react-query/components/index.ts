@@ -27,6 +27,5 @@ export * from "./DataEditorMode";
 export * from "./QuerySelector";
 export * from "./QueryDebugInfo";
 export * from "./WifiToggle";
-export * from "./WifiToggleModal";
 export * from "./ReactQuerySection";
 export { ReactQueryDevToolsModal } from "./ReactQueryDevToolsModal";

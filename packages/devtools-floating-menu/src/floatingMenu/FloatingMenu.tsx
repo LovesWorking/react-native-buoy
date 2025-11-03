@@ -12,6 +12,7 @@ import { EnvironmentIndicator, gameUIColors } from "@react-buoy/shared-ui";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
 import { useAppHost } from "./AppHost";
 import { useDevToolsVisibility } from "./DevToolsVisibilityContext";
+import { toggleStateManager } from "./ToggleStateManager";
 
 /**
  * Props for the floating developer tools launcher. Controls which apps are shown and
@@ -46,10 +47,20 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 }) => {
   const [internalHidden, setInternalHidden] = useState(false);
   const [showDial, setShowDial] = useState(false);
+  const [, forceUpdate] = useState(0); // Used to force re-render when toggle states change
 
   const { isAnyOpen, open, registerApps } = useAppHost();
   const wasAppOpenRef = useRef(isAnyOpen);
   const { setDialOpen, setToolOpen } = useDevToolsVisibility();
+
+  // Subscribe to toggle state changes to update icon colors
+  useEffect(() => {
+    const unsubscribe = toggleStateManager.subscribe(() => {
+      // Force re-render when any toggle state changes
+      forceUpdate((prev) => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
 
   // Sync dial state with visibility context
   useEffect(() => {
