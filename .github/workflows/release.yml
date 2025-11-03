@@ -94,7 +94,7 @@ jobs:
           FAILED=false
 
           # Publish each package and track results
-          for pkg in "@react-buoy/shared-ui" "@react-buoy/core" "@react-buoy/env" "@react-buoy/network" "@react-buoy/storage" "@react-buoy/react-query"; do
+          for pkg in "@react-buoy/shared-ui" "@react-buoy/core" "@react-buoy/env" "@react-buoy/network" "@react-buoy/storage" "@react-buoy/react-query" "@react-buoy/route-events" "@react-buoy/debug-borders"; do
             echo "Publishing $pkg..."
 
             # Get package directory name from package name

@@ -8,6 +8,8 @@ const packages = [
   { scope: '@react-buoy/network', dir: 'packages/network' },
   { scope: '@react-buoy/storage', dir: 'packages/storage' },
   { scope: '@react-buoy/react-query', dir: 'packages/react-query' },
+  { scope: '@react-buoy/route-events', dir: 'packages/route-events' },
+  { scope: '@react-buoy/debug-borders', dir: 'packages/debug-borders' },
 ];
 
 const failures = [];
