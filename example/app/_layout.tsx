@@ -1,15 +1,12 @@
 import { Slot } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import {
   FloatingDevTools,
-  createEnvTool,
-  createEnvVarConfig,
-  envVar,
-  createStorageTool,
+  type EnvVarConfig,
+  type StorageKeyConfig,
   type Environment,
   type UserRole,
-  type RequiredStorageKey,
 } from "@react-buoy/core";
 
 export default function RootLayout() {
@@ -21,83 +18,68 @@ export default function RootLayout() {
   const userRole: UserRole = "admin";
   const environment: Environment = "local";
 
-  const requiredEnvVars = useMemo(
-    () =>
-      createEnvVarConfig([
-        // 🟢 GREEN - Valid variables
-        envVar("EXPO_PUBLIC_API_URL").exists(), // ✓ Exists
+  const requiredEnvVars: EnvVarConfig[] = [
+    // Valid variables
+    "EXPO_PUBLIC_API_URL",
+    {
+      key: "EXPO_PUBLIC_DEBUG_MODE",
+      expectedType: "boolean",
+      description: "Enable debug logging",
+    },
+    { key: "EXPO_PUBLIC_MAX_RETRIES", expectedType: "number" },
+    { key: "EXPO_PUBLIC_ENVIRONMENT", expectedValue: "development" },
 
-        envVar("EXPO_PUBLIC_DEBUG_MODE")
-          .withType("boolean")
-          .withDescription("Enable debug logging")
-          .build(), // ✓ Correct type
+    // Wrong values (exists but incorrect)
+    {
+      key: "EXPO_PUBLIC_API_VERSION",
+      expectedValue: "v2",
+      description: "API version (should be v2)",
+    },
+    { key: "EXPO_PUBLIC_REGION", expectedValue: "us-east-1" },
 
-        envVar("EXPO_PUBLIC_MAX_RETRIES").withType("number").build(), // ✓ Correct type
+    // Wrong types (exists but wrong type)
+    {
+      key: "EXPO_PUBLIC_FEATURE_FLAGS",
+      description: "Feature flags configuration object",
+      expectedType: "object",
+    },
+    { key: "EXPO_PUBLIC_PORT", expectedType: "number" },
 
-        envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(), // ✓ Correct value
+    // Missing variables
+    "EXPO_PUBLIC_SENTRY_DSN",
+    {
+      key: "EXPO_PUBLIC_ANALYTICS_KEY",
+      description: "Analytics service API key",
+      expectedType: "string",
+    },
+    { key: "EXPO_PUBLIC_ENABLE_TELEMETRY", expectedType: "boolean" },
+  ];
 
-        // 🟠 ORANGE - Wrong values (exists but incorrect)
-        envVar("EXPO_PUBLIC_API_VERSION")
-          .withValue("v2")
-          .withDescription("API version (should be v2)")
-          .build(), // ⚠ Wrong value
-
-        envVar("EXPO_PUBLIC_REGION").withValue("us-east-1").build(), // ⚠ Wrong value
-
-        // 🔴 RED - Wrong types (exists but wrong type)
-        envVar("EXPO_PUBLIC_FEATURE_FLAGS")
-          .withDescription("Feature flags configuration object")
-          .withType("object")
-          .build(), // ⚠ Wrong type
-
-        envVar("EXPO_PUBLIC_PORT").withType("number").build(), // ⚠ Wrong type
-
-        // 🔴 RED - Missing variables
-        envVar("EXPO_PUBLIC_SENTRY_DSN").exists(), // ⚠ Missing
-
-        envVar("EXPO_PUBLIC_ANALYTICS_KEY")
-          .withDescription("Analytics service API key")
-          .withType("string")
-          .build(), // ⚠ Missing
-
-        envVar("EXPO_PUBLIC_ENABLE_TELEMETRY").withType("boolean").build(), // ⚠ Missing
-      ]),
-    []
-  );
-
-  const storageRequiredKeys = useMemo<RequiredStorageKey[]>(
-    () => [
-      {
-        key: "@app/session",
-        expectedType: "string",
-        description: "Current user session token",
-        storageType: "secure",
-      },
-      {
-        key: "@app/settings:theme",
-        expectedValue: "dark",
-        description: "Preferred theme",
-        storageType: "mmkv",
-      },
-      {
-        key: "@devtools/storage/activeTab",
-        description: "Last viewed storage tab",
-        storageType: "async",
-      },
-    ],
-    []
-  );
+  const storageRequiredKeys: StorageKeyConfig[] = [
+    {
+      key: "@app/session",
+      expectedType: "string",
+      description: "Current user session token",
+      storageType: "secure",
+    },
+    {
+      key: "@app/settings:theme",
+      expectedValue: "dark",
+      description: "Preferred theme",
+      storageType: "mmkv",
+    },
+    {
+      key: "@devtools/storage/activeTab",
+      description: "Last viewed storage tab",
+      storageType: "async",
+    },
+  ];
 
   return (
     <QueryClientProvider client={queryClientRef.current!}>
       <FloatingDevTools
-        // Auto-discovers ALL installed tools and merges with custom configs
-        // Only specify tools that need custom configuration
-        apps={[
-          createEnvTool({ requiredEnvVars }),
-          createStorageTool({ requiredStorageKeys: storageRequiredKeys }),
-          // Network, React Query, WiFi, and Routes load automatically!
-        ]}
+        requiredEnvVars={requiredEnvVars}
+        requiredStorageKeys={storageRequiredKeys}
         actions={{}}
         environment={environment}
         userRole={userRole}
