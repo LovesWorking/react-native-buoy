@@ -1,72 +1,27 @@
 # React Buoy Devtools
 
-**The floating control panel for your entire mobile app team.**
+**Zero-config mobile dev tools that just work.**
 
-A persistent, draggable menu that’s always available—showing your current environment and role, while giving instant access to the tools anyone in your org needs. From impersonating users in production for customer support, to debugging storage, network, or cache issues across environments, to testing feature flags or building entirely custom workflows—React Buoy makes it easy to create and share powerful tools with your whole team.
+A single floating menu gives your entire team instant access to powerful debugging tools—in dev, staging, AND production. No configuration, no complexity. Just install packages and they automatically appear.
 
-![devtools](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
+![React Buoy Demo](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
 
-## ✨ Features
+[![npm version](https://img.shields.io/npm/v/@react-buoy/core?color=brightgreen)](https://www.npmjs.com/package/@react-buoy/core)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- **Always visible** – Shows environment & user role in a draggable row that survives reloads
-- **Consistent everywhere** – Same tools in dev, staging, and production
-- **Bring your own tools** – Drop in any React component as a tool
-- **Team-friendly** – Each engineer can show/hide the tools they need
-- **Smart interactions** – Double-tap to switch between bottom sheet and floating modal, triple-tap to close, swipe down to dismiss
+---
 
-## 🧩 JSON Viewer & Diff
+## ⚡ 2-Minute Setup
 
-React Buoy includes optimized JSON viewers and comparison tools:
-
-- **Tree view** – Like Redux DevTools for exploring nested objects
-- **Side-by-side diff view** – Like VS Code for comparing payloads
-- **Type filtering** – Quickly find exactly what you need in large payloads:
-  - string
-  - number
-  - boolean
-  - undefined
-  - null
-  - object
-  - array
-  - function
-
-Example: debugging a large response payload → filter only booleans to check feature flags, or search for undefined keys to spot missing data instantly.
-
-## 🚀 Step 1: Basic Setup (2 minutes)
-
-Get the floating menu working in your app with just the core functionality.
-
-### Install Core Package
-
-**npm**
+### 1. Install Core + Tools
 
 ```bash
-npm install @react-buoy/core
+npm install @react-buoy/core @react-buoy/env @react-buoy/network
+# or: pnpm add / yarn add / bun add
 ```
 
-**pnpm**
-
-```bash
-pnpm add @react-buoy/core
-```
-
-**yarn**
-
-```bash
-yarn add @react-buoy/core
-```
-
-**bun**
-
-```bash
-bun add @react-buoy/core
-```
-
-### Add to Your App
-
-**Option 1: Zero-Config Auto-Discovery (Simplest!)**
-
-Just install the dev tool packages you want, and they'll automatically load:
+### 2. Add to Your App
 
 ```tsx
 import { FloatingDevTools } from "@react-buoy/core";
@@ -74,98 +29,156 @@ import { FloatingDevTools } from "@react-buoy/core";
 function App() {
   return (
     <>
-      {/* Your existing app content */}
+      {/* Your app content */}
       <FloatingDevTools environment="local" userRole="admin" />
     </>
   );
 }
 ```
 
-**That's it!** All installed dev tool packages will automatically appear in your floating menu. No configuration, no imports, just install and go!
+### 3. That's It! 🎉
 
-**Option 2: With Custom Config (When You Need Validation)**
+All installed tools automatically appear in your floating menu. No config needed.
 
-Customize specific tools while auto-discovering the rest:
-
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-import type { EnvVarConfig } from "@react-buoy/core";
-import type { StorageKeyConfig } from "@react-buoy/core";
-
-const requiredEnvVars: EnvVarConfig[] = [
-  "API_URL", // Just check if exists
-  { key: "DEBUG_MODE", expectedType: "boolean" },
-];
-
-const requiredStorageKeys: StorageKeyConfig[] = [
-  {
-    key: "@app/session",
-    expectedType: "string",
-    storageType: "async",
-  },
-];
-
-function App() {
-  return (
-    <>
-      {/* Your existing app content */}
-      <FloatingDevTools
-        requiredEnvVars={requiredEnvVars}
-        requiredStorageKeys={requiredStorageKeys}
-        environment="local"
-        userRole="admin"
-      />
-    </>
-  );
-}
-```
-
-**Note:** Core types come from `@react-buoy/core`. Individual package types like `Environment` and `UserRole` come from their respective packages (e.g., `@react-buoy/env`).
+> 💡 **Pro Tip**: Install all tools at once:
+>
+> ```bash
+> npm i @react-buoy/{core,env,network,storage,react-query,route-events,debug-borders}
+> ```
 
 ---
 
-## 📦 Available Packages
+## 🎯 What You Get
 
-Add any combination of these developer tools to your floating menu:
+**✨ Zero Configuration** – Install packages, they auto-appear. No manual setup.
+
+**🏷️ Always-Visible Context** – See your environment (dev/staging/prod) and role at a glance.
+
+**🔄 Persistent State** – Tools remember their position and state through reloads.
+
+**👥 Team-Friendly** – Same tools everywhere. Onboard new devs in minutes.
+
+**🎨 Beautiful UI** – Draggable menu with modal and bottom-sheet views.
+
+**🔌 Fully Extensible** – Drop in any React component as a custom tool.
+
+---
+
+## 📦 Available Tools
+
+Install any combination to customize your dev menu:
+
+| Tool               | Package                     | What It Does                   | Key Features                                  |
+| ------------------ | --------------------------- | ------------------------------ | --------------------------------------------- |
+| 🌍 **ENV**         | `@react-buoy/env`           | Environment variable inspector | Validation, search, type checking, warnings   |
+| 📡 **Network**     | `@react-buoy/network`       | API request monitor            | Timeline view, filtering, performance metrics |
+| 💾 **Storage**     | `@react-buoy/storage`       | AsyncStorage/MMKV browser      | View/edit/delete, bulk ops, validation        |
+| ⚡ **React Query** | `@react-buoy/react-query`   | TanStack Query devtools        | Cache inspector, offline toggle, refetch      |
+| 🧭 **Routes**      | `@react-buoy/route-events`  | Route & navigation tracker     | Sitemap, stack view, event timeline           |
+| 🎨 **Borders**     | `@react-buoy/debug-borders` | Visual layout debugger         | Colored component boundaries                  |
+
+**Installation Pattern**: All packages follow the same simple pattern:
+
+```bash
+npm install @react-buoy/{tool-name}
+# Peer dependencies auto-detected (e.g., @tanstack/react-query, @react-native-async-storage/async-storage)
+```
+
+**That's it!** Once installed, each tool automatically appears in `FloatingDevTools`.
 
 <details>
-<summary><strong>🌍 Environment Inspector (@react-buoy/env)</strong></summary>
+<summary>📸 View screenshots for each tool</summary>
 
-Visual health check for your app configuration. See all environment variables with validation, search, and filtering.
+### Environment Inspector
 
-![env1](https://github.com/user-attachments/assets/75651046-33a0-4257-9011-3bcc4818a964)
+<details>
+<summary>Show preview</summary>
 
-### Install
+![ENV Tool](https://github.com/user-attachments/assets/75651046-33a0-4257-9011-3bcc4818a964)
 
-**npm**
+</details>
 
-```bash
-npm install @react-buoy/env
+### Network Monitor
+
+<details>
+<summary>Show preview</summary>
+
+![Network Tool](https://github.com/user-attachments/assets/473ddf83-03cd-4bd1-8dc3-0f66eda9fa8a)
+
+</details>
+
+### Storage Browser
+
+<details>
+<summary>Show preview</summary>
+
+![Storage Tool](https://github.com/user-attachments/assets/80ef1c60-d20c-4d8b-97e6-f37b21b315ea)
+
+</details>
+
+### React Query DevTools
+
+<details>
+<summary>Show preview</summary>
+
+![React Query Tool](https://github.com/user-attachments/assets/258e892d-3eaf-41f8-9fae-d7d2dcd6c39d)
+
+</details>
+
+### Route Tracker
+
+<details>
+<summary>Show preview</summary>
+
+![Routes Tool](https://github.com/user-attachments/assets/90e55dc7-f8ab-423a-9770-84b9ff9c8446)
+
+</details>
+
+### Debug Borders
+
+<details>
+<summary>Show preview</summary>
+
+![Debug Borders](https://github.com/user-attachments/assets/945fdb5d-2546-442d-98e7-ef73231abbba)
+
+</details>
+
+</details>
+
+---
+
+## 🚀 Choose Your Path
+
+**👶 Just Starting?**
+
+- Follow the [2-Minute Setup](#-2-minute-setup) above
+- All tools work with zero config
+
+**🔧 Need Validation?**
+
+- See [Configuration](#-configuration) below for env var and storage validation
+
+**🎨 Building Custom Tools?**
+
+- Check out [Custom Tools](#-custom-tools) section
+
+**📖 Want Deep Dive?**
+
+- View [detailed package docs](#-package-details) (collapsed sections)
+
+---
+
+## ⚙️ Configuration
+
+### Basic Usage (Zero Config)
+
+```tsx
+<FloatingDevTools environment="local" userRole="admin" />
 ```
 
-**pnpm**
+That's all you need! But if you want validation...
 
-```bash
-pnpm add @react-buoy/env
-```
-
-**yarn**
-
-```bash
-yarn add @react-buoy/env
-```
-
-**bun**
-
-```bash
-bun add @react-buoy/env
-```
-
-**That's it!** Once installed, the ENV tool automatically appears in your FloatingDevTools. No imports, no configuration needed.
-
-### Add Custom Validation (Optional)
-
-Want to validate specific environment variables? Pass them directly to `FloatingDevTools`:
+### With Environment Variable Validation
 
 ```tsx
 import { FloatingDevTools } from "@react-buoy/core";
@@ -177,14 +190,172 @@ const requiredEnvVars: EnvVarConfig[] = [
   { key: "ENVIRONMENT", expectedValue: "development" },
 ];
 
-function App() {
+<FloatingDevTools
+  requiredEnvVars={requiredEnvVars}
+  environment="local"
+  userRole="admin"
+/>;
+```
+
+### With Storage Key Validation
+
+```tsx
+import type { StorageKeyConfig } from "@react-buoy/core";
+
+const requiredStorageKeys: StorageKeyConfig[] = [
+  {
+    key: "@app/session",
+    expectedType: "string",
+    description: "User session token",
+    storageType: "async", // "async" | "mmkv" | "secure"
+  },
+];
+
+<FloatingDevTools
+  requiredStorageKeys={requiredStorageKeys}
+  environment="local"
+/>;
+```
+
+### Complete Example with React Query
+
+```tsx
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { FloatingDevTools } from "@react-buoy/core";
+import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
+
+export default function App() {
+  const queryClient = new QueryClient();
+
+  const requiredEnvVars: EnvVarConfig[] = [
+    "EXPO_PUBLIC_API_URL",
+    { key: "EXPO_PUBLIC_DEBUG_MODE", expectedType: "boolean" },
+  ];
+
+  const requiredStorageKeys: StorageKeyConfig[] = [
+    {
+      key: "@app/session",
+      expectedType: "string",
+      storageType: "async",
+    },
+  ];
+
   return (
-    <FloatingDevTools requiredEnvVars={requiredEnvVars} environment="local" />
+    <QueryClientProvider client={queryClient}>
+      {/* Your app content */}
+
+      <FloatingDevTools
+        requiredEnvVars={requiredEnvVars}
+        requiredStorageKeys={requiredStorageKeys}
+        environment="local"
+        userRole="admin"
+      />
+    </QueryClientProvider>
   );
 }
 ```
 
-**Using helper functions for better DX:**
+> 💡 **Note**: All types (`EnvVarConfig`, `StorageKeyConfig`, etc.) are exported from `@react-buoy/core`
+
+---
+
+## 🔧 How It Works
+
+React Buoy uses **automatic package discovery**. When you render `<FloatingDevTools />`, it:
+
+1. **Checks** which `@react-buoy/*` packages are installed
+2. **Loads** only the installed packages (lazy + safe)
+3. **Renders** them automatically in the floating menu
+
+No registration, no imports, no config arrays. Just install and go.
+
+**Behind the scenes**: The core package attempts to `require()` each plugin. If installed, it loads. If not, it silently skips. This means:
+
+- ✅ Zero config for the 90% use case
+- ✅ No crashes from missing packages
+- ✅ Automatic updates when you install new tools
+
+**Want full control?** You can still manually configure tools with the `apps` prop (see [Advanced Configuration](#advanced-configuration)).
+
+---
+
+## 🎨 Custom Tools
+
+Any React component can be a dev tool! Perfect for:
+
+- 🚀 Feature flag toggles
+- 👤 User impersonation panels
+- ✅ QA checklists
+- 📊 Analytics dashboards
+- 🗄️ Database browsers
+- 📱 Push notification testers
+
+### Basic Custom Tool
+
+```tsx
+import { FloatingDevTools } from "@react-buoy/core";
+import type { InstalledApp } from "@react-buoy/core";
+
+// Your custom tool - just a React component
+function FeatureFlagsModal({ onClose }) {
+  return (
+    <View style={{ padding: 20 }}>
+      <Text>Feature Flags</Text>
+      {/* Your UI here */}
+      <Button title="Close" onPress={onClose} />
+    </View>
+  );
+}
+
+// Define the tool
+const customTools: InstalledApp[] = [
+  {
+    id: "feature-flags",
+    name: "FLAGS",
+    description: "Toggle feature flags",
+    slot: "both", // "row" | "dial" | "both"
+    icon: ({ size }) => <YourIcon size={size} />,
+    component: FeatureFlagsModal,
+    props: {},
+  },
+];
+
+// Add to FloatingDevTools
+<FloatingDevTools
+  apps={customTools} // Your custom tools
+  environment="local"
+/>;
+```
+
+> ✨ **Auto-discovery still works!** Custom tools merge with auto-discovered tools. Same ID = your custom tool overrides.
+
+---
+
+## 📚 Package Details
+
+<details>
+<summary><strong>🌍 Environment Inspector (@react-buoy/env)</strong></summary>
+
+### What It Does
+
+Visual health check for your app configuration. Validates environment variables, checks types, and warns about missing/incorrect values.
+
+### Install
+
+```bash
+npm install @react-buoy/env
+```
+
+### Features
+
+- ✅ Visual validation of required environment variables
+- 🔍 Search and filter across all env vars
+- 🎯 Type checking (string, number, boolean, object)
+- ⚠️ Clear warnings for missing or incorrect values
+- 📋 Copy values to clipboard
+
+### Optional: Helper Functions for Better DX
 
 ```tsx
 import { createEnvVarConfig, envVar } from "@react-buoy/env";
@@ -197,181 +368,80 @@ const requiredEnvVars: EnvVarConfig[] = createEnvVarConfig([
 ]);
 ```
 
-### What you get:
-
-- ✅ Visual validation of required environment variables
-- 🔍 Search and filter environment variables
-- 🎯 Type checking (string, number, boolean, object)
-- ⚠️ Clear warnings for missing or incorrect values
-
 </details>
 
 <details>
 <summary><strong>📡 Network Inspector (@react-buoy/network)</strong></summary>
 
+### What It Does
+
 Real-time network request monitoring with timeline view, detailed inspection, and performance stats.
 
-![net1](https://github.com/user-attachments/assets/473ddf83-03cd-4bd1-8dc3-0f66eda9fa8a)
-
 ### Install
-
-**npm**
 
 ```bash
 npm install @react-buoy/network
 ```
 
-**pnpm**
-
-```bash
-pnpm add @react-buoy/network
-```
-
-**yarn**
-
-```bash
-yarn add @react-buoy/network
-```
-
-**bun**
-
-```bash
-bun add @react-buoy/network
-```
-
-**That's it!** Once installed, the Network tool automatically appears in your FloatingDevTools. No imports, no configuration needed.
-
-### What you get:
+### Features
 
 - 📊 Timeline view of all network requests
-- 🔍 Detailed request/response inspection
-- ⚡ Performance metrics and timing
-- 🎛️ Request filtering and search
-- 📋 Copy request details for debugging
+- 🔍 Detailed request/response inspection with JSON viewer
+- ⚡ Performance metrics and timing breakdown
+- 🎛️ Filter by status, method, URL patterns
+- 📋 Copy request details (curl, JSON, etc.)
+- 🔴 Highlight failed requests
 
 </details>
 
 <details>
 <summary><strong>💾 Storage Explorer (@react-buoy/storage)</strong></summary>
 
-Real-time AsyncStorage browser with live updates, bulk operations, and storage validation.
+### What It Does
 
-![stor1](https://github.com/user-attachments/assets/80ef1c60-d20c-4d8b-97e6-f37b21b315ea)
+Real-time storage browser for AsyncStorage, MMKV, and SecureStore with live updates and bulk operations.
 
 ### Install
-
-**npm**
 
 ```bash
 npm install @react-buoy/storage
 npm install @react-native-async-storage/async-storage  # peer dependency
 ```
 
-**pnpm**
+### Features
 
-```bash
-pnpm add @react-buoy/storage
-pnpm add @react-native-async-storage/async-storage  # peer dependency
-```
-
-**yarn**
-
-```bash
-yarn add @react-buoy/storage
-yarn add @react-native-async-storage/async-storage  # peer dependency
-```
-
-**bun**
-
-```bash
-bun add @react-buoy/storage
-bun add @react-native-async-storage/async-storage  # peer dependency
-```
-
-**That's it!** Once installed, the Storage tool automatically appears in your FloatingDevTools. No imports, no configuration needed.
-
-### Add Custom Validation (Optional)
-
-Want to validate specific storage keys? Pass them directly to `FloatingDevTools`:
-
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-import type { StorageKeyConfig } from "@react-buoy/core";
-
-const requiredStorageKeys: StorageKeyConfig[] = [
-  {
-    key: "@app/session",
-    expectedType: "string",
-    description: "User session token",
-    storageType: "async",
-  },
-  {
-    key: "@app/settings:theme",
-    expectedValue: "dark",
-    storageType: "mmkv",
-  },
-];
-
-function App() {
-  return (
-    <FloatingDevTools
-      requiredStorageKeys={requiredStorageKeys}
-      environment="local"
-    />
-  );
-}
-```
-
-### What you get:
-
-- 🗂️ Browse all AsyncStorage, SecureStore, and MMKV data
+- 🗂️ Browse all AsyncStorage, MMKV, and SecureStore data
 - ✏️ Edit storage values in real-time
 - 🗑️ Bulk delete operations
 - 🔍 Search and filter storage keys
 - ⚠️ Validation for required storage keys
+- 📋 Copy keys/values
+
+### Supports Multiple Storage Types
+
+- **AsyncStorage**: React Native standard
+- **MMKV**: Encrypted, faster alternative
+- **SecureStore**: iOS Keychain / Android Keystore
 
 </details>
 
 <details>
 <summary><strong>⚡ React Query DevTools (@react-buoy/react-query)</strong></summary>
 
-TanStack Query devtools adapted for mobile with query explorer, cache manipulation, and offline toggle.
+### What It Does
 
-![rq1](https://github.com/user-attachments/assets/258e892d-3eaf-41f8-9fae-d7d2dcd6c39d)
+TanStack Query devtools adapted for mobile with query explorer, cache manipulation, and offline toggle.
 
 ### Install
 
-**npm**
-
 ```bash
 npm install @react-buoy/react-query
-npm install @tanstack/react-query  # peer dependency
+npm install @tanstack/react-query  # peer dependency (v5+)
 ```
 
-**pnpm**
+### Setup
 
-```bash
-pnpm add @react-buoy/react-query
-pnpm add @tanstack/react-query  # peer dependency
-```
-
-**yarn**
-
-```bash
-yarn add @react-buoy/react-query
-yarn add @tanstack/react-query  # peer dependency
-```
-
-**bun**
-
-```bash
-bun add @react-buoy/react-query
-bun add @tanstack/react-query  # peer dependency
-```
-
-### Setup QueryClient
-
-Wrap your app with QueryClientProvider:
+Wrap your app with `QueryClientProvider`:
 
 ```tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -382,657 +452,49 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Your app content */}
+      {/* Your app */}
       <FloatingDevTools environment="local" />
     </QueryClientProvider>
   );
 }
 ```
 
-**That's it!** Once installed, both React Query DevTools and WiFi Toggle automatically appear in your FloatingDevTools. No imports, no configuration needed.
-
-### What you get:
+### Features
 
 - 🔍 Query explorer with real-time data
-- 🗂️ Cache manipulation and inspection
+- 🗂️ Cache inspection and manipulation
 - 📊 Query performance metrics
-- 🔄 Manual query refetching
-- 📶 **WiFi Toggle** - Simulate offline mode to test error handling and retry logic
+- 🔄 Manual query refetching and invalidation
+- 📶 **WiFi Toggle** - Simulate offline mode
+- 🎨 Query state visualization (loading, error, success)
 
 </details>
 
 <details>
 <summary><strong>🧭 Route Events (@react-buoy/route-events)</strong></summary>
 
-Comprehensive route tracking and visualization for Expo Router applications. Monitor route changes, explore your app's sitemap, and visualize the navigation stack in real-time.
+### What It Does
 
-![routes](https://github.com/user-attachments/assets/90e55dc7-f8ab-423a-9770-84b9ff9c8446)
-
-
-**Zero Configuration Required** - Just add the component and everything works automatically!
+Comprehensive route tracking and visualization for Expo Router applications. Monitor route changes, explore your app's sitemap, and visualize the navigation stack.
 
 ### Install
-
-**npm**
 
 ```bash
 npm install @react-buoy/route-events
 npm install expo-router @react-navigation/native  # peer dependencies
 ```
 
-**pnpm**
-
-```bash
-pnpm add @react-buoy/route-events
-pnpm add expo-router @react-navigation/native  # peer dependencies
-```
-
-**yarn**
-
-```bash
-yarn add @react-buoy/route-events
-yarn add expo-router @react-navigation/native  # peer dependencies
-```
-
-**bun**
-
-```bash
-bun add @react-buoy/route-events
-bun add expo-router @react-navigation/native  # peer dependencies
-```
-
-**That's it!** Once installed, the Route Events tool automatically appears in your FloatingDevTools. No imports, no configuration needed - route tracking starts automatically!
-
-### What you get:
-
-- 🗺️ **Route Sitemap** - Browse all routes in your app with search and navigation
-- 📊 **Event Timeline** - View chronological timeline of all route changes
-- 🏗️ **Navigation Stack** - Real-time visualization of the navigation stack
-- 🔍 **Event Inspection** - Detailed view of route params, segments, and timing
-- 🎯 **Filtering** - Filter events by pathname patterns
-- 📋 **Copy Support** - Copy route data for debugging
-- ⏱️ **Performance Metrics** - Track navigation timing and performance
-- ✨ **Zero Config** - Route tracking starts automatically when you open the modal
-
-</details>
-
-<details>
-<summary><strong>🎨 Debug Borders (@react-buoy/debug-borders)</strong></summary>
-
-
-Visual debugging tool that adds colored borders around all React Native components to help identify layout issues, nesting problems, and component boundaries.
-
-![border s](https://github.com/user-attachments/assets/945fdb5d-2546-442d-98e7-ef73231abbba)
-
-
-### Install
-
-**npm**
-
-```bash
-npm install @react-buoy/debug-borders
-```
-
-**pnpm**
-
-```bash
-pnpm add @react-buoy/debug-borders
-```
-
-**yarn**
-
-```bash
-yarn add @react-buoy/debug-borders
-```
-
-**bun**
-
-```bash
-bun add @react-buoy/debug-borders
-```
-
-### Quick Setup
-
-**Zero Configuration - Auto-Discovery (Recommended)**
-
-Just install the package and it automatically integrates with FloatingDevTools:
-
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-
-function App() {
-  return <FloatingDevTools environment="local" userRole="admin" />;
-}
-```
-
-**That's it!** Debug borders will automatically:
-
-- ✅ Appear as a "BORDERS" button in the dial and floating menu
-- ✅ Tap the icon to toggle borders on/off (no modal!)
-- ✅ Icon changes color: gray when off, green when on
-- ✅ Overlay automatically renders when package is installed
-
-**Alternative: Standalone (without FloatingDevTools)**
-
-If you want to use debug borders without the full FloatingDevTools:
-
-```tsx
-import { DebugBordersStandaloneOverlay } from "@react-buoy/debug-borders";
-
-function App() {
-  return (
-    <>
-      {/* Your app content */}
-      <DebugBordersStandaloneOverlay />
-    </>
-  );
-}
-```
-
-### What you get:
-
-- 🎨 **Visual Borders** - Colored borders around all components
-- 🎯 **Layout Debugging** - Identify component boundaries instantly
-- 🔍 **Nesting Visualization** - See component hierarchy visually
-- 🎭 **Direct Toggle** - Tap the icon to toggle on/off (no modal needed!)
-- 💚 **Visual Feedback** - Icon changes from gray (off) to green (on)
-- ⚡ **Zero Performance Impact** - Only active when enabled
-
-### Controls:
-
-- **Tap to Toggle** - Click the BORDERS icon in dial/floating menu to toggle on/off
-- **No Modal** - Direct toggle action, no popup needed
-- **Visual State** - Icon color shows current state (gray = off, green = on)
-- Automatically integrated with FloatingDevTools when installed
-- Overlay renders automatically when enabled
-- Can be used standalone if needed
-
-</details>
-
-<details>
-<summary><strong>Dev Tool Settings Menu</strong></summary>
-
-###
-
-![set](https://github.com/user-attachments/assets/f8033982-e802-48f8-bd07-824121d557a2)
-
-</details>
-
----
-
-## 🔥 Complete Example
-
-Here's a full working example with all packages using the simplest setup (same as our [example app](./example/app/_layout.tsx)):
-
-<details>
-<summary><strong>Click to see the complete setup - everything from @react-buoy/core!</strong></summary>
-
-```tsx
-import React, { useRef } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FloatingDevTools } from "@react-buoy/core";
-import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
-import type { Environment, UserRole } from "@react-buoy/env";
-
-export default function App() {
-  const queryClientRef = useRef<QueryClient | null>(null);
-  if (!queryClientRef.current) {
-    queryClientRef.current = new QueryClient({});
-  }
-
-  const requiredEnvVars: EnvVarConfig[] = [
-    "EXPO_PUBLIC_API_URL",
-    { key: "EXPO_PUBLIC_DEBUG_MODE", expectedType: "boolean" },
-    { key: "EXPO_PUBLIC_ENVIRONMENT", expectedValue: "development" },
-  ];
-
-  const requiredStorageKeys: StorageKeyConfig[] = [
-    {
-      key: "@app/session",
-      expectedType: "string",
-      description: "Current user session token",
-      storageType: "async",
-    },
-    {
-      key: "@app/settings:theme",
-      expectedValue: "dark",
-      description: "Preferred theme",
-      storageType: "async",
-    },
-  ];
-
-  const environment: Environment = "local";
-  const userRole: UserRole = "admin";
-
-  return (
-    <QueryClientProvider client={queryClientRef.current!}>
-      <YourAppContent />
-
-      <FloatingDevTools
-        requiredEnvVars={requiredEnvVars}
-        requiredStorageKeys={requiredStorageKeys}
-        environment={environment}
-        userRole={userRole}
-      />
-    </QueryClientProvider>
-  );
-}
-```
-
-**That's it!** Just ~40 lines of setup for all dev tools (ENV, Network, Storage, React Query, Routes, and Debug Borders), all imported from `@react-buoy/core`! ✨
-
-</details>
-
-<details>
-<summary><strong>Alternative: Manual setup (more control)</strong></summary>
-
-If you need full control, you can configure each tool manually:
-
-```tsx
-import React, { useMemo, useRef } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
-import { EnvVarsModal, createEnvVarConfig, envVar } from "@react-buoy/env";
-import { NetworkModal } from "@react-buoy/network";
-import { StorageModalWithTabs } from "@react-buoy/storage";
-import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
-import { RouteEventsModalWithTabs } from "@react-buoy/route-events";
-import {
-  EnvLaptopIcon,
-  ReactQueryIcon,
-  StorageStackIcon,
-  WifiCircuitIcon,
-  RouteMapIcon,
-} from "@react-buoy/shared-ui";
-
-export default function App() {
-  // Setup QueryClient
-  const queryClientRef = useRef<QueryClient | null>(null);
-  if (!queryClientRef.current) {
-    queryClientRef.current = new QueryClient({});
-  }
-
-  // Configure environment variables to validate
-  const requiredEnvVars = createEnvVarConfig([
-    envVar("EXPO_PUBLIC_API_URL").exists(),
-    envVar("EXPO_PUBLIC_DEBUG_MODE").withType("boolean").build(),
-    envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(),
-  ]);
-
-  // Configure storage keys to monitor
-  const requiredStorageKeys = useMemo(
-    () => [
-      {
-        key: "@app/session",
-        expectedType: "string",
-        description: "Current user session token",
-        storageType: "async",
-      },
-      {
-        key: "@app/settings:theme",
-        expectedValue: "dark",
-        description: "Preferred theme",
-        storageType: "async",
-      },
-    ],
-    []
-  );
-
-  // Configure all development tools manually
-  const installedApps: InstalledApp[] = useMemo(
-    () => [
-      {
-        id: "env",
-        name: "ENV",
-        description: "Environment variables debugger",
-        slot: "both",
-        icon: ({ size }) => (
-          <EnvLaptopIcon size={size} colorPreset="green" noBackground />
-        ),
-        component: EnvVarsModal,
-        props: { requiredEnvVars },
-      },
-      {
-        id: "network",
-        name: "NET",
-        description: "Network request logger",
-        slot: "both",
-        icon: ({ size }) => (
-          <WifiCircuitIcon
-            size={size}
-            colorPreset="cyan"
-            strength={4}
-            noBackground
-          />
-        ),
-        component: NetworkModal,
-        props: {},
-      },
-      {
-        id: "storage",
-        name: "STORAGE",
-        description: "AsyncStorage browser",
-        slot: "both",
-        icon: ({ size }) => (
-          <StorageStackIcon size={size} colorPreset="green" noBackground />
-        ),
-        component: StorageModalWithTabs,
-        props: { requiredStorageKeys },
-      },
-      {
-        id: "query",
-        name: "QUERY",
-        description: "React Query inspector",
-        slot: "both",
-        icon: ({ size }) => (
-          <ReactQueryIcon size={size} colorPreset="red" noBackground />
-        ),
-        component: ReactQueryDevToolsModal,
-        props: {},
-      },
-      {
-        id: "route-events",
-        name: "ROUTES",
-        description: "Route tracking & navigation inspector",
-        slot: "both",
-        icon: ({ size }) => (
-          <RouteMapIcon size={size} colorPreset="orange" noBackground />
-        ),
-        component: RouteEventsModalWithTabs,
-        props: {},
-      },
-    ],
-    [requiredEnvVars, requiredStorageKeys]
-  );
-
-  return (
-    <QueryClientProvider client={queryClientRef.current!}>
-      {/* Your existing app content */}
-      <YourAppContent />
-
-      {/* The floating menu with all tools */}
-      <FloatingDevTools
-        apps={installedApps}
-        actions={{}}
-        environment="local"
-        userRole="admin"
-      />
-    </QueryClientProvider>
-  );
-}
-```
-
-</details>
-
----
-
-## 🚀 Zero-Config Auto-Discovery
-
-**The absolute simplest way to use React Buoy** - just install the packages you want, and they'll automatically load!
-
-### How It Works
-
-The core package automatically discovers and loads any installed dev tool packages. No configuration needed!
-
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-
-function App() {
-  return <FloatingDevTools environment="local" userRole="admin" />;
-}
-```
-
-**What happens:**
-
-1. `FloatingDevTools` automatically checks if dev tool packages are installed
-2. If installed, automatically imports and loads the preset
-3. If not installed, silently skips it
-4. All discovered tools appear in your menu automatically!
-
-### Installing Tools
-
-Just install the packages you want to use:
-
-```bash
-# Install only what you need
-pnpm add @react-buoy/env @react-buoy/network @react-buoy/react-query
-
-# Or install everything
-pnpm add @react-buoy/env @react-buoy/network @react-buoy/storage @react-buoy/react-query @react-buoy/route-events @react-buoy/debug-borders
-```
-
-All installed packages will automatically appear in your dev tools. No imports, no configuration!
-
-### Combining Auto-Discovery with Custom Config
-
-Need to customize some tools? Just pass validation configs as props:
-
-```tsx
-import {
-  FloatingDevTools,
-  type EnvVarConfig,
-  type StorageKeyConfig,
-} from "@react-buoy/core";
-
-function App() {
-  const requiredEnvVars: EnvVarConfig[] = [
-    "API_URL",
-    { key: "DEBUG_MODE", expectedType: "boolean" },
-  ];
-
-  const requiredStorageKeys: StorageKeyConfig[] = [
-    {
-      key: "@app/session",
-      expectedType: "string",
-      storageType: "async",
-    },
-  ];
-
-  return (
-    <FloatingDevTools
-      requiredEnvVars={requiredEnvVars}
-      requiredStorageKeys={requiredStorageKeys}
-      environment="local"
-      userRole="admin"
-    />
-  );
-}
-```
-
-**Benefits:**
-
-- ✅ No `apps` array needed for validation
-- ✅ Direct props for env vars and storage keys
-- ✅ Everything else loads automatically
-- ✅ Custom configs override auto-discovered presets
-- ✅ Everything imports from `@react-buoy/core`
-
-### Using Helper Functions for Environment Variables
-
-The `@react-buoy/env` package provides helper functions to make defining environment variable configurations more ergonomic:
-
-```tsx
-import { FloatingDevTools, type EnvVarConfig } from "@react-buoy/core";
-import { createEnvVarConfig, envVar } from "@react-buoy/env";
-
-function App() {
-  // Using helper functions for better DX
-  const requiredEnvVars: EnvVarConfig[] = createEnvVarConfig([
-    envVar("EXPO_PUBLIC_API_URL").exists(),
-    envVar("EXPO_PUBLIC_DEBUG_MODE").withType("boolean").build(),
-    envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(),
-  ]);
-
-  return (
-    <FloatingDevTools requiredEnvVars={requiredEnvVars} environment="local" />
-  );
-}
-```
-
-**Helper Function API:**
-
-```tsx
-// Just check if it exists
-envVar("API_URL").exists();
-
-// Check for specific type
-envVar("DEBUG_MODE").withType("boolean").build();
-
-// Check for specific value
-envVar("ENVIRONMENT").withValue("production").build();
-
-// Add description
-envVar("API_URL").withType("string").withDescription("Backend API").build();
-```
-
-**Note:** `createEnvVarConfig()` returns `RequiredEnvVar[]` which is fully compatible with `EnvVarConfig[]` from `@react-buoy/core`. You can use either the helper functions or the object syntax shown in previous examples.
-
-### When to Use Each Approach
-
-| Approach                                | Best For                                     |
-| --------------------------------------- | -------------------------------------------- |
-| No config props                         | Zero config - just install and go!           |
-| `requiredEnvVars`/`requiredStorageKeys` | Need validation for env vars or storage      |
-| `apps` array                            | Custom tools or overriding built-in behavior |
-
----
-
-## ⚙️ Customizing Dev Tools
-
-All dev tool presets can be customized. With auto-discovery, you only need to configure what you want to customize - everything else loads automatically!
-
-### Direct Customization (Recommended)
-
-Use direct props on `FloatingDevTools` for the most common customizations:
-
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
-import { createEnvVarConfig, envVar } from "@react-buoy/env";
-
-// Validate environment variables
-const requiredEnvVars: EnvVarConfig[] = createEnvVarConfig([
-  envVar("API_URL").exists(),
-  envVar("DEBUG_MODE").withType("boolean").build(),
-  envVar("NODE_ENV").withValue("production").build(),
-]);
-
-// Validate storage keys
-const requiredStorageKeys: StorageKeyConfig[] = [
-  {
-    key: "@app/session",
-    expectedType: "string",
-    description: "User session",
-    storageType: "async",
-  },
-];
-
-function App() {
-  return (
-    <FloatingDevTools
-      requiredEnvVars={requiredEnvVars}
-      requiredStorageKeys={requiredStorageKeys}
-      environment="production"
-      userRole="admin"
-    />
-  );
-}
-```
-
-**That's it!** All other tools (Network, React Query, Routes, Debug Borders) load automatically without any configuration.
-
-### Advanced: Custom Tool Configuration
-
-Need to customize tool names, colors, or behavior? Use factory functions with the `apps` prop:
-
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-import {
-  createEnvTool,
-  createNetworkTool,
-  createStorageTool,
-  createReactQueryTool,
-  createRouteEventsTool,
-} from "@react-buoy/...";
-
-const customTools = [
-  createEnvTool({
-    name: "ENVIRONMENT",
-    iconColor: "#9333EA",
-  }),
-  createNetworkTool({
-    name: "API CALLS",
-    iconColor: "#EC4899",
-  }),
-  createStorageTool({
-    name: "DATA",
-    iconColor: "#06B6D4",
-  }),
-];
-
-function App() {
-  return (
-    <FloatingDevTools
-      apps={customTools} // Custom tools override auto-discovered ones
-      environment="production"
-    />
-  );
-}
-```
-
-**Note:** Custom tools in `apps` override auto-discovered presets with the same ID. Tools not customized still load automatically!
-
-If you need complete control, configure tools manually:
-
-```tsx
-import { EnvVarsModal } from "@react-buoy/env";
-import { NetworkModal } from "@react-buoy/network";
-import { StorageModalWithTabs } from "@react-buoy/storage";
-import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
-import { RouteEventsModalWithTabs } from "@react-buoy/route-events";
-import {
-  EnvLaptopIcon,
-  WifiCircuitIcon,
-  StorageStackIcon,
-  ReactQueryIcon,
-  RouteMapIcon,
-} from "@react-buoy/shared-ui";
-
-const TOOLS = [
-  {
-    id: "env",
-    name: "ENV",
-    description: "Environment variables debugger",
-    slot: "both",
-    icon: ({ size }) => (
-      <EnvLaptopIcon size={size} colorPreset="green" noBackground />
-    ),
-    component: EnvVarsModal,
-    props: { requiredEnvVars },
-  },
-  {
-    id: "network",
-    name: "NET",
-    description: "Network request logger",
-    slot: "both",
-    icon: ({ size }) => (
-      <WifiCircuitIcon
-        size={size}
-        colorPreset="cyan"
-        strength={4}
-        noBackground
-      />
-    ),
-    component: NetworkModal,
-    props: {},
-  },
-  // ... more tools
-];
-```
-
-### Advanced: Custom Analytics for Routes
-
-If you need custom analytics tracking for routes:
+### Features
+
+- 🗺️ **Route Sitemap** - Browse all routes with search
+- 📊 **Event Timeline** - Chronological route changes
+- 🏗️ **Navigation Stack** - Real-time stack visualization
+- 🔍 **Event Inspection** - Detailed params, segments, timing
+- 🎯 **Filtering** - Filter by pathname patterns
+- ⏱️ **Performance Metrics** - Navigation timing
+- ✨ **Zero Config** - Auto-tracks when modal opens
+
+### Bonus: Custom Analytics Hook
 
 ```tsx
 import { useRouteObserver } from "@react-buoy/route-events";
@@ -1042,7 +504,6 @@ export default function RootLayout() {
     analytics.trackPageView({
       path: event.pathname,
       params: event.params,
-      previousPath: event.previousPathname,
       timeSpent: event.timeSincePrevious,
     });
   });
@@ -1051,89 +512,290 @@ export default function RootLayout() {
 }
 ```
 
----
+</details>
 
-## 🛠️ Build Your Own Tools
+<details>
+<summary><strong>🎨 Debug Borders (@react-buoy/debug-borders)</strong></summary>
 
-Any React component can be a development tool. Perfect for:
+### What It Does
 
-- 👨‍💼 Admin dashboards
-- 🎚️ Feature flag toggles
-- 👤 User impersonation
-- ✅ QA checklists
-- 🌐 GraphQL explorers
-- 🗄️ Database browsers
-- 📱 Push notification testing
-- 📊 Analytics dashboards
+Visual debugging tool that adds colored borders around all React Native components to identify layout issues and component boundaries.
 
-```tsx
-// Your custom tool - just a React component
-function MyCustomTool({ onClose }) {
-  return (
-    <View style={{ padding: 20 }}>
-      <Text>My Custom Development Tool 🚀</Text>
-      {/* Your custom UI here */}
-      <Button title="Close" onPress={onClose} />
-    </View>
-  );
-}
+### Install
 
-// Add it to the floating menu
-const TOOLS = [
-  {
-    id: "custom",
-    name: "CUSTOM",
-    description: "My custom development tool",
-    slot: "both", // Show in row AND dial
-    icon: ({ size }) => <YourIcon size={size} />,
-    component: MyCustomTool,
-    props: {}, // Any props your component needs
-  },
-];
+```bash
+npm install @react-buoy/debug-borders
 ```
 
-## 🎯 Why Teams Love It
+### Features
 
-### 🏷️ **No More Environment Confusion**
+- 🎨 Colored borders around all components
+- 🎯 Instant layout debugging
+- 🔍 Component nesting visualization
+- 🎭 **Direct Toggle** - Tap icon to enable/disable
+- 💚 **Visual Feedback** - Icon changes color (gray → green)
+- ⚡ Zero performance impact when disabled
 
-Your current environment and role are always visible. No more "wait, am I in prod?" moments.
+### Usage
 
-### 🔄 **Survives Everything**
+**Zero Config (Recommended)**: Just install and it auto-appears as a "BORDERS" button in the floating menu.
 
-Hot reload? Crash recovery? The tools persist through it all. Positions are remembered.
+**Standalone (without FloatingDevTools)**:
 
-### 👥 **Team Consistency**
+```tsx
+import { DebugBordersStandaloneOverlay } from "@react-buoy/debug-borders";
 
-Every engineer sees the same tools in every environment. Onboard new devs in minutes.
+function App() {
+  return (
+    <>
+      {/* Your app */}
+      <DebugBordersStandaloneOverlay />
+    </>
+  );
+}
+```
 
-### 🎨 **Actually Pleasant to Use**
+</details>
 
-Beautiful, responsive, and intuitive. Your team will _want_ to use these tools.
+---
 
-### 🏢 **Production-Safe**
+## 🏗️ Advanced Configuration
 
-Ship it to production—just add your own access controls!
+<details>
+<summary>📚 Expand for advanced topics</summary>
 
-## 📱 Real-World Debugging Example
+### Manual Tool Configuration
 
-Imagine debugging a payment flow issue:
+Want to override auto-discovery with full control? Use factory functions:
 
-1. **Environment badge** shows you're in staging (not prod! 😅)
-2. **Role badge** confirms you're logged in as "Admin"
+```tsx
+import { FloatingDevTools } from "@react-buoy/core";
+import { createEnvTool } from "@react-buoy/env";
+import { createNetworkTool } from "@react-buoy/network";
+
+const customTools = [
+  createEnvTool({
+    name: "ENVIRONMENT",  // Custom name
+    iconColor: "#9333EA",  // Custom color
+    requiredEnvVars: [...],
+  }),
+  createNetworkTool({
+    name: "API MONITOR",
+    iconColor: "#EC4899",
+  }),
+];
+
+<FloatingDevTools
+  apps={customTools}  // Overrides auto-discovery for these IDs
+  environment="production"
+/>
+```
+
+### Complete Manual Setup (No Auto-Discovery)
+
+```tsx
+import type { InstalledApp } from "@react-buoy/core";
+import { EnvVarsModal } from "@react-buoy/env";
+import { NetworkModal } from "@react-buoy/network";
+import { EnvLaptopIcon, WifiCircuitIcon } from "@react-buoy/shared-ui";
+
+const manualTools: InstalledApp[] = [
+  {
+    id: "env",
+    name: "ENV",
+    description: "Environment debugger",
+    slot: "both",
+    icon: ({ size }) => <EnvLaptopIcon size={size} colorPreset="green" noBackground />,
+    component: EnvVarsModal,
+    props: { requiredEnvVars: [...] },
+  },
+  {
+    id: "network",
+    name: "NET",
+    description: "Network logger",
+    slot: "both",
+    icon: ({ size }) => <WifiCircuitIcon size={size} colorPreset="cyan" noBackground />,
+    component: NetworkModal,
+    props: {},
+  },
+];
+
+<FloatingDevTools apps={manualTools} environment="local" />
+```
+
+### Slot Types
+
+Control where tools appear:
+
+```typescript
+type AppSlot = "row" | "dial" | "both";
+```
+
+- **"row"**: Always-visible header (environment/role badges)
+- **"dial"**: Floating expandable menu
+- **"both"**: Available in both locations (default)
+
+### Launch Modes
+
+```typescript
+type LaunchMode = "self-modal" | "host-modal" | "inline" | "toggle-only";
+```
+
+- **"self-modal"**: Tool manages its own modal (default for most)
+- **"host-modal"**: Core manages the modal lifecycle
+- **"inline"**: Renders inline (no modal)
+- **"toggle-only"**: Just triggers an action (e.g., debug-borders)
+
+</details>
+
+---
+
+## 🧩 Advanced Features
+
+<details>
+<summary><strong>JSON Viewer & Diff Tools</strong></summary>
+
+All tools that display data (Network, Storage, React Query) use optimized JSON viewers:
+
+### Tree View
+
+Like Redux DevTools - explore nested objects with expand/collapse
+
+### Side-by-Side Diff
+
+Like VS Code - compare payloads visually
+
+### Type Filtering
+
+Quickly find what you need in large payloads:
+
+- String values
+- Numbers
+- Booleans
+- Null/undefined
+- Objects
+- Arrays
+- Functions
+
+**Example**: Debugging a 5MB API response → filter only booleans to check feature flags, or search undefined keys to spot missing data.
+
+</details>
+
+<details>
+<summary><strong>State Persistence</strong></summary>
+
+React Buoy remembers:
+
+- Which tools are open
+- Tool positions (if dragged)
+- User preferences
+
+**Storage Key**: `@apphost_open_apps`
+
+This means your debugging session survives:
+
+- ✅ Hot reloads
+- ✅ App restarts
+- ✅ Crash recovery
+
+</details>
+
+<details>
+<summary><strong>Production Usage</strong></summary>
+
+React Buoy is **production-safe** with proper access controls:
+
+```tsx
+import { FloatingDevTools } from "@react-buoy/core";
+import { useUser } from "./auth";
+
+function App() {
+  const user = useUser();
+  const showDevTools = user.role === "admin" || __DEV__;
+
+  return (
+    <>
+      {/* Your app */}
+      {showDevTools && (
+        <FloatingDevTools
+          environment={process.env.ENVIRONMENT}
+          userRole={user.role}
+        />
+      )}
+    </>
+  );
+}
+```
+
+**Recommendation**: Gate with your existing authentication/authorization system.
+
+</details>
+
+---
+
+## 🆚 Why React Buoy?
+
+### vs. Reactotron
+
+- ✅ Zero config (Reactotron requires manual command registration)
+- ✅ In-app UI (Reactotron requires external app)
+- ✅ Production-safe with auth (Reactotron is dev-only)
+- ✅ Plugin architecture (install packages = auto-appear)
+
+### vs. Flipper
+
+- ✅ Zero setup (Flipper requires native config + desktop app)
+- ✅ Works on physical devices out-of-the-box
+- ✅ Lightweight (Flipper is heavy)
+- ✅ Team-friendly (no desktop app to install)
+
+### vs. react-native-debugger
+
+- ✅ Modern (supports Hermes, new architecture)
+- ✅ In-app (no external tools)
+- ✅ Extensible (custom tools as React components)
+- ✅ Production-ready
+
+---
+
+## 🤝 Real-World Use Case
+
+**Scenario**: Debugging a payment flow issue in staging
+
+1. **Environment badge** shows you're in staging (not prod!)
+2. **Role badge** confirms you're logged in as "QA"
 3. Tap **Network** to watch API calls in real-time
 4. Open **Storage** to see what's persisted locally
-5. Check **React Query** to inspect cached data
-6. Launch your custom **Payment Debug** tool
+5. Check **React Query** to inspect cached payment data
+6. Use **Routes** to see the navigation flow
+7. Launch your custom **Payment Debug** tool
 
 All from one floating menu that follows you through every screen.
 
-## 📄 License
+---
+
+## 📝 License
 
 MIT © React Buoy Team
 
-## 🚀 More
+---
 
-**Take a shortcut from web developer to mobile development fluency with guided learning**
+## 🚀 Learn More
+
+**Resources**:
+
+- [Example App](./example) - Full working example with all packages
+- [Package Source](./packages) - Individual package source code
+- [Changelog](./CHANGELOG.md) - Version history
+
+**Contributing**:
+
+- Report bugs: [GitHub Issues](https://github.com/yourusername/react-buoy/issues)
+- Feature requests welcome!
+
+---
+
+## 💙 Credits
 
 Big thanks to [galaxies.dev](https://galaxies.dev) — their content helped me get up to speed with React Native early on, and I strongly recommend it as a resource for anyone making the jump from web to mobile.
 
