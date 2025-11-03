@@ -186,6 +186,22 @@ git push --follow-tags
 - ✅ Handles dependency version updates
 - ✅ Validates package integrity before publishing
 
+**⚠️ Important:** After publishing with changesets, the `package.json` files will have actual version numbers instead of `workspace:*`. You **MUST** revert these back to `workspace:*` for local development:
+
+```bash
+# After publishing, revert workspace protocols
+git diff packages/*/package.json  # Check what changed
+# Manually revert "@react-buoy/*" dependencies back to "workspace:*"
+git add packages/*/package.json
+git commit -m "fix: revert workspace protocol for local development"
+git push
+```
+
+This is necessary because:
+- The lockfile expects `workspace:*` for local development
+- CI will fail with `ERR_PNPM_OUTDATED_LOCKFILE` if left as actual versions
+- Changesets will transform them again during the next publish
+
 ### Alternative: Automated Release (GitHub Actions)
 
 The `.github/workflows/release.yml` workflow automatically publishes on push to `main`:
@@ -370,6 +386,38 @@ pnpm add @react-buoy/<package-name>
 ---
 
 ## Troubleshooting
+
+### Lockfile Out of Sync Error
+
+**Symptoms:**
+```bash
+ERR_PNPM_OUTDATED_LOCKFILE  Cannot install with "frozen-lockfile" 
+because pnpm-lock.yaml is not up to date
+
+specifiers in the lockfile ({"@react-buoy/shared-ui":"workspace:*"})
+don't match specs in package.json ({"@react-buoy/shared-ui":"^0.1.19"})
+```
+
+**Cause:** After publishing with changesets, `package.json` files still have transformed version numbers instead of `workspace:*`.
+
+**Solution:**
+```bash
+# Check what changed
+git diff packages/*/package.json
+
+# Find all transformed dependencies
+grep -r "@react-buoy.*\^0.1" packages/*/package.json
+
+# Revert to workspace:*
+# For each package with transformed deps, update:
+# "@react-buoy/shared-ui": "^0.1.19" → "@react-buoy/shared-ui": "workspace:*"
+# "@react-buoy/react-query": "^0.1.21" → "@react-buoy/react-query": "workspace:*"
+
+# Commit and push
+git add packages/*/package.json
+git commit -m "fix: revert workspace protocol for local development"
+git push
+```
 
 ### Package Not Found on npm After Publishing
 
