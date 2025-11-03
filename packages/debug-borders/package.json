@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/debug-borders",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "debug-borders package",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
