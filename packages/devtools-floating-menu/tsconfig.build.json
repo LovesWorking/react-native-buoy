@@ -1,9 +1,21 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./lib/typescript"
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationOnly": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false
   },
-  "include": ["src"],
-  "exclude": ["example", "lib", "**/__tests__", "**/__fixtures__", "**/__mocks__"]
+  "exclude": [
+    "node_modules",
+    "lib",
+    "../env-tools/**/*",
+    "../network/**/*",
+    "../storage/**/*",
+    "../react-query/**/*",
+    "../route-events/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

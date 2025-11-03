@@ -75,10 +75,7 @@ function App() {
   return (
     <>
       {/* Your existing app content */}
-      <FloatingDevTools
-        environment="local"
-        userRole="admin"
-      />
+      <FloatingDevTools environment="local" userRole="admin" />
     </>
   );
 }
@@ -93,34 +90,30 @@ Customize specific tools while auto-discovering the rest:
 ```tsx
 import {
   FloatingDevTools,
-  createEnvTool,
-  createEnvVarConfig,
-  envVar,
-  createStorageTool,
-  type RequiredStorageKey,
+  type EnvVarConfig,
+  type StorageKeyConfig,
 } from "@react-buoy/core";
 
-const requiredEnvVars = createEnvVarConfig([
-  envVar("API_URL").exists(),
-  envVar("DEBUG_MODE").withType("boolean").build(),
-]);
+const requiredEnvVars: EnvVarConfig[] = [
+  "API_URL", // Just check if exists
+  { key: "DEBUG_MODE", expectedType: "boolean" },
+];
 
-const requiredStorageKeys: RequiredStorageKey[] = [{
-  key: "@app/session",
-  expectedType: "string",
-  storageType: "async",
-}];
+const requiredStorageKeys: StorageKeyConfig[] = [
+  {
+    key: "@app/session",
+    expectedType: "string",
+    storageType: "async",
+  },
+];
 
 function App() {
   return (
     <>
       {/* Your existing app content */}
       <FloatingDevTools
-        apps={[
-          createEnvTool({ requiredEnvVars }),
-          createStorageTool({ requiredStorageKeys }),
-          // Network, React Query, WiFi, Routes auto-discover!
-        ]}
+        requiredEnvVars={requiredEnvVars}
+        requiredStorageKeys={requiredStorageKeys}
         environment="local"
         userRole="admin"
       />
@@ -482,73 +475,53 @@ Here's a full working example with all packages using the simplest setup (same a
 <summary><strong>Click to see the complete setup - everything from @react-buoy/core!</strong></summary>
 
 ```tsx
-import React, { useMemo, useRef } from "react";
+import React, { useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   FloatingDevTools,
-  createEnvTool,
-  createEnvVarConfig,
-  envVar,
-  createStorageTool,
-  type RequiredStorageKey,
+  type EnvVarConfig,
+  type StorageKeyConfig,
   type Environment,
   type UserRole,
 } from "@react-buoy/core";
 
 export default function App() {
-  // Setup QueryClient
   const queryClientRef = useRef<QueryClient | null>(null);
   if (!queryClientRef.current) {
     queryClientRef.current = new QueryClient({});
   }
 
-  // Configure environment variables to validate
-  const requiredEnvVars = useMemo(
-    () =>
-      createEnvVarConfig([
-        envVar("EXPO_PUBLIC_API_URL").exists(),
-        envVar("EXPO_PUBLIC_DEBUG_MODE").withType("boolean").build(),
-        envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(),
-      ]),
-    []
-  );
+  const requiredEnvVars: EnvVarConfig[] = [
+    "EXPO_PUBLIC_API_URL",
+    { key: "EXPO_PUBLIC_DEBUG_MODE", expectedType: "boolean" },
+    { key: "EXPO_PUBLIC_ENVIRONMENT", expectedValue: "development" },
+  ];
 
-  // Configure storage keys to monitor
-  const requiredStorageKeys: RequiredStorageKey[] = useMemo(
-    () => [
-      {
-        key: "@app/session",
-        expectedType: "string",
-        description: "Current user session token",
-        storageType: "async",
-      },
-      {
-        key: "@app/settings:theme",
-        expectedValue: "dark",
-        description: "Preferred theme",
-        storageType: "async",
-      },
-    ],
-    []
-  );
+  const requiredStorageKeys: StorageKeyConfig[] = [
+    {
+      key: "@app/session",
+      expectedType: "string",
+      description: "Current user session token",
+      storageType: "async",
+    },
+    {
+      key: "@app/settings:theme",
+      expectedValue: "dark",
+      description: "Preferred theme",
+      storageType: "async",
+    },
+  ];
 
-  // Environment and user role
   const environment: Environment = "local";
   const userRole: UserRole = "admin";
 
   return (
     <QueryClientProvider client={queryClientRef.current!}>
-      {/* Your existing app content */}
       <YourAppContent />
 
-      {/* The floating menu with all tools */}
       <FloatingDevTools
-        apps={[
-          // Only specify tools that need custom configuration
-          createEnvTool({ requiredEnvVars }),
-          createStorageTool({ requiredStorageKeys }),
-          // Network, React Query, WiFi, and Routes auto-discover!
-        ]}
+        requiredEnvVars={requiredEnvVars}
+        requiredStorageKeys={requiredStorageKeys}
         environment={environment}
         userRole={userRole}
       />
@@ -557,7 +530,7 @@ export default function App() {
 }
 ```
 
-**That's it!** Just ~50 lines of setup for 6 complete dev tools, all imported from `@react-buoy/core`! ✨
+**That's it!** Just ~40 lines of setup for 6 complete dev tools, all imported from `@react-buoy/core`! ✨
 
 </details>
 
@@ -716,12 +689,7 @@ The core package automatically discovers and loads any installed dev tool packag
 import { FloatingDevTools } from "@react-buoy/core";
 
 function App() {
-  return (
-    <FloatingDevTools
-      environment="local"
-      userRole="admin"
-    />
-  );
+  return <FloatingDevTools environment="local" userRole="admin" />;
 }
 ```
 
@@ -748,26 +716,22 @@ All installed packages will automatically appear in your dev tools. No imports, 
 
 ### Combining Auto-Discovery with Custom Config
 
-Need to customize some tools? Just pass them in the `apps` array - everything else auto-discovers:
+Need to customize some tools? Just pass validation configs as props:
 
 ```tsx
 import {
   FloatingDevTools,
-  createEnvTool,
-  createEnvVarConfig,
-  envVar,
-  createStorageTool,
-  type RequiredStorageKey,
+  type EnvVarConfig,
+  type StorageKeyConfig,
 } from "@react-buoy/core";
 
 function App() {
-  // Define custom configs for tools that need them
-  const requiredEnvVars = createEnvVarConfig([
-    envVar("API_URL").exists(),
-    envVar("DEBUG_MODE").withType("boolean").build(),
-  ]);
+  const requiredEnvVars: EnvVarConfig[] = [
+    "API_URL",
+    { key: "DEBUG_MODE", expectedType: "boolean" },
+  ];
 
-  const requiredStorageKeys: RequiredStorageKey[] = [
+  const requiredStorageKeys: StorageKeyConfig[] = [
     {
       key: "@app/session",
       expectedType: "string",
@@ -777,11 +741,8 @@ function App() {
 
   return (
     <FloatingDevTools
-      apps={[
-        createEnvTool({ requiredEnvVars }),
-        createStorageTool({ requiredStorageKeys }),
-        // Network, React Query, WiFi, and Routes load automatically!
-      ]}
+      requiredEnvVars={requiredEnvVars}
+      requiredStorageKeys={requiredStorageKeys}
       environment="local"
       userRole="admin"
     />
@@ -791,19 +752,19 @@ function App() {
 
 **Benefits:**
 
-- ✅ Only customize tools that need specific configuration
+- ✅ No `apps` array needed for validation
+- ✅ Direct props for env vars and storage keys
 - ✅ Everything else loads automatically
-- ✅ Custom configs override auto-discovered presets (by ID)
-- ✅ No duplicates - custom tools take precedence
+- ✅ Custom configs override auto-discovered presets
 - ✅ Everything imports from `@react-buoy/core`
 
 ### When to Use Each Approach
 
-| Approach                  | Best For                                          |
-| ------------------------- | ------------------------------------------------- |
-| No `apps` prop            | Zero config - just install and go!                |
-| `apps` with custom tools  | Need validation or custom settings for some tools |
-| Manual tool objects       | Want explicit control over every tool             |
+| Approach                                | Best For                                     |
+| --------------------------------------- | -------------------------------------------- |
+| No config props                         | Zero config - just install and go!           |
+| `requiredEnvVars`/`requiredStorageKeys` | Need validation for env vars or storage      |
+| `apps` array                            | Custom tools or overriding built-in behavior |
 
 ---
 

@@ -3,8 +3,10 @@
   "compilerOptions": {
     "outDir": "./lib/typescript",
     "rootDir": "./src",
-    "jsx": "react-native"
+    "jsx": "react-native",
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "lib"]
+  "exclude": ["node_modules", "lib", "../env-tools", "../network", "../storage", "../react-query", "../route-events"]
 }

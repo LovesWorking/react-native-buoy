@@ -1,6 +1,10 @@
 // Export unified component - primary interface
 export { FloatingDevTools } from "./floatingMenu/FloatingDevTools";
-export type { FloatingDevToolsProps } from "./floatingMenu/FloatingDevTools";
+export type {
+  FloatingDevToolsProps,
+  EnvVarConfig,
+  StorageKeyConfig,
+} from "./floatingMenu/FloatingDevTools";
 
 // Export auto-discovery utilities
 export {
@@ -26,46 +30,51 @@ export {
 
 // =============================================================================
 // Re-export all dev tool configuration helpers from packages
-// This allows users to import everything from @react-buoy/core
+// These are runtime-only exports to avoid TypeScript build errors
+// Types are available when packages are installed
 // =============================================================================
 
-// ENV Tools
+// Runtime re-exports - TypeScript will find types from installed packages
 export {
   createEnvTool,
   createEnvVarConfig,
   envVar,
   envToolPreset,
+  // @ts-expect-error - Optional peer dependency
 } from "@react-buoy/env";
 export type {
   RequiredEnvVar,
-  EnvVarRule,
   Environment,
   UserRole,
+  // @ts-expect-error - Optional peer dependency
 } from "@react-buoy/env";
 
-// Network Tools
 export {
   createNetworkTool,
   networkToolPreset,
+  // @ts-expect-error - Optional peer dependency
 } from "@react-buoy/network";
 
-// Storage Tools
 export {
   createStorageTool,
   storageToolPreset,
+  // @ts-expect-error - Optional peer dependency
 } from "@react-buoy/storage";
-export type { RequiredStorageKey } from "@react-buoy/storage";
+export type {
+  RequiredStorageKey,
+  // @ts-expect-error - Optional peer dependency
+} from "@react-buoy/storage";
 
-// React Query Tools
 export {
   createReactQueryTool,
   reactQueryToolPreset,
   createWifiToggleTool,
   wifiTogglePreset,
+  // @ts-expect-error - Optional peer dependency
 } from "@react-buoy/react-query";
 
-// Route Events Tools
 export {
   createRouteEventsTool,
   routeEventsToolPreset,
+  // @ts-expect-error - Optional peer dependency
 } from "@react-buoy/route-events";

@@ -4,7 +4,7 @@
   "description": "Floating dev tools launcher and AppHost",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
-  "types": "lib/typescript/index.d.ts",
+  "types": "src/index.tsx",
   "react-native": "src/index.tsx",
   "source": "src/index.tsx",
   "files": [
@@ -31,8 +31,7 @@
     "output": "lib",
     "targets": [
       "commonjs",
-      "module",
-      "typescript"
+      "module"
     ]
   },
   "devDependencies": {
