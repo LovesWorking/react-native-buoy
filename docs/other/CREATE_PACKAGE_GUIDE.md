@@ -1,5 +1,7 @@
 # Package Creation Guide
 
+> **⚠️ Important:** This guide covers package **creation** only. For the complete workflow including publishing and workflow updates, see [ADDING_NEW_PACKAGES.md](./ADDING_NEW_PACKAGES.md).
+
 ## Quick Start
 
 Create a new package with a single command:
@@ -7,6 +9,10 @@ Create a new package with a single command:
 ```bash
 pnpm create:package <package-name> [type]
 ```
+
+**Next Steps After Creation:**
+1. Update workflow files (see [ADDING_NEW_PACKAGES.md](./ADDING_NEW_PACKAGES.md#what-you-must-update-manually))
+2. Publish using changesets (see [ADDING_NEW_PACKAGES.md](./ADDING_NEW_PACKAGES.md#publishing-new-packages))
 
 ## Examples
 
