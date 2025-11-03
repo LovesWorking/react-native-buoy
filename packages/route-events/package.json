@@ -1,0 +1,62 @@
+{
+  "name": "@react-buoy/route-events",
+  "version": "0.1.16",
+  "description": "route-events package",
+  "main": "lib/commonjs/index",
+  "module": "lib/module/index",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.tsx",
+  "source": "src/index.tsx",
+  "files": [
+    "src",
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "bob build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf lib",
+    "test": "pnpm run typecheck",
+    "postinstall": "node ../../scripts/postinstall.js || exit 0"
+  },
+  "dependencies": {
+    "@react-buoy/shared-ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "@react-native-async-storage/async-storage": "*",
+    "@react-navigation/native": "*",
+    "expo-router": "*",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@react-navigation/native": "^7.1.18",
+    "@types/react": "^19.1.0",
+    "@types/react-native": "^0.73.0",
+    "expo-router": "~5.0.7",
+    "typescript": "~5.8.3"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LovesWorking/react-native-buoy.git",
+    "directory": "packages/route-events"
+  },
+  "bugs": {
+    "url": "https://github.com/LovesWorking/react-native-buoy/issues"
+  },
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/route-events#readme",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  }
+}

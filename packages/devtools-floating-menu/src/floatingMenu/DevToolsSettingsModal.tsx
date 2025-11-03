@@ -14,6 +14,7 @@ import {
   SentryBugIcon,
   StorageStackIcon,
   WifiCircuitIcon,
+  RouteMapIcon,
   Globe,
   Info,
   ChevronRightIcon,
@@ -356,12 +357,22 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
             />
           );
         case "wifi":
+        case "query-wifi-toggle": // Support both IDs for wifi toggle
           return (
             <WifiCircuitIcon
               size={16}
               color={color}
               glowColor={color}
               strength={4}
+              noBackground
+            />
+          );
+        case "route-events":
+          return (
+            <RouteMapIcon
+              size={16}
+              color={color}
+              glowColor={color}
               noBackground
             />
           );

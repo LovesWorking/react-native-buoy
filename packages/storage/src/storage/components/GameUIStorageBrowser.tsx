@@ -7,12 +7,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import {
-  Database,
-  RefreshCw,
-  Trash2,
-  Search,
-} from "@react-buoy/shared-ui";
+import { Database, RefreshCw, Trash2, Search } from "@react-buoy/shared-ui";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   StorageType,
@@ -24,10 +19,18 @@ import { StorageKeyInfo, RequiredStorageKey, StorageKeyStats } from "../types";
 import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 import { clearAllAppStorage } from "../utils/clearAllStorage";
 import { StorageKeySection } from "./StorageKeySection";
-import { StorageFilterCards, type StorageFilterType, type StorageTypeFilter } from "./StorageFilterCards";
+import {
+  StorageFilterCards,
+  type StorageFilterType,
+  type StorageTypeFilter,
+} from "./StorageFilterCards";
 
 // Import shared Game UI components
-import { gameUIColors, macOSColors, copyToClipboard as copyToClipboardUtil } from "@react-buoy/shared-ui";
+import {
+  gameUIColors,
+  macOSColors,
+  copyToClipboard,
+} from "@react-buoy/shared-ui";
 
 interface GameUIStorageBrowserProps {
   requiredStorageKeys?: RequiredStorageKey[];
@@ -39,7 +42,8 @@ export function GameUIStorageBrowser({
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<StorageFilterType>("all");
-  const [activeStorageType, setActiveStorageType] = useState<StorageTypeFilter>("all");
+  const [activeStorageType, setActiveStorageType] =
+    useState<StorageTypeFilter>("all");
 
   // Get all storage queries from cache
   const allQueries = queryClient.getQueryCache().getAll();
@@ -169,7 +173,7 @@ export function GameUIStorageBrowser({
     // Calculate stats
     const keys = Array.from(keyInfoMap.values());
     const devKeys = Array.from(devToolKeyInfoMap.values());
-    
+
     const storageStats: StorageKeyStats & { devToolsCount: number } = {
       totalCount: keys.length + devKeys.length,
       requiredCount: keys.filter((k) => k.category === "required").length,
@@ -181,9 +185,13 @@ export function GameUIStorageBrowser({
       presentRequiredCount: keys.filter((k) => k.status === "required_present")
         .length,
       optionalCount: keys.filter((k) => k.category === "optional").length,
-      mmkvCount: [...keys, ...devKeys].filter((k) => k.storageType === "mmkv").length,
-      asyncCount: [...keys, ...devKeys].filter((k) => k.storageType === "async").length,
-      secureCount: [...keys, ...devKeys].filter((k) => k.storageType === "secure").length,
+      mmkvCount: [...keys, ...devKeys].filter((k) => k.storageType === "mmkv")
+        .length,
+      asyncCount: [...keys, ...devKeys].filter((k) => k.storageType === "async")
+        .length,
+      secureCount: [...keys, ...devKeys].filter(
+        (k) => k.storageType === "secure"
+      ).length,
       devToolsCount: devKeys.length,
     };
 
@@ -193,59 +201,49 @@ export function GameUIStorageBrowser({
   // Group storage keys by status
   const requiredKeys = storageKeys.filter((k) => k.category === "required");
   const optionalKeys = storageKeys.filter((k) => k.category === "optional");
-  
+
   // Combine all keys and sort by priority (issues first)
   const allKeys = useMemo(() => {
     const combined = [...requiredKeys, ...optionalKeys, ...devToolKeys];
-    
+
     // Sort by status priority: errors first, then warnings, then valid
     return combined.sort((a, b) => {
       const priorityMap: Record<string, number> = {
-        "required_missing": 1,
-        "required_wrong_type": 2,
-        "required_wrong_value": 3,
-        "required_present": 4,
-        "optional_present": 5,
+        required_missing: 1,
+        required_wrong_type: 2,
+        required_wrong_value: 3,
+        required_present: 4,
+        optional_present: 5,
       };
       return (priorityMap[a.status] || 999) - (priorityMap[b.status] || 999);
     });
   }, [requiredKeys, optionalKeys, devToolKeys]);
-  
+
   // Filter keys based on active filter and storage type
   const filteredKeys = useMemo(() => {
     let keys = allKeys;
-    
+
     // Apply status filter
     switch (activeFilter) {
       case "missing":
-        keys = keys.filter(k => k.status === "required_missing");
+        keys = keys.filter((k) => k.status === "required_missing");
         break;
       case "issues":
-        keys = keys.filter(k =>
-          k.status === "required_wrong_type" ||
-          k.status === "required_wrong_value"
+        keys = keys.filter(
+          (k) =>
+            k.status === "required_wrong_type" ||
+            k.status === "required_wrong_value"
         );
         break;
     }
-    
+
     // Apply storage type filter
     if (activeStorageType !== "all") {
-      keys = keys.filter(k => k.storageType === activeStorageType);
+      keys = keys.filter((k) => k.storageType === activeStorageType);
     }
-    
+
     return keys;
   }, [allKeys, activeFilter, activeStorageType]);
-
-
-  // Copy to clipboard helper
-  const copyToClipboard = useCallback(async (text: string, label: string) => {
-    const success = await copyToClipboardUtil(text);
-    if (success) {
-      Alert.alert("Copied!", `${label} copied to clipboard`);
-    } else {
-      Alert.alert("Error", "Failed to copy to clipboard");
-    }
-  }, []);
 
   // Removed unused issues and statsConfig variables
 
@@ -320,8 +318,8 @@ export function GameUIStorageBrowser({
     }, {} as Record<string, unknown>);
 
     const serialized = JSON.stringify(exportData, null, 2);
-    await copyToClipboard(serialized, "Storage data");
-  }, [storageKeys, copyToClipboard]);
+    await copyToClipboard(serialized);
+  }, [storageKeys]);
 
   return (
     <ScrollView
@@ -351,9 +349,7 @@ export function GameUIStorageBrowser({
               {stats.totalCount} {stats.totalCount === 1 ? "key" : "keys"}
             </Text>
           </View>
-          <Text style={styles.keyCount}>
-            Stored
-          </Text>
+          <Text style={styles.keyCount}>Stored</Text>
         </View>
 
         <View style={styles.actionButtons}>
@@ -367,7 +363,9 @@ export function GameUIStorageBrowser({
           >
             <RefreshCw
               size={12}
-              color={isRefreshing ? gameUIColors.success : macOSColors.text.secondary}
+              color={
+                isRefreshing ? gameUIColors.success : macOSColors.text.secondary
+              }
             />
             <Text
               style={[
@@ -390,7 +388,10 @@ export function GameUIStorageBrowser({
           >
             <Database size={12} color={macOSColors.text.secondary} />
             <Text
-              style={[styles.actionButtonText, { color: macOSColors.text.secondary }]}
+              style={[
+                styles.actionButtonText,
+                { color: macOSColors.text.secondary },
+              ]}
             >
               Export
             </Text>
@@ -398,10 +399,7 @@ export function GameUIStorageBrowser({
 
           <TouchableOpacity
             onPress={handleClearAll}
-            style={[
-              styles.actionButton,
-              styles.dangerButton,
-            ]}
+            style={[styles.actionButton, styles.dangerButton]}
             activeOpacity={0.7}
           >
             <Trash2 size={12} color={gameUIColors.error} />
@@ -419,10 +417,13 @@ export function GameUIStorageBrowser({
         <View style={styles.keysSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {activeFilter === "all" ? "ALL STORAGE KEYS" : 
-               activeFilter === "missing" ? "MISSING KEYS" :
-               "ISSUES TO FIX"}
-              {activeStorageType !== "all" && ` (${activeStorageType.toUpperCase()})`}
+              {activeFilter === "all"
+                ? "ALL STORAGE KEYS"
+                : activeFilter === "missing"
+                ? "MISSING KEYS"
+                : "ISSUES TO FIX"}
+              {activeStorageType !== "all" &&
+                ` (${activeStorageType.toUpperCase()})`}
             </Text>
             <View style={styles.countBadge}>
               <Text style={styles.countText}>{filteredKeys.length}</Text>
@@ -439,12 +440,14 @@ export function GameUIStorageBrowser({
         <View style={styles.emptyState}>
           <Search size={32} color={macOSColors.text.muted} />
           <Text style={styles.emptyTitle}>
-            {activeFilter === "all" ? "No storage keys" : 
-             activeFilter === "missing" ? "No missing keys" :
-             "No issues found"}
+            {activeFilter === "all"
+              ? "No storage keys"
+              : activeFilter === "missing"
+              ? "No missing keys"
+              : "No issues found"}
           </Text>
           <Text style={styles.emptySubtitle}>
-            {activeFilter === "all" 
+            {activeFilter === "all"
               ? "Your app hasn't stored any data yet"
               : activeFilter === "missing"
               ? "All required keys are present"
@@ -556,7 +559,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     opacity: 0.5,
   },
-  
+
   // Keys section
   keysSection: {
     marginTop: 8,
@@ -596,7 +599,7 @@ const styles = StyleSheet.create({
     color: macOSColors.text.primary,
     fontFamily: "monospace",
   },
-  
+
   // Empty state
   emptyState: {
     alignItems: "center",

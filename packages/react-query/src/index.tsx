@@ -1,3 +1,11 @@
+// Export preset configuration (easiest way to add to FloatingDevTools!)
+export {
+  reactQueryToolPreset,
+  createReactQueryTool,
+  wifiTogglePreset,
+  createWifiToggleTool,
+} from "./preset";
+
 // React Query dev tools entry point
 // Re-export the full dev tools surface so consumers can tree-shake as needed
 export * from "./react-query";
