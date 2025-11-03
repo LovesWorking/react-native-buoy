@@ -88,11 +88,9 @@ function App() {
 Customize specific tools while auto-discovering the rest:
 
 ```tsx
-import {
-  FloatingDevTools,
-  type EnvVarConfig,
-  type StorageKeyConfig,
-} from "@react-buoy/core";
+import { FloatingDevTools } from "@react-buoy/core";
+import type { EnvVarConfig } from "@react-buoy/core";
+import type { StorageKeyConfig } from "@react-buoy/core";
 
 const requiredEnvVars: EnvVarConfig[] = [
   "API_URL", // Just check if exists
@@ -122,7 +120,7 @@ function App() {
 }
 ```
 
-**Note:** Everything imports from `@react-buoy/core` - no need to import from individual packages!
+**Note:** Core types come from `@react-buoy/core`. Individual package types like `Environment` and `UserRole` come from their respective packages (e.g., `@react-buoy/env`).
 
 ---
 
