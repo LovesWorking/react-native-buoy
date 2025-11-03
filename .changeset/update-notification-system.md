@@ -20,9 +20,16 @@ Add unified update notification system with automatic package manager detection
   - Now consistent across dial menu, floating menu, and settings
   - More flexible API with `iconColor` instead of `colorPreset`
 
+- **Type Compatibility Fix**: Fixed `EnvVarConfig` to be fully compatible with `RequiredEnvVar`
+  - `createEnvVarConfig()` and `envVar()` helpers now work seamlessly with `FloatingDevTools`
+  - Changed from optional `expectedValue?` and `expectedType?` to proper union types
+  - Added "url" type support
+  - Added documentation for helper function usage
+
 - **TypeScript Improvements**: 
   - Removed problematic re-exports that caused `rootDir` conflicts
   - All typecheck errors resolved
+  - Added "toggle-only" to `LaunchMode` type
   - Cleaner import structure for better monorepo compatibility
 
 - **Testing**: Added comprehensive test suite for update notifications
