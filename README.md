@@ -161,26 +161,40 @@ yarn add @react-buoy/env
 bun add @react-buoy/env
 ```
 
-### Quick Setup
+**That's it!** Once installed, the ENV tool automatically appears in your FloatingDevTools. No imports, no configuration needed.
+
+### Add Custom Validation (Optional)
+
+Want to validate specific environment variables? Pass them directly to `FloatingDevTools`:
 
 ```tsx
-import { envToolPreset } from "@react-buoy/env";
+import { FloatingDevTools } from "@react-buoy/core";
+import type { EnvVarConfig } from "@react-buoy/core";
 
-// Add to your apps array - just one line!
-const TOOLS = [envToolPreset];
+const requiredEnvVars: EnvVarConfig[] = [
+  "API_URL", // Just check if exists
+  { key: "DEBUG_MODE", expectedType: "boolean" },
+  { key: "ENVIRONMENT", expectedValue: "development" },
+];
+
+function App() {
+  return (
+    <FloatingDevTools requiredEnvVars={requiredEnvVars} environment="local" />
+  );
+}
 ```
 
-**Need to validate environment variables?** Use `createEnvTool()`:
+**Using helper functions for better DX:**
 
 ```tsx
-import { createEnvTool, createEnvVarConfig, envVar } from "@react-buoy/env";
+import { createEnvVarConfig, envVar } from "@react-buoy/env";
+import type { EnvVarConfig } from "@react-buoy/core";
 
-const requiredEnvVars = createEnvVarConfig([
+const requiredEnvVars: EnvVarConfig[] = createEnvVarConfig([
   envVar("API_URL").exists(),
   envVar("DEBUG_MODE").withType("boolean").build(),
+  envVar("ENVIRONMENT").withValue("development").build(),
 ]);
-
-const TOOLS = [createEnvTool({ requiredEnvVars })];
 ```
 
 ### What you get:
@@ -225,14 +239,7 @@ yarn add @react-buoy/network
 bun add @react-buoy/network
 ```
 
-### Quick Setup
-
-```tsx
-import { networkToolPreset } from "@react-buoy/network";
-
-// Add to your apps array - just one line!
-const TOOLS = [networkToolPreset];
-```
+**That's it!** Once installed, the Network tool automatically appears in your FloatingDevTools. No imports, no configuration needed.
 
 ### What you get:
 
@@ -281,30 +288,38 @@ bun add @react-buoy/storage
 bun add @react-native-async-storage/async-storage  # peer dependency
 ```
 
-### Quick Setup
+**That's it!** Once installed, the Storage tool automatically appears in your FloatingDevTools. No imports, no configuration needed.
+
+### Add Custom Validation (Optional)
+
+Want to validate specific storage keys? Pass them directly to `FloatingDevTools`:
 
 ```tsx
-import { storageToolPreset } from "@react-buoy/storage";
+import { FloatingDevTools } from "@react-buoy/core";
+import type { StorageKeyConfig } from "@react-buoy/core";
 
-// Add to your apps array - just one line!
-const TOOLS = [storageToolPreset];
-```
-
-**Need to validate storage keys?** Use `createStorageTool()`:
-
-```tsx
-import { createStorageTool } from "@react-buoy/storage";
-
-const requiredStorageKeys = [
+const requiredStorageKeys: StorageKeyConfig[] = [
   {
     key: "@app/session",
     expectedType: "string",
     description: "User session token",
     storageType: "async",
   },
+  {
+    key: "@app/settings:theme",
+    expectedValue: "dark",
+    storageType: "mmkv",
+  },
 ];
 
-const TOOLS = [createStorageTool({ requiredStorageKeys })];
+function App() {
+  return (
+    <FloatingDevTools
+      requiredStorageKeys={requiredStorageKeys}
+      environment="local"
+    />
+  );
+}
 ```
 
 ### What you get:
@@ -356,34 +371,25 @@ bun add @tanstack/react-query  # peer dependency
 
 ### Setup QueryClient
 
+Wrap your app with QueryClientProvider:
+
 ```tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { FloatingDevTools } from "@react-buoy/core";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppHostProvider>{/* Your app content */}</AppHostProvider>
+      {/* Your app content */}
+      <FloatingDevTools environment="local" />
     </QueryClientProvider>
   );
 }
 ```
 
-### Quick Setup
-
-```tsx
-import {
-  reactQueryToolPreset,
-  wifiTogglePreset,
-} from "@react-buoy/react-query";
-
-// Add to your apps array - just one line each!
-const TOOLS = [
-  reactQueryToolPreset, // React Query devtools
-  wifiTogglePreset, // WiFi offline toggle
-];
-```
+**That's it!** Once installed, both React Query DevTools and WiFi Toggle automatically appear in your FloatingDevTools. No imports, no configuration needed.
 
 ### What you get:
 
@@ -432,14 +438,7 @@ bun add @react-buoy/route-events
 bun add expo-router @react-navigation/native  # peer dependencies
 ```
 
-### Quick Setup
-
-```tsx
-import { routeEventsToolPreset } from "@react-buoy/route-events";
-
-// Add to your apps array - just one line!
-const TOOLS = [routeEventsToolPreset];
-```
+**That's it!** Once installed, the Route Events tool automatically appears in your FloatingDevTools. No imports, no configuration needed - route tracking starts automatically!
 
 ### What you get:
 
@@ -564,13 +563,9 @@ Here's a full working example with all packages using the simplest setup (same a
 ```tsx
 import React, { useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  FloatingDevTools,
-  type EnvVarConfig,
-  type StorageKeyConfig,
-  type Environment,
-  type UserRole,
-} from "@react-buoy/core";
+import { FloatingDevTools } from "@react-buoy/core";
+import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
+import type { Environment, UserRole } from "@react-buoy/env";
 
 export default function App() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -897,57 +892,26 @@ envVar("API_URL").withType("string").withDescription("Backend API").build();
 
 ## ⚙️ Customizing Dev Tools
 
-All dev tool presets can be customized using their respective factory functions. Here are common customization patterns:
+All dev tool presets can be customized. With auto-discovery, you only need to configure what you want to customize - everything else loads automatically!
 
-### Custom Colors & Names
+### Direct Customization (Recommended)
 
-```tsx
-import {
-  createEnvTool,
-  createNetworkTool,
-  createStorageTool,
-  createReactQueryTool,
-  createRouteEventsTool,
-} from "@react-buoy/...";
-
-const TOOLS = [
-  createEnvTool({
-    name: "ENVIRONMENT",
-    colorPreset: "purple",
-  }),
-  createNetworkTool({
-    name: "API CALLS",
-    colorPreset: "pink",
-  }),
-  createStorageTool({
-    name: "DATA",
-    colorPreset: "cyan",
-  }),
-  createReactQueryTool({
-    name: "TANSTACK",
-    colorPreset: "yellow",
-  }),
-  createRouteEventsTool({
-    name: "NAVIGATION",
-    colorPreset: "green",
-  }),
-];
-```
-
-### Validation & Required Data
+Use direct props on `FloatingDevTools` for the most common customizations:
 
 ```tsx
-// ENV: Validate environment variables
-const requiredEnvVars = createEnvVarConfig([
+import { FloatingDevTools } from "@react-buoy/core";
+import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
+import { createEnvVarConfig, envVar } from "@react-buoy/env";
+
+// Validate environment variables
+const requiredEnvVars: EnvVarConfig[] = createEnvVarConfig([
   envVar("API_URL").exists(),
   envVar("DEBUG_MODE").withType("boolean").build(),
   envVar("NODE_ENV").withValue("production").build(),
 ]);
 
-const TOOLS = [createEnvTool({ requiredEnvVars })];
-
-// STORAGE: Validate storage keys
-const requiredStorageKeys = [
+// Validate storage keys
+const requiredStorageKeys: StorageKeyConfig[] = [
   {
     key: "@app/session",
     expectedType: "string",
@@ -956,23 +920,60 @@ const requiredStorageKeys = [
   },
 ];
 
-const TOOLS = [createStorageTool({ requiredStorageKeys })];
+function App() {
+  return (
+    <FloatingDevTools
+      requiredEnvVars={requiredEnvVars}
+      requiredStorageKeys={requiredStorageKeys}
+      environment="production"
+      userRole="admin"
+    />
+  );
+}
 ```
 
-### Shared Modal Dimensions
+**That's it!** All other tools (Network, React Query, Routes, Debug Borders) load automatically without any configuration.
 
-All dev tools enable consistent modal sizing by default. You can disable it if needed:
+### Advanced: Custom Tool Configuration
+
+Need to customize tool names, colors, or behavior? Use factory functions with the `apps` prop:
 
 ```tsx
-const TOOLS = [
+import { FloatingDevTools } from "@react-buoy/core";
+import {
+  createEnvTool,
+  createNetworkTool,
+  createStorageTool,
+  createReactQueryTool,
+  createRouteEventsTool,
+} from "@react-buoy/...";
+
+const customTools = [
   createEnvTool({
-    requiredEnvVars,
-    enableSharedModalDimensions: false, // Disable if you want custom sizing
+    name: "ENVIRONMENT",
+    iconColor: "#9333EA",
+  }),
+  createNetworkTool({
+    name: "API CALLS",
+    iconColor: "#EC4899",
+  }),
+  createStorageTool({
+    name: "DATA",
+    iconColor: "#06B6D4",
   }),
 ];
+
+function App() {
+  return (
+    <FloatingDevTools
+      apps={customTools} // Custom tools override auto-discovered ones
+      environment="production"
+    />
+  );
+}
 ```
 
-### Manual Configuration (Full Control)
+**Note:** Custom tools in `apps` override auto-discovered presets with the same ID. Tools not customized still load automatically!
 
 If you need complete control, configure tools manually:
 
