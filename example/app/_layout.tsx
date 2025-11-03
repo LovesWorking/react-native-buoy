@@ -2,23 +2,15 @@ import { Slot } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRef, useMemo } from "react";
 import {
+  FloatingDevTools,
   createEnvTool,
   createEnvVarConfig,
   envVar,
+  createStorageTool,
   type Environment,
   type UserRole,
-} from "@react-buoy/env";
-import {
-  reactQueryToolPreset,
-  wifiTogglePreset,
-} from "@react-buoy/react-query";
-import { createNetworkTool } from "@react-buoy/network";
-import { routeEventsToolPreset } from "@react-buoy/route-events";
-import {
-  createStorageTool,
   type RequiredStorageKey,
-} from "@react-buoy/storage";
-import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
+} from "@react-buoy/core";
 
 export default function RootLayout() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -96,37 +88,16 @@ export default function RootLayout() {
     []
   );
 
-  const installedApps: InstalledApp[] = useMemo(
-    () => [
-      // ENV tool with custom required env vars
-      createEnvTool({
-        requiredEnvVars,
-      }),
-
-      // Storage tool with custom required keys
-      createStorageTool({
-        requiredStorageKeys: storageRequiredKeys,
-      }),
-
-      // React Query preset - simplest way!
-      reactQueryToolPreset,
-
-      // WiFi toggle preset - one line!
-      wifiTogglePreset,
-
-      // Network tool
-      createNetworkTool(),
-
-      // Routes preset - simplest way!
-      routeEventsToolPreset,
-    ],
-    [requiredEnvVars, storageRequiredKeys]
-  );
-
   return (
     <QueryClientProvider client={queryClientRef.current!}>
       <FloatingDevTools
-        apps={installedApps}
+        // Auto-discovers ALL installed tools and merges with custom configs
+        // Only specify tools that need custom configuration
+        apps={[
+          createEnvTool({ requiredEnvVars }),
+          createStorageTool({ requiredStorageKeys: storageRequiredKeys }),
+          // Network, React Query, WiFi, and Routes load automatically!
+        ]}
         actions={{}}
         environment={environment}
         userRole={userRole}

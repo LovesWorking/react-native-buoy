@@ -64,6 +64,10 @@ bun add @react-buoy/core
 
 ### Add to Your App
 
+**Option 1: Zero-Config Auto-Discovery (Simplest!)**
+
+Just install the dev tool packages you want, and they'll automatically load:
+
 ```tsx
 import { FloatingDevTools } from "@react-buoy/core";
 
@@ -72,8 +76,6 @@ function App() {
     <>
       {/* Your existing app content */}
       <FloatingDevTools
-        apps={[]}
-        actions={{}}
         environment="local"
         userRole="admin"
       />
@@ -82,7 +84,52 @@ function App() {
 }
 ```
 
-**That's it!** You now have a floating menu showing "local" environment and "admin" user role. The menu is draggable and will persist its position.
+**That's it!** All installed dev tool packages will automatically appear in your floating menu. No configuration, no imports, just install and go!
+
+**Option 2: With Custom Config (When You Need Validation)**
+
+Customize specific tools while auto-discovering the rest:
+
+```tsx
+import {
+  FloatingDevTools,
+  createEnvTool,
+  createEnvVarConfig,
+  envVar,
+  createStorageTool,
+  type RequiredStorageKey,
+} from "@react-buoy/core";
+
+const requiredEnvVars = createEnvVarConfig([
+  envVar("API_URL").exists(),
+  envVar("DEBUG_MODE").withType("boolean").build(),
+]);
+
+const requiredStorageKeys: RequiredStorageKey[] = [{
+  key: "@app/session",
+  expectedType: "string",
+  storageType: "async",
+}];
+
+function App() {
+  return (
+    <>
+      {/* Your existing app content */}
+      <FloatingDevTools
+        apps={[
+          createEnvTool({ requiredEnvVars }),
+          createStorageTool({ requiredStorageKeys }),
+          // Network, React Query, WiFi, Routes auto-discover!
+        ]}
+        environment="local"
+        userRole="admin"
+      />
+    </>
+  );
+}
+```
+
+**Note:** Everything imports from `@react-buoy/core` - no need to import from individual packages!
 
 ---
 
@@ -335,12 +382,15 @@ function App() {
 ### Quick Setup
 
 ```tsx
-import { reactQueryToolPreset, wifiTogglePreset } from "@react-buoy/react-query";
+import {
+  reactQueryToolPreset,
+  wifiTogglePreset,
+} from "@react-buoy/react-query";
 
 // Add to your apps array - just one line each!
 const TOOLS = [
   reactQueryToolPreset, // React Query devtools
-  wifiTogglePreset,     // WiFi offline toggle
+  wifiTogglePreset, // WiFi offline toggle
 ];
 ```
 
@@ -426,22 +476,24 @@ const TOOLS = [routeEventsToolPreset];
 
 ## 🔥 Complete Example
 
-Here's a full working example with all packages using **presets** for the simplest setup (same as our [example app](./example/app/_layout.tsx)):
+Here's a full working example with all packages using the simplest setup (same as our [example app](./example/app/_layout.tsx)):
 
 <details>
-<summary><strong>Click to see the simplest setup with presets</strong></summary>
+<summary><strong>Click to see the complete setup - everything from @react-buoy/core!</strong></summary>
 
 ```tsx
 import React, { useMemo, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
-
-// Import presets and factory functions
-import { createEnvTool, createEnvVarConfig, envVar } from "@react-buoy/env";
-import { createNetworkTool } from "@react-buoy/network";
-import { createStorageTool } from "@react-buoy/storage";
-import { reactQueryToolPreset, wifiTogglePreset } from "@react-buoy/react-query";
-import { routeEventsToolPreset } from "@react-buoy/route-events";
+import {
+  FloatingDevTools,
+  createEnvTool,
+  createEnvVarConfig,
+  envVar,
+  createStorageTool,
+  type RequiredStorageKey,
+  type Environment,
+  type UserRole,
+} from "@react-buoy/core";
 
 export default function App() {
   // Setup QueryClient
@@ -462,7 +514,7 @@ export default function App() {
   );
 
   // Configure storage keys to monitor
-  const requiredStorageKeys = useMemo(
+  const requiredStorageKeys: RequiredStorageKey[] = useMemo(
     () => [
       {
         key: "@app/session",
@@ -480,33 +532,9 @@ export default function App() {
     []
   );
 
-  // Configure all development tools using presets!
-  const installedApps: InstalledApp[] = useMemo(
-    () => [
-      // ENV tool with custom required vars (using factory)
-      createEnvTool({
-        requiredEnvVars,
-      }),
-
-      // Network tool (using factory)
-      createNetworkTool(),
-
-      // Storage tool with custom keys (using factory)
-      createStorageTool({
-        requiredStorageKeys,
-      }),
-
-      // React Query preset - just one line!
-      reactQueryToolPreset,
-
-      // WiFi toggle preset - just one line!
-      wifiTogglePreset,
-
-      // Routes preset - just one line!
-      routeEventsToolPreset,
-    ],
-    [requiredEnvVars, requiredStorageKeys]
-  );
+  // Environment and user role
+  const environment: Environment = "local";
+  const userRole: UserRole = "admin";
 
   return (
     <QueryClientProvider client={queryClientRef.current!}>
@@ -515,17 +543,21 @@ export default function App() {
 
       {/* The floating menu with all tools */}
       <FloatingDevTools
-        apps={installedApps}
-        actions={{}}
-        environment="local"
-        userRole="admin"
+        apps={[
+          // Only specify tools that need custom configuration
+          createEnvTool({ requiredEnvVars }),
+          createStorageTool({ requiredStorageKeys }),
+          // Network, React Query, WiFi, and Routes auto-discover!
+        ]}
+        environment={environment}
+        userRole={userRole}
       />
     </QueryClientProvider>
   );
 }
 ```
 
-**That's it!** Just ~50 lines of setup for 5 complete dev tools. ✨
+**That's it!** Just ~50 lines of setup for 6 complete dev tools, all imported from `@react-buoy/core`! ✨
 
 </details>
 
@@ -669,6 +701,109 @@ export default function App() {
 ```
 
 </details>
+
+---
+
+## 🚀 Zero-Config Auto-Discovery
+
+**The absolute simplest way to use React Buoy** - just install the packages you want, and they'll automatically load!
+
+### How It Works
+
+The core package automatically discovers and loads any installed dev tool packages. No configuration needed!
+
+```tsx
+import { FloatingDevTools } from "@react-buoy/core";
+
+function App() {
+  return (
+    <FloatingDevTools
+      environment="local"
+      userRole="admin"
+    />
+  );
+}
+```
+
+**What happens:**
+
+1. `FloatingDevTools` automatically checks if dev tool packages are installed
+2. If installed, automatically imports and loads the preset
+3. If not installed, silently skips it
+4. All discovered tools appear in your menu automatically!
+
+### Installing Tools
+
+Just install the packages you want to use:
+
+```bash
+# Install only what you need
+pnpm add @react-buoy/env @react-buoy/network @react-buoy/react-query
+
+# Or install everything
+pnpm add @react-buoy/env @react-buoy/network @react-buoy/storage @react-buoy/react-query @react-buoy/route-events
+```
+
+All installed packages will automatically appear in your dev tools. No imports, no configuration!
+
+### Combining Auto-Discovery with Custom Config
+
+Need to customize some tools? Just pass them in the `apps` array - everything else auto-discovers:
+
+```tsx
+import {
+  FloatingDevTools,
+  createEnvTool,
+  createEnvVarConfig,
+  envVar,
+  createStorageTool,
+  type RequiredStorageKey,
+} from "@react-buoy/core";
+
+function App() {
+  // Define custom configs for tools that need them
+  const requiredEnvVars = createEnvVarConfig([
+    envVar("API_URL").exists(),
+    envVar("DEBUG_MODE").withType("boolean").build(),
+  ]);
+
+  const requiredStorageKeys: RequiredStorageKey[] = [
+    {
+      key: "@app/session",
+      expectedType: "string",
+      storageType: "async",
+    },
+  ];
+
+  return (
+    <FloatingDevTools
+      apps={[
+        createEnvTool({ requiredEnvVars }),
+        createStorageTool({ requiredStorageKeys }),
+        // Network, React Query, WiFi, and Routes load automatically!
+      ]}
+      environment="local"
+      userRole="admin"
+    />
+  );
+}
+```
+
+**Benefits:**
+
+- ✅ Only customize tools that need specific configuration
+- ✅ Everything else loads automatically
+- ✅ Custom configs override auto-discovered presets (by ID)
+- ✅ No duplicates - custom tools take precedence
+- ✅ Everything imports from `@react-buoy/core`
+
+### When to Use Each Approach
+
+| Approach                  | Best For                                          |
+| ------------------------- | ------------------------------------------------- |
+| No `apps` prop            | Zero config - just install and go!                |
+| `apps` with custom tools  | Need validation or custom settings for some tools |
+| Manual tool objects       | Want explicit control over every tool             |
 
 ---
 
