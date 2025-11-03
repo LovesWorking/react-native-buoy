@@ -76,6 +76,8 @@ ordered_dirs=(
   "packages/network"
   "packages/storage"
   "packages/react-query"
+  "packages/route-events"
+  "packages/debug-borders"
 )
 
 for dir in "${ordered_dirs[@]}"; do
