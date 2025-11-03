@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/route-events",
-  "version": "0.1.0",
+  "version": "0.1.16",
   "description": "route-events package",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "clean": "rimraf lib",
     "test": "pnpm run typecheck",
-    "postinstall": "echo \"Run pnpm build to compile this package\""
+    "postinstall": "node ../../scripts/postinstall.js || exit 0"
   },
   "dependencies": {
     "@react-buoy/shared-ui": "workspace:*"
