@@ -1,5 +1,18 @@
 # example
 
+## 1.0.15
+
+### Patch Changes
+
+- Updated dependencies [16c3d8d]
+  - @react-buoy/core@0.1.21
+  - @react-buoy/network@0.1.21
+  - @react-buoy/storage@0.1.21
+  - @react-buoy/env@0.1.21
+  - @react-buoy/react-query@0.1.21
+  - @react-buoy/route-events@0.1.22
+  - @react-buoy/debug-borders@0.1.22
+
 ## 1.0.14
 
 ### Patch Changes
