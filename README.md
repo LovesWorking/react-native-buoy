@@ -1,14 +1,18 @@
 # React Buoy Devtools
 
+[![npm version](https://img.shields.io/npm/v/@react-buoy/core?color=brightgreen)](https://www.npmjs.com/package/@react-buoy/core)
+[![npm downloads](https://img.shields.io/npm/dm/@react-buoy/core?color=blue&label=downloads%2Fmonth)](https://www.npmjs.com/package/@react-buoy/core)
+[![Total Downloads](https://img.shields.io/npm/dt/@react-buoy/core?color=blue&label=total%20downloads)](https://www.npmjs.com/package/@react-buoy/core)
+[![Legacy Package](https://img.shields.io/npm/dt/react-native-react-query-devtools?color=9cf&label=legacy%20downloads)](https://www.npmjs.com/package/react-native-react-query-devtools)
+[![Dependents](https://img.shields.io/librariesio/dependents/npm/@react-buoy/core?color=success)](https://www.npmjs.com/package/@react-buoy/core)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **Zero-config mobile dev tools that just work.**
 
 A single floating menu gives your entire team instant access to powerful debugging tools—in dev, staging, AND production. No configuration, no complexity. Just install packages and they automatically appear.
 
 ![React Buoy Demo](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
-
-[![npm version](https://img.shields.io/npm/v/@react-buoy/core?color=brightgreen)](https://www.npmjs.com/package/@react-buoy/core)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
