@@ -121,6 +121,19 @@ export function autoDiscoverPresets(): InstalledApp[] {
         }
       },
     },
+    // Debug Borders
+    {
+      name: "@react-buoy/debug-borders",
+      loader: () => {
+        try {
+          // @ts-ignore - Dynamic import that may not exist
+          const { debugBordersToolPreset } = require("@react-buoy/debug-borders");
+          return debugBordersToolPreset;
+        } catch {
+          return null;
+        }
+      },
+    },
   ];
 
   // Attempt to load each preset

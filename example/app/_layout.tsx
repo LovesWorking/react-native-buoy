@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { FloatingDevTools } from "@react-buoy/core";
 import type { Environment, UserRole } from "@react-buoy/env";
 import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
+import { DebugBordersStandaloneOverlay } from "@react-buoy/debug-borders";
 
 export default function RootLayout() {
   const queryClientRef = useRef<QueryClient | null>(null);
@@ -79,7 +80,9 @@ export default function RootLayout() {
         actions={{}}
         environment={environment}
         userRole={userRole}
-      />
+      >
+        <DebugBordersStandaloneOverlay />
+      </FloatingDevTools>
       <Slot />
     </QueryClientProvider>
   );

@@ -129,7 +129,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     name: `empty-${slotIndex}`,
     icon: null,
     color: "transparent",
-    onPress: () => { },
+    onPress: () => {},
   });
 
   const enabledIcons: IconType[] = [];
@@ -150,15 +150,22 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
           : app.icon,
       color: app.color ?? gameUIColors.primary,
       onPress: () => {
+        // Call the app's onPress callback if provided
         app?.onPress?.();
-        open({
-          id: app.id,
-          title: app.name,
-          component: app.component,
-          props: app.props,
-          launchMode: app.launchMode ?? "self-modal",
-          singleton: app.singleton ?? true,
-        });
+
+        // Only open modal if not a toggle-only tool
+        if (app.launchMode !== "toggle-only") {
+          open({
+            id: app.id,
+            title: app.name,
+            component: app.component,
+            props: app.props,
+            launchMode: app.launchMode ?? "self-modal",
+            singleton: app.singleton ?? true,
+          });
+        }
+
+        // Close the dial
         onClose?.();
       },
     });
@@ -168,7 +175,8 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     const totalEnabled = dialApps.filter((app) => isDialEnabled(app.id)).length;
     if (totalEnabled > MAX_DIAL_SLOTS) {
       console.warn(
-        `[DialDevTools] Only ${MAX_DIAL_SLOTS} dial tools can be shown at once. ${totalEnabled - MAX_DIAL_SLOTS
+        `[DialDevTools] Only ${MAX_DIAL_SLOTS} dial tools can be shown at once. ${
+          totalEnabled - MAX_DIAL_SLOTS
         } tool(s) were hidden. Adjust dial defaults to avoid this warning.`
       );
     }
@@ -428,7 +436,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} nativeID="dial-devtools-root">
       {/* Dark overlay backdrop */}
       <Animated.View style={[styles.backdrop, backdropAnimatedStyle]}>
         <Pressable

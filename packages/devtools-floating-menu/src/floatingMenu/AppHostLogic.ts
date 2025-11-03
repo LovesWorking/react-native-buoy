@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-export type LaunchMode = "self-modal" | "host-modal" | "inline";
+export type LaunchMode = "self-modal" | "host-modal" | "inline" | "toggle-only";
 
 export type AppInstance = {
   instanceId: string;

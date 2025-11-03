@@ -27,3 +27,9 @@ export {
   AppOverlay,
   useAppHost,
 } from "./floatingMenu/AppHost";
+
+// Export DevTools visibility tracking
+export {
+  DevToolsVisibilityProvider,
+  useDevToolsVisibility,
+} from "./floatingMenu/DevToolsVisibilityContext";
