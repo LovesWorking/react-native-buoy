@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/network",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "network package",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -19,8 +19,8 @@
     "test": "pnpm run typecheck"
   },
   "dependencies": {
-    "@react-buoy/react-query": "workspace:*",
-    "@react-buoy/shared-ui": "workspace:*"
+    "@react-buoy/react-query": "^0.1.21",
+    "@react-buoy/shared-ui": "^0.1.19"
   },
   "peerDependencies": {
     "react": "*",
