@@ -123,95 +123,26 @@ yarn add @react-buoy/env
 bun add @react-buoy/env
 ```
 
-### Import & Use
+### Quick Setup
 
 ```tsx
-import { EnvVarsModal, createEnvVarConfig, envVar } from "@react-buoy/env";
-import { EnvLaptopIcon } from "@react-buoy/shared-ui";
+import { envToolPreset } from "@react-buoy/env";
 
-// Define your required environment variables
+// Add to your apps array - just one line!
+const TOOLS = [envToolPreset];
+```
+
+**Need to validate environment variables?** Use `createEnvTool()`:
+
+```tsx
+import { createEnvTool, createEnvVarConfig, envVar } from "@react-buoy/env";
+
 const requiredEnvVars = createEnvVarConfig([
-  // Basic existence check
   envVar("API_URL").exists(),
-
-  // Type validation
   envVar("DEBUG_MODE").withType("boolean").build(),
-  envVar("PORT").withType("number").build(),
-  envVar("FEATURE_FLAGS").withType("object").build(),
-
-  // Specific value validation
-  envVar("NODE_ENV").withValue("development").build(),
-
-  // Combined validations with descriptions
-  envVar("DATABASE_URL")
-    .exists()
-    .withDescription("PostgreSQL connection string")
-    .build(),
-
-  envVar("MAX_RETRIES")
-    .withType("number")
-    .withDescription("Maximum API retry attempts")
-    .build(),
 ]);
 
-// Add to your apps array
-const TOOLS = [
-  {
-    id: "env",
-    name: "ENV",
-    description: "Environment variables debugger",
-    slot: "both",
-    icon: ({ size }) => <EnvLaptopIcon size={size} color="#9f6" />,
-    component: EnvVarsModal,
-    props: {
-      requiredEnvVars,
-    },
-  },
-];
-```
-
-### API Reference
-
-#### `envVar(key: string)`
-
-Creates an environment variable validation rule.
-
-**Methods:**
-
-- `.exists()` - Validates the environment variable exists (not undefined/empty)
-- `.withType(type)` - Validates the variable type (`"string"` | `"number"` | `"boolean"` | `"object"`)
-- `.withValue(expectedValue)` - Validates the variable has a specific value
-- `.withDescription(description)` - Adds a description shown in the UI
-- `.build()` - Finalizes the validation rule (required for chained methods)
-
-**Examples:**
-
-```tsx
-// Just check if it exists
-envVar("API_URL").exists();
-
-// Type validation
-envVar("PORT").withType("number").build();
-
-// Exact value check
-envVar("NODE_ENV").withValue("production").build();
-
-// Combined validation
-envVar("ENABLE_ANALYTICS")
-  .withType("boolean")
-  .withDescription("Controls analytics tracking")
-  .build();
-```
-
-#### `createEnvVarConfig(rules: EnvVarRule[])`
-
-Creates a configuration object from environment variable rules.
-
-```tsx
-const config = createEnvVarConfig([
-  envVar("API_URL").exists(),
-  envVar("DEBUG").withType("boolean").build(),
-]);
+const TOOLS = [createEnvTool({ requiredEnvVars })];
 ```
 
 ### What you get:
@@ -256,24 +187,13 @@ yarn add @react-buoy/network
 bun add @react-buoy/network
 ```
 
-### Import & Use
+### Quick Setup
 
 ```tsx
-import { NetworkModal } from "@react-buoy/network";
-import { Globe } from "@react-buoy/shared-ui";
+import { networkToolPreset } from "@react-buoy/network";
 
-// Add to your apps array
-const TOOLS = [
-  {
-    id: "network",
-    name: "NETWORK",
-    description: "Network request logger",
-    slot: "both",
-    icon: ({ size }) => <Globe size={size} color="#38bdf8" />,
-    component: NetworkModal,
-    props: {},
-  },
-];
+// Add to your apps array - just one line!
+const TOOLS = [networkToolPreset];
 ```
 
 ### What you get:
@@ -323,128 +243,30 @@ bun add @react-buoy/storage
 bun add @react-native-async-storage/async-storage  # peer dependency
 ```
 
-### Import & Use
+### Quick Setup
 
 ```tsx
-import { StorageModalWithTabs } from "@react-buoy/storage";
-import { StorageStackIcon } from "@react-buoy/shared-ui";
+import { storageToolPreset } from "@react-buoy/storage";
 
-// Define storage keys to monitor and validate
+// Add to your apps array - just one line!
+const TOOLS = [storageToolPreset];
+```
+
+**Need to validate storage keys?** Use `createStorageTool()`:
+
+```tsx
+import { createStorageTool } from "@react-buoy/storage";
+
 const requiredStorageKeys = [
-  // Basic key monitoring
   {
     key: "@app/session",
-    description: "Current user session token",
-    storageType: "async",
-  },
-
-  // Type validation
-  {
-    key: "@app/settings",
-    expectedType: "object",
-    description: "User preferences and settings",
-    storageType: "async",
-  },
-
-  // Exact value validation
-  {
-    key: "@app/theme",
-    expectedValue: "dark",
-    description: "Application theme preference",
-    storageType: "mmkv",
-  },
-
-  // SecureStore keys
-  {
-    key: "biometric_token",
     expectedType: "string",
-    description: "Encrypted biometric authentication token",
-    storageType: "secure",
-  },
-
-  // Multiple storage types
-  {
-    key: "@analytics/user_id",
-    expectedType: "string",
-    description: "Anonymous user identifier for analytics",
+    description: "User session token",
     storageType: "async",
   },
 ];
 
-// Add to your apps array
-const TOOLS = [
-  {
-    id: "storage",
-    name: "STORAGE",
-    description: "AsyncStorage browser",
-    slot: "both",
-    icon: ({ size }) => <StorageStackIcon size={size} color="#38f8a7" />,
-    component: StorageModalWithTabs,
-    props: {
-      requiredStorageKeys, // optional
-    },
-  },
-];
-```
-
-### API Reference
-
-#### `RequiredStorageKey` Configuration
-
-Each storage key configuration object supports the following properties:
-
-**Required:**
-
-- `key: string` - The storage key to monitor (e.g., "@app/session")
-- `storageType: "async" | "secure" | "mmkv"` - Which storage system to check
-
-**Optional Validation:**
-
-- `expectedType: "string" | "number" | "boolean" | "object"` - Validates the stored value type
-- `expectedValue: any` - Validates the stored value matches exactly
-- `description: string` - Human-readable description shown in the UI
-
-**Examples:**
-
-```tsx
-// Type validation
-{
-  key: "@app/settings",
-  expectedType: "object",
-  description: "User app settings",
-  storageType: "async",
-}
-
-// Exact value validation
-{
-  key: "@app/theme",
-  expectedValue: "dark",
-  description: "App theme (should be dark)",
-  storageType: "mmkv",
-}
-
-// SecureStore monitoring
-{
-  key: "auth_token",
-  expectedType: "string",
-  description: "JWT authentication token",
-  storageType: "secure",
-}
-```
-
-#### Storage Types
-
-- **`"async"`** - React Native AsyncStorage
-- **`"secure"`** - Expo SecureStore (encrypted)
-- **`"mmkv"`** - MMKV high-performance storage
-
-#### Props for StorageModalWithTabs
-
-```tsx
-interface StorageModalProps {
-  requiredStorageKeys?: RequiredStorageKey[];
-  enableSharedModalDimensions?: boolean;
-}
+const TOOLS = [createStorageTool({ requiredStorageKeys })];
 ```
 
 ### What you get:
@@ -510,33 +332,15 @@ function App() {
 }
 ```
 
-### Import & Use
+### Quick Setup
 
 ```tsx
-import { ReactQueryDevToolsModal, WifiToggle } from "@react-buoy/react-query";
-import { ReactQueryIcon } from "@react-buoy/shared-ui";
+import { reactQueryToolPreset, wifiTogglePreset } from "@react-buoy/react-query";
 
-// Add to your apps array
+// Add to your apps array - just one line each!
 const TOOLS = [
-  {
-    id: "query",
-    name: "REACT QUERY",
-    description: "React Query inspector",
-    slot: "both",
-    icon: ({ size }) => <ReactQueryIcon size={size} colorPreset="red" />,
-    component: ReactQueryDevToolsModal,
-    props: {},
-  },
-  // Optional: Add WiFi toggle for offline testing
-  {
-    id: "wifi-toggle",
-    name: "WIFI",
-    description: "Toggle offline mode",
-    slot: "both",
-    icon: ({ size }) => <WifiToggle size={size} />,
-    component: () => <></>,
-    props: {},
-  },
+  reactQueryToolPreset, // React Query devtools
+  wifiTogglePreset,     // WiFi offline toggle
 ];
 ```
 
@@ -546,7 +350,7 @@ const TOOLS = [
 - 🗂️ Cache manipulation and inspection
 - 📊 Query performance metrics
 - 🔄 Manual query refetching
-- 📶 Offline/online mode toggle
+- 📶 **WiFi Toggle** - Simulate offline mode to test error handling and retry logic
 
 </details>
 
@@ -587,33 +391,13 @@ bun add @react-buoy/route-events
 bun add expo-router @react-navigation/native  # peer dependencies
 ```
 
-### Import & Use
-
-**Simplest way - just import the preset:**
+### Quick Setup
 
 ```tsx
 import { routeEventsToolPreset } from "@react-buoy/route-events";
 
-// Add to your apps array
-const TOOLS = [
-  routeEventsToolPreset, // One line - that's it!
-  // ...other tools
-];
-```
-
-**Or customize it:**
-
-```tsx
-import { createRouteEventsTool } from "@react-buoy/route-events";
-import { Navigation } from "@react-buoy/shared-ui";
-
-const TOOLS = [
-  createRouteEventsTool({
-    name: "MY ROUTES",
-    color: "#a78bfa",
-    enableSharedModalDimensions: true,
-  }),
-];
+// Add to your apps array - just one line!
+const TOOLS = [routeEventsToolPreset];
 ```
 
 ### What you get:
@@ -626,25 +410,6 @@ const TOOLS = [
 - 📋 **Copy Support** - Copy route data for debugging
 - ⏱️ **Performance Metrics** - Track navigation timing and performance
 - ✨ **Zero Config** - Route tracking starts automatically when you open the modal
-
-### Advanced: Custom Analytics
-
-Only if you need custom analytics tracking, you can use the hook:
-
-```tsx
-import { useRouteObserver } from "@react-buoy/route-events";
-
-export default function RootLayout() {
-  useRouteObserver((event) => {
-    analytics.trackPageView({
-      path: event.pathname,
-      params: event.params,
-    });
-  });
-
-  return <Stack />;
-}
-```
 
 </details>
 
@@ -661,10 +426,113 @@ export default function RootLayout() {
 
 ## 🔥 Complete Example
 
-Here's a full working example with all packages (same as our [example app](./example/App.tsx)):
+Here's a full working example with all packages using **presets** for the simplest setup (same as our [example app](./example/app/_layout.tsx)):
 
 <details>
-<summary><strong>Click to see complete setup with all tools</strong></summary>
+<summary><strong>Click to see the simplest setup with presets</strong></summary>
+
+```tsx
+import React, { useMemo, useRef } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
+
+// Import presets and factory functions
+import { createEnvTool, createEnvVarConfig, envVar } from "@react-buoy/env";
+import { createNetworkTool } from "@react-buoy/network";
+import { createStorageTool } from "@react-buoy/storage";
+import { reactQueryToolPreset, wifiTogglePreset } from "@react-buoy/react-query";
+import { routeEventsToolPreset } from "@react-buoy/route-events";
+
+export default function App() {
+  // Setup QueryClient
+  const queryClientRef = useRef<QueryClient | null>(null);
+  if (!queryClientRef.current) {
+    queryClientRef.current = new QueryClient({});
+  }
+
+  // Configure environment variables to validate
+  const requiredEnvVars = useMemo(
+    () =>
+      createEnvVarConfig([
+        envVar("EXPO_PUBLIC_API_URL").exists(),
+        envVar("EXPO_PUBLIC_DEBUG_MODE").withType("boolean").build(),
+        envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(),
+      ]),
+    []
+  );
+
+  // Configure storage keys to monitor
+  const requiredStorageKeys = useMemo(
+    () => [
+      {
+        key: "@app/session",
+        expectedType: "string",
+        description: "Current user session token",
+        storageType: "async",
+      },
+      {
+        key: "@app/settings:theme",
+        expectedValue: "dark",
+        description: "Preferred theme",
+        storageType: "async",
+      },
+    ],
+    []
+  );
+
+  // Configure all development tools using presets!
+  const installedApps: InstalledApp[] = useMemo(
+    () => [
+      // ENV tool with custom required vars (using factory)
+      createEnvTool({
+        requiredEnvVars,
+      }),
+
+      // Network tool (using factory)
+      createNetworkTool(),
+
+      // Storage tool with custom keys (using factory)
+      createStorageTool({
+        requiredStorageKeys,
+      }),
+
+      // React Query preset - just one line!
+      reactQueryToolPreset,
+
+      // WiFi toggle preset - just one line!
+      wifiTogglePreset,
+
+      // Routes preset - just one line!
+      routeEventsToolPreset,
+    ],
+    [requiredEnvVars, requiredStorageKeys]
+  );
+
+  return (
+    <QueryClientProvider client={queryClientRef.current!}>
+      {/* Your existing app content */}
+      <YourAppContent />
+
+      {/* The floating menu with all tools */}
+      <FloatingDevTools
+        apps={installedApps}
+        actions={{}}
+        environment="local"
+        userRole="admin"
+      />
+    </QueryClientProvider>
+  );
+}
+```
+
+**That's it!** Just ~50 lines of setup for 5 complete dev tools. ✨
+
+</details>
+
+<details>
+<summary><strong>Alternative: Manual setup (more control)</strong></summary>
+
+If you need full control, you can configure each tool manually:
 
 ```tsx
 import React, { useMemo, useRef } from "react";
@@ -673,14 +541,14 @@ import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
 import { EnvVarsModal, createEnvVarConfig, envVar } from "@react-buoy/env";
 import { NetworkModal } from "@react-buoy/network";
 import { StorageModalWithTabs } from "@react-buoy/storage";
-import { ReactQueryDevToolsModal, WifiToggle } from "@react-buoy/react-query";
-import { routeEventsToolPreset } from "@react-buoy/route-events";
+import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
+import { RouteEventsModalWithTabs } from "@react-buoy/route-events";
 import {
   EnvLaptopIcon,
   ReactQueryIcon,
   StorageStackIcon,
-  Globe,
-  Navigation,
+  WifiCircuitIcon,
+  RouteMapIcon,
 } from "@react-buoy/shared-ui";
 
 export default function App() {
@@ -716,7 +584,7 @@ export default function App() {
     []
   );
 
-  // Configure all development tools
+  // Configure all development tools manually
   const installedApps: InstalledApp[] = useMemo(
     () => [
       {
@@ -724,16 +592,25 @@ export default function App() {
         name: "ENV",
         description: "Environment variables debugger",
         slot: "both",
-        icon: ({ size }) => <EnvLaptopIcon size={size} color="#9f6" />,
+        icon: ({ size }) => (
+          <EnvLaptopIcon size={size} colorPreset="green" noBackground />
+        ),
         component: EnvVarsModal,
         props: { requiredEnvVars },
       },
       {
         id: "network",
-        name: "NETWORK",
+        name: "NET",
         description: "Network request logger",
         slot: "both",
-        icon: ({ size }) => <Globe size={size} color="#38bdf8" />,
+        icon: ({ size }) => (
+          <WifiCircuitIcon
+            size={size}
+            colorPreset="cyan"
+            strength={4}
+            noBackground
+          />
+        ),
         component: NetworkModal,
         props: {},
       },
@@ -742,27 +619,32 @@ export default function App() {
         name: "STORAGE",
         description: "AsyncStorage browser",
         slot: "both",
-        icon: ({ size }) => <StorageStackIcon size={size} color="#38f8a7" />,
+        icon: ({ size }) => (
+          <StorageStackIcon size={size} colorPreset="green" noBackground />
+        ),
         component: StorageModalWithTabs,
         props: { requiredStorageKeys },
       },
       {
         id: "query",
-        name: "REACT QUERY",
+        name: "QUERY",
         description: "React Query inspector",
         slot: "both",
-        icon: ({ size }) => <ReactQueryIcon size={size} colorPreset="red" />,
+        icon: ({ size }) => (
+          <ReactQueryIcon size={size} colorPreset="red" noBackground />
+        ),
         component: ReactQueryDevToolsModal,
         props: {},
       },
-      routeEventsToolPreset, // Simplest way - one line!
       {
-        id: "wifi-toggle",
-        name: "WIFI TOGGLE",
-        description: "Toggle offline mode",
+        id: "route-events",
+        name: "ROUTES",
+        description: "Route tracking & navigation inspector",
         slot: "both",
-        icon: ({ size }) => <WifiToggle size={size} />,
-        component: () => <></>,
+        icon: ({ size }) => (
+          <RouteMapIcon size={size} colorPreset="orange" noBackground />
+        ),
+        component: RouteEventsModalWithTabs,
         props: {},
       },
     ],
@@ -787,6 +669,156 @@ export default function App() {
 ```
 
 </details>
+
+---
+
+## ⚙️ Customizing Dev Tools
+
+All dev tool presets can be customized using their respective factory functions. Here are common customization patterns:
+
+### Custom Colors & Names
+
+```tsx
+import {
+  createEnvTool,
+  createNetworkTool,
+  createStorageTool,
+  createReactQueryTool,
+  createRouteEventsTool,
+} from "@react-buoy/...";
+
+const TOOLS = [
+  createEnvTool({
+    name: "ENVIRONMENT",
+    colorPreset: "purple",
+  }),
+  createNetworkTool({
+    name: "API CALLS",
+    colorPreset: "pink",
+  }),
+  createStorageTool({
+    name: "DATA",
+    colorPreset: "cyan",
+  }),
+  createReactQueryTool({
+    name: "TANSTACK",
+    colorPreset: "yellow",
+  }),
+  createRouteEventsTool({
+    name: "NAVIGATION",
+    colorPreset: "green",
+  }),
+];
+```
+
+### Validation & Required Data
+
+```tsx
+// ENV: Validate environment variables
+const requiredEnvVars = createEnvVarConfig([
+  envVar("API_URL").exists(),
+  envVar("DEBUG_MODE").withType("boolean").build(),
+  envVar("NODE_ENV").withValue("production").build(),
+]);
+
+const TOOLS = [createEnvTool({ requiredEnvVars })];
+
+// STORAGE: Validate storage keys
+const requiredStorageKeys = [
+  {
+    key: "@app/session",
+    expectedType: "string",
+    description: "User session",
+    storageType: "async",
+  },
+];
+
+const TOOLS = [createStorageTool({ requiredStorageKeys })];
+```
+
+### Shared Modal Dimensions
+
+All dev tools enable consistent modal sizing by default. You can disable it if needed:
+
+```tsx
+const TOOLS = [
+  createEnvTool({
+    requiredEnvVars,
+    enableSharedModalDimensions: false, // Disable if you want custom sizing
+  }),
+];
+```
+
+### Manual Configuration (Full Control)
+
+If you need complete control, configure tools manually:
+
+```tsx
+import { EnvVarsModal } from "@react-buoy/env";
+import { NetworkModal } from "@react-buoy/network";
+import { StorageModalWithTabs } from "@react-buoy/storage";
+import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
+import { RouteEventsModalWithTabs } from "@react-buoy/route-events";
+import {
+  EnvLaptopIcon,
+  WifiCircuitIcon,
+  StorageStackIcon,
+  ReactQueryIcon,
+  RouteMapIcon,
+} from "@react-buoy/shared-ui";
+
+const TOOLS = [
+  {
+    id: "env",
+    name: "ENV",
+    description: "Environment variables debugger",
+    slot: "both",
+    icon: ({ size }) => (
+      <EnvLaptopIcon size={size} colorPreset="green" noBackground />
+    ),
+    component: EnvVarsModal,
+    props: { requiredEnvVars },
+  },
+  {
+    id: "network",
+    name: "NET",
+    description: "Network request logger",
+    slot: "both",
+    icon: ({ size }) => (
+      <WifiCircuitIcon
+        size={size}
+        colorPreset="cyan"
+        strength={4}
+        noBackground
+      />
+    ),
+    component: NetworkModal,
+    props: {},
+  },
+  // ... more tools
+];
+```
+
+### Advanced: Custom Analytics for Routes
+
+If you need custom analytics tracking for routes:
+
+```tsx
+import { useRouteObserver } from "@react-buoy/route-events";
+
+export default function RootLayout() {
+  useRouteObserver((event) => {
+    analytics.trackPageView({
+      path: event.pathname,
+      params: event.params,
+      previousPath: event.previousPathname,
+      timeSpent: event.timeSincePrevious,
+    });
+  });
+
+  return <Stack />;
+}
+```
 
 ---
 

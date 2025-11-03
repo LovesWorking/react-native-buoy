@@ -2,24 +2,20 @@ import { Slot } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRef, useMemo } from "react";
 import {
-  EnvVarsModal,
+  createEnvTool,
   createEnvVarConfig,
   envVar,
   type Environment,
   type UserRole,
 } from "@react-buoy/env";
 import {
-  EnvLaptopIcon,
-  ReactQueryIcon,
-  StorageStackIcon,
-  WifiCircuitIcon,
-  Globe,
-} from "@react-buoy/shared-ui";
-import { ReactQueryDevToolsModal } from "@react-buoy/react-query";
-import { NetworkModal } from "@react-buoy/network";
+  reactQueryToolPreset,
+  wifiTogglePreset,
+} from "@react-buoy/react-query";
+import { createNetworkTool } from "@react-buoy/network";
 import { routeEventsToolPreset } from "@react-buoy/route-events";
 import {
-  StorageModalWithTabs,
+  createStorageTool,
   type RequiredStorageKey,
 } from "@react-buoy/storage";
 import { FloatingDevTools, type InstalledApp } from "@react-buoy/core";
@@ -102,101 +98,27 @@ export default function RootLayout() {
 
   const installedApps: InstalledApp[] = useMemo(
     () => [
-      {
-        id: "env",
-        name: "ENV",
-        description: "Environment variables debugger",
-        slot: "both",
-        icon: ({ size }: { size: number }) => (
-          <EnvLaptopIcon
-            size={size}
-            color="#9f6"
-            glowColor="#9f6"
-            noBackground
-          />
-        ),
-        component: EnvVarsModal,
-        props: {
-          requiredEnvVars,
-          enableSharedModalDimensions: true,
-        },
-        onPress: () => {
-          console.log(
-            "🚀 ENV tool icon pressed! onPress callback fired before modal opens"
-          );
-        },
-      },
-      {
-        id: "storage",
-        name: "STORAGE",
-        description: "Storage browser",
-        slot: "both",
-        icon: ({ size }: { size: number }) => (
-          <StorageStackIcon
-            size={size}
-            color="#38f8a7"
-            glowColor="#10B981"
-            noBackground
-          />
-        ),
-        component: StorageModalWithTabs,
-        props: {
-          enableSharedModalDimensions: true,
-          requiredStorageKeys: storageRequiredKeys,
-        },
-      },
-      {
-        id: "query",
-        name: "QUERY",
-        description: "React Query inspector",
-        slot: "both",
-        icon: ({ size }: { size: number }) => (
-          <ReactQueryIcon
-            size={size}
-            colorPreset="red"
-            glowColor="#FF6B8A"
-            noBackground
-          />
-        ),
-        component: ReactQueryDevToolsModal,
-        props: {
-          enableSharedModalDimensions: true,
-        },
-      },
-      {
-        id: "query-wifi-toggle",
-        name: "WIFI",
-        description: "React Query WiFi toggle",
-        slot: "both",
-        icon: ({ size }: { size: number }) => (
-          <WifiCircuitIcon
-            size={size}
-            colorPreset="cyan"
-            strength={4}
-            noBackground
-          />
-        ),
-        component: () => <></>,
-        props: {},
-      },
-      {
-        id: "network",
-        name: "NET",
-        description: "Network request logger",
-        slot: "both",
-        icon: ({ size }: { size: number }) => (
-          <Globe size={size} color="#38bdf8" />
-        ),
-        component: NetworkModal,
-        props: {
-          enableSharedModalDimensions: true,
-        },
-        onPress: () => {
-          console.log("📡 Network tool opened - tracking analytics event");
-          // This could be used for analytics tracking in a real app
-        },
-      },
-      routeEventsToolPreset, // Simplest way - just add the preset!
+      // ENV tool with custom required env vars
+      createEnvTool({
+        requiredEnvVars,
+      }),
+
+      // Storage tool with custom required keys
+      createStorageTool({
+        requiredStorageKeys: storageRequiredKeys,
+      }),
+
+      // React Query preset - simplest way!
+      reactQueryToolPreset,
+
+      // WiFi toggle preset - one line!
+      wifiTogglePreset,
+
+      // Network tool
+      createNetworkTool(),
+
+      // Routes preset - simplest way!
+      routeEventsToolPreset,
     ],
     [requiredEnvVars, storageRequiredKeys]
   );

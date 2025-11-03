@@ -35,7 +35,9 @@ export const routeEventsToolPreset = {
     <RouteMapIcon size={size} colorPreset="orange" noBackground />
   ),
   component: RouteEventsModalWithTabs,
-  props: {},
+  props: {
+    enableSharedModalDimensions: true,
+  },
 };
 
 /**
@@ -80,7 +82,10 @@ export function createRouteEventsTool(options?: {
     ),
     component: RouteEventsModalWithTabs,
     props: {
-      enableSharedModalDimensions: options?.enableSharedModalDimensions,
+      enableSharedModalDimensions:
+        options?.enableSharedModalDimensions !== undefined
+          ? options.enableSharedModalDimensions
+          : true,
     },
   };
 }
