@@ -31,7 +31,6 @@
     "lint": "eslint --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map' \"packages/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
     "test": "pnpm run build && pnpm run typecheck && pnpm run lint",
     "test:packages": "lerna run test --stream",
-    "test:update-notification": "node scripts/test-update-notification-complete.js",
     "fresh": "pnpm run clean && pnpm install && pnpm run build",
     "zip": "bash scripts/gpt5-zip-repo.sh",
     "zip:review": "bash scripts/gpt5-zip-repo.sh ./gpt5-review.zip",
