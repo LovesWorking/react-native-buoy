@@ -327,9 +327,6 @@ importers:
       '@react-buoy/shared-ui':
         specifier: workspace:*
         version: link:../shared
-      '@tanstack/react-query':
-        specifier: ^5.89.0
-        version: 5.90.5(react@19.1.0)
       react:
         specifier: '*'
         version: 19.1.0

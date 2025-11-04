@@ -7,6 +7,9 @@ export { StorageKeySection } from "./components/StorageKeySection";
 export { StorageBrowserMode } from "./components/StorageBrowserMode";
 export { StorageEventsSection } from "./components/StorageEventsSection";
 
+// Storage hooks
+export { useAsyncStorageKeys } from "./hooks/useAsyncStorageKeys";
+
 // Storage types
 export * from "./types";
 

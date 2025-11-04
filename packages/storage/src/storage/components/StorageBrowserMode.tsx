@@ -1,10 +1,7 @@
-import { Query } from "@tanstack/react-query";
 import { RequiredStorageKey } from "../types";
 import { GameUIStorageBrowser } from "./GameUIStorageBrowser";
 
 interface StorageBrowserModeProps {
-  selectedQuery: Query | undefined;
-  onQuerySelect: (query: Query | undefined) => void;
   requiredStorageKeys?: RequiredStorageKey[]; // Configuration for required keys
 }
 

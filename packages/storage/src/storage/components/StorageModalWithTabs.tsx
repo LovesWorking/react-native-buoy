@@ -446,8 +446,6 @@ export function StorageModalWithTabs({
     if (activeTab === "browser") {
       return (
         <StorageBrowserMode
-          selectedQuery={undefined}
-          onQuerySelect={() => {}}
           requiredStorageKeys={requiredStorageKeys}
         />
       );

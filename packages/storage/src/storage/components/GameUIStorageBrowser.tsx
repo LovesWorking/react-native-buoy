@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,14 +7,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { Database, RefreshCw, Trash2, Search } from "@react-buoy/shared-ui";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  StorageType,
-  getCleanStorageKey,
-  getStorageType,
-  isStorageQuery,
-} from "../utils/storageQueryUtils";
+import { Database, Trash2, Search } from "@react-buoy/shared-ui";
 import { StorageKeyInfo, RequiredStorageKey, StorageKeyStats } from "../types";
 import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 import { clearAllAppStorage } from "../utils/clearAllStorage";
@@ -24,6 +17,8 @@ import {
   type StorageFilterType,
   type StorageTypeFilter,
 } from "./StorageFilterCards";
+import { useAsyncStorageKeys } from "../hooks/useAsyncStorageKeys";
+import { addListener } from "../utils/AsyncStorageListener";
 
 // Import shared Game UI components
 import {
@@ -39,175 +34,63 @@ interface GameUIStorageBrowserProps {
 export function GameUIStorageBrowser({
   requiredStorageKeys = [],
 }: GameUIStorageBrowserProps) {
-  const queryClient = useQueryClient();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<StorageFilterType>("all");
   const [activeStorageType, setActiveStorageType] =
     useState<StorageTypeFilter>("all");
 
-  // Get all storage queries from cache
-  const allQueries = queryClient.getQueryCache().getAll();
-  const storageQueriesData = allQueries.filter((query) =>
-    isStorageQuery(query.queryKey)
+  // Use new direct AsyncStorage hook
+  const { storageKeys: allStorageKeys, isLoading, error, refresh } = useAsyncStorageKeys(
+    requiredStorageKeys
   );
 
-  // Process storage keys into StorageKeyInfo format
-  const { storageKeys, devToolKeys, stats } = useMemo(() => {
-    const keyInfoMap = new Map<string, StorageKeyInfo>();
-    const devToolKeyInfoMap = new Map<string, StorageKeyInfo>();
+  // Auto-refresh on storage events
+  useEffect(() => {
+    // Debounce to avoid multiple rapid refreshes
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-    // Normal processing - use actual storage queries
-    storageQueriesData.forEach((query) => {
-      const storageType = getStorageType(query.queryKey);
-      if (!storageType) return;
-
-      const cleanKey = getCleanStorageKey(query.queryKey);
-      const value = query.state.data;
-
-      // Check if this is a dev tool key
-      if (isDevToolsStorageKey(cleanKey)) {
-        const devKeyInfo: StorageKeyInfo = {
-          key: cleanKey,
-          value,
-          storageType,
-          status: "optional_present",
-          category: "optional",
-          description: "Dev Tools internal storage key",
-        };
-        devToolKeyInfoMap.set(cleanKey, devKeyInfo);
-        return;
-      }
-
-      // Check if this is a required key
-      const requiredConfig = requiredStorageKeys.find((req) => {
-        if (typeof req === "string") return req === cleanKey;
-        return req.key === cleanKey;
-      });
-
-      let status: StorageKeyInfo["status"] = "optional_present";
-
-      if (requiredConfig) {
-        if (value === undefined || value === null) {
-          status = "required_missing";
-        } else if (
-          typeof requiredConfig === "object" &&
-          "expectedValue" in requiredConfig
-        ) {
-          status =
-            value === requiredConfig.expectedValue
-              ? "required_present"
-              : "required_wrong_value";
-        } else if (
-          typeof requiredConfig === "object" &&
-          "expectedType" in requiredConfig
-        ) {
-          const actualType = value === null ? "null" : typeof value;
-          status =
-            actualType.toLowerCase() ===
-            requiredConfig.expectedType.toLowerCase()
-              ? "required_present"
-              : "required_wrong_type";
-        } else {
-          status = "required_present";
-        }
-      }
-
-      const keyInfo: StorageKeyInfo = {
-        key: cleanKey,
-        value,
-        storageType,
-        status,
-        category: requiredConfig ? "required" : "optional",
-        ...(typeof requiredConfig === "object" &&
-          "expectedValue" in requiredConfig && {
-            expectedValue: requiredConfig.expectedValue,
-          }),
-        ...(typeof requiredConfig === "object" &&
-          "expectedType" in requiredConfig && {
-            expectedType: requiredConfig.expectedType,
-          }),
-        ...(typeof requiredConfig === "object" &&
-          "description" in requiredConfig && {
-            description: requiredConfig.description,
-          }),
-      };
-
-      keyInfoMap.set(cleanKey, keyInfo);
+    const unsubscribe = addListener((event) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        refresh(); // Auto-refresh when storage changes
+      }, 100); // 100ms debounce
     });
 
-    // Process required storage keys that weren't found in actual storage
-    requiredStorageKeys.forEach((req) => {
-      const key = typeof req === "string" ? req : req.key;
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
+  }, [refresh]);
 
-      if (!keyInfoMap.has(key)) {
-        let storageType: StorageType = "async";
-
-        if (typeof req === "object" && "storageType" in req) {
-          storageType = req.storageType;
-        }
-
-        const keyInfo: StorageKeyInfo = {
-          key,
-          value: undefined,
-          storageType,
-          status: "required_missing",
-          category: "required",
-          ...(typeof req === "object" &&
-            "expectedValue" in req && {
-              expectedValue: req.expectedValue,
-            }),
-          ...(typeof req === "object" &&
-            "expectedType" in req && {
-              expectedType: req.expectedType,
-            }),
-          ...(typeof req === "object" &&
-            "description" in req && {
-              description: req.description,
-            }),
-        };
-
-        keyInfoMap.set(key, keyInfo);
-      }
-    });
-
-    // Calculate stats
-    const keys = Array.from(keyInfoMap.values());
-    const devKeys = Array.from(devToolKeyInfoMap.values());
+  // Calculate stats from keys (filter out dev tool keys in the calculation)
+  const stats = useMemo(() => {
+    const allKeys = allStorageKeys;
+    const appKeys = allKeys.filter((k) => !isDevToolsStorageKey(k.key));
+    const devKeys = allKeys.filter((k) => isDevToolsStorageKey(k.key));
 
     const storageStats: StorageKeyStats & { devToolsCount: number } = {
-      totalCount: keys.length + devKeys.length,
-      requiredCount: keys.filter((k) => k.category === "required").length,
-      missingCount: keys.filter((k) => k.status === "required_missing").length,
-      wrongValueCount: keys.filter((k) => k.status === "required_wrong_value")
+      totalCount: allKeys.length,
+      requiredCount: appKeys.filter((k) => k.category === "required").length,
+      missingCount: appKeys.filter((k) => k.status === "required_missing").length,
+      wrongValueCount: appKeys.filter((k) => k.status === "required_wrong_value")
         .length,
-      wrongTypeCount: keys.filter((k) => k.status === "required_wrong_type")
+      wrongTypeCount: appKeys.filter((k) => k.status === "required_wrong_type")
         .length,
-      presentRequiredCount: keys.filter((k) => k.status === "required_present")
+      presentRequiredCount: appKeys.filter((k) => k.status === "required_present")
         .length,
-      optionalCount: keys.filter((k) => k.category === "optional").length,
-      mmkvCount: [...keys, ...devKeys].filter((k) => k.storageType === "mmkv")
-        .length,
-      asyncCount: [...keys, ...devKeys].filter((k) => k.storageType === "async")
-        .length,
-      secureCount: [...keys, ...devKeys].filter(
-        (k) => k.storageType === "secure"
-      ).length,
+      optionalCount: appKeys.filter((k) => k.category === "optional").length,
+      mmkvCount: 0, // Will be populated when MMKV is added
+      asyncCount: appKeys.length,
+      secureCount: 0, // Will be populated when SecureStore is added
       devToolsCount: devKeys.length,
     };
 
-    return { storageKeys: keys, devToolKeys: devKeys, stats: storageStats };
-  }, [storageQueriesData, requiredStorageKeys]);
+    return storageStats;
+  }, [allStorageKeys]);
 
-  // Group storage keys by status
-  const requiredKeys = storageKeys.filter((k) => k.category === "required");
-  const optionalKeys = storageKeys.filter((k) => k.category === "optional");
-
-  // Combine all keys and sort by priority (issues first)
-  const allKeys = useMemo(() => {
-    const combined = [...requiredKeys, ...optionalKeys, ...devToolKeys];
-
+  // Sort all keys by priority (issues first)
+  const sortedKeys = useMemo(() => {
     // Sort by status priority: errors first, then warnings, then valid
-    return combined.sort((a, b) => {
+    return [...allStorageKeys].sort((a, b) => {
       const priorityMap: Record<string, number> = {
         required_missing: 1,
         required_wrong_type: 2,
@@ -217,11 +100,11 @@ export function GameUIStorageBrowser({
       };
       return (priorityMap[a.status] || 999) - (priorityMap[b.status] || 999);
     });
-  }, [requiredKeys, optionalKeys, devToolKeys]);
+  }, [allStorageKeys]);
 
   // Filter keys based on active filter and storage type
   const filteredKeys = useMemo(() => {
-    let keys = allKeys;
+    let keys = sortedKeys;
 
     // Apply status filter
     switch (activeFilter) {
@@ -243,7 +126,7 @@ export function GameUIStorageBrowser({
     }
 
     return keys;
-  }, [allKeys, activeFilter, activeStorageType]);
+  }, [sortedKeys, activeFilter, activeStorageType]);
 
   // Removed unused issues and statsConfig variables
 
@@ -282,9 +165,7 @@ export function GameUIStorageBrowser({
           onPress: async () => {
             try {
               await clearAllAppStorage();
-              await queryClient.invalidateQueries({
-                predicate: (query) => isStorageQuery(query.queryKey),
-              });
+              await refresh(); // Auto-refresh after clearing
             } catch (error) {
               console.error("Failed to clear storage:", error);
               Alert.alert("Error", "Failed to clear storage");
@@ -293,33 +174,41 @@ export function GameUIStorageBrowser({
         },
       ]
     );
-  }, [queryClient]);
-
-  // Handle refresh
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await queryClient.invalidateQueries({
-        predicate: (query) => isStorageQuery(query.queryKey),
-      });
-      await queryClient.refetchQueries({
-        predicate: (query) => isStorageQuery(query.queryKey),
-      });
-    } finally {
-      setTimeout(() => setIsRefreshing(false), 500);
-    }
-  }, [queryClient]);
+  }, [refresh]);
 
   // Handle export
   const handleExport = useCallback(async () => {
-    const exportData = storageKeys.reduce((acc, keyInfo) => {
+    const exportData = allStorageKeys.reduce((acc, keyInfo) => {
       acc[keyInfo.key] = keyInfo.value;
       return acc;
     }, {} as Record<string, unknown>);
 
     const serialized = JSON.stringify(exportData, null, 2);
     await copyToClipboard(serialized);
-  }, [storageKeys]);
+  }, [allStorageKeys]);
+
+  // Loading state
+  if (isLoading && allStorageKeys.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Database size={48} color={macOSColors.text.muted} />
+        <Text style={styles.emptyTitle}>Loading storage keys...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.emptyState}>
+        <Database size={48} color={gameUIColors.error} />
+        <Text style={[styles.emptyTitle, { color: gameUIColors.error }]}>
+          Error loading storage
+        </Text>
+        <Text style={styles.emptySubtitle}>{error.message}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -353,34 +242,6 @@ export function GameUIStorageBrowser({
         </View>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity
-            onPress={handleRefresh}
-            style={[
-              styles.actionButton,
-              isRefreshing && styles.actionButtonActive,
-            ]}
-            activeOpacity={0.7}
-          >
-            <RefreshCw
-              size={12}
-              color={
-                isRefreshing ? gameUIColors.success : macOSColors.text.secondary
-              }
-            />
-            <Text
-              style={[
-                styles.actionButtonText,
-                {
-                  color: isRefreshing
-                    ? gameUIColors.success
-                    : macOSColors.text.secondary,
-                },
-              ]}
-            >
-              Scan
-            </Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             onPress={handleExport}
             style={styles.actionButton}
@@ -536,10 +397,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: macOSColors.border.default,
-  },
-  actionButtonActive: {
-    backgroundColor: gameUIColors.success + "15",
-    borderColor: gameUIColors.success + "40",
   },
   dangerButton: {
     backgroundColor: gameUIColors.error + "08",
