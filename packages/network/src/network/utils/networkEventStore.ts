@@ -43,15 +43,19 @@ class NetworkEventStore {
       }
 
       // Create new network event for request
+      // Build full URL with query params if present
+      const queryString = request.params
+        ? `?${new URLSearchParams(request.params).toString()}`
+        : "";
+      const fullUrl = `${request.url}${queryString}`;
+
       const networkEvent: NetworkEvent = {
         id: request.id,
         method: request.method,
-        url: request.url,
+        url: fullUrl, // Store FULL URL with query params
         host: this.extractHost(request.url),
         path: this.extractPath(request.url),
-        query: request.params
-          ? `?${new URLSearchParams(request.params).toString()}`
-          : "",
+        query: queryString,
         timestamp: event.timestamp.getTime(),
         requestHeaders: request.headers || {},
         requestData: request.data,

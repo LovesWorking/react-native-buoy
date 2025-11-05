@@ -83,7 +83,7 @@ class ModalStorage {
   static async save(key: string, value: PersistedModalState): Promise<void> {
     try {
       this.memoryCache[key] = value;
-      await safeSetItem(`@modal_state_${key}`, JSON.stringify(value));
+      await safeSetItem(key, JSON.stringify(value));
     } catch (error) {
       // Failed to save modal state
     }
@@ -103,7 +103,7 @@ class ModalStorage {
       }
 
       // Load from storage (AsyncStorage or memory fallback)
-      const stored = await safeGetItem(`@modal_state_${key}`);
+      const stored = await safeGetItem(key);
       if (stored) {
         const parsed = JSON.parse(stored);
         this.memoryCache[key] = parsed;

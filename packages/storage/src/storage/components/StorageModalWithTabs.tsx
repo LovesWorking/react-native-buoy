@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  Alert,
+  TextInput,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -23,9 +25,14 @@ import {
   Play,
   Trash2,
   Filter,
+  Copy,
+  Search,
+  copyToClipboard,
+  X,
 } from "@react-buoy/shared-ui";
 import { RequiredStorageKey } from "../types";
 import { StorageBrowserMode } from "./StorageBrowserMode";
+import { clearAllAppStorage } from "../utils/clearAllStorage";
 import {
   startListening,
   stopListening,
@@ -75,6 +82,18 @@ export function StorageModalWithTabs({
 }: StorageModalWithTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("browser");
 
+  // Storage Browser state
+  const [showStorageFilters, setShowStorageFilters] = useState(false);
+  const [storageIgnoredPatterns, setStorageIgnoredPatterns] = useState<
+    Set<string>
+  >(
+    new Set(["@react_buoy"]) // Auto-hide dev tool keys by default
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const searchInputRef = useRef<TextInput>(null);
+  const hasLoadedStorageFilters = useRef(false);
+
   // Event Listener state
   const [events, setEvents] = useState<AsyncStorageEvent[]>([]);
   const [isListening, setIsListening] = useState(false);
@@ -84,7 +103,7 @@ export function StorageModalWithTabs({
   const [selectedEventIndex, setSelectedEventIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(
-    new Set(["@RNAsyncStorage", "redux-persist", "@devtools", "persist:"])
+    new Set(["@RNAsyncStorage", "redux-persist", "@react_buoy", "persist:"])
   );
   const lastEventRef = useRef<AsyncStorageEvent | null>(null);
   const hasLoadedFilters = useRef(false);
@@ -288,6 +307,71 @@ export function StorageModalWithTabs({
     setShowFilters(!showFilters);
   }, [showFilters]);
 
+  // Storage Browser handlers
+  const storageDataRef = useRef<any[]>([]);
+
+  const handleToggleStorageFilters = useCallback(() => {
+    setShowStorageFilters(!showStorageFilters);
+  }, [showStorageFilters]);
+
+  const handleToggleStoragePattern = useCallback((pattern: string) => {
+    setStorageIgnoredPatterns((prev) => {
+      const next = new Set(prev);
+      if (next.has(pattern)) {
+        next.delete(pattern);
+      } else {
+        next.add(pattern);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleAddStoragePattern = useCallback((pattern: string) => {
+    setStorageIgnoredPatterns((prev) => new Set([...prev, pattern]));
+  }, []);
+
+  // Auto-focus search input when activated
+  useEffect(() => {
+    if (isSearchActive) {
+      requestAnimationFrame(() => {
+        searchInputRef.current?.focus();
+      });
+    }
+  }, [isSearchActive]);
+
+  const handleCopyStorage = useCallback(async () => {
+    const exportData = storageDataRef.current.reduce((acc, keyInfo) => {
+      acc[keyInfo.key] = keyInfo.value;
+      return acc;
+    }, {} as Record<string, unknown>);
+
+    const serialized = JSON.stringify(exportData, null, 2);
+    await copyToClipboard(serialized);
+  }, []);
+
+  const handlePurgeStorage = useCallback(async () => {
+    Alert.alert(
+      "Clear Storage",
+      "This will clear all app storage data. Continue?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllAppStorage();
+              // Refresh will be handled by GameUIStorageBrowser
+            } catch (error) {
+              console.error("Failed to clear storage:", error);
+              Alert.alert("Error", "Failed to clear storage");
+            }
+          },
+        },
+      ]
+    );
+  }, []);
+
   const getValueType = (
     value: unknown
   ): StorageKeyConversation["valueType"] => {
@@ -444,9 +528,25 @@ export function StorageModalWithTabs({
 
   const renderContent = () => {
     if (activeTab === "browser") {
+      if (showStorageFilters) {
+        return (
+          <StorageFilterViewV2
+            ignoredPatterns={storageIgnoredPatterns}
+            onTogglePattern={handleToggleStoragePattern}
+            onAddPattern={handleAddStoragePattern}
+            availableKeys={[]} // Will be populated by GameUIStorageBrowser
+          />
+        );
+      }
       return (
         <StorageBrowserMode
           requiredStorageKeys={requiredStorageKeys}
+          showFilters={showStorageFilters}
+          ignoredPatterns={storageIgnoredPatterns}
+          onTogglePattern={handleToggleStoragePattern}
+          onAddPattern={handleAddStoragePattern}
+          searchQuery={searchQuery}
+          storageDataRef={storageDataRef}
         />
       );
     }
@@ -523,13 +623,21 @@ export function StorageModalWithTabs({
       persistenceKey={persistenceKey}
       header={{
         showToggleButton: true,
-        customContent: showFilters ? (
+        customContent: showStorageFilters ? (
+          <ModalHeader>
+            <ModalHeader.Navigation
+              onBack={() => setShowStorageFilters(false)}
+              onClose={onClose}
+            />
+            <ModalHeader.Content title="Filters" />
+          </ModalHeader>
+        ) : showFilters ? (
           <ModalHeader>
             <ModalHeader.Navigation
               onBack={() => setShowFilters(false)}
               onClose={onClose}
             />
-            <ModalHeader.Content title="Filters" />
+            <ModalHeader.Content title="Event Filters" />
           </ModalHeader>
         ) : selectedConversation ? (
           <ModalHeader>
@@ -545,27 +653,96 @@ export function StorageModalWithTabs({
         ) : (
           <ModalHeader>
             {onBack && <ModalHeader.Navigation onBack={onBack} />}
-            <ModalHeader.Content title="" noMargin>
-              <TabSelector
-                tabs={[
-                  {
-                    key: "browser",
-                    label: "Storage",
-                  },
-                  {
-                    key: "events",
-                    label: `Events${
-                      events.length > 0 && activeTab !== "events"
-                        ? ` (${events.length})`
-                        : ""
-                    }`,
-                  },
-                ]}
-                activeTab={activeTab}
-                onTabChange={(tab) => setActiveTab(tab as TabType)}
-              />
+            <ModalHeader.Content title="">
+              {isSearchActive ? (
+                <View style={styles.headerSearchContainer}>
+                  <Search size={14} color={macOSColors.text.secondary} />
+                  <TextInput
+                    ref={searchInputRef}
+                    style={styles.headerSearchInput}
+                    placeholder="Search storage keys..."
+                    placeholderTextColor={macOSColors.text.muted}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    onSubmitEditing={() => setIsSearchActive(false)}
+                    onBlur={() => setIsSearchActive(false)}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="search"
+                  />
+                  {searchQuery.length > 0 ? (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSearchQuery("");
+                        setIsSearchActive(false);
+                      }}
+                      style={styles.headerSearchClear}
+                    >
+                      <X size={14} color={macOSColors.text.secondary} />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ) : (
+                <TabSelector
+                  tabs={[
+                    {
+                      key: "browser",
+                      label: "Storage",
+                    },
+                    {
+                      key: "events",
+                      label: `Events${
+                        events.length > 0 && activeTab !== "events"
+                          ? ` (${events.length})`
+                          : ""
+                      }`,
+                    },
+                  ]}
+                  activeTab={activeTab}
+                  onTabChange={(tab) => setActiveTab(tab as TabType)}
+                />
+              )}
             </ModalHeader.Content>
             <ModalHeader.Actions onClose={onClose}>
+              {activeTab === "browser" && !isSearchActive && (
+                <>
+                  <TouchableOpacity
+                    onPress={() => setIsSearchActive(true)}
+                    style={styles.iconButton}
+                  >
+                    <Search size={14} color={macOSColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleToggleStorageFilters}
+                    style={[
+                      styles.iconButton,
+                      storageIgnoredPatterns.size > 0 &&
+                        styles.activeFilterButton,
+                    ]}
+                  >
+                    <Filter
+                      size={14}
+                      color={
+                        storageIgnoredPatterns.size > 0
+                          ? macOSColors.semantic.debug
+                          : macOSColors.text.secondary
+                      }
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleCopyStorage}
+                    style={styles.iconButton}
+                  >
+                    <Copy size={14} color={macOSColors.text.secondary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handlePurgeStorage}
+                    style={styles.iconButton}
+                  >
+                    <Trash2 size={14} color={macOSColors.semantic.error} />
+                  </TouchableOpacity>
+                </>
+              )}
               {activeTab === "events" && (
                 <>
                   <TouchableOpacity
@@ -623,10 +800,39 @@ export function StorageModalWithTabs({
 }
 
 const styles = StyleSheet.create({
-  iconButton: {
-    padding: 6,
-    borderRadius: 6,
+  headerSearchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: macOSColors.background.input,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    maxHeight: 32,
+  },
+  headerSearchInput: {
+    flex: 1,
+    color: macOSColors.text.primary,
+    fontSize: 13,
+    marginLeft: 6,
+    paddingVertical: 2,
+  },
+  headerSearchClear: {
+    marginLeft: 6,
+    padding: 4,
+  },
+
+  iconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: macOSColors.background.hover,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   activeButton: {

@@ -1,5 +1,5 @@
 import { QueryKey } from "@tanstack/react-query";
-import { JsModal } from "@react-buoy/shared-ui";
+import { JsModal, devToolsStorageKeys } from "@react-buoy/shared-ui";
 import type { ModalMode } from "@react-buoy/shared-ui";
 import { useGetQueryByQueryKey } from "../../hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
@@ -45,8 +45,8 @@ export function DataEditorModal({
   );
 
   const storagePrefix = enableSharedModalDimensions
-    ? "@react_query_modal"
-    : "@react_query_editor_modal";
+    ? devToolsStorageKeys.reactQuery.modal()
+    : `${devToolsStorageKeys.reactQuery.modal()}_data_editor`;
 
   if (!visible || !selectedQuery) return null;
 

@@ -67,10 +67,10 @@ class AsyncStorageListener {
 
   // Keys to ignore for dev tools to prevent self-triggering
   private ignoredKeys = new Set([
-    "@devtools_diff_mode",
-    "@devtools_diff_options",
+    "@react_buoy_diff_mode",
+    "@react_buoy_diff_options",
     "REACT_QUERY_OFFLINE_CACHE",
-    "@devtools_", // Prefix check for all dev tools keys
+    "@react_buoy_", // Prefix check for all dev tools keys
   ]);
 
   // Store original methods

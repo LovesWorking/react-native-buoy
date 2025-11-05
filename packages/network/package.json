@@ -16,7 +16,9 @@
     "build": "bob build",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf lib",
-    "test": "pnpm run typecheck"
+    "test": "pnpm run typecheck",
+    "test:interceptor": "node test-network-interceptor.js",
+    "test:comprehensive": "node test-comprehensive.js"
   },
   "dependencies": {
     "@react-buoy/react-query": "workspace:*",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@types/react": "^19.1.0",
     "@types/react-native": "^0.73.0",
+    "node-fetch": "^2.7.0",
     "typescript": "~5.8.3"
   },
   "react-native-builder-bob": {

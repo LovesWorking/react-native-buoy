@@ -91,9 +91,6 @@ class NetworkListener {
   private originalXHROpen: typeof XMLHttpRequest.prototype.open;
   private originalXHRSend: typeof XMLHttpRequest.prototype.send;
   private originalXHRSetRequestHeader: typeof XMLHttpRequest.prototype.setRequestHeader;
-  private originalXHROnLoad: typeof XMLHttpRequest.prototype.onload;
-  private originalXHROnError: typeof XMLHttpRequest.prototype.onerror;
-  private originalXHROnAbort: typeof XMLHttpRequest.prototype.onabort;
 
   constructor() {
     // Store original methods
@@ -102,9 +99,6 @@ class NetworkListener {
     this.originalXHRSend = XMLHttpRequest.prototype.send;
     this.originalXHRSetRequestHeader =
       XMLHttpRequest.prototype.setRequestHeader;
-    this.originalXHROnLoad = XMLHttpRequest.prototype.onload;
-    this.originalXHROnError = XMLHttpRequest.prototype.onerror;
-    this.originalXHROnAbort = XMLHttpRequest.prototype.onabort;
   }
 
   /**
@@ -149,7 +143,7 @@ class NetworkListener {
     if (queryParamIdx > -1) {
       params = {};
       url
-        .substr(queryParamIdx + 1)
+        .substring(queryParamIdx + 1)
         .split("&")
         .forEach((pair) => {
           const [key, value] = pair.split("=");
@@ -160,9 +154,85 @@ class NetworkListener {
     }
 
     return {
-      url: queryParamIdx > -1 ? url.substr(0, queryParamIdx) : url,
+      url: queryParamIdx > -1 ? url.substring(0, queryParamIdx) : url,
       params,
     };
+  }
+
+  /**
+   * Process response body with size limits to prevent memory issues
+   * @param response - The Response object to process
+   * @param maxSize - Maximum body size in bytes (default: 1MB)
+   * @returns Object containing body, size, and truncation status
+   */
+  private async processResponseBody(
+    response: Response,
+    maxSize: number = 1024 * 1024 // 1MB default
+  ): Promise<{ body: any; size: number; truncated: boolean }> {
+    try {
+      // Check Content-Length header first
+      const contentLength = response.headers.get('content-length');
+      if (contentLength) {
+        const size = parseInt(contentLength, 10);
+        if (!isNaN(size) && size > maxSize) {
+          return {
+            body: `[Response too large: ${this.formatBytes(size)}]`,
+            size,
+            truncated: true,
+          };
+        }
+      }
+
+      // Read the response text
+      const text = await response.text();
+      const size = text.length;
+
+      // Check if text exceeds max size
+      if (size > maxSize) {
+        const preview = text.substring(0, maxSize);
+        const omitted = size - maxSize;
+        return {
+          body: `${preview}\n\n... [truncated, ${this.formatBytes(omitted)} omitted]`,
+          size,
+          truncated: true,
+        };
+      }
+
+      // Try to parse as JSON
+      try {
+        return {
+          body: JSON.parse(text),
+          size,
+          truncated: false,
+        };
+      } catch {
+        // Return as text if not JSON
+        return {
+          body: text,
+          size,
+          truncated: false,
+        };
+      }
+    } catch (error) {
+      return {
+        body: "~~~ unable to read body ~~~",
+        size: 0,
+        truncated: false,
+      };
+    }
+  }
+
+  /**
+   * Format bytes into human-readable format
+   * @param bytes - Number of bytes
+   * @returns Formatted string (e.g., "1.5 MB")
+   */
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
   }
 
   // Get response body size
@@ -416,25 +486,12 @@ class NetworkListener {
       });
 
       try {
-        const response = await this.originalFetch(input as RequestInfo, init);
+        const response = await self.originalFetch(input as RequestInfo, init);
         const duration = Date.now() - startTime;
 
-        // Clone response to read body
+        // Clone response to read body with size limits
         const responseClone = response.clone();
-        let body;
-        let responseSize = 0;
-
-        try {
-          const text = await responseClone.text();
-          responseSize = text.length;
-          try {
-            body = JSON.parse(text);
-          } catch {
-            body = text;
-          }
-        } catch {
-          body = "~~~ unable to read body ~~~";
-        }
+        const { body, size: responseSize, truncated } = await self.processResponseBody(responseClone);
 
         // Parse response headers
         const responseHeaders: Record<string, string> = {};
@@ -579,12 +636,6 @@ class NetworkListener {
         },
       });
 
-      // Store original event handlers
-      const originalOnReadyStateChange = this.onreadystatechange;
-      const originalOnLoad = this.onload;
-      const originalOnError = this.onerror;
-      const originalOnAbort = this.onabort;
-
       // Track if we've already processed this request to avoid duplicate events
       let processed = false;
 
@@ -602,49 +653,45 @@ class NetworkListener {
           startTime || 0,
           isError
         );
+        // Clean up event listeners after processing to prevent memory leaks
+        cleanup();
       };
 
-      // Handle onreadystatechange (for compatibility with older code)
-      this.onreadystatechange = function (this: XMLHttpRequest, ev: Event) {
-        if (this.readyState === 4) {
-          processResponse();
-        }
-
-        // Call original handler if it exists
-        if (originalOnReadyStateChange) {
-          originalOnReadyStateChange.call(this, ev);
-        }
+      // Cleanup function to remove event listeners
+      const cleanup = () => {
+        this.removeEventListener('load', loadListener);
+        this.removeEventListener('error', errorListener);
+        this.removeEventListener('abort', abortListener);
+        this.removeEventListener('readystatechange', readyStateListener);
       };
 
-      // Handle onload (used by axios and modern libraries)
-      this.onload = function (this: XMLHttpRequest, ev: ProgressEvent) {
-        processResponse();
+      // Use addEventListener to listen to events WITHOUT replacing user handlers
+      // This is critical because React Native's XMLHttpRequest uses EventTarget
+      // with getters/setters that shouldn't be overridden
 
-        // Call original handler if it exists
-        if (originalOnLoad) {
-          originalOnLoad.call(this, ev);
-        }
+      const loadListener = () => {
+        processResponse(false);
       };
 
-      // Handle onerror (used by axios and modern libraries)
-      this.onerror = function (this: XMLHttpRequest, ev: ProgressEvent) {
+      const errorListener = () => {
         processResponse(true);
-
-        // Call original handler if it exists
-        if (originalOnError) {
-          originalOnError.call(this, ev);
-        }
       };
 
-      // Handle onabort (used by axios and modern libraries)
-      this.onabort = function (this: XMLHttpRequest, ev: ProgressEvent) {
+      const abortListener = () => {
         processResponse(true);
+      };
 
-        // Call original handler if it exists
-        if (originalOnAbort) {
-          originalOnAbort.call(this, ev);
+      const readyStateListener = () => {
+        if (this.readyState === 4 && !processed) {
+          processResponse(false);
         }
       };
+
+      // Add event listeners that will fire alongside user handlers
+      this.addEventListener('load', loadListener);
+      this.addEventListener('error', errorListener);
+      this.addEventListener('abort', abortListener);
+      this.addEventListener('readystatechange', readyStateListener);
 
       return self.originalXHRSend.call(this, data);
     };
@@ -672,9 +719,6 @@ class NetworkListener {
     XMLHttpRequest.prototype.send = this.originalXHRSend;
     XMLHttpRequest.prototype.setRequestHeader =
       this.originalXHRSetRequestHeader;
-    XMLHttpRequest.prototype.onload = this.originalXHROnLoad;
-    XMLHttpRequest.prototype.onerror = this.originalXHROnError;
-    XMLHttpRequest.prototype.onabort = this.originalXHROnAbort;
 
     this.isListening = false;
     if (__DEV__) {

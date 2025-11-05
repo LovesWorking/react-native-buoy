@@ -21,7 +21,7 @@ import {
   safeGetItem,
   safeSetItem,
 } from "@react-buoy/shared-ui";
-import { JsModal, type ModalMode } from "@react-buoy/shared-ui";
+import { JsModal, type ModalMode, devToolsStorageKeys } from "@react-buoy/shared-ui";
 import { gameUIColors } from "@react-buoy/shared-ui";
 import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import { ModalHeader } from "@react-buoy/shared-ui";
@@ -530,7 +530,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
       }}
       initialMode="bottomSheet"
       onModeChange={handleModeChange}
-      persistenceKey="devtools_settings"
+      persistenceKey={devToolsStorageKeys.settings.root()}
       enablePersistence={false}
       maxHeight={screenHeight - insets.top}
       initialHeight={modalHeight}

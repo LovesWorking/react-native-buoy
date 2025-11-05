@@ -41,45 +41,18 @@ export function StorageFilterCards({
 
   return (
     <View style={styles.container}>
-      {/* Title + Health */}
-      <View style={styles.topRow}>
-        <View style={styles.titleLeft}>
-          <View style={[styles.healthDot, { backgroundColor: healthColor }]} />
-          <Text style={styles.titleText}>Storage</Text>
-          <View style={styles.titleDivider} />
-          <Text style={styles.subtitleText}>
-            {stats.totalCount} {stats.totalCount === 1 ? "key" : "keys"} •{" "}
-            {healthStatus.toLowerCase()}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.healthBadge,
-            {
-              backgroundColor: healthColor + "20",
-              borderColor: healthColor + "40",
-            },
-          ]}
-        >
-          <Text style={[styles.healthBadgeText, { color: healthColor }]}>
-            {healthPercentage}%
-          </Text>
-        </View>
-      </View>
-
-      {/* Health progress - purely visual */}
-      <View style={styles.healthProgressBar}>
-        <View
-          style={[
-            styles.healthProgressFill,
-            { width: `${healthPercentage}%`, backgroundColor: healthColor },
-          ]}
-        />
-      </View>
-
       {/* Status Filters */}
       <View style={styles.filtersRow}>
+        {/* Total Keys - non-interactive display */}
+        <View style={styles.filterChip}>
+          <Text
+            style={[styles.filterValue, { color: macOSColors.text.primary }]}
+          >
+            {stats.totalCount}
+          </Text>
+          <Text style={styles.filterLabel}>Keys</Text>
+        </View>
+
         <TouchableOpacity
           style={[
             styles.filterChip,
@@ -98,9 +71,9 @@ export function StorageFilterCards({
           <Text
             style={[styles.filterValue, { color: macOSColors.text.primary }]}
           >
-            {stats.totalCount}
+            {stats.presentRequiredCount + stats.optionalCount}
           </Text>
-          <Text style={styles.filterLabel}>All</Text>
+          <Text style={styles.filterLabel}>Valid</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -120,7 +93,7 @@ export function StorageFilterCards({
         >
           <Text
             style={[
-              styles.filterValue, 
+              styles.filterValue,
               { color: stats.missingCount > 0 ? macOSColors.semantic.error : macOSColors.text.muted }
             ]}
           >

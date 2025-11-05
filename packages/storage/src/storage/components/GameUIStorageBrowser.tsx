@@ -1,16 +1,14 @@
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useMemo, useCallback, useState, useEffect, useRef, MutableRefObject } from "react";
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from "react-native";
-import { Database, Trash2, Search } from "@react-buoy/shared-ui";
+import { Database } from "@react-buoy/shared-ui";
 import { StorageKeyInfo, RequiredStorageKey, StorageKeyStats } from "../types";
 import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
-import { clearAllAppStorage } from "../utils/clearAllStorage";
 import { StorageKeySection } from "./StorageKeySection";
 import {
   StorageFilterCards,
@@ -24,15 +22,26 @@ import { addListener } from "../utils/AsyncStorageListener";
 import {
   gameUIColors,
   macOSColors,
-  copyToClipboard,
 } from "@react-buoy/shared-ui";
 
 interface GameUIStorageBrowserProps {
   requiredStorageKeys?: RequiredStorageKey[];
+  showFilters?: boolean;
+  ignoredPatterns?: Set<string>;
+  onTogglePattern?: (pattern: string) => void;
+  onAddPattern?: (pattern: string) => void;
+  searchQuery?: string;
+  storageDataRef?: MutableRefObject<any[]>;
 }
 
 export function GameUIStorageBrowser({
   requiredStorageKeys = [],
+  showFilters = false,
+  ignoredPatterns = new Set(["@react_buoy"]),
+  onTogglePattern,
+  onAddPattern,
+  searchQuery = "",
+  storageDataRef,
 }: GameUIStorageBrowserProps) {
   const [activeFilter, setActiveFilter] = useState<StorageFilterType>("all");
   const [activeStorageType, setActiveStorageType] =
@@ -42,6 +51,13 @@ export function GameUIStorageBrowser({
   const { storageKeys: allStorageKeys, isLoading, error, refresh } = useAsyncStorageKeys(
     requiredStorageKeys
   );
+
+  // Update storage data ref for copy functionality
+  useEffect(() => {
+    if (storageDataRef) {
+      storageDataRef.current = allStorageKeys;
+    }
+  }, [allStorageKeys, storageDataRef]);
 
   // Auto-refresh on storage events
   useEffect(() => {
@@ -102,12 +118,39 @@ export function GameUIStorageBrowser({
     });
   }, [allStorageKeys]);
 
-  // Filter keys based on active filter and storage type
+  // Get all unique keys for filter suggestions
+  const allUniqueKeys = useMemo(() => {
+    return Array.from(new Set(allStorageKeys.map((k) => k.key))).sort();
+  }, [allStorageKeys]);
+
+  // Filter keys based on active filter, storage type, ignored patterns, and search
   const filteredKeys = useMemo(() => {
     let keys = sortedKeys;
 
+    // Apply ignored pattern filter first
+    keys = keys.filter((k) => {
+      // Check if key matches any ignored pattern
+      const shouldIgnore = Array.from(ignoredPatterns).some((pattern) =>
+        k.key.includes(pattern)
+      );
+      return !shouldIgnore;
+    });
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      keys = keys.filter((k) => k.key.toLowerCase().includes(query));
+    }
+
     // Apply status filter
     switch (activeFilter) {
+      case "all":
+        // "All" (Valid) shows only keys without issues
+        keys = keys.filter(
+          (k) =>
+            k.status === "required_present" || k.status === "optional_present"
+        );
+        break;
       case "missing":
         keys = keys.filter((k) => k.status === "required_missing");
         break;
@@ -126,9 +169,31 @@ export function GameUIStorageBrowser({
     }
 
     return keys;
-  }, [sortedKeys, activeFilter, activeStorageType]);
+  }, [sortedKeys, activeFilter, activeStorageType, ignoredPatterns, searchQuery]);
 
-  // Removed unused issues and statsConfig variables
+  // Calculate stats from FILTERED keys to show actual visible counts
+  const filteredStats = useMemo(() => {
+    const appKeys = filteredKeys.filter((k) => !isDevToolsStorageKey(k.key));
+
+    const storageStats: StorageKeyStats & { devToolsCount: number } = {
+      totalCount: filteredKeys.length,
+      requiredCount: appKeys.filter((k) => k.category === "required").length,
+      missingCount: appKeys.filter((k) => k.status === "required_missing").length,
+      wrongValueCount: appKeys.filter((k) => k.status === "required_wrong_value")
+        .length,
+      wrongTypeCount: appKeys.filter((k) => k.status === "required_wrong_type")
+        .length,
+      presentRequiredCount: appKeys.filter((k) => k.status === "required_present")
+        .length,
+      optionalCount: appKeys.filter((k) => k.category === "optional").length,
+      mmkvCount: filteredKeys.filter((k) => k.storageType === "mmkv").length,
+      asyncCount: filteredKeys.filter((k) => k.storageType === "async").length,
+      secureCount: filteredKeys.filter((k) => k.storageType === "secure").length,
+      devToolsCount: filteredKeys.filter((k) => isDevToolsStorageKey(k.key)).length,
+    };
+
+    return storageStats;
+  }, [filteredKeys]);
 
   // Calculate health percentage
   const healthPercentage =
@@ -152,40 +217,6 @@ export function GameUIStorageBrowser({
       ? gameUIColors.warning
       : gameUIColors.error;
 
-  // Handle clear all storage
-  const handleClearAll = useCallback(async () => {
-    Alert.alert(
-      "Clear Storage",
-      "This will clear all app storage data. Continue?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearAllAppStorage();
-              await refresh(); // Auto-refresh after clearing
-            } catch (error) {
-              console.error("Failed to clear storage:", error);
-              Alert.alert("Error", "Failed to clear storage");
-            }
-          },
-        },
-      ]
-    );
-  }, [refresh]);
-
-  // Handle export
-  const handleExport = useCallback(async () => {
-    const exportData = allStorageKeys.reduce((acc, keyInfo) => {
-      acc[keyInfo.key] = keyInfo.value;
-      return acc;
-    }, {} as Record<string, unknown>);
-
-    const serialized = JSON.stringify(exportData, null, 2);
-    await copyToClipboard(serialized);
-  }, [allStorageKeys]);
 
   // Loading state
   if (isLoading && allStorageKeys.length === 0) {
@@ -220,7 +251,7 @@ export function GameUIStorageBrowser({
 
       {/* Filter Cards Section with integrated status */}
       <StorageFilterCards
-        stats={stats}
+        stats={filteredStats}
         healthPercentage={healthPercentage}
         healthStatus={healthStatus}
         healthColor={healthColor}
@@ -230,56 +261,13 @@ export function GameUIStorageBrowser({
         onStorageTypeChange={setActiveStorageType}
       />
 
-      {/* Streamlined Action Bar */}
-      <View style={styles.actionBar}>
-        <View style={styles.actionBarLeft}>
-          <View style={styles.keyPill}>
-            <Text style={styles.keyPillText}>
-              {stats.totalCount} {stats.totalCount === 1 ? "key" : "keys"}
-            </Text>
-          </View>
-          <Text style={styles.keyCount}>Stored</Text>
-        </View>
-
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            onPress={handleExport}
-            style={styles.actionButton}
-            activeOpacity={0.7}
-          >
-            <Database size={12} color={macOSColors.text.secondary} />
-            <Text
-              style={[
-                styles.actionButtonText,
-                { color: macOSColors.text.secondary },
-              ]}
-            >
-              Export
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleClearAll}
-            style={[styles.actionButton, styles.dangerButton]}
-            activeOpacity={0.7}
-          >
-            <Trash2 size={12} color={gameUIColors.error} />
-            <Text
-              style={[styles.actionButtonText, { color: gameUIColors.error }]}
-            >
-              Purge
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Filtered Storage Keys */}
       {filteredKeys.length > 0 ? (
         <View style={styles.keysSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               {activeFilter === "all"
-                ? "ALL STORAGE KEYS"
+                ? "VALID STORAGE KEYS"
                 : activeFilter === "missing"
                 ? "MISSING KEYS"
                 : "ISSUES TO FIX"}
@@ -299,17 +287,21 @@ export function GameUIStorageBrowser({
         </View>
       ) : (
         <View style={styles.emptyState}>
-          <Search size={32} color={macOSColors.text.muted} />
+          <Database size={32} color={macOSColors.text.muted} />
           <Text style={styles.emptyTitle}>
-            {activeFilter === "all"
-              ? "No storage keys"
+            {searchQuery
+              ? "No results found"
+              : activeFilter === "all"
+              ? "No valid keys found"
               : activeFilter === "missing"
               ? "No missing keys"
               : "No issues found"}
           </Text>
           <Text style={styles.emptySubtitle}>
-            {activeFilter === "all"
-              ? "Your app hasn't stored any data yet"
+            {searchQuery
+              ? `No keys matching "${searchQuery}"`
+              : activeFilter === "all"
+              ? "All keys have issues or are missing"
               : activeFilter === "missing"
               ? "All required keys are present"
               : "All storage keys are correctly configured"}
@@ -339,72 +331,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     opacity: 0.006,
     backgroundColor: gameUIColors.info,
-  },
-
-  // Streamlined Action bar (polished styling)
-  actionBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    marginTop: 8,
-    marginBottom: 12,
-    backgroundColor: macOSColors.background.card,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  actionBarLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  keyPill: {
-    backgroundColor: macOSColors.background.base,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  keyPillText: {
-    fontSize: 11,
-    fontWeight: "700",
-    fontFamily: "monospace",
-    color: macOSColors.text.primary,
-    letterSpacing: 0.3,
-  },
-  keyCount: {
-    fontSize: 11,
-    color: macOSColors.text.muted,
-    fontFamily: "monospace",
-    letterSpacing: 0.5,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: macOSColors.background.base,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  dangerButton: {
-    backgroundColor: gameUIColors.error + "08",
-    borderColor: gameUIColors.error + "20",
-  },
-  actionButtonText: {
-    fontSize: 10,
-    fontWeight: "500",
   },
 
   techFooter: {
@@ -474,5 +400,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: macOSColors.text.secondary,
     textAlign: "center",
+  },
+  clearSearchButton: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: macOSColors.background.hover,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+  },
+  clearSearchText: {
+    fontSize: 13,
+    color: macOSColors.text.primary,
+    fontWeight: "500",
   },
 });

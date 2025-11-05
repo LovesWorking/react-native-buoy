@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { ModalHeader } from "../components/ModalHeader";
 import { JsModal, ModalMode } from "../../JsModal";
 import { BubbleVisibilitySettings, BubbleSettingsDetail } from "../../settings";
+import { devToolsStorageKeys } from "../../storage/devToolsStorageKeys";
 
 interface BubbleSettingsModalProps {
   visible: boolean;
@@ -27,8 +28,8 @@ export function BubbleSettingsModal({
   if (!visible) return null;
 
   const persistenceKey = enableSharedModalDimensions
-    ? "@dev_tools_console_modal"
-    : "@bubble_settings_modal";
+    ? devToolsStorageKeys.modal.root()
+    : devToolsStorageKeys.bubble.settings();
 
   return (
     <JsModal

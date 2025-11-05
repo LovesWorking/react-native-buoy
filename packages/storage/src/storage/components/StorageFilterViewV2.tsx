@@ -26,9 +26,9 @@ export function StorageFilterViewV2({
     },
     availableItemsSection: {
       enabled: true,
-      title: "AVAILABLE KEYS FROM EVENTS",
+      title: "AVAILABLE STORAGE KEYS",
       emptyMessage:
-        "No keys available. Keys from storage events will appear here.",
+        "No storage keys available. Keys will appear here once loaded.",
       items: availableKeys,
     },
     howItWorksSection: {

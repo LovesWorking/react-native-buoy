@@ -99,8 +99,8 @@ function GripVerticalIcon({
 }
 
 const STORAGE_KEYS = {
-  BUBBLE_POSITION_X: "@floating_tools_bubble_position_x",
-  BUBBLE_POSITION_Y: "@floating_tools_bubble_position_y",
+  BUBBLE_POSITION_X: "@react_buoy_bubble_position_x",
+  BUBBLE_POSITION_Y: "@react_buoy_bubble_position_y",
 } as const;
 
 // Debug logging removed for production

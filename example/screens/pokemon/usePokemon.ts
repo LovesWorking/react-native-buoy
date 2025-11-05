@@ -17,8 +17,12 @@ const fetchPokemon = async (
   pokemonName: string,
   requestMethod: RequestMethod
 ): Promise<PokemonData> => {
+  // Add query params to test network devtools - Pokemon API ignores these but they'll show in devtools
+  const timestamp = Date.now();
+  const url = `https://pokeapi.co/api/v2/pokemon/${pokemonName}?debug=true&timestamp=${timestamp}&client=rn-buoy&version=1.0`;
+
   const response = await get<any>(
-    `https://pokeapi.co/api/v2/pokemon/${pokemonName}`,
+    url,
     requestMethod
   );
 
