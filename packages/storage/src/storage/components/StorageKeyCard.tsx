@@ -157,10 +157,19 @@ export function StorageKeyCard({
                   {storageTypeLabel}
                 </Text>
               </View>
+              {/* Show MMKV instance ID if available */}
+              {storageKey.storageType === 'mmkv' && storageKey.instanceId && (
+                <View style={styles.instanceBadge}>
+                  <Text style={styles.instanceText}>
+                    {storageKey.instanceId}
+                  </Text>
+                </View>
+              )}
               {hasValue && (
                 <View style={styles.valueBadge}>
                   <Text style={styles.valueText}>
-                  {getValueTypeLabel(storageKey.value)}
+                    {/* Use MMKV's native valueType if available, otherwise infer */}
+                    {storageKey.valueType ? storageKey.valueType.toUpperCase() : getValueTypeLabel(storageKey.value)}
                   </Text>
                 </View>
               )}
@@ -339,6 +348,20 @@ const styles = StyleSheet.create({
   storageText: {
     fontSize: 9,
     fontWeight: "600",
+  },
+  instanceBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    backgroundColor: macOSColors.semantic.info + '15',
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.info + '30',
+  },
+  instanceText: {
+    fontSize: 8,
+    color: macOSColors.semantic.info,
+    fontWeight: "600",
+    fontFamily: "monospace",
   },
   valueBadge: {
     paddingHorizontal: 4,

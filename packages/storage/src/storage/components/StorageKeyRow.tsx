@@ -97,7 +97,7 @@ export function StorageKeyRow({
             {
               backgroundColor:
                 getStorageTypeColor(storageKey.storageType) + "12",
-              borderColor: getStorageTypeColor(storageKey.storageType) + "40",
+              borderColor: getStorageTypeColor(storageKey.storageType) + "25",
             },
           ]}
         >
@@ -131,7 +131,7 @@ export function StorageKeyRow({
           <>
             <View style={styles.expandedRow}>
               <Text style={styles.expandedLabel}>Type:</Text>
-          <TypeBadge type={getValueTypeLabel(storageKey.value)} />
+              <TypeBadge type={getValueTypeLabel(storageKey.value)} />
             </View>
             <View style={styles.expandedRow}>
               <Text style={styles.expandedLabel}>Expected:</Text>
@@ -164,7 +164,10 @@ export function StorageKeyRow({
     <View
       style={[
         styles.storageBadge,
-        { backgroundColor: getStorageTypeColor(storageKey.storageType) + "20" },
+        {
+          backgroundColor: getStorageTypeColor(storageKey.storageType) + "12",
+          borderColor: getStorageTypeColor(storageKey.storageType) + "25",
+        },
       ]}
     >
       <Text

@@ -2,6 +2,7 @@ import { Mutation } from "@tanstack/react-query";
 import {
   JsModal,
   type ModalMode,
+  devToolsStorageKeys,
 } from "@react-buoy/shared-ui";
 import { useGetMutationById } from "../../hooks/useSelectedMutation";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
@@ -47,8 +48,8 @@ export function MutationEditorModal({
   );
 
   const storagePrefix = enableSharedModalDimensions
-    ? "@react_query_modal"
-    : "@react_query_editor_modal";
+    ? devToolsStorageKeys.reactQuery.modal()
+    : devToolsStorageKeys.reactQuery.mutationModal();
 
   if (!visible || !selectedMutation) return null;
 

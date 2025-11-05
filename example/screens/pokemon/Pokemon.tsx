@@ -287,7 +287,12 @@ export function PokemonScreen() {
   function handleSearch() {
     if (inputValue.trim()) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setPokemonStack([inputValue.trim().toLowerCase(), ...pokemonStack]);
+      const searchValue = inputValue.trim().toLowerCase();
+
+      // Navigate to the pokemon detail page
+      router.push(`/pokemon/${searchValue}`);
+
+      setPokemonStack([searchValue, ...pokemonStack]);
       setCurrentIndex(0);
       setInputValue("");
 
@@ -361,13 +366,17 @@ export function PokemonScreen() {
   const selectSuggestion = useCallback(
     (pokemon: string) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Navigate to the pokemon detail page
+      router.push(`/pokemon/${pokemon}`);
+
       setPokemonStack([pokemon, ...pokemonStack]);
       setCurrentIndex(0);
       setInputValue("");
       setShowSuggestions(false);
       setSuggestions([]);
     },
-    [pokemonStack]
+    [pokemonStack, router]
   );
 
   const savedPokemon = savedPokemonQuery.data ?? [];

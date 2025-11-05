@@ -60,14 +60,21 @@ export function StorageKeySection({
         </SectionHeader>
       )}
       <View style={styles.sectionContent}>
-        {keys.map((storageKey) => (
-          <StorageKeyRow
-            key={storageKey.key}
-            storageKey={storageKey}
-            isExpanded={expandedKey === storageKey.key}
-            onPress={handleKeyPress}
-          />
-        ))}
+        {keys.map((storageKey) => {
+          // Create unique key by combining storage type, instance ID (if present), and key name
+          const uniqueKey = storageKey.instanceId
+            ? `${storageKey.storageType}-${storageKey.instanceId}-${storageKey.key}`
+            : `${storageKey.storageType}-${storageKey.key}`;
+
+          return (
+            <StorageKeyRow
+              key={uniqueKey}
+              storageKey={storageKey}
+              isExpanded={expandedKey === storageKey.key}
+              onPress={handleKeyPress}
+            />
+          );
+        })}
       </View>
     </View>
   );

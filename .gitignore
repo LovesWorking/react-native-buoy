@@ -50,9 +50,11 @@ lerna-debug.log
 # TypeScript
 *.tsbuildinfo
 .tsc-cache/
-# Don't commit TypeScript declaration files in src directories
+# Don't commit TypeScript declaration files in src directories (these are build artifacts)
 **/src/**/*.d.ts
 **/src/**/*.d.ts.map
+# Except for intentional type declaration files
+!**/src/**/optionalModules.d.ts
 
 # React Native / Expo
 .expo/

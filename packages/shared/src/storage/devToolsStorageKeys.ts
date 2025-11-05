@@ -3,13 +3,13 @@
  * This ensures consistency across all dev tool storage operations
  * and allows easy filtering of dev tool keys from the Storage Browser
  *
- * All dev tool keys start with "@devtools" prefix for easy identification
+ * All dev tool keys start with "@react_buoy" prefix for easy identification
  */
 export const devToolsStorageKeys = {
   /**
    * Base dev tools key - all dev tool storage keys start with this
    */
-  base: "@devtools" as const,
+  base: "@react_buoy" as const,
 
   /**
    * Bubble-related storage keys
@@ -76,6 +76,8 @@ export const devToolsStorageKeys = {
     filters: () => `${devToolsStorageKeys.storage.root()}_filters` as const,
     eventFilters: () =>
       `${devToolsStorageKeys.storage.root()}_event_filters` as const,
+    keyFilters: () =>
+      `${devToolsStorageKeys.storage.root()}_key_filters` as const,
     preferences: () =>
       `${devToolsStorageKeys.storage.root()}_preferences` as const,
     activeTab: () =>
@@ -139,15 +141,19 @@ export const devToolsStorageKeys = {
 
 /**
  * Legacy dev tool key patterns that should be cleaned up
- * These are old keys from before we standardized on @devtools prefix
+ * These are old keys from before we standardized on @react_buoy prefix
  */
 const LEGACY_DEV_TOOL_PATTERNS = [
+  "@devtools",
   "@dev_tools_",
+  "@modal_state_", // Old modal state keys
   "@react_query_browser_modal",
   "@react_query_modal",
   "@react_query_mutation_modal",
   "@sentry_logs_modal",
   "@floating_rn_better_dev_tools_",
+  "@floating_tools_",
+  "@apphost_",
   "@bubble_settings_",
   "@env_vars_modal",
   "@storage_modal",

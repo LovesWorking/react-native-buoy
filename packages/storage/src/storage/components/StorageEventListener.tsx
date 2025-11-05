@@ -15,13 +15,38 @@ import {
   isListening as checkIsListening,
 } from "../utils/AsyncStorageListener";
 import { translateStorageAction } from "../utils/storageActionHelpers";
+import { isMMKVAvailable } from "../utils/mmkvAvailability";
+
+// Conditionally import MMKV listener
+let addMMKVListener: any;
+
+// Define type for MMKV events (imported conditionally at runtime)
+type MMKVEvent = {
+  action: string;
+  timestamp: Date;
+  instanceId: string;
+  data?: {
+    key?: string;
+    value?: any;
+    valueType?: string;
+    success?: boolean;
+  };
+};
+
+if (isMMKVAvailable()) {
+  const mmkvListener = require("../utils/MMKVListener");
+  addMMKVListener = mmkvListener.addMMKVListener;
+}
+
+// Unified event type that covers both AsyncStorage and MMKV
+type StorageEvent = (AsyncStorageEvent & { storageType: 'async' }) | (any & { storageType: 'mmkv' });
 
 /**
- * Storage event listener component for monitoring AsyncStorage operations
+ * Storage event listener component for monitoring AsyncStorage and MMKV operations
  * Follows the Sentry component pattern for consistency
  */
 export function StorageEventListener() {
-  const [events, setEvents] = useState<AsyncStorageEvent[]>([]);
+  const [events, setEvents] = useState<StorageEvent[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [isAsyncStorageAvailable, setIsAsyncStorageAvailable] = useState(false);
 
@@ -30,28 +55,34 @@ export function StorageEventListener() {
     setIsAsyncStorageAvailable(true);
 
     // Add listener for AsyncStorage events
-    const unsubscribe = addListener((event: AsyncStorageEvent) => {
-      // Received storage event
+    const unsubscribeAsync = addListener((event: AsyncStorageEvent) => {
       setEvents((prev) => {
-        const newEvents = [event, ...prev.slice(0, 99)]; // Keep last 100 events
-        // Updated events state
+        const newEvents = [{ ...event, storageType: 'async' as const }, ...prev.slice(0, 99)];
         return newEvents;
       });
     });
 
+    // Add listener for MMKV events (only if available)
+    let unsubscribeMMKV = () => {};
+    if (isMMKVAvailable() && addMMKVListener) {
+      unsubscribeMMKV = addMMKVListener((event: any) => {
+        setEvents((prev) => {
+          const newEvents = [{ ...event, storageType: 'mmkv' as const }, ...prev.slice(0, 99)];
+          return newEvents;
+        });
+      });
+    }
+
     // Check initial listening state
     const initialState = checkIsListening();
     setIsListening(initialState);
-    // Set initial listening state
 
     return () => {
-      // Component unmounting, cleaning up
-      // Make sure to stop listening when component unmounts
       if (checkIsListening()) {
-        // Stopping listener on unmount
         stopListening();
       }
-      unsubscribe();
+      unsubscribeAsync();
+      unsubscribeMMKV();
     };
   }, []);
 
@@ -76,9 +107,30 @@ export function StorageEventListener() {
     setEvents([]);
   }, []);
 
-  const formatEventData = (event: AsyncStorageEvent) => {
+  const formatEventData = (event: StorageEvent) => {
     if (!event.data) return "";
 
+    // MMKV events
+    if (event.storageType === 'mmkv') {
+      const mmkvEvent = event as MMKVEvent & { storageType: 'mmkv' };
+
+      // Show instance ID for MMKV events
+      const instancePrefix = `[${mmkvEvent.instanceId}] `;
+
+      if (mmkvEvent.action.startsWith('set.') || mmkvEvent.action.startsWith('get.') || mmkvEvent.action === 'delete') {
+        const keyInfo = mmkvEvent.data?.key ? `${mmkvEvent.data.key}` : "";
+        const typeInfo = mmkvEvent.data?.valueType ? ` (${mmkvEvent.data.valueType})` : "";
+        return instancePrefix + keyInfo + typeInfo;
+      }
+
+      if (mmkvEvent.action === 'clearAll') {
+        return instancePrefix + "All keys";
+      }
+
+      return instancePrefix;
+    }
+
+    // AsyncStorage events
     if (
       event.action === "setItem" ||
       event.action === "removeItem" ||
@@ -103,6 +155,18 @@ export function StorageEventListener() {
   };
 
   const getActionColor = (action: string) => {
+    // MMKV actions
+    if (action.startsWith('set.')) {
+      return "#10B981"; // Green for writes
+    }
+    if (action.startsWith('get.')) {
+      return "#F59E0B"; // Orange for reads
+    }
+    if (action === 'delete' || action === 'clearAll') {
+      return "#EF4444"; // Red for deletes
+    }
+
+    // AsyncStorage actions
     switch (action) {
       case "setItem":
       case "multiSet":

@@ -1,213 +1,216 @@
-import { useMemo, useCallback, useState } from "react";
+import {
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  MutableRefObject,
+} from "react";
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from "react-native";
-import { Database, RefreshCw, Trash2, Search } from "@react-buoy/shared-ui";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  StorageType,
-  getCleanStorageKey,
-  getStorageType,
-  isStorageQuery,
-} from "../utils/storageQueryUtils";
+import { Database } from "@react-buoy/shared-ui";
 import { StorageKeyInfo, RequiredStorageKey, StorageKeyStats } from "../types";
 import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
-import { clearAllAppStorage } from "../utils/clearAllStorage";
 import { StorageKeySection } from "./StorageKeySection";
 import {
   StorageFilterCards,
   type StorageFilterType,
   type StorageTypeFilter,
 } from "./StorageFilterCards";
+import { useAsyncStorageKeys } from "../hooks/useAsyncStorageKeys";
+import { addListener } from "../utils/AsyncStorageListener";
+import { useMMKVKeys } from "../hooks/useMMKVKeys";
+import { useMMKVInstances } from "../hooks/useMMKVInstances";
+import { MMKVInstanceSelector } from "./MMKVInstanceSelector";
+import { MMKVInstanceInfoPanel } from "./MMKVInstanceInfoPanel";
+import { isMMKVAvailable } from "../utils/mmkvAvailability";
+
+// Conditionally import MMKV listener
+let addMMKVListener: any;
+if (isMMKVAvailable()) {
+  const listener = require("../utils/MMKVListener");
+  addMMKVListener = listener.addMMKVListener;
+}
 
 // Import shared Game UI components
-import {
-  gameUIColors,
-  macOSColors,
-  copyToClipboard,
-} from "@react-buoy/shared-ui";
+import { gameUIColors, macOSColors } from "@react-buoy/shared-ui";
 
 interface GameUIStorageBrowserProps {
   requiredStorageKeys?: RequiredStorageKey[];
+  showFilters?: boolean;
+  ignoredPatterns?: Set<string>;
+  onTogglePattern?: (pattern: string) => void;
+  onAddPattern?: (pattern: string) => void;
+  searchQuery?: string;
+  storageDataRef?: MutableRefObject<any[]>;
 }
 
 export function GameUIStorageBrowser({
   requiredStorageKeys = [],
+  showFilters = false,
+  ignoredPatterns = new Set(["@react_buoy"]),
+  onTogglePattern,
+  onAddPattern,
+  searchQuery = "",
+  storageDataRef,
 }: GameUIStorageBrowserProps) {
-  const queryClient = useQueryClient();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<StorageFilterType>("all");
   const [activeStorageType, setActiveStorageType] =
     useState<StorageTypeFilter>("all");
+  const [selectedMMKVInstance, setSelectedMMKVInstance] = useState<
+    string | null
+  >(null);
 
-  // Get all storage queries from cache
-  const allQueries = queryClient.getQueryCache().getAll();
-  const storageQueriesData = allQueries.filter((query) =>
-    isStorageQuery(query.queryKey)
+  // Auto-enable MMKV detection when component mounts (if MMKV is available)
+  useEffect(() => {
+    if (isMMKVAvailable()) {
+      try {
+        const { enableMMKVAutoDetection } = require("../utils/mmkvAutoDetection");
+        enableMMKVAutoDetection();
+      } catch (error) {
+        // Silently fail if auto-detection isn't available
+      }
+    }
+  }, []); // Run once on mount
+
+  // Get all MMKV instances
+  const { instances: mmkvInstances } = useMMKVInstances(false);
+
+  // Auto-select first MMKV instance if available and none selected
+  useEffect(() => {
+    if (mmkvInstances.length > 0 && !selectedMMKVInstance) {
+      setSelectedMMKVInstance(mmkvInstances[0].id);
+    }
+  }, [mmkvInstances, selectedMMKVInstance]);
+
+  // Use AsyncStorage hook
+  const {
+    storageKeys: asyncStorageKeys,
+    isLoading: isLoadingAsync,
+    error: asyncError,
+    refresh: refreshAsync,
+  } = useAsyncStorageKeys(requiredStorageKeys);
+
+  // Use MMKV hook (only when instance is selected)
+  const selectedInstance = mmkvInstances.find(
+    (inst) => inst.id === selectedMMKVInstance
+  )?.instance;
+
+  const {
+    storageKeys: mmkvStorageKeys,
+    isLoading: isLoadingMMKV,
+    error: mmkvError,
+    refresh: refreshMMKV,
+  } = useMMKVKeys(
+    selectedInstance || null,
+    selectedMMKVInstance || "mmkv.default",
+    requiredStorageKeys
   );
 
-  // Process storage keys into StorageKeyInfo format
-  const { storageKeys, devToolKeys, stats } = useMemo(() => {
-    const keyInfoMap = new Map<string, StorageKeyInfo>();
-    const devToolKeyInfoMap = new Map<string, StorageKeyInfo>();
+  // Merge storage keys from AsyncStorage and MMKV
+  const allStorageKeys = useMemo(() => {
+    return [...asyncStorageKeys, ...mmkvStorageKeys];
+  }, [asyncStorageKeys, mmkvStorageKeys]);
 
-    // Normal processing - use actual storage queries
-    storageQueriesData.forEach((query) => {
-      const storageType = getStorageType(query.queryKey);
-      if (!storageType) return;
+  // Determine loading and error states
+  const isLoading = isLoadingAsync || isLoadingMMKV;
+  const error = asyncError || mmkvError;
 
-      const cleanKey = getCleanStorageKey(query.queryKey);
-      const value = query.state.data;
+  // Combined refresh function
+  const refresh = useCallback(() => {
+    refreshAsync();
+    if (selectedInstance) {
+      refreshMMKV();
+    }
+  }, [refreshAsync, refreshMMKV, selectedInstance]);
 
-      // Check if this is a dev tool key
-      if (isDevToolsStorageKey(cleanKey)) {
-        const devKeyInfo: StorageKeyInfo = {
-          key: cleanKey,
-          value,
-          storageType,
-          status: "optional_present",
-          category: "optional",
-          description: "Dev Tools internal storage key",
-        };
-        devToolKeyInfoMap.set(cleanKey, devKeyInfo);
-        return;
-      }
+  // Update storage data ref for copy functionality
+  useEffect(() => {
+    if (storageDataRef) {
+      storageDataRef.current = allStorageKeys;
+    }
+  }, [allStorageKeys, storageDataRef]);
 
-      // Check if this is a required key
-      const requiredConfig = requiredStorageKeys.find((req) => {
-        if (typeof req === "string") return req === cleanKey;
-        return req.key === cleanKey;
-      });
+  // Auto-refresh on storage events (AsyncStorage)
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-      let status: StorageKeyInfo["status"] = "optional_present";
-
-      if (requiredConfig) {
-        if (value === undefined || value === null) {
-          status = "required_missing";
-        } else if (
-          typeof requiredConfig === "object" &&
-          "expectedValue" in requiredConfig
-        ) {
-          status =
-            value === requiredConfig.expectedValue
-              ? "required_present"
-              : "required_wrong_value";
-        } else if (
-          typeof requiredConfig === "object" &&
-          "expectedType" in requiredConfig
-        ) {
-          const actualType = value === null ? "null" : typeof value;
-          status =
-            actualType.toLowerCase() ===
-            requiredConfig.expectedType.toLowerCase()
-              ? "required_present"
-              : "required_wrong_type";
-        } else {
-          status = "required_present";
-        }
-      }
-
-      const keyInfo: StorageKeyInfo = {
-        key: cleanKey,
-        value,
-        storageType,
-        status,
-        category: requiredConfig ? "required" : "optional",
-        ...(typeof requiredConfig === "object" &&
-          "expectedValue" in requiredConfig && {
-            expectedValue: requiredConfig.expectedValue,
-          }),
-        ...(typeof requiredConfig === "object" &&
-          "expectedType" in requiredConfig && {
-            expectedType: requiredConfig.expectedType,
-          }),
-        ...(typeof requiredConfig === "object" &&
-          "description" in requiredConfig && {
-            description: requiredConfig.description,
-          }),
-      };
-
-      keyInfoMap.set(cleanKey, keyInfo);
+    const unsubscribe = addListener((event) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        refreshAsync(); // Auto-refresh AsyncStorage when it changes
+      }, 100); // 100ms debounce
     });
 
-    // Process required storage keys that weren't found in actual storage
-    requiredStorageKeys.forEach((req) => {
-      const key = typeof req === "string" ? req : req.key;
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
+  }, [refreshAsync]);
 
-      if (!keyInfoMap.has(key)) {
-        let storageType: StorageType = "async";
+  // Auto-refresh on MMKV storage events (only if MMKV is available)
+  useEffect(() => {
+    if (!isMMKVAvailable() || !addMMKVListener) {
+      return; // Skip if MMKV not available
+    }
 
-        if (typeof req === "object" && "storageType" in req) {
-          storageType = req.storageType;
-        }
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-        const keyInfo: StorageKeyInfo = {
-          key,
-          value: undefined,
-          storageType,
-          status: "required_missing",
-          category: "required",
-          ...(typeof req === "object" &&
-            "expectedValue" in req && {
-              expectedValue: req.expectedValue,
-            }),
-          ...(typeof req === "object" &&
-            "expectedType" in req && {
-              expectedType: req.expectedType,
-            }),
-          ...(typeof req === "object" &&
-            "description" in req && {
-              description: req.description,
-            }),
-        };
-
-        keyInfoMap.set(key, keyInfo);
+    const unsubscribe = addMMKVListener((event: any) => {
+      // Only refresh if event is for the selected instance
+      if (event.instanceId === selectedMMKVInstance) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          refreshMMKV(); // Auto-refresh MMKV when it changes
+        }, 100); // 100ms debounce
       }
     });
 
-    // Calculate stats
-    const keys = Array.from(keyInfoMap.values());
-    const devKeys = Array.from(devToolKeyInfoMap.values());
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
+  }, [refreshMMKV, selectedMMKVInstance]);
+
+  // Calculate stats from ALL keys (not filtered) - for storage type tab badges
+  const stats = useMemo(() => {
+    const allKeys = allStorageKeys;
+    const appKeys = allKeys.filter((k) => !isDevToolsStorageKey(k.key));
+    const devKeys = allKeys.filter((k) => isDevToolsStorageKey(k.key));
 
     const storageStats: StorageKeyStats & { devToolsCount: number } = {
-      totalCount: keys.length + devKeys.length,
-      requiredCount: keys.filter((k) => k.category === "required").length,
-      missingCount: keys.filter((k) => k.status === "required_missing").length,
-      wrongValueCount: keys.filter((k) => k.status === "required_wrong_value")
+      totalCount: allKeys.length,
+      requiredCount: appKeys.filter((k) => k.category === "required").length,
+      missingCount: appKeys.filter((k) => k.status === "required_missing")
         .length,
-      wrongTypeCount: keys.filter((k) => k.status === "required_wrong_type")
-        .length,
-      presentRequiredCount: keys.filter((k) => k.status === "required_present")
-        .length,
-      optionalCount: keys.filter((k) => k.category === "optional").length,
-      mmkvCount: [...keys, ...devKeys].filter((k) => k.storageType === "mmkv")
-        .length,
-      asyncCount: [...keys, ...devKeys].filter((k) => k.storageType === "async")
-        .length,
-      secureCount: [...keys, ...devKeys].filter(
-        (k) => k.storageType === "secure"
+      wrongValueCount: appKeys.filter(
+        (k) => k.status === "required_wrong_value"
       ).length,
+      wrongTypeCount: appKeys.filter((k) => k.status === "required_wrong_type")
+        .length,
+      presentRequiredCount: appKeys.filter(
+        (k) => k.status === "required_present"
+      ).length,
+      optionalCount: appKeys.filter((k) => k.category === "optional").length,
+      // Count keys by their actual storageType property
+      mmkvCount: allKeys.filter((k) => k.storageType === "mmkv").length,
+      asyncCount: allKeys.filter((k) => k.storageType === "async").length,
+      secureCount: allKeys.filter((k) => k.storageType === "secure").length,
       devToolsCount: devKeys.length,
     };
 
-    return { storageKeys: keys, devToolKeys: devKeys, stats: storageStats };
-  }, [storageQueriesData, requiredStorageKeys]);
+    return storageStats;
+  }, [allStorageKeys]);
 
-  // Group storage keys by status
-  const requiredKeys = storageKeys.filter((k) => k.category === "required");
-  const optionalKeys = storageKeys.filter((k) => k.category === "optional");
-
-  // Combine all keys and sort by priority (issues first)
-  const allKeys = useMemo(() => {
-    const combined = [...requiredKeys, ...optionalKeys, ...devToolKeys];
-
+  // Sort all keys by priority (issues first)
+  const sortedKeys = useMemo(() => {
     // Sort by status priority: errors first, then warnings, then valid
-    return combined.sort((a, b) => {
+    return [...allStorageKeys].sort((a, b) => {
       const priorityMap: Record<string, number> = {
         required_missing: 1,
         required_wrong_type: 2,
@@ -217,14 +220,41 @@ export function GameUIStorageBrowser({
       };
       return (priorityMap[a.status] || 999) - (priorityMap[b.status] || 999);
     });
-  }, [requiredKeys, optionalKeys, devToolKeys]);
+  }, [allStorageKeys]);
 
-  // Filter keys based on active filter and storage type
+  // Get all unique keys for filter suggestions
+  const allUniqueKeys = useMemo(() => {
+    return Array.from(new Set(allStorageKeys.map((k) => k.key))).sort();
+  }, [allStorageKeys]);
+
+  // Filter keys based on active filter, storage type, ignored patterns, and search
   const filteredKeys = useMemo(() => {
-    let keys = allKeys;
+    let keys = sortedKeys;
+
+    // Apply ignored pattern filter first
+    keys = keys.filter((k) => {
+      // Check if key matches any ignored pattern
+      const shouldIgnore = Array.from(ignoredPatterns).some((pattern) =>
+        k.key.includes(pattern)
+      );
+      return !shouldIgnore;
+    });
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      keys = keys.filter((k) => k.key.toLowerCase().includes(query));
+    }
 
     // Apply status filter
     switch (activeFilter) {
+      case "all":
+        // "All" (Valid) shows only keys without issues
+        keys = keys.filter(
+          (k) =>
+            k.status === "required_present" || k.status === "optional_present"
+        );
+        break;
       case "missing":
         keys = keys.filter((k) => k.status === "required_missing");
         break;
@@ -243,9 +273,42 @@ export function GameUIStorageBrowser({
     }
 
     return keys;
-  }, [allKeys, activeFilter, activeStorageType]);
+  }, [
+    sortedKeys,
+    activeFilter,
+    activeStorageType,
+    ignoredPatterns,
+    searchQuery,
+  ]);
 
-  // Removed unused issues and statsConfig variables
+  // Calculate stats from FILTERED keys to show actual visible counts
+  const filteredStats = useMemo(() => {
+    const appKeys = filteredKeys.filter((k) => !isDevToolsStorageKey(k.key));
+
+    const storageStats: StorageKeyStats & { devToolsCount: number } = {
+      totalCount: filteredKeys.length,
+      requiredCount: appKeys.filter((k) => k.category === "required").length,
+      missingCount: appKeys.filter((k) => k.status === "required_missing")
+        .length,
+      wrongValueCount: appKeys.filter(
+        (k) => k.status === "required_wrong_value"
+      ).length,
+      wrongTypeCount: appKeys.filter((k) => k.status === "required_wrong_type")
+        .length,
+      presentRequiredCount: appKeys.filter(
+        (k) => k.status === "required_present"
+      ).length,
+      optionalCount: appKeys.filter((k) => k.category === "optional").length,
+      mmkvCount: filteredKeys.filter((k) => k.storageType === "mmkv").length,
+      asyncCount: filteredKeys.filter((k) => k.storageType === "async").length,
+      secureCount: filteredKeys.filter((k) => k.storageType === "secure")
+        .length,
+      devToolsCount: filteredKeys.filter((k) => isDevToolsStorageKey(k.key))
+        .length,
+    };
+
+    return storageStats;
+  }, [filteredKeys]);
 
   // Calculate health percentage
   const healthPercentage =
@@ -269,57 +332,28 @@ export function GameUIStorageBrowser({
       ? gameUIColors.warning
       : gameUIColors.error;
 
-  // Handle clear all storage
-  const handleClearAll = useCallback(async () => {
-    Alert.alert(
-      "Clear Storage",
-      "This will clear all app storage data. Continue?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearAllAppStorage();
-              await queryClient.invalidateQueries({
-                predicate: (query) => isStorageQuery(query.queryKey),
-              });
-            } catch (error) {
-              console.error("Failed to clear storage:", error);
-              Alert.alert("Error", "Failed to clear storage");
-            }
-          },
-        },
-      ]
+  // Loading state
+  if (isLoading && allStorageKeys.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Database size={48} color={macOSColors.text.muted} />
+        <Text style={styles.emptyTitle}>Loading storage keys...</Text>
+      </View>
     );
-  }, [queryClient]);
+  }
 
-  // Handle refresh
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await queryClient.invalidateQueries({
-        predicate: (query) => isStorageQuery(query.queryKey),
-      });
-      await queryClient.refetchQueries({
-        predicate: (query) => isStorageQuery(query.queryKey),
-      });
-    } finally {
-      setTimeout(() => setIsRefreshing(false), 500);
-    }
-  }, [queryClient]);
-
-  // Handle export
-  const handleExport = useCallback(async () => {
-    const exportData = storageKeys.reduce((acc, keyInfo) => {
-      acc[keyInfo.key] = keyInfo.value;
-      return acc;
-    }, {} as Record<string, unknown>);
-
-    const serialized = JSON.stringify(exportData, null, 2);
-    await copyToClipboard(serialized);
-  }, [storageKeys]);
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.emptyState}>
+        <Database size={48} color={gameUIColors.error} />
+        <Text style={[styles.emptyTitle, { color: gameUIColors.error }]}>
+          Error loading storage
+        </Text>
+        <Text style={styles.emptySubtitle}>{error.message}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -341,76 +375,18 @@ export function GameUIStorageBrowser({
         onStorageTypeChange={setActiveStorageType}
       />
 
-      {/* Streamlined Action Bar */}
-      <View style={styles.actionBar}>
-        <View style={styles.actionBarLeft}>
-          <View style={styles.keyPill}>
-            <Text style={styles.keyPillText}>
-              {stats.totalCount} {stats.totalCount === 1 ? "key" : "keys"}
-            </Text>
-          </View>
-          <Text style={styles.keyCount}>Stored</Text>
+      {/* MMKV Instance Selector - Only show when MMKV-only filter is active and no instances */}
+      {activeStorageType === "mmkv" && mmkvInstances.length === 0 && (
+        <View style={styles.emptyMMKVState}>
+          <Text style={styles.emptyMMKVTitle}>No MMKV Instances Detected</Text>
+          <Text style={styles.emptyMMKVSubtitle}>
+            MMKV instances must be registered with registerMMKVInstance()
+          </Text>
+          <Text style={styles.emptyMMKVCode}>
+            {`import { registerMMKVInstance } from '@react-buoy/storage';\n\nconst storage = createMMKV();\nregisterMMKVInstance('mmkv.default', storage);`}
+          </Text>
         </View>
-
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            onPress={handleRefresh}
-            style={[
-              styles.actionButton,
-              isRefreshing && styles.actionButtonActive,
-            ]}
-            activeOpacity={0.7}
-          >
-            <RefreshCw
-              size={12}
-              color={
-                isRefreshing ? gameUIColors.success : macOSColors.text.secondary
-              }
-            />
-            <Text
-              style={[
-                styles.actionButtonText,
-                {
-                  color: isRefreshing
-                    ? gameUIColors.success
-                    : macOSColors.text.secondary,
-                },
-              ]}
-            >
-              Scan
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleExport}
-            style={styles.actionButton}
-            activeOpacity={0.7}
-          >
-            <Database size={12} color={macOSColors.text.secondary} />
-            <Text
-              style={[
-                styles.actionButtonText,
-                { color: macOSColors.text.secondary },
-              ]}
-            >
-              Export
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleClearAll}
-            style={[styles.actionButton, styles.dangerButton]}
-            activeOpacity={0.7}
-          >
-            <Trash2 size={12} color={gameUIColors.error} />
-            <Text
-              style={[styles.actionButtonText, { color: gameUIColors.error }]}
-            >
-              Purge
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      )}
 
       {/* Filtered Storage Keys */}
       {filteredKeys.length > 0 ? (
@@ -418,7 +394,7 @@ export function GameUIStorageBrowser({
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               {activeFilter === "all"
-                ? "ALL STORAGE KEYS"
+                ? "KEYS"
                 : activeFilter === "missing"
                 ? "MISSING KEYS"
                 : "ISSUES TO FIX"}
@@ -438,17 +414,21 @@ export function GameUIStorageBrowser({
         </View>
       ) : (
         <View style={styles.emptyState}>
-          <Search size={32} color={macOSColors.text.muted} />
+          <Database size={32} color={macOSColors.text.muted} />
           <Text style={styles.emptyTitle}>
-            {activeFilter === "all"
-              ? "No storage keys"
+            {searchQuery
+              ? "No results found"
+              : activeFilter === "all"
+              ? "No valid keys found"
               : activeFilter === "missing"
               ? "No missing keys"
               : "No issues found"}
           </Text>
           <Text style={styles.emptySubtitle}>
-            {activeFilter === "all"
-              ? "Your app hasn't stored any data yet"
+            {searchQuery
+              ? `No keys matching "${searchQuery}"`
+              : activeFilter === "all"
+              ? "All keys have issues or are missing"
               : activeFilter === "missing"
               ? "All required keys are present"
               : "All storage keys are correctly configured"}
@@ -478,76 +458,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     opacity: 0.006,
     backgroundColor: gameUIColors.info,
-  },
-
-  // Streamlined Action bar (polished styling)
-  actionBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    marginTop: 8,
-    marginBottom: 12,
-    backgroundColor: macOSColors.background.card,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  actionBarLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  keyPill: {
-    backgroundColor: macOSColors.background.base,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  keyPillText: {
-    fontSize: 11,
-    fontWeight: "700",
-    fontFamily: "monospace",
-    color: macOSColors.text.primary,
-    letterSpacing: 0.3,
-  },
-  keyCount: {
-    fontSize: 11,
-    color: macOSColors.text.muted,
-    fontFamily: "monospace",
-    letterSpacing: 0.5,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: macOSColors.background.base,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  actionButtonActive: {
-    backgroundColor: gameUIColors.success + "15",
-    borderColor: gameUIColors.success + "40",
-  },
-  dangerButton: {
-    backgroundColor: gameUIColors.error + "08",
-    borderColor: gameUIColors.error + "20",
-  },
-  actionButtonText: {
-    fontSize: 10,
-    fontWeight: "500",
   },
 
   techFooter: {
@@ -617,5 +527,53 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: macOSColors.text.secondary,
     textAlign: "center",
+  },
+
+  // Empty MMKV state
+  emptyMMKVState: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    marginTop: 8,
+    alignItems: "center",
+  },
+  emptyMMKVTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: macOSColors.text.primary,
+    marginBottom: 6,
+  },
+  emptyMMKVSubtitle: {
+    fontSize: 12,
+    color: macOSColors.text.secondary,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  emptyMMKVCode: {
+    fontSize: 10,
+    fontFamily: "monospace",
+    color: macOSColors.semantic.info,
+    backgroundColor: macOSColors.background.input,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    alignSelf: "stretch",
+  },
+  clearSearchButton: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: macOSColors.background.hover,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+  },
+  clearSearchText: {
+    fontSize: 13,
+    color: macOSColors.text.primary,
+    fontWeight: "500",
   },
 });

@@ -3,10 +3,12 @@ import { StorageType } from "./utils/storageQueryUtils";
 export interface StorageKeyInfo {
   key: string;
   value: unknown;
+  valueType?: 'string' | 'number' | 'boolean' | 'buffer';  // MMKV native type
   expectedValue?: string;
   expectedType?: string;
   description?: string;
   storageType: StorageType;
+  instanceId?: string;  // MMKV instance ID (for multi-instance support)
   status:
     | "required_present"
     | "required_missing"
@@ -35,4 +37,6 @@ export interface StorageKeyStats {
   mmkvCount: number;
   asyncCount: number;
   secureCount: number;
+  // MMKV instance counts (optional, for multi-instance support)
+  instanceCounts?: Record<string, number>; // { 'mmkv.default': 10, 'secure': 5 }
 }

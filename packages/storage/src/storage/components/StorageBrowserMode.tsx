@@ -1,11 +1,15 @@
-import { Query } from "@tanstack/react-query";
 import { RequiredStorageKey } from "../types";
 import { GameUIStorageBrowser } from "./GameUIStorageBrowser";
+import { MutableRefObject } from "react";
 
 interface StorageBrowserModeProps {
-  selectedQuery: Query | undefined;
-  onQuerySelect: (query: Query | undefined) => void;
   requiredStorageKeys?: RequiredStorageKey[]; // Configuration for required keys
+  showFilters?: boolean;
+  ignoredPatterns?: Set<string>;
+  onTogglePattern?: (pattern: string) => void;
+  onAddPattern?: (pattern: string) => void;
+  searchQuery?: string;
+  storageDataRef?: MutableRefObject<any[]>;
 }
 
 /**
@@ -14,10 +18,22 @@ interface StorageBrowserModeProps {
  */
 export function StorageBrowserMode({
   requiredStorageKeys = [],
+  showFilters = false,
+  ignoredPatterns = new Set(),
+  onTogglePattern,
+  onAddPattern,
+  searchQuery = "",
+  storageDataRef,
 }: StorageBrowserModeProps) {
   return (
     <GameUIStorageBrowser
       requiredStorageKeys={requiredStorageKeys}
+      showFilters={showFilters}
+      ignoredPatterns={ignoredPatterns}
+      onTogglePattern={onTogglePattern}
+      onAddPattern={onAddPattern}
+      searchQuery={searchQuery}
+      storageDataRef={storageDataRef}
     />
   );
 }

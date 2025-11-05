@@ -1,5 +1,6 @@
 import { HardDrive, CyberpunkSectionButton } from "@react-buoy/shared-ui";
-import { useStorageQueryCounts } from "../hooks/useStorageQueryCounts";
+import { useAsyncStorageKeys } from "../hooks/useAsyncStorageKeys";
+import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 
 interface StorageSectionProps {
   onPress: () => void;
@@ -10,19 +11,20 @@ interface StorageSectionProps {
  * Shows storage statistics and provides access to storage browser.
  */
 export function StorageSection({ onPress }: StorageSectionProps) {
-  const { total, mmkv, async, secure } = useStorageQueryCounts();
+  const { storageKeys } = useAsyncStorageKeys();
+
+  // Filter out dev tool keys for the count
+  const appKeys = storageKeys.filter((k) => !isDevToolsStorageKey(k.key));
+  const asyncCount = appKeys.length;
+  const total = asyncCount;
 
   const getStorageSubtitle = () => {
     if (total === 0) {
       return "Empty";
     }
 
-    // Shorter format: just show the most used type
-    if (async > 0) return `${async} Async`;
-    if (mmkv > 0) return `${mmkv} MMKV`;
-    if (secure > 0) return `${secure} Secure`;
-
-    return `${total} items`;
+    // For now, only AsyncStorage is supported
+    return `${asyncCount} Async`;
   };
 
   return (

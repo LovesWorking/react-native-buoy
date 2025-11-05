@@ -1,8 +1,16 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { macOSColors } from "@react-buoy/shared-ui";
+import { isMMKVAvailable } from "../utils/mmkvAvailability";
 
 export type StorageFilterType = "all" | "missing" | "issues";
 export type StorageTypeFilter = "all" | "async" | "mmkv" | "secure";
+
+// Feature flags - set to true when implemented
+const IS_MMKV_IMPLEMENTED = true; // ✅ MMKV support is now implemented
+const IS_SECURE_STORE_IMPLEMENTED = false;
+
+// Runtime availability checks
+const IS_MMKV_AVAILABLE = isMMKVAvailable();
 
 interface StorageFilterCardsProps {
   stats: {
@@ -41,43 +49,6 @@ export function StorageFilterCards({
 
   return (
     <View style={styles.container}>
-      {/* Title + Health */}
-      <View style={styles.topRow}>
-        <View style={styles.titleLeft}>
-          <View style={[styles.healthDot, { backgroundColor: healthColor }]} />
-          <Text style={styles.titleText}>Storage</Text>
-          <View style={styles.titleDivider} />
-          <Text style={styles.subtitleText}>
-            {stats.totalCount} {stats.totalCount === 1 ? "key" : "keys"} •{" "}
-            {healthStatus.toLowerCase()}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.healthBadge,
-            {
-              backgroundColor: healthColor + "20",
-              borderColor: healthColor + "40",
-            },
-          ]}
-        >
-          <Text style={[styles.healthBadgeText, { color: healthColor }]}>
-            {healthPercentage}%
-          </Text>
-        </View>
-      </View>
-
-      {/* Health progress - purely visual */}
-      <View style={styles.healthProgressBar}>
-        <View
-          style={[
-            styles.healthProgressFill,
-            { width: `${healthPercentage}%`, backgroundColor: healthColor },
-          ]}
-        />
-      </View>
-
       {/* Status Filters */}
       <View style={styles.filtersRow}>
         <TouchableOpacity
@@ -98,9 +69,9 @@ export function StorageFilterCards({
           <Text
             style={[styles.filterValue, { color: macOSColors.text.primary }]}
           >
-            {stats.totalCount}
+            {stats.presentRequiredCount + stats.optionalCount}
           </Text>
-          <Text style={styles.filterLabel}>All</Text>
+          <Text style={styles.filterLabel}>Valid</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -120,8 +91,13 @@ export function StorageFilterCards({
         >
           <Text
             style={[
-              styles.filterValue, 
-              { color: stats.missingCount > 0 ? macOSColors.semantic.error : macOSColors.text.muted }
+              styles.filterValue,
+              {
+                color:
+                  stats.missingCount > 0
+                    ? macOSColors.semantic.error
+                    : macOSColors.text.muted,
+              },
             ]}
           >
             {stats.missingCount}
@@ -147,7 +123,12 @@ export function StorageFilterCards({
           <Text
             style={[
               styles.filterValue,
-              { color: issuesCount > 0 ? macOSColors.semantic.warning : macOSColors.text.muted },
+              {
+                color:
+                  issuesCount > 0
+                    ? macOSColors.semantic.warning
+                    : macOSColors.text.muted,
+              },
             ]}
           >
             {issuesCount}
@@ -188,8 +169,12 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "all" && { color: macOSColors.text.primary },
-                activeStorageType !== "all" && { color: macOSColors.text.muted },
+                activeStorageType === "all" && {
+                  color: macOSColors.text.primary,
+                },
+                activeStorageType !== "all" && {
+                  color: macOSColors.text.muted,
+                },
               ]}
             >
               {stats.totalCount}
@@ -225,9 +210,9 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "async" ? 
-                  { color: macOSColors.semantic.warning } : 
-                  { color: macOSColors.text.muted },
+                activeStorageType === "async"
+                  ? { color: macOSColors.semantic.warning }
+                  : { color: macOSColors.text.muted },
               ]}
             >
               {stats.asyncCount || 0}
@@ -263,9 +248,9 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "mmkv" ? 
-                  { color: macOSColors.semantic.info } : 
-                  { color: macOSColors.text.muted },
+                activeStorageType === "mmkv"
+                  ? { color: macOSColors.semantic.info }
+                  : { color: macOSColors.text.muted },
               ]}
             >
               {stats.mmkvCount || 0}
@@ -301,12 +286,12 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "secure" ? 
-                  { color: macOSColors.semantic.success } : 
-                  { color: macOSColors.text.muted },
+                activeStorageType === "secure"
+                  ? { color: macOSColors.semantic.success }
+                  : { color: macOSColors.text.muted },
               ]}
             >
-              {stats.secureCount || 0}
+              Coming Soon
             </Text>
           </TouchableOpacity>
         </View>
@@ -373,8 +358,8 @@ const styles = StyleSheet.create({
     backgroundColor: macOSColors.background.input,
     overflow: "hidden",
   },
-  healthProgressFill: { 
-    height: 3, 
+  healthProgressFill: {
+    height: 3,
     borderRadius: 1.5,
   },
 
@@ -382,10 +367,10 @@ const styles = StyleSheet.create({
   filtersRow: { flexDirection: "row", gap: 10 },
   filterChip: {
     flex: 1,
-    backgroundColor: macOSColors.background.input,
+    backgroundColor: macOSColors.background.input + "80",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: macOSColors.border.default + "40",
+    borderColor: macOSColors.border.default + "30",
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: "center",

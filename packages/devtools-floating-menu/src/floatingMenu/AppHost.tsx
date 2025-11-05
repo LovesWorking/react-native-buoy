@@ -28,7 +28,7 @@ type AppHostContextValue = {
 
 const AppHostContext = createContext<AppHostContextValue | null>(null);
 
-const STORAGE_KEY_OPEN_APPS = "@apphost_open_apps";
+const STORAGE_KEY_OPEN_APPS = "@react_buoy_open_apps";
 const PERSISTENCE_DELAY = 500;
 
 /**

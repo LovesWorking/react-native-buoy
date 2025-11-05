@@ -20,26 +20,27 @@ export function StorageFilterViewV2({
   const filterConfig: DynamicFilterConfig = {
     addFilterSection: {
       enabled: true,
-      placeholder: "Enter pattern (e.g., @temp)",
+      placeholder: "Enter key pattern to hide...",
       title: "ACTIVE FILTERS",
       icon: Filter,
     },
     availableItemsSection: {
       enabled: true,
-      title: "AVAILABLE KEYS FROM EVENTS",
+      title: "AVAILABLE STORAGE KEYS",
       emptyMessage:
-        "No keys available. Keys from storage events will appear here.",
+        "No storage keys available. Keys will appear here once loaded.",
       items: availableKeys,
     },
     howItWorksSection: {
       enabled: true,
-      title: "HOW FILTERS WORK",
+      title: "HOW STORAGE FILTERS WORK",
       description:
-        "Filtered keys will not appear in the storage events list. Patterns match if the key contains the specified text.",
+        "Patterns hide matching storage keys from the list. Filters match if the storage key contains the provided text.",
       examples: [
-        "• @temp → filters @temp_user, @temp_data",
-        "• redux → filters redux-persist:root",
-        "• : → filters all keys with colons",
+        "• react_buoy → hides keys containing react_buoy",
+        "• @temp → hides @temp_user, @temp_data",
+        "• redux → hides redux-persist:root",
+        "• : → hides all keys with colons",
       ],
       icon: Filter,
     },

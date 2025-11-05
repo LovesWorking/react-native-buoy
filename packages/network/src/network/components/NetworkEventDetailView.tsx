@@ -107,6 +107,8 @@ const UrlBreakdown: FC<{ url: string }> = ({ url }) => {
 
   const urlParts = parseUrl(url);
 
+  const [showParams, setShowParams] = useState(false);
+
   return (
     <View style={styles.urlBreakdown}>
       <View style={styles.urlRow}>
@@ -121,17 +123,42 @@ const UrlBreakdown: FC<{ url: string }> = ({ url }) => {
         </Text>
         <InlineCopyButton value={url} buttonStyle={styles.copyButton} />
       </View>
+
+      {/* Full URL with query params */}
       <View style={styles.urlPathRow}>
-        <Text style={styles.urlPath}>{urlParts.pathname}</Text>
-      </View>
-      {urlParts.params ? (
-        <View style={styles.urlParams}>
-          <Text style={styles.urlParamsTitle}>Query Parameters:</Text>
-          {Object.entries(urlParts.params).map(([key, value]) => (
-            <Text key={key} style={styles.urlParam}>
-              {key}: {value}
+        <Text style={styles.urlPath} numberOfLines={2}>
+          {urlParts.pathname}
+          {urlParts.params ? (
+            <Text style={styles.urlQueryString}>
+              ?{new URLSearchParams(urlParts.params).toString()}
             </Text>
-          ))}
+          ) : null}
+        </Text>
+      </View>
+
+      {/* Collapsible Query Parameters with DataViewer */}
+      {urlParts.params ? (
+        <View style={styles.queryParamsCollapsible}>
+          <TouchableOpacity
+            style={styles.queryParamsToggle}
+            onPress={() => setShowParams(!showParams)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.queryParamsToggleText}>Query Parameters</Text>
+            {showParams ? (
+              <ChevronUp size={14} color={macOSColors.text.secondary} />
+            ) : (
+              <ChevronDown size={14} color={macOSColors.text.secondary} />
+            )}
+          </TouchableOpacity>
+
+          {showParams ? (
+            <DataViewer
+              title=""
+              data={urlParts.params}
+              showTypeFilter={false}
+            />
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -149,6 +176,62 @@ export function NetworkEventDetailView({
 }: NetworkEventDetailViewProps) {
   const status = event.status ? formatHttpStatus(event.status) : null;
   const isPending = !event.status && !event.error;
+
+  // Generate full request details for copying
+  const getFullRequestDetails = () => {
+    const requestDetails = {
+      method: event.method,
+      url: event.url,
+      status: event.status,
+      statusText: event.statusText,
+      timestamp: new Date(event.timestamp).toISOString(),
+      duration: event.duration ? `${event.duration}ms` : 'N/A',
+      requestHeaders: event.requestHeaders,
+      requestData: event.requestData,
+      responseHeaders: event.responseHeaders,
+      responseData: event.responseData,
+      requestSize: event.requestSize ? formatBytes(event.requestSize) : 'N/A',
+      responseSize: event.responseSize ? formatBytes(event.responseSize) : 'N/A',
+      error: event.error,
+      client: event.requestClient,
+    };
+
+    return `# Network Request Details
+
+## Request
+- **Method:** ${requestDetails.method}
+- **URL:** ${requestDetails.url}
+- **Client:** ${requestDetails.client || 'N/A'}
+- **Timestamp:** ${requestDetails.timestamp}
+
+## Response
+- **Status:** ${requestDetails.status || 'Pending'}${requestDetails.statusText ? ` (${requestDetails.statusText})` : ''}
+- **Duration:** ${requestDetails.duration}
+- **Request Size:** ${requestDetails.requestSize}
+- **Response Size:** ${requestDetails.responseSize}
+${requestDetails.error ? `- **Error:** ${requestDetails.error}` : ''}
+
+## Request Headers
+\`\`\`json
+${JSON.stringify(requestDetails.requestHeaders, null, 2)}
+\`\`\`
+
+## Request Data
+\`\`\`json
+${JSON.stringify(requestDetails.requestData, null, 2)}
+\`\`\`
+
+## Response Headers
+\`\`\`json
+${JSON.stringify(requestDetails.responseHeaders, null, 2)}
+\`\`\`
+
+## Response Data
+\`\`\`json
+${JSON.stringify(requestDetails.responseData, null, 2)}
+\`\`\`
+`;
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -183,6 +266,10 @@ export function NetworkEventDetailView({
               </Text>
             </View>
           ) : null}
+          <View style={styles.copyFullContainer}>
+            <Text style={styles.copyFullLabel}>Copy Full Request</Text>
+            <InlineCopyButton value={getFullRequestDetails()} />
+          </View>
         </View>
 
         <UrlBreakdown url={event.url} />
@@ -503,6 +590,17 @@ const styles = StyleSheet.create({
     color: macOSColors.text.secondary,
     fontSize: 11,
   },
+  copyFullContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginLeft: "auto",
+  },
+  copyFullLabel: {
+    color: macOSColors.text.secondary,
+    fontSize: 11,
+    fontWeight: "500",
+  },
   // URL breakdown styles
   urlBreakdown: {
     backgroundColor: macOSColors.background.input,
@@ -536,26 +634,32 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: "monospace",
   },
-  urlParams: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: macOSColors.border.default,
-  },
-  urlParamsTitle: {
-    color: macOSColors.text.secondary,
-    fontSize: 10,
-    fontWeight: "600",
-    marginBottom: 4,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  urlParam: {
+  urlQueryString: {
     color: macOSColors.semantic.info,
     fontSize: 11,
     fontFamily: "monospace",
-    marginLeft: 8,
-    marginTop: 2,
+  },
+  // Query Parameters - Collapsible section
+  queryParamsCollapsible: {
+    marginTop: 8,
+  },
+  queryParamsToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: macOSColors.background.hover,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    marginBottom: 8,
+  },
+  queryParamsToggleText: {
+    color: macOSColors.text.primary,
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
   // Timing section - always visible
   timingSection: {

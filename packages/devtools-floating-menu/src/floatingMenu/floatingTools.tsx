@@ -99,8 +99,8 @@ function GripVerticalIcon({
 }
 
 const STORAGE_KEYS = {
-  BUBBLE_POSITION_X: "@floating_tools_bubble_position_x",
-  BUBBLE_POSITION_Y: "@floating_tools_bubble_position_y",
+  BUBBLE_POSITION_X: "@react_buoy_bubble_position_x",
+  BUBBLE_POSITION_Y: "@react_buoy_bubble_position_y",
 } as const;
 
 // Debug logging removed for production
@@ -357,7 +357,7 @@ export function UserStatus({
     <TouchableOpacity
       accessibilityRole="button"
       onPress={onPress}
-      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      hitSlop={{ top: 10, bottom: 10, left: 0, right: 10 }}
       disabled={isDragging}
       activeOpacity={0.85}
       style={containerStyle}
@@ -442,6 +442,9 @@ export function FloatingTools({
   // Track if user has explicitly chosen to show the menu (overriding pushToSide)
   const userWantsVisibleRef = useRef(false);
 
+  // Track previous pushToSide value to detect transitions
+  const prevPushToSideRef = useRef(pushToSide);
+
   const safeAreaInsets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -457,6 +460,14 @@ export function FloatingTools({
 
   // Effect to handle pushToSide prop changes
   useEffect(() => {
+    // Reset user override when pushToSide becomes true (dial/modal opens)
+    // This allows auto-hide to work after user manually showed the menu
+    if (!prevPushToSideRef.current && pushToSide) {
+      userWantsVisibleRef.current = false;
+    }
+
+    prevPushToSideRef.current = pushToSide;
+
     // Only push to side if:
     // 1. pushToSide is true
     // 2. Not currently hidden

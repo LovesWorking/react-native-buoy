@@ -66,11 +66,12 @@ class AsyncStorageListener {
   private isInitialized = false;
 
   // Keys to ignore for dev tools to prevent self-triggering
+  // Only ignore specific keys that would cause infinite loops in the storage browser
   private ignoredKeys = new Set([
-    "@devtools_diff_mode",
-    "@devtools_diff_options",
-    "REACT_QUERY_OFFLINE_CACHE",
-    "@devtools_", // Prefix check for all dev tools keys
+    "@react_buoy_storage_event_filters", // Storage events filter settings
+    "@react_buoy_storage_key_filters", // Storage browser key filters
+    "@react_buoy_storage_is_monitoring", // Storage monitoring toggle
+    "REACT_QUERY_OFFLINE_CACHE", // React Query cache
   ]);
 
   // Store original methods
