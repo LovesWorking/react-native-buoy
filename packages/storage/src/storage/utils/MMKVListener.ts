@@ -176,9 +176,6 @@ class MMKVListener {
   addInstance(instance: MMKV, instanceId: string): void {
     // Check if already monitoring this instance
     if (this.instances.has(instanceId)) {
-      console.warn(
-        `[MMKVListener] Instance "${instanceId}" is already being monitored. Skipping.`
-      );
       return;
     }
 
@@ -234,15 +231,8 @@ class MMKVListener {
           });
         });
       } catch (error) {
-        console.warn(
-          `[MMKVListener] Could not add native listener for instance "${instanceId}":`,
-          error
-        );
+        // Could not add native listener
       }
-    } else {
-      console.log(
-        `[MMKVListener] Instance "${instanceId}" does not support addOnValueChangedListener. Using method wrapping only.`
-      );
     }
 
     // PART 2: Wrap set methods for immediate type information
@@ -386,8 +376,6 @@ class MMKVListener {
       originalMethods,
       nativeListenerUnsubscribe,
     });
-
-    console.log(`[MMKVListener] Started monitoring instance "${instanceId}"`);
   }
 
   /**
@@ -400,9 +388,6 @@ class MMKVListener {
   removeInstance(instanceId: string): void {
     const tracked = this.instances.get(instanceId);
     if (!tracked) {
-      console.warn(
-        `[MMKVListener] Instance "${instanceId}" is not being monitored. Cannot remove.`
-      );
       return;
     }
 
@@ -424,8 +409,6 @@ class MMKVListener {
 
     // Remove from tracking
     this.instances.delete(instanceId);
-
-    console.log(`[MMKVListener] Stopped monitoring instance "${instanceId}"`);
   }
 
   /**

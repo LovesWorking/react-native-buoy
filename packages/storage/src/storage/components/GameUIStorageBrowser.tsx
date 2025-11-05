@@ -545,7 +545,7 @@ export function GameUIStorageBrowser({
         </View>
       )}
 
-      {/* MMKV Instance Filter Navbar - Show when MMKV filter active and instances available */}
+      {/* MMKV Instance Filter Navbar - ONLY show in MMKV tab when instances available */}
       {activeStorageType === "mmkv" && mmkvInstances.length > 0 && (
         <View style={styles.instanceNavbar}>
           <Text style={styles.instanceNavbarLabel}>INSTANCES</Text>
@@ -646,30 +646,31 @@ export function GameUIStorageBrowser({
         </View>
       )}
 
-      {/* Storage Action Buttons */}
-      <StorageActionButtons
-        onCopy={handleCopyStorage}
-        mmkvInstances={mmkvInstances.map(inst => ({ id: inst.id, instance: inst.instance }))}
-        activeStorageType={activeStorageType}
-        onClearComplete={refresh}
-      />
-
       {/* Filtered Storage Keys */}
       {filteredKeys.length > 0 ? (
         <View style={styles.keysSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {activeFilter === "all"
-                ? "KEYS"
-                : activeFilter === "missing"
-                ? "MISSING KEYS"
-                : "ISSUES TO FIX"}
-              {activeStorageType !== "all" &&
-                ` (${activeStorageType.toUpperCase()})`}
-            </Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{filteredKeys.length}</Text>
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionTitle}>
+                {activeFilter === "all"
+                  ? "KEYS"
+                  : activeFilter === "missing"
+                  ? "MISSING KEYS"
+                  : "ISSUES TO FIX"}
+                {activeStorageType !== "all" &&
+                  ` (${activeStorageType.toUpperCase()})`}
+              </Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{filteredKeys.length}</Text>
+              </View>
             </View>
+            {/* Storage Action Buttons in Header */}
+            <StorageActionButtons
+              onCopy={handleCopyStorage}
+              mmkvInstances={mmkvInstances.map(inst => ({ id: inst.id, instance: inst.instance }))}
+              activeStorageType={activeStorageType}
+              onClearComplete={refresh}
+            />
           </View>
           <StorageKeySection
             title=""
@@ -705,47 +706,6 @@ export function GameUIStorageBrowser({
       <Text style={styles.techFooter}>
         ASYNC STORAGE | MMKV | SECURE STORAGE BACKENDS
       </Text>
-
-      {/* MMKV Instance Quick Switcher - Only show when multiple instances available */}
-      {isMMKVAvailable() && mmkvInstances.length > 1 && (
-        <View style={styles.instanceQuickSwitch}>
-          <Text style={styles.quickSwitchLabel}>Instance:</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.quickSwitchScroll}
-            contentContainerStyle={styles.quickSwitchContent}
-          >
-            {mmkvInstances.map(inst => (
-              <TouchableOpacity
-                key={inst.id}
-                onPress={() => setSelectedMMKVInstance(inst.id)}
-                style={[
-                  styles.quickSwitchButton,
-                  inst.id === selectedMMKVInstance && styles.quickSwitchButtonActive,
-                  { borderColor: getInstanceColor(inst.id) + '40' }
-                ]}
-              >
-                <HardDrive size={10} color={getInstanceColor(inst.id)} />
-                <Text style={styles.quickSwitchText} numberOfLines={1}>
-                  {inst.id}
-                </Text>
-                <View style={[
-                  styles.quickSwitchBadge,
-                  inst.id === selectedMMKVInstance && styles.quickSwitchBadgeActive
-                ]}>
-                  <Text style={[
-                    styles.quickSwitchCount,
-                    inst.id === selectedMMKVInstance && styles.quickSwitchCountActive
-                  ]}>
-                    {inst.keyCount}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
 
       {/* Dev Test Mode removed - test component no longer needed */}
     </ScrollView>
@@ -794,6 +754,11 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: macOSColors.border.default,
+  },
+  sectionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 12,
@@ -955,77 +920,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: macOSColors.text.primary,
     fontWeight: "500",
-  },
-
-  // Instance Quick Switcher styles
-  instanceQuickSwitch: {
-    marginTop: 16,
-    marginBottom: 16,
-    backgroundColor: macOSColors.background.card + 'F0',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  quickSwitchLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: macOSColors.text.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginLeft: 2,
-  },
-  quickSwitchScroll: {
-    flex: 1,
-  },
-  quickSwitchContent: {
-    gap: 8,
-    paddingRight: 8,
-  },
-  quickSwitchButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: macOSColors.background.input,
-    borderRadius: 8,
-    borderWidth: 1,
-    minWidth: 100,
-  },
-  quickSwitchButtonActive: {
-    backgroundColor: macOSColors.semantic.infoBackground,
-    borderColor: macOSColors.semantic.info + '60',
-  },
-  quickSwitchText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: macOSColors.text.primary,
-    fontFamily: 'monospace',
-    flex: 1,
-  },
-  quickSwitchBadge: {
-    backgroundColor: macOSColors.background.hover,
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  quickSwitchBadgeActive: {
-    backgroundColor: macOSColors.semantic.info + '30',
-  },
-  quickSwitchCount: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: macOSColors.text.secondary,
-  },
-  quickSwitchCountActive: {
-    color: macOSColors.semantic.info,
   },
 });

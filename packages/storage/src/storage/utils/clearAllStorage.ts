@@ -32,7 +32,6 @@ export async function clearAllAppStorage(): Promise<void> {
 
     // Successfully cleared app storage
   } catch (error) {
-    console.error("[Storage] Failed to clear storage:", error);
     throw error;
   }
 }
@@ -48,7 +47,6 @@ export async function clearAllStorageIncludingDevTools(): Promise<void> {
 
     // Successfully cleared all storage including dev tools
   } catch (error) {
-    console.error("[Storage] Failed to clear all storage:", error);
     throw error;
   }
 }

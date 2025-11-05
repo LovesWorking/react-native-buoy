@@ -131,18 +131,6 @@ export function StorageKeyCard({
   const storageTypeColor = getStorageTypeHexColor(storageKey.storageType);
   const storageTypeLabel = getStorageTypeLabel(storageKey.storageType);
 
-  // DEBUG: Log every MMKV key to see what's happening
-  if (storageKey.storageType === 'mmkv') {
-    console.log('[DEBUG StorageKeyCard] MMKV Key Detected:', {
-      key: storageKey.key,
-      storageType: storageKey.storageType,
-      instanceId: storageKey.instanceId,
-      hasInstanceId: !!storageKey.instanceId,
-      instanceIdType: typeof storageKey.instanceId,
-      color: storageKey.instanceId ? getInstanceColor(storageKey.instanceId) : '❌ NO INSTANCE ID',
-    });
-  }
-
   return (
     <View style={[styles.storageKeyCard, { borderColor: config.borderColor }]}>
       <TouchableOpacity

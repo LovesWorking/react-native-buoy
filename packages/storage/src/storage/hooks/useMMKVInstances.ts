@@ -119,7 +119,6 @@ export function useMMKVInstances(
 
       setInstances(instancesWithMetadata);
     } catch (error) {
-      console.error('[useMMKVInstances] Error fetching instances:', error);
       setInstances([]);
     } finally {
       setIsLoading(false);

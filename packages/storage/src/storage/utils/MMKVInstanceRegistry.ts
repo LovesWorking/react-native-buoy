@@ -246,13 +246,6 @@ export function registerMMKVInstance(
   const { mmkvListener } = require('./MMKVListener');
   mmkvListener.addInstance(instance, id);
   */
-
-  if (__DEV__) {
-    console.log(
-      `[React Buoy] Registered MMKV instance: ${id}`,
-      config?.encrypted ? '(encrypted)' : ''
-    );
-  }
 }
 
 /**
@@ -278,8 +271,4 @@ export function unregisterMMKVInstance(id: string): void {
 
   // Then remove from registry
   mmkvInstanceRegistry.unregister(id);
-
-  if (__DEV__) {
-    console.log(`[React Buoy] Unregistered MMKV instance: ${id}`);
-  }
 }

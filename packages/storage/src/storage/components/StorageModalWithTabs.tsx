@@ -402,7 +402,6 @@ export function StorageModalWithTabs({
               await clearAllAppStorage();
               // Refresh will be handled by GameUIStorageBrowser
             } catch (error) {
-              console.error("Failed to clear app storage:", error);
               Alert.alert("Error", "Failed to clear app storage");
             }
           },
@@ -415,7 +414,6 @@ export function StorageModalWithTabs({
               await clearAllStorageIncludingDevTools();
               // Refresh will be handled by GameUIStorageBrowser
             } catch (error) {
-              console.error("Failed to clear all storage:", error);
               Alert.alert("Error", "Failed to clear all storage");
             }
           },
@@ -447,7 +445,7 @@ export function StorageModalWithTabs({
         const keys = await AsyncStorage.getAllKeys();
         setAllStorageKeys([...keys].sort());
       } catch (error) {
-        console.error("Failed to fetch all storage keys:", error);
+        // Failed to fetch keys
       }
     };
 
