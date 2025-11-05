@@ -1,8 +1,16 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { macOSColors } from "@react-buoy/shared-ui";
+import { isMMKVAvailable } from "../utils/mmkvAvailability";
 
 export type StorageFilterType = "all" | "missing" | "issues";
 export type StorageTypeFilter = "all" | "async" | "mmkv" | "secure";
+
+// Feature flags - set to true when implemented
+const IS_MMKV_IMPLEMENTED = true; // ✅ MMKV support is now implemented
+const IS_SECURE_STORE_IMPLEMENTED = false;
+
+// Runtime availability checks
+const IS_MMKV_AVAILABLE = isMMKVAvailable();
 
 interface StorageFilterCardsProps {
   stats: {
@@ -283,7 +291,7 @@ export function StorageFilterCards({
                   : { color: macOSColors.text.muted },
               ]}
             >
-              {stats.secureCount || 0}
+              Coming Soon
             </Text>
           </TouchableOpacity>
         </View>

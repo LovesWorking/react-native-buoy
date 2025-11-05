@@ -24,6 +24,18 @@ import {
 } from "./StorageFilterCards";
 import { useAsyncStorageKeys } from "../hooks/useAsyncStorageKeys";
 import { addListener } from "../utils/AsyncStorageListener";
+import { useMMKVKeys } from "../hooks/useMMKVKeys";
+import { useMMKVInstances } from "../hooks/useMMKVInstances";
+import { MMKVInstanceSelector } from "./MMKVInstanceSelector";
+import { MMKVInstanceInfoPanel } from "./MMKVInstanceInfoPanel";
+import { isMMKVAvailable } from "../utils/mmkvAvailability";
+
+// Conditionally import MMKV listener
+let addMMKVListener: any;
+if (isMMKVAvailable()) {
+  const listener = require("../utils/MMKVListener");
+  addMMKVListener = listener.addMMKVListener;
+}
 
 // Import shared Game UI components
 import { gameUIColors, macOSColors } from "@react-buoy/shared-ui";
@@ -50,14 +62,72 @@ export function GameUIStorageBrowser({
   const [activeFilter, setActiveFilter] = useState<StorageFilterType>("all");
   const [activeStorageType, setActiveStorageType] =
     useState<StorageTypeFilter>("all");
+  const [selectedMMKVInstance, setSelectedMMKVInstance] = useState<
+    string | null
+  >(null);
 
-  // Use new direct AsyncStorage hook
+  // Auto-enable MMKV detection when component mounts (if MMKV is available)
+  useEffect(() => {
+    if (isMMKVAvailable()) {
+      try {
+        const { enableMMKVAutoDetection } = require("../utils/mmkvAutoDetection");
+        enableMMKVAutoDetection();
+      } catch (error) {
+        // Silently fail if auto-detection isn't available
+      }
+    }
+  }, []); // Run once on mount
+
+  // Get all MMKV instances
+  const { instances: mmkvInstances } = useMMKVInstances(false);
+
+  // Auto-select first MMKV instance if available and none selected
+  useEffect(() => {
+    if (mmkvInstances.length > 0 && !selectedMMKVInstance) {
+      setSelectedMMKVInstance(mmkvInstances[0].id);
+    }
+  }, [mmkvInstances, selectedMMKVInstance]);
+
+  // Use AsyncStorage hook
   const {
-    storageKeys: allStorageKeys,
-    isLoading,
-    error,
-    refresh,
+    storageKeys: asyncStorageKeys,
+    isLoading: isLoadingAsync,
+    error: asyncError,
+    refresh: refreshAsync,
   } = useAsyncStorageKeys(requiredStorageKeys);
+
+  // Use MMKV hook (only when instance is selected)
+  const selectedInstance = mmkvInstances.find(
+    (inst) => inst.id === selectedMMKVInstance
+  )?.instance;
+
+  const {
+    storageKeys: mmkvStorageKeys,
+    isLoading: isLoadingMMKV,
+    error: mmkvError,
+    refresh: refreshMMKV,
+  } = useMMKVKeys(
+    selectedInstance || null,
+    selectedMMKVInstance || "mmkv.default",
+    requiredStorageKeys
+  );
+
+  // Merge storage keys from AsyncStorage and MMKV
+  const allStorageKeys = useMemo(() => {
+    return [...asyncStorageKeys, ...mmkvStorageKeys];
+  }, [asyncStorageKeys, mmkvStorageKeys]);
+
+  // Determine loading and error states
+  const isLoading = isLoadingAsync || isLoadingMMKV;
+  const error = asyncError || mmkvError;
+
+  // Combined refresh function
+  const refresh = useCallback(() => {
+    refreshAsync();
+    if (selectedInstance) {
+      refreshMMKV();
+    }
+  }, [refreshAsync, refreshMMKV, selectedInstance]);
 
   // Update storage data ref for copy functionality
   useEffect(() => {
@@ -66,15 +136,14 @@ export function GameUIStorageBrowser({
     }
   }, [allStorageKeys, storageDataRef]);
 
-  // Auto-refresh on storage events
+  // Auto-refresh on storage events (AsyncStorage)
   useEffect(() => {
-    // Debounce to avoid multiple rapid refreshes
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const unsubscribe = addListener((event) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        refresh(); // Auto-refresh when storage changes
+        refreshAsync(); // Auto-refresh AsyncStorage when it changes
       }, 100); // 100ms debounce
     });
 
@@ -82,9 +151,33 @@ export function GameUIStorageBrowser({
       clearTimeout(timeoutId);
       unsubscribe();
     };
-  }, [refresh]);
+  }, [refreshAsync]);
 
-  // Calculate stats from keys (filter out dev tool keys in the calculation)
+  // Auto-refresh on MMKV storage events (only if MMKV is available)
+  useEffect(() => {
+    if (!isMMKVAvailable() || !addMMKVListener) {
+      return; // Skip if MMKV not available
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const unsubscribe = addMMKVListener((event: any) => {
+      // Only refresh if event is for the selected instance
+      if (event.instanceId === selectedMMKVInstance) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          refreshMMKV(); // Auto-refresh MMKV when it changes
+        }, 100); // 100ms debounce
+      }
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
+  }, [refreshMMKV, selectedMMKVInstance]);
+
+  // Calculate stats from ALL keys (not filtered) - for storage type tab badges
   const stats = useMemo(() => {
     const allKeys = allStorageKeys;
     const appKeys = allKeys.filter((k) => !isDevToolsStorageKey(k.key));
@@ -104,9 +197,10 @@ export function GameUIStorageBrowser({
         (k) => k.status === "required_present"
       ).length,
       optionalCount: appKeys.filter((k) => k.category === "optional").length,
-      mmkvCount: 0, // Will be populated when MMKV is added
-      asyncCount: appKeys.length,
-      secureCount: 0, // Will be populated when SecureStore is added
+      // Count keys by their actual storageType property
+      mmkvCount: allKeys.filter((k) => k.storageType === "mmkv").length,
+      asyncCount: allKeys.filter((k) => k.storageType === "async").length,
+      secureCount: allKeys.filter((k) => k.storageType === "secure").length,
       devToolsCount: devKeys.length,
     };
 
@@ -271,7 +365,7 @@ export function GameUIStorageBrowser({
 
       {/* Filter Cards Section with integrated status */}
       <StorageFilterCards
-        stats={filteredStats}
+        stats={stats}
         healthPercentage={healthPercentage}
         healthStatus={healthStatus}
         healthColor={healthColor}
@@ -280,6 +374,19 @@ export function GameUIStorageBrowser({
         activeStorageType={activeStorageType}
         onStorageTypeChange={setActiveStorageType}
       />
+
+      {/* MMKV Instance Selector - Only show when MMKV-only filter is active and no instances */}
+      {activeStorageType === "mmkv" && mmkvInstances.length === 0 && (
+        <View style={styles.emptyMMKVState}>
+          <Text style={styles.emptyMMKVTitle}>No MMKV Instances Detected</Text>
+          <Text style={styles.emptyMMKVSubtitle}>
+            MMKV instances must be registered with registerMMKVInstance()
+          </Text>
+          <Text style={styles.emptyMMKVCode}>
+            {`import { registerMMKVInstance } from '@react-buoy/storage';\n\nconst storage = createMMKV();\nregisterMMKVInstance('mmkv.default', storage);`}
+          </Text>
+        </View>
+      )}
 
       {/* Filtered Storage Keys */}
       {filteredKeys.length > 0 ? (
@@ -420,6 +527,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: macOSColors.text.secondary,
     textAlign: "center",
+  },
+
+  // Empty MMKV state
+  emptyMMKVState: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    marginTop: 8,
+    alignItems: "center",
+  },
+  emptyMMKVTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: macOSColors.text.primary,
+    marginBottom: 6,
+  },
+  emptyMMKVSubtitle: {
+    fontSize: 12,
+    color: macOSColors.text.secondary,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  emptyMMKVCode: {
+    fontSize: 10,
+    fontFamily: "monospace",
+    color: macOSColors.semantic.info,
+    backgroundColor: macOSColors.background.input,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    alignSelf: "stretch",
   },
   clearSearchButton: {
     marginTop: 16,
