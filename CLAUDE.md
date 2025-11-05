@@ -131,7 +131,33 @@ pnpm run release:publish
 
 ## Testing Changes
 
-Before committing:
+### In the Example App
+
+The `example/` directory contains an Expo Go app for quick testing:
+
+```bash
+pnpm run start        # Start Metro
+pnpm run ios         # Run on iOS
+pnpm run android     # Run on Android
+```
+
+### In a Development Build App
+
+To test packages in a development build (e.g., `wb-mobile-app`) with native dependencies:
+
+```bash
+# Link packages for local development (one-time setup)
+./scripts/link-to-dev-app.sh
+
+# Make changes in packages - they'll hot reload in the dev app!
+
+# When done testing, unlink
+./scripts/unlink-from-dev-app.sh
+```
+
+See [DEV_LINKING_GUIDE.md](./DEV_LINKING_GUIDE.md) for full documentation.
+
+### Before Committing
 
 ```bash
 # 1. Build all packages

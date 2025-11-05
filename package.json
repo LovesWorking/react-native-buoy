@@ -46,6 +46,8 @@
     "release:publish": "pnpm run build:packages && pnpm changeset publish",
     "release": "bash scripts/release.sh",
     "release:all": "bash scripts/release-all.sh",
+    "link:dev": "bash scripts/link-to-dev-app.sh",
+    "unlink:dev": "bash scripts/unlink-from-dev-app.sh",
     "claude": "claude --dangerously-skip-permissions"
   },
   "devDependencies": {
