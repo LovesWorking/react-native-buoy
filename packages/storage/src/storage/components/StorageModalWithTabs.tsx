@@ -800,18 +800,7 @@ export function StorageModalWithTabs({
                       }
                     />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleCopyStorage}
-                    style={styles.iconButton}
-                  >
-                    <Copy size={14} color={macOSColors.text.secondary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handlePurgeStorage}
-                    style={styles.iconButton}
-                  >
-                    <Trash2 size={14} color={macOSColors.semantic.error} />
-                  </TouchableOpacity>
+                  {/* Copy and Delete buttons moved to StorageActionButtons component */}
                 </>
               )}
               {activeTab === "events" && (

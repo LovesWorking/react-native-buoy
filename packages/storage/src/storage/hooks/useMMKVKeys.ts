@@ -243,17 +243,6 @@ export function useMMKVKeys(
       });
 
       setStorageKeys(allStorageKeys);
-
-      // DEBUG: Log first few keys to verify instanceId is set
-      console.log('[DEBUG useMMKVKeys] Fetched MMKV keys:', {
-        instanceId,
-        totalKeys: allStorageKeys.length,
-        sampleKeys: allStorageKeys.slice(0, 3).map(k => ({
-          key: k.key,
-          instanceId: k.instanceId,
-          storageType: k.storageType,
-        })),
-      });
     } catch (err) {
       setError(
         err instanceof Error ? err : new Error('Failed to fetch MMKV storage data')

@@ -182,52 +182,68 @@ class MMKVListener {
       return;
     }
 
-    // Store original methods
+    // Store original methods with safety checks
     const originalMethods = {
-      set: instance.set.bind(instance),
-      setNumber: instance.set.bind(instance) as MMKVSetNumber,
-      setBoolean: instance.set.bind(instance) as MMKVSetBoolean,
-      setBuffer: instance.set.bind(instance) as MMKVSetBuffer,
-      delete: instance.delete.bind(instance),
-      clearAll: instance.clearAll.bind(instance),
-      getString: instance.getString.bind(instance),
-      getNumber: instance.getNumber.bind(instance),
-      getBoolean: instance.getBoolean.bind(instance),
-      getBuffer: instance.getBuffer.bind(instance),
+      set: instance.set?.bind?.(instance) || instance.set,
+      setNumber: (instance.set?.bind?.(instance) as MMKVSetNumber) || instance.set,
+      setBoolean: (instance.set?.bind?.(instance) as MMKVSetBoolean) || instance.set,
+      setBuffer: (instance.set?.bind?.(instance) as MMKVSetBuffer) || instance.set,
+      delete: instance.delete?.bind?.(instance) || instance.delete,
+      clearAll: instance.clearAll?.bind?.(instance) || instance.clearAll,
+      getString: instance.getString?.bind?.(instance) || instance.getString,
+      getNumber: instance.getNumber?.bind?.(instance) || instance.getNumber,
+      getBoolean: instance.getBoolean?.bind?.(instance) || instance.getBoolean,
+      getBuffer: instance.getBuffer?.bind?.(instance) || instance.getBuffer,
     };
 
     // PART 1: Set up MMKV's native listener (for write operations)
     // This fires whenever a key is written or deleted
-    const nativeListenerUnsubscribe = instance.addOnValueChangedListener((key: string) => {
-      // Ignore dev tools keys
-      if (this.shouldIgnoreKey(key)) return;
+    // Note: addOnValueChangedListener might not be available on all MMKV instances (e.g., encrypted)
+    let nativeListenerUnsubscribe: (() => void) | undefined;
 
-      // Detect the value type
-      const { value, type } = detectMMKVType(instance, key);
+    if (typeof instance.addOnValueChangedListener === 'function') {
+      try {
+        nativeListenerUnsubscribe = instance.addOnValueChangedListener((key: string) => {
+          // Ignore dev tools keys
+          if (this.shouldIgnoreKey(key)) return;
 
-      // Emit event (note: we can't distinguish which set method was used)
-      // We detect type after the fact
-      this.emit({
-        action:
-          type === 'string'
-            ? 'set.string'
-            : type === 'number'
-              ? 'set.number'
-              : type === 'boolean'
-                ? 'set.boolean'
-                : type === 'buffer'
-                  ? 'set.buffer'
-                  : 'set.string', // fallback
-        timestamp: new Date(),
-        instanceId,
-        data: {
-          key,
-          value,
-          valueType: type,
-          success: true,
-        },
-      });
-    });
+          // Detect the value type
+          const { value, type } = detectMMKVType(instance, key);
+
+          // Emit event (note: we can't distinguish which set method was used)
+          // We detect type after the fact
+          this.emit({
+            action:
+              type === 'string'
+                ? 'set.string'
+                : type === 'number'
+                  ? 'set.number'
+                  : type === 'boolean'
+                    ? 'set.boolean'
+                    : type === 'buffer'
+                      ? 'set.buffer'
+                      : 'set.string', // fallback
+            timestamp: new Date(),
+            instanceId,
+            data: {
+              key,
+              value,
+              valueType: type,
+              success: true,
+            },
+          });
+        });
+      } catch (error) {
+        console.warn(
+          `[MMKVListener] Could not add native listener for instance "${instanceId}":`,
+          error
+        );
+      }
+    } else {
+      console.log(
+        `[MMKVListener] Instance "${instanceId}" does not support addOnValueChangedListener. Using method wrapping only.`
+      );
+    }
 
     // PART 2: Wrap set methods for immediate type information
     // Native listener can't tell us which set method was called, so we wrap them

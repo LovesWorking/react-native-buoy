@@ -2,11 +2,13 @@
 
 [![npm](https://img.shields.io/npm/v/@react-buoy%2Fstorage)](https://www.npmjs.com/package/@react-buoy/storage)
 
-AsyncStorage browser and monitoring tool for React Native development.
+Storage browser and monitoring tool for React Native development. Supports both AsyncStorage and MMKV.
 
 ## Features
 
-- **Storage Browser**: Browse all AsyncStorage keys and values
+- **Storage Browser**: Browse all AsyncStorage and MMKV keys and values
+- **MMKV Support**: Monitor and debug MMKV instances (including encrypted storage)
+- **Multiple Storage Types**: Support for AsyncStorage, MMKV, and multiple MMKV instances
 - **Live Event Monitoring**: Track all storage operations in real-time
 - **Edit & Delete**: Modify or remove storage items directly
 - **Add New Items**: Create new storage entries
@@ -24,11 +26,21 @@ This package is part of the React Buoy monorepo and is automatically available t
 For external projects:
 
 ```bash
+# Required: Core storage package and AsyncStorage
 npm install @react-buoy/storage @react-native-async-storage/async-storage
-# or
+
+# Optional: MMKV support (recommended for better performance)
+npm install react-native-mmkv
+```
+
+Or with pnpm/yarn:
+
+```bash
+# Required
 pnpm add @react-buoy/storage @react-native-async-storage/async-storage
-# or
-yarn add @react-buoy/storage @react-native-async-storage/async-storage
+
+# Optional: MMKV support
+pnpm add react-native-mmkv
 ```
 
 ## Quick Start
@@ -130,6 +142,189 @@ function App() {
     </>
   );
 }
+```
+
+## MMKV Support
+
+React Buoy Storage fully supports [react-native-mmkv](https://github.com/mrousavy/react-native-mmkv), a fast, efficient storage solution for React Native.
+
+### Why MMKV?
+
+- **10x faster** than AsyncStorage
+- **Synchronous API** - no async/await needed
+- **Encryption support** - built-in AES encryption
+- **Multi-process support** - share data between extensions
+- **Small bundle size** - ~30KB
+
+### Setup Requirements
+
+**⚠️ IMPORTANT:** Manual registration is **required** for MMKV v4. Auto-detection is not possible due to Metro bundler and ES6 module limitations.
+
+You must call `registerMMKVInstance()` for each MMKV instance you want to monitor in the DevTools.
+
+### Basic MMKV Setup
+
+```typescript
+import { createMMKV } from 'react-native-mmkv';
+import { registerMMKVInstance } from '@react-buoy/storage';
+
+// 1. Create your MMKV instance
+export const storage = createMMKV({
+  id: 'mmkv.default'
+});
+
+// 2. Register it with DevTools (required!)
+registerMMKVInstance('mmkv.default', storage);
+```
+
+**That's it!** Your MMKV instance is now visible in the Storage DevTools.
+
+### Encrypted MMKV Setup
+
+```typescript
+import { createMMKV } from 'react-native-mmkv';
+import { registerMMKVInstance } from '@react-buoy/storage';
+
+// Create encrypted instance
+export const secureStorage = createMMKV({
+  id: 'secure-storage',
+  encryptionKey: 'my-encryption-key'
+});
+
+// Register with encrypted flag
+registerMMKVInstance('secure-storage', secureStorage, {
+  encrypted: true
+});
+```
+
+### Multiple MMKV Instances
+
+You can create and monitor multiple MMKV instances for different purposes:
+
+```typescript
+import { createMMKV } from 'react-native-mmkv';
+import { registerMMKVInstance } from '@react-buoy/storage';
+
+// User preferences
+export const userPrefs = createMMKV({ id: 'user-prefs' });
+registerMMKVInstance('user-prefs', userPrefs);
+
+// API cache
+export const apiCache = createMMKV({ id: 'api-cache' });
+registerMMKVInstance('api-cache', apiCache);
+
+// Secure auth storage
+export const authStorage = createMMKV({
+  id: 'auth',
+  encryptionKey: process.env.ENCRYPTION_KEY
+});
+registerMMKVInstance('auth', authStorage, { encrypted: true });
+```
+
+### MMKV with FloatingDevTools
+
+Once registered, MMKV instances automatically appear in the Storage Browser:
+
+```typescript
+import { FloatingDevTools } from '@react-buoy/core';
+import { storageToolPreset } from '@react-buoy/storage';
+import './mmkv-setup'; // Import your MMKV setup file
+
+function App() {
+  return (
+    <FloatingDevTools
+      apps={[storageToolPreset]}
+      environment="local"
+      userRole="admin"
+    />
+  );
+}
+```
+
+The Storage Browser will show:
+- All your MMKV instances (default, user-prefs, api-cache, auth, etc.)
+- All AsyncStorage keys
+- Real-time updates when data changes
+- Ability to edit, delete, and add keys
+
+### MMKV Registration API
+
+#### `registerMMKVInstance(id, instance, config?)`
+
+Register an MMKV instance with DevTools for monitoring and debugging.
+
+**Parameters:**
+- `id` (string) - Unique identifier for this instance (should match the `id` used in `createMMKV`)
+- `instance` (MMKV) - The MMKV instance returned from `createMMKV()`
+- `config` (optional) - Configuration object
+  - `encrypted` (boolean) - Set to `true` if instance uses encryption
+
+**Returns:** `void`
+
+**Example:**
+```typescript
+import { createMMKV } from 'react-native-mmkv';
+import { registerMMKVInstance } from '@react-buoy/storage';
+
+const storage = createMMKV({ id: 'my-storage' });
+registerMMKVInstance('my-storage', storage);
+```
+
+#### `unregisterMMKVInstance(id)`
+
+Unregister an MMKV instance from DevTools monitoring. Typically not needed unless you're dynamically creating/destroying instances.
+
+**Parameters:**
+- `id` (string) - The instance ID to unregister
+
+**Returns:** `void`
+
+**Example:**
+```typescript
+import { unregisterMMKVInstance } from '@react-buoy/storage';
+
+unregisterMMKVInstance('my-storage');
+```
+
+### Why Manual Registration?
+
+Auto-detection is fundamentally impossible for MMKV v4 due to:
+
+1. **ES6 Module Exports are Sealed** - Cannot monkey-patch `createMMKV` function
+2. **Metro Bundler Limitations** - No access to `require.cache` or module interception
+3. **Nitro Modules Architecture** - MMKV instances created in native C++ layer
+
+Manual registration is a simple one-line call per instance and provides explicit control over what's monitored.
+
+### MMKV Best Practices
+
+**Recommended structure:**
+
+```typescript
+// utils/storage.ts
+import { createMMKV } from 'react-native-mmkv';
+import { registerMMKVInstance } from '@react-buoy/storage';
+
+export const storage = createMMKV({ id: 'mmkv.default' });
+export const secureStorage = createMMKV({
+  id: 'secure',
+  encryptionKey: 'your-key'
+});
+
+if (__DEV__) {
+  registerMMKVInstance('mmkv.default', storage);
+  registerMMKVInstance('secure', secureStorage, { encrypted: true });
+}
+```
+
+Then import in your app:
+
+```typescript
+import { storage, secureStorage } from './utils/storage';
+
+// Use anywhere in your app
+storage.set('user.name', 'John Doe');
+secureStorage.set('auth.token', 'secret-token');
 ```
 
 ## API Reference
@@ -236,8 +431,8 @@ interface RequiredStorageKey {
   expectedType?: "string" | "number" | "boolean" | "object" | "array";
   /** Expected value */
   expectedValue?: any;
-  /** Storage type (always "async" for AsyncStorage) */
-  storageType: "async";
+  /** Storage type: "async" for AsyncStorage, "mmkv" for MMKV, "secure" for Secure Storage */
+  storageType: "async" | "mmkv" | "secure";
   /** Whether the key is required */
   required?: boolean;
 }
@@ -376,6 +571,7 @@ Required storage keys can be validated for:
 
 - `@react-buoy/shared-ui` - Common UI components and utilities
 - `@react-native-async-storage/async-storage` - AsyncStorage implementation (peer dependency)
+- `react-native-mmkv` - MMKV storage implementation (optional peer dependency)
 - React and React Native (peer dependencies)
 
 ## Development
