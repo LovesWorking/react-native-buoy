@@ -1,5 +1,3 @@
 packages:
   - packages/*
   - example
-patchedDependencies:
-  '@changesets/cli': patches/@changesets+cli@2.29.7.patch
