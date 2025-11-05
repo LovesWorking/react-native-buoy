@@ -94,7 +94,12 @@ export function StorageFilterCards({
           <Text
             style={[
               styles.filterValue,
-              { color: stats.missingCount > 0 ? macOSColors.semantic.error : macOSColors.text.muted }
+              {
+                color:
+                  stats.missingCount > 0
+                    ? macOSColors.semantic.error
+                    : macOSColors.text.muted,
+              },
             ]}
           >
             {stats.missingCount}
@@ -120,7 +125,12 @@ export function StorageFilterCards({
           <Text
             style={[
               styles.filterValue,
-              { color: issuesCount > 0 ? macOSColors.semantic.warning : macOSColors.text.muted },
+              {
+                color:
+                  issuesCount > 0
+                    ? macOSColors.semantic.warning
+                    : macOSColors.text.muted,
+              },
             ]}
           >
             {issuesCount}
@@ -161,8 +171,12 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "all" && { color: macOSColors.text.primary },
-                activeStorageType !== "all" && { color: macOSColors.text.muted },
+                activeStorageType === "all" && {
+                  color: macOSColors.text.primary,
+                },
+                activeStorageType !== "all" && {
+                  color: macOSColors.text.muted,
+                },
               ]}
             >
               {stats.totalCount}
@@ -198,9 +212,9 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "async" ? 
-                  { color: macOSColors.semantic.warning } : 
-                  { color: macOSColors.text.muted },
+                activeStorageType === "async"
+                  ? { color: macOSColors.semantic.warning }
+                  : { color: macOSColors.text.muted },
               ]}
             >
               {stats.asyncCount || 0}
@@ -236,9 +250,9 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "mmkv" ? 
-                  { color: macOSColors.semantic.info } : 
-                  { color: macOSColors.text.muted },
+                activeStorageType === "mmkv"
+                  ? { color: macOSColors.semantic.info }
+                  : { color: macOSColors.text.muted },
               ]}
             >
               {stats.mmkvCount || 0}
@@ -274,9 +288,9 @@ export function StorageFilterCards({
             <Text
               style={[
                 styles.typePillValue,
-                activeStorageType === "secure" ? 
-                  { color: macOSColors.semantic.success } : 
-                  { color: macOSColors.text.muted },
+                activeStorageType === "secure"
+                  ? { color: macOSColors.semantic.success }
+                  : { color: macOSColors.text.muted },
               ]}
             >
               {stats.secureCount || 0}
@@ -346,8 +360,8 @@ const styles = StyleSheet.create({
     backgroundColor: macOSColors.background.input,
     overflow: "hidden",
   },
-  healthProgressFill: { 
-    height: 3, 
+  healthProgressFill: {
+    height: 3,
     borderRadius: 1.5,
   },
 
@@ -355,10 +369,10 @@ const styles = StyleSheet.create({
   filtersRow: { flexDirection: "row", gap: 10 },
   filterChip: {
     flex: 1,
-    backgroundColor: macOSColors.background.input,
+    backgroundColor: macOSColors.background.input + "80",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: macOSColors.border.default + "40",
+    borderColor: macOSColors.border.default + "30",
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: "center",

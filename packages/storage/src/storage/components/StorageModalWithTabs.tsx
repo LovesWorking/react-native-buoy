@@ -32,7 +32,7 @@ import {
 } from "@react-buoy/shared-ui";
 import { RequiredStorageKey } from "../types";
 import { StorageBrowserMode } from "./StorageBrowserMode";
-import { clearAllAppStorage } from "../utils/clearAllStorage";
+import { clearAllAppStorage, clearAllStorageIncludingDevTools } from "../utils/clearAllStorage";
 import {
   startListening,
   stopListening,
@@ -103,7 +103,7 @@ export function StorageModalWithTabs({
   const [selectedEventIndex, setSelectedEventIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(
-    new Set(["@RNAsyncStorage", "redux-persist", "@react_buoy", "persist:"])
+    new Set(["@RNAsyncStorage", "redux-persist", "persist:"]) // Only show @react_buoy events by default
   );
   const lastEventRef = useRef<AsyncStorageEvent | null>(null);
   const hasLoadedFilters = useRef(false);
@@ -352,19 +352,31 @@ export function StorageModalWithTabs({
   const handlePurgeStorage = useCallback(async () => {
     Alert.alert(
       "Clear Storage",
-      "This will clear all app storage data. Continue?",
+      "Choose what to clear:",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Clear",
-          style: "destructive",
+          text: "Clear App Storage",
           onPress: async () => {
             try {
               await clearAllAppStorage();
               // Refresh will be handled by GameUIStorageBrowser
             } catch (error) {
-              console.error("Failed to clear storage:", error);
-              Alert.alert("Error", "Failed to clear storage");
+              console.error("Failed to clear app storage:", error);
+              Alert.alert("Error", "Failed to clear app storage");
+            }
+          },
+        },
+        {
+          text: "Clear All (Including Dev Tools)",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllStorageIncludingDevTools();
+              // Refresh will be handled by GameUIStorageBrowser
+            } catch (error) {
+              console.error("Failed to clear all storage:", error);
+              Alert.alert("Error", "Failed to clear all storage");
             }
           },
         },
@@ -386,16 +398,35 @@ export function StorageModalWithTabs({
     return "undefined";
   };
 
-  // Get all unique keys from events (including filtered ones for filter view)
+  // Get all unique keys from events AND from AsyncStorage for filter view
+  const [allStorageKeys, setAllStorageKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchAllKeys = async () => {
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        setAllStorageKeys([...keys].sort());
+      } catch (error) {
+        console.error("Failed to fetch all storage keys:", error);
+      }
+    };
+
+    // Fetch all keys for both tabs when visible
+    if (visible) {
+      fetchAllKeys();
+    }
+  }, [visible]);
+
   const allEventKeys = useMemo(() => {
-    const keys = new Set<string>();
+    // Combine storage keys with event keys for comprehensive filter view
+    const keys = new Set<string>(allStorageKeys);
     events.forEach((event) => {
       if (event.data?.key) {
         keys.add(event.data.key);
       }
     });
     return Array.from(keys).sort();
-  }, [events]);
+  }, [events, allStorageKeys]);
 
   // Group events by key and create conversations
   const conversations = useMemo(() => {
@@ -534,7 +565,7 @@ export function StorageModalWithTabs({
             ignoredPatterns={storageIgnoredPatterns}
             onTogglePattern={handleToggleStoragePattern}
             onAddPattern={handleAddStoragePattern}
-            availableKeys={[]} // Will be populated by GameUIStorageBrowser
+            availableKeys={allStorageKeys}
           />
         );
       }
