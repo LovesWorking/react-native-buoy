@@ -410,6 +410,7 @@ Real-time storage browser for AsyncStorage, MMKV, and SecureStore with live upda
 ```bash
 npm install @react-buoy/storage
 npm install @react-native-async-storage/async-storage  # peer dependency
+npm install react-native-mmkv  # optional - for MMKV support
 ```
 
 ### Features
@@ -423,9 +424,37 @@ npm install @react-native-async-storage/async-storage  # peer dependency
 
 ### Supports Multiple Storage Types
 
-- **AsyncStorage**: React Native standard
-- **MMKV**: Encrypted, faster alternative
-- **SecureStore**: iOS Keychain / Android Keystore
+- **AsyncStorage**: React Native standard (auto-detected)
+- **MMKV**: Encrypted, faster alternative (requires registration)
+- **SecureStore**: iOS Keychain / Android Keystore (coming soon)
+
+### MMKV Setup (react-native-mmkv v4+)
+
+MMKV instances need to be manually registered:
+
+```tsx
+import { createMMKV } from "react-native-mmkv";
+import { registerMMKVInstance } from "@react-buoy/storage";
+
+// Create your MMKV instances
+export const storage = createMMKV({ id: "mmkv.default" });
+export const authStorage = createMMKV({
+  id: "auth.storage",
+  encryptionKey: "your-encryption-key",
+});
+
+// Register them with the storage dev tool
+try {
+  registerMMKVInstance("mmkv.default", storage);
+  registerMMKVInstance("auth.storage", authStorage, { encrypted: true });
+} catch {
+  // Storage package not installed - that's fine
+}
+```
+
+**Why?** react-native-mmkv v4 uses read-only exports which prevents automatic detection. Manual registration is a one-time setup per instance.
+
+**Note:** Registration is safe in production - it only takes effect when `<FloatingDevTools />` is rendered.
 
 </details>
 
