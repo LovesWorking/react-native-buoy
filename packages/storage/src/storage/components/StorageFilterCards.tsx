@@ -43,16 +43,6 @@ export function StorageFilterCards({
     <View style={styles.container}>
       {/* Status Filters */}
       <View style={styles.filtersRow}>
-        {/* Total Keys - non-interactive display */}
-        <View style={styles.filterChip}>
-          <Text
-            style={[styles.filterValue, { color: macOSColors.text.primary }]}
-          >
-            {stats.totalCount}
-          </Text>
-          <Text style={styles.filterLabel}>Keys</Text>
-        </View>
-
         <TouchableOpacity
           style={[
             styles.filterChip,

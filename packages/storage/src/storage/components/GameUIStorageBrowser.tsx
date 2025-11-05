@@ -1,4 +1,11 @@
-import { useMemo, useCallback, useState, useEffect, useRef, MutableRefObject } from "react";
+import {
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  MutableRefObject,
+} from "react";
 import {
   StyleSheet,
   Text,
@@ -19,10 +26,7 @@ import { useAsyncStorageKeys } from "../hooks/useAsyncStorageKeys";
 import { addListener } from "../utils/AsyncStorageListener";
 
 // Import shared Game UI components
-import {
-  gameUIColors,
-  macOSColors,
-} from "@react-buoy/shared-ui";
+import { gameUIColors, macOSColors } from "@react-buoy/shared-ui";
 
 interface GameUIStorageBrowserProps {
   requiredStorageKeys?: RequiredStorageKey[];
@@ -48,9 +52,12 @@ export function GameUIStorageBrowser({
     useState<StorageTypeFilter>("all");
 
   // Use new direct AsyncStorage hook
-  const { storageKeys: allStorageKeys, isLoading, error, refresh } = useAsyncStorageKeys(
-    requiredStorageKeys
-  );
+  const {
+    storageKeys: allStorageKeys,
+    isLoading,
+    error,
+    refresh,
+  } = useAsyncStorageKeys(requiredStorageKeys);
 
   // Update storage data ref for copy functionality
   useEffect(() => {
@@ -86,13 +93,16 @@ export function GameUIStorageBrowser({
     const storageStats: StorageKeyStats & { devToolsCount: number } = {
       totalCount: allKeys.length,
       requiredCount: appKeys.filter((k) => k.category === "required").length,
-      missingCount: appKeys.filter((k) => k.status === "required_missing").length,
-      wrongValueCount: appKeys.filter((k) => k.status === "required_wrong_value")
+      missingCount: appKeys.filter((k) => k.status === "required_missing")
         .length,
+      wrongValueCount: appKeys.filter(
+        (k) => k.status === "required_wrong_value"
+      ).length,
       wrongTypeCount: appKeys.filter((k) => k.status === "required_wrong_type")
         .length,
-      presentRequiredCount: appKeys.filter((k) => k.status === "required_present")
-        .length,
+      presentRequiredCount: appKeys.filter(
+        (k) => k.status === "required_present"
+      ).length,
       optionalCount: appKeys.filter((k) => k.category === "optional").length,
       mmkvCount: 0, // Will be populated when MMKV is added
       asyncCount: appKeys.length,
@@ -169,7 +179,13 @@ export function GameUIStorageBrowser({
     }
 
     return keys;
-  }, [sortedKeys, activeFilter, activeStorageType, ignoredPatterns, searchQuery]);
+  }, [
+    sortedKeys,
+    activeFilter,
+    activeStorageType,
+    ignoredPatterns,
+    searchQuery,
+  ]);
 
   // Calculate stats from FILTERED keys to show actual visible counts
   const filteredStats = useMemo(() => {
@@ -178,18 +194,23 @@ export function GameUIStorageBrowser({
     const storageStats: StorageKeyStats & { devToolsCount: number } = {
       totalCount: filteredKeys.length,
       requiredCount: appKeys.filter((k) => k.category === "required").length,
-      missingCount: appKeys.filter((k) => k.status === "required_missing").length,
-      wrongValueCount: appKeys.filter((k) => k.status === "required_wrong_value")
+      missingCount: appKeys.filter((k) => k.status === "required_missing")
         .length,
+      wrongValueCount: appKeys.filter(
+        (k) => k.status === "required_wrong_value"
+      ).length,
       wrongTypeCount: appKeys.filter((k) => k.status === "required_wrong_type")
         .length,
-      presentRequiredCount: appKeys.filter((k) => k.status === "required_present")
-        .length,
+      presentRequiredCount: appKeys.filter(
+        (k) => k.status === "required_present"
+      ).length,
       optionalCount: appKeys.filter((k) => k.category === "optional").length,
       mmkvCount: filteredKeys.filter((k) => k.storageType === "mmkv").length,
       asyncCount: filteredKeys.filter((k) => k.storageType === "async").length,
-      secureCount: filteredKeys.filter((k) => k.storageType === "secure").length,
-      devToolsCount: filteredKeys.filter((k) => isDevToolsStorageKey(k.key)).length,
+      secureCount: filteredKeys.filter((k) => k.storageType === "secure")
+        .length,
+      devToolsCount: filteredKeys.filter((k) => isDevToolsStorageKey(k.key))
+        .length,
     };
 
     return storageStats;
@@ -216,7 +237,6 @@ export function GameUIStorageBrowser({
       : healthPercentage >= 70
       ? gameUIColors.warning
       : gameUIColors.error;
-
 
   // Loading state
   if (isLoading && allStorageKeys.length === 0) {
@@ -267,7 +287,7 @@ export function GameUIStorageBrowser({
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               {activeFilter === "all"
-                ? "VALID STORAGE KEYS"
+                ? "KEYS"
                 : activeFilter === "missing"
                 ? "MISSING KEYS"
                 : "ISSUES TO FIX"}
