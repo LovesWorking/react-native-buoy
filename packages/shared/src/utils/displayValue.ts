@@ -1,8 +1,8 @@
-import { serialize, deserialize } from "superjson";
+import { serialize, deserialize } from "./minimalSuperJSON";
 
 /**
  * Displays a string regardless the type of the data
- * Uses SuperJSON to properly serialize complex objects, avoiding [object Object].
+ * Uses minimal SuperJSON to properly serialize complex objects, avoiding [object Object].
  * @param {unknown} value Value to be stringified
  * @param {boolean} beautify Formats json to multiline
  */
@@ -12,7 +12,7 @@ export const displayValue = (value: unknown, beautify: boolean = false) => {
 };
 
 /**
- * Parses a string that was serialized with displayValue/SuperJSON.
+ * Parses a string that was serialized with displayValue/minimal SuperJSON.
  * Properly deserializes complex types like Date, RegExp, Map, Set, etc.
  *
  * @param value - The string to parse

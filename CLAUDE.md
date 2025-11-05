@@ -44,7 +44,8 @@ rn-buoy/
 │   ├── react-query/   # React Query devtools
 │   ├── route-events/  # Navigation tracking
 │   └── debug-borders/ # Visual debug borders
-└── example/           # Example React Native app
+├── example/           # Example app (Expo Go)
+└── example-dev-build/ # Example app (Development Build)
 ```
 
 ## Build System
@@ -65,10 +66,18 @@ pnpm install
 # Build all packages
 pnpm run build
 
-# Run the example app
-pnpm run start        # Metro bundler
-pnpm run ios         # iOS simulator
-pnpm run android     # Android emulator
+# Run the example apps (interactive - choose Expo Go or Dev Build)
+pnpm run start        # Metro bundler (prompts for choice)
+pnpm run ios         # iOS simulator (prompts for choice)
+pnpm run android     # Android emulator (prompts for choice)
+
+# Run specific example app directly
+pnpm run start:go    # Run Expo Go app
+pnpm run start:dev   # Run Development Build app
+pnpm run ios:go      # Run Expo Go on iOS
+pnpm run ios:dev     # Run Dev Build on iOS
+pnpm run android:go  # Run Expo Go on Android
+pnpm run android:dev # Run Dev Build on Android
 
 # Type checking (safe - doesn't emit files)
 pnpm run typecheck
@@ -131,19 +140,34 @@ pnpm run release:publish
 
 ## Testing Changes
 
-### In the Example App
+### In the Example Apps
 
-The `example/` directory contains an Expo Go app for quick testing:
+We have two example apps for testing:
+
+1. **`example/` - Expo Go App**
+   - For testing packages without native dependencies
+   - Fastest testing workflow - just scan QR code
+   - Use when testing pure JavaScript/TypeScript changes
+
+2. **`example-dev-build/` - Development Build App**
+   - For testing packages WITH native dependencies
+   - Requires building native app first
+   - Use when testing native modules or changes requiring native code
 
 ```bash
-pnpm run start        # Start Metro
-pnpm run ios         # Run on iOS
-pnpm run android     # Run on Android
+# Interactive mode (choose which app to run)
+pnpm run start        # Prompts you to choose
+pnpm run ios         # Prompts you to choose
+pnpm run android     # Prompts you to choose
+
+# Direct mode (skip the prompt)
+pnpm run start:go    # Run Expo Go app
+pnpm run start:dev   # Run Dev Build app
 ```
 
-### In a Development Build App
+### In an External Development Build App
 
-To test packages in a development build (e.g., `wb-mobile-app`) with native dependencies:
+To test packages in an external development build (e.g., `wb-mobile-app`) with native dependencies:
 
 ```bash
 # Link packages for local development (one-time setup)

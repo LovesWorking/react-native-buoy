@@ -340,10 +340,50 @@ export function StorageModalWithTabs({
   }, [isSearchActive]);
 
   const handleCopyStorage = useCallback(async () => {
-    const exportData = storageDataRef.current.reduce((acc, keyInfo) => {
-      acc[keyInfo.key] = keyInfo.value;
-      return acc;
-    }, {} as Record<string, unknown>);
+    const allKeys = storageDataRef.current;
+
+    // Calculate stats
+    const stats = {
+      valid: allKeys.filter(k =>
+        k.status === 'required_present' || k.status === 'optional_present'
+      ).length,
+      missing: allKeys.filter(k => k.status === 'required_missing').length,
+      issues: allKeys.filter(k =>
+        k.status === 'required_wrong_value' || k.status === 'required_wrong_type'
+      ).length,
+      total: allKeys.length,
+    };
+
+    // Group by storage type
+    const asyncKeys = allKeys.filter(k => k.storageType === 'async');
+    const mmkvKeys = allKeys.filter(k => k.storageType === 'mmkv');
+    const secureKeys = allKeys.filter(k => k.storageType === 'secure');
+
+    // Build structured export
+    const exportData = {
+      summary: {
+        valid: stats.valid,
+        missing: stats.missing,
+        issues: stats.issues,
+        total: stats.total,
+        timestamp: new Date().toISOString(),
+      },
+      asyncStorage: asyncKeys.reduce((acc, k) => {
+        acc[k.key] = k.value;
+        return acc;
+      }, {} as Record<string, unknown>),
+      mmkv: mmkvKeys.reduce((acc, k) => {
+        // Group by instance
+        const instanceId = k.instanceId || 'default';
+        if (!acc[instanceId]) acc[instanceId] = {};
+        acc[instanceId][k.key] = k.value;
+        return acc;
+      }, {} as Record<string, Record<string, unknown>>),
+      secure: secureKeys.reduce((acc, k) => {
+        acc[k.key] = k.value;
+        return acc;
+      }, {} as Record<string, unknown>),
+    };
 
     const serialized = JSON.stringify(exportData, null, 2);
     await copyToClipboard(serialized);

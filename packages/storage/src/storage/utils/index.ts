@@ -56,12 +56,3 @@ export {
   type MMKVValueType,
   type MMKVValueInfo,
 } from "./mmkvTypeDetection";
-
-// MMKV Auto-Detection
-export {
-  enableMMKVAutoDetection,
-  disableMMKVAutoDetection,
-  registerMMKV,
-  getDetectedInstances,
-  isAutoDetectionEnabled,
-} from "./mmkvAutoDetection";

@@ -17,10 +17,8 @@ import {
   Modal,
 } from 'react-native';
 import { macOSColors } from '@react-buoy/shared-ui';
-import { useMMKVInstances } from '../hooks/useMMKVInstances';
+import { useMMKVInstances, MMKVInstanceMetadata } from '../hooks/useMMKVInstances';
 import { isMMKVAvailable, getMMKVUnavailableMessage } from '../utils/mmkvAvailability';
-
-type MMKVInstanceMetadata = any;
 
 interface MMKVInstanceSelectorProps {
   selectedInstanceId: string | null;

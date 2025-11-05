@@ -26,6 +26,15 @@ interface StorageFilterCardsProps {
     mmkvCount?: number;
     secureCount?: number;
   };
+  tabStats?: {
+    validCount: number;
+    missingCount: number;
+    issuesCount: number;
+    asyncCount: number;
+    mmkvCount: number;
+    secureCount: number;
+    totalCount: number;
+  };
   healthPercentage: number;
   healthStatus: string;
   healthColor: string;
@@ -37,6 +46,7 @@ interface StorageFilterCardsProps {
 
 export function StorageFilterCards({
   stats,
+  tabStats,
   healthPercentage,
   healthStatus,
   healthColor,
@@ -45,7 +55,16 @@ export function StorageFilterCards({
   activeStorageType = "all",
   onStorageTypeChange,
 }: StorageFilterCardsProps) {
-  const issuesCount = stats.wrongValueCount + stats.wrongTypeCount;
+  // Use tabStats if provided (for filtered counts), otherwise fall back to stats
+  const displayStats = tabStats || {
+    validCount: stats.presentRequiredCount + stats.optionalCount,
+    missingCount: stats.missingCount,
+    issuesCount: stats.wrongValueCount + stats.wrongTypeCount,
+    asyncCount: stats.asyncCount || 0,
+    mmkvCount: stats.mmkvCount || 0,
+    secureCount: stats.secureCount || 0,
+    totalCount: stats.totalCount,
+  };
 
   return (
     <View style={styles.container}>
@@ -69,7 +88,7 @@ export function StorageFilterCards({
           <Text
             style={[styles.filterValue, { color: macOSColors.text.primary }]}
           >
-            {stats.presentRequiredCount + stats.optionalCount}
+            {displayStats.validCount}
           </Text>
           <Text style={styles.filterLabel}>Valid</Text>
         </TouchableOpacity>
@@ -94,13 +113,13 @@ export function StorageFilterCards({
               styles.filterValue,
               {
                 color:
-                  stats.missingCount > 0
+                  displayStats.missingCount > 0
                     ? macOSColors.semantic.error
                     : macOSColors.text.muted,
               },
             ]}
           >
-            {stats.missingCount}
+            {displayStats.missingCount}
           </Text>
           <Text style={styles.filterLabel}>Missing</Text>
         </TouchableOpacity>
@@ -125,13 +144,13 @@ export function StorageFilterCards({
               styles.filterValue,
               {
                 color:
-                  issuesCount > 0
+                  displayStats.issuesCount > 0
                     ? macOSColors.semantic.warning
                     : macOSColors.text.muted,
               },
             ]}
           >
-            {issuesCount}
+            {displayStats.issuesCount}
           </Text>
           <Text style={styles.filterLabel}>Issues</Text>
         </TouchableOpacity>
@@ -177,7 +196,7 @@ export function StorageFilterCards({
                 },
               ]}
             >
-              {stats.totalCount}
+              {displayStats.totalCount}
             </Text>
           </TouchableOpacity>
 
@@ -215,7 +234,7 @@ export function StorageFilterCards({
                   : { color: macOSColors.text.muted },
               ]}
             >
-              {stats.asyncCount || 0}
+              {displayStats.asyncCount}
             </Text>
           </TouchableOpacity>
 
@@ -253,7 +272,7 @@ export function StorageFilterCards({
                   : { color: macOSColors.text.muted },
               ]}
             >
-              {stats.mmkvCount || 0}
+              {displayStats.mmkvCount}
             </Text>
           </TouchableOpacity>
 

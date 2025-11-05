@@ -1,9 +1,28 @@
 import { View, Text, StyleSheet } from "react-native";
 import { StorageKeyInfo } from "../types";
-import { macOSColors, CompactRow, TypeBadge } from "@react-buoy/shared-ui";
+import { macOSColors, CompactRow, TypeBadge, HardDrive } from "@react-buoy/shared-ui";
 import { getStorageTypeLabel } from "../utils/storageQueryUtils";
 import { getValueTypeLabel } from "../utils/valueType";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
+
+// MMKV Instance color palette - consistent colors per instance
+const INSTANCE_COLORS = [
+  macOSColors.semantic.info,     // Blue
+  macOSColors.semantic.success,  // Green
+  macOSColors.semantic.warning,  // Orange
+  macOSColors.semantic.debug,    // Purple
+  '#FF6B9D',                      // Pink
+  '#00D9FF',                      // Cyan
+];
+
+/**
+ * Get consistent color for an MMKV instance based on its ID
+ * Uses simple hash to ensure same instance always gets same color
+ */
+function getInstanceColor(instanceId: string): string {
+  const hash = instanceId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return INSTANCE_COLORS[hash % INSTANCE_COLORS.length];
+}
 
 interface StorageKeyRowProps {
   storageKey: StorageKeyInfo;
@@ -111,6 +130,35 @@ export function StorageKeyRow({
           </Text>
         </View>
       </View>
+
+      {/* MMKV Instance Badge - Color-coded */}
+      {storageKey.storageType === 'mmkv' && storageKey.instanceId && (
+        <View style={styles.expandedRow}>
+          <Text style={styles.expandedLabel}>Instance:</Text>
+          <View
+            style={[
+              styles.instanceBadge,
+              {
+                backgroundColor: getInstanceColor(storageKey.instanceId) + '20',
+                borderColor: getInstanceColor(storageKey.instanceId) + '40',
+              }
+            ]}
+          >
+            <HardDrive
+              size={9}
+              color={getInstanceColor(storageKey.instanceId)}
+            />
+            <Text
+              style={[
+                styles.instanceText,
+                { color: getInstanceColor(storageKey.instanceId) }
+              ]}
+            >
+              {storageKey.instanceId}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Use DataViewer for JSON data, otherwise show as text */}
       {isJsonData && typeof parsedValue === "object" ? (
@@ -264,5 +312,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "monospace",
     letterSpacing: 0.5,
+  },
+  instanceBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  instanceText: {
+    fontSize: 10,
+    fontWeight: "700",
+    fontFamily: "monospace",
+    letterSpacing: 0.3,
   },
 });

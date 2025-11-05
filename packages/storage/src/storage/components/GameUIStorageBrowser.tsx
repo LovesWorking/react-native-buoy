@@ -38,7 +38,26 @@ if (isMMKVAvailable()) {
 }
 
 // Import shared Game UI components
-import { gameUIColors, macOSColors } from "@react-buoy/shared-ui";
+import { gameUIColors, macOSColors, HardDrive } from "@react-buoy/shared-ui";
+
+// MMKV Instance color palette - consistent colors per instance
+const INSTANCE_COLORS = [
+  macOSColors.semantic.info,     // Blue
+  macOSColors.semantic.success,  // Green
+  macOSColors.semantic.warning,  // Orange
+  macOSColors.semantic.debug,    // Purple
+  '#FF6B9D',                      // Pink
+  '#00D9FF',                      // Cyan
+];
+
+/**
+ * Get consistent color for an MMKV instance based on its ID
+ * Uses simple hash to ensure same instance always gets same color
+ */
+function getInstanceColor(instanceId: string): string {
+  const hash = instanceId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return INSTANCE_COLORS[hash % INSTANCE_COLORS.length];
+}
 
 interface GameUIStorageBrowserProps {
   requiredStorageKeys?: RequiredStorageKey[];
@@ -66,24 +85,26 @@ export function GameUIStorageBrowser({
     string | null
   >(null);
 
-  // Auto-enable MMKV detection when component mounts (if MMKV is available)
-  useEffect(() => {
-    if (isMMKVAvailable()) {
-      try {
-        const { enableMMKVAutoDetection } = require("../utils/mmkvAutoDetection");
-        enableMMKVAutoDetection();
-      } catch (error) {
-        // Silently fail if auto-detection isn't available
-      }
-    }
-  }, []); // Run once on mount
-
   // Get all MMKV instances
   const { instances: mmkvInstances } = useMMKVInstances(false);
+
+  // DEBUG: Log MMKV instances
+  useEffect(() => {
+    console.log('[DEBUG GameUIStorageBrowser] MMKV Instances:', {
+      count: mmkvInstances.length,
+      instances: mmkvInstances.map(i => ({
+        id: i.id,
+        keyCount: i.keyCount,
+        encrypted: i.encrypted,
+      })),
+      selectedMMKVInstance,
+    });
+  }, [mmkvInstances, selectedMMKVInstance]);
 
   // Auto-select first MMKV instance if available and none selected
   useEffect(() => {
     if (mmkvInstances.length > 0 && !selectedMMKVInstance) {
+      console.log('[DEBUG] Auto-selecting first instance:', mmkvInstances[0].id);
       setSelectedMMKVInstance(mmkvInstances[0].id);
     }
   }, [mmkvInstances, selectedMMKVInstance]);
@@ -177,7 +198,7 @@ export function GameUIStorageBrowser({
     };
   }, [refreshMMKV, selectedMMKVInstance]);
 
-  // Calculate stats from ALL keys (not filtered) - for storage type tab badges
+  // Calculate stats from ALL keys (not filtered) - base stats for display
   const stats = useMemo(() => {
     const allKeys = allStorageKeys;
     const appKeys = allKeys.filter((k) => !isDevToolsStorageKey(k.key));
@@ -206,6 +227,107 @@ export function GameUIStorageBrowser({
 
     return storageStats;
   }, [allStorageKeys]);
+
+  // Calculate stats for tab badges based on current filters
+  const tabStats = useMemo(() => {
+    // Start with all keys, excluding devtools keys
+    let keysForStats = allStorageKeys.filter((k) => !isDevToolsStorageKey(k.key));
+
+    // If a specific storage type is selected, filter by that type first
+    if (activeStorageType !== "all") {
+      keysForStats = keysForStats.filter((k) => k.storageType === activeStorageType);
+    }
+
+    // Calculate status counts from filtered keys
+    const validCount = keysForStats.filter(
+      (k) => k.status === "required_present" || k.status === "optional_present"
+    ).length;
+    const missingCount = keysForStats.filter((k) => k.status === "required_missing").length;
+    const issuesCount = keysForStats.filter(
+      (k) => k.status === "required_wrong_type" || k.status === "required_wrong_value"
+    ).length;
+
+    // Calculate storage type counts based on active status filter
+    let asyncCount = 0;
+    let mmkvCount = 0;
+    let secureCount = 0;
+    let totalCount = 0;
+
+    if (activeFilter === "all") {
+      // Valid: only keys with valid status
+      asyncCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "async" &&
+          (k.status === "required_present" || k.status === "optional_present")
+      ).length;
+      mmkvCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "mmkv" &&
+          (k.status === "required_present" || k.status === "optional_present")
+      ).length;
+      secureCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "secure" &&
+          (k.status === "required_present" || k.status === "optional_present")
+      ).length;
+      totalCount = asyncCount + mmkvCount + secureCount;
+    } else if (activeFilter === "missing") {
+      // Missing: only keys with missing status
+      asyncCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "async" &&
+          k.status === "required_missing"
+      ).length;
+      mmkvCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "mmkv" &&
+          k.status === "required_missing"
+      ).length;
+      secureCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "secure" &&
+          k.status === "required_missing"
+      ).length;
+      totalCount = asyncCount + mmkvCount + secureCount;
+    } else if (activeFilter === "issues") {
+      // Issues: only keys with issue status
+      asyncCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "async" &&
+          (k.status === "required_wrong_type" || k.status === "required_wrong_value")
+      ).length;
+      mmkvCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "mmkv" &&
+          (k.status === "required_wrong_type" || k.status === "required_wrong_value")
+      ).length;
+      secureCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "secure" &&
+          (k.status === "required_wrong_type" || k.status === "required_wrong_value")
+      ).length;
+      totalCount = asyncCount + mmkvCount + secureCount;
+    }
+
+    return {
+      validCount,
+      missingCount,
+      issuesCount,
+      asyncCount,
+      mmkvCount,
+      secureCount,
+      totalCount,
+    };
+  }, [allStorageKeys, activeFilter, activeStorageType]);
 
   // Sort all keys by priority (issues first)
   const sortedKeys = useMemo(() => {
@@ -366,6 +488,7 @@ export function GameUIStorageBrowser({
       {/* Filter Cards Section with integrated status */}
       <StorageFilterCards
         stats={stats}
+        tabStats={tabStats}
         healthPercentage={healthPercentage}
         healthStatus={healthStatus}
         healthColor={healthColor}
@@ -439,6 +562,47 @@ export function GameUIStorageBrowser({
       <Text style={styles.techFooter}>
         ASYNC STORAGE | MMKV | SECURE STORAGE BACKENDS
       </Text>
+
+      {/* MMKV Instance Quick Switcher - Only show when multiple instances available */}
+      {isMMKVAvailable() && mmkvInstances.length > 1 && (
+        <View style={styles.instanceQuickSwitch}>
+          <Text style={styles.quickSwitchLabel}>Instance:</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.quickSwitchScroll}
+            contentContainerStyle={styles.quickSwitchContent}
+          >
+            {mmkvInstances.map(inst => (
+              <TouchableOpacity
+                key={inst.id}
+                onPress={() => setSelectedMMKVInstance(inst.id)}
+                style={[
+                  styles.quickSwitchButton,
+                  inst.id === selectedMMKVInstance && styles.quickSwitchButtonActive,
+                  { borderColor: getInstanceColor(inst.id) + '40' }
+                ]}
+              >
+                <HardDrive size={10} color={getInstanceColor(inst.id)} />
+                <Text style={styles.quickSwitchText} numberOfLines={1}>
+                  {inst.id}
+                </Text>
+                <View style={[
+                  styles.quickSwitchBadge,
+                  inst.id === selectedMMKVInstance && styles.quickSwitchBadgeActive
+                ]}>
+                  <Text style={[
+                    styles.quickSwitchCount,
+                    inst.id === selectedMMKVInstance && styles.quickSwitchCountActive
+                  ]}>
+                    {inst.keyCount}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Dev Test Mode removed - test component no longer needed */}
     </ScrollView>
@@ -575,5 +739,77 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: macOSColors.text.primary,
     fontWeight: "500",
+  },
+
+  // Instance Quick Switcher styles
+  instanceQuickSwitch: {
+    marginTop: 16,
+    marginBottom: 16,
+    backgroundColor: macOSColors.background.card + 'F0',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  quickSwitchLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: macOSColors.text.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginLeft: 2,
+  },
+  quickSwitchScroll: {
+    flex: 1,
+  },
+  quickSwitchContent: {
+    gap: 8,
+    paddingRight: 8,
+  },
+  quickSwitchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 8,
+    borderWidth: 1,
+    minWidth: 100,
+  },
+  quickSwitchButtonActive: {
+    backgroundColor: macOSColors.semantic.infoBackground,
+    borderColor: macOSColors.semantic.info + '60',
+  },
+  quickSwitchText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: macOSColors.text.primary,
+    fontFamily: 'monospace',
+    flex: 1,
+  },
+  quickSwitchBadge: {
+    backgroundColor: macOSColors.background.hover,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  quickSwitchBadgeActive: {
+    backgroundColor: macOSColors.semantic.info + '30',
+  },
+  quickSwitchCount: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: macOSColors.text.secondary,
+  },
+  quickSwitchCountActive: {
+    color: macOSColors.semantic.info,
   },
 });

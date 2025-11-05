@@ -23,6 +23,9 @@ if (isMMKVAvailable()) {
   mmkvInstanceRegistry = registry.mmkvInstanceRegistry;
 }
 
+/**
+ * Metadata about an MMKV instance with additional runtime information
+ */
 export interface MMKVInstanceMetadata {
   id: string;
   instance: any;
