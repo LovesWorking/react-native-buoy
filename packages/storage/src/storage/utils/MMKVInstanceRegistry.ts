@@ -40,9 +40,10 @@ export type MMKV = {
    */
   contains(key: string): boolean;
   /**
-   * Delete a key
+   * Delete a key (v4 uses 'remove', but we support both)
    */
-  delete(key: string): boolean;
+  delete?(key: string): boolean;
+  remove?(key: string): void;
   /**
    * Get all keys
    */
@@ -52,9 +53,13 @@ export type MMKV = {
    */
   clearAll(): void;
   /**
+   * Trim storage to reclaim disk space
+   */
+  trim?(): void;
+  /**
    * Whether this instance is read-only
    */
-  readonly isReadOnly: boolean;
+  readonly isReadOnly?: boolean;
   /**
    * Current storage size in bytes
    */
