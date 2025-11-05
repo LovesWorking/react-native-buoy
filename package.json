@@ -26,8 +26,10 @@
     "start": "pnpm --filter example start",
     "ios": "pnpm --filter example ios",
     "android": "pnpm --filter example android",
+    "tsc": "echo '\n❌ ERROR: Do not run tsc directly in this repo!\n✅ Use: pnpm run build (to build packages)\n✅ Use: pnpm run typecheck (to check types)\n' && exit 1",
     "typecheck": "lerna run typecheck --stream",
     "typecheck:all": "pnpm run typecheck && tsc --noEmit",
+    "check:build-artifacts": "node scripts/check-build-artifacts.js",
     "lint": "eslint --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map' \"packages/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
     "test": "pnpm run build && pnpm run typecheck && pnpm run lint",
     "test:packages": "lerna run test --stream",
@@ -44,6 +46,8 @@
     "release:publish": "pnpm run build:packages && pnpm changeset publish",
     "release": "bash scripts/release.sh",
     "release:all": "bash scripts/release-all.sh",
+    "link:dev": "bash scripts/link-to-dev-app.sh",
+    "unlink:dev": "bash scripts/unlink-from-dev-app.sh",
     "claude": "claude --dangerously-skip-permissions"
   },
   "devDependencies": {

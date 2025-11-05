@@ -1,0 +1,39 @@
+# Cursor AI Rules for React Native Buoy
+
+## Critical Build Rules
+
+NEVER run `tsc`, `npx tsc`, or any direct TypeScript compilation commands in this repository.
+
+This monorepo uses react-native-builder-bob for building packages. Running `tsc` directly will pollute the `src/` directories with build artifacts (.d.ts, .d.ts.map, .js files).
+
+## Allowed Build Commands
+
+- `pnpm run build` - Build all packages using bob
+- `pnpm run typecheck` - Type check without emitting files
+- `cd packages/[name] && pnpm run build` - Build specific package
+
+## Forbidden Commands
+
+- `tsc` - DO NOT USE
+- `npx tsc` - DO NOT USE
+- `tsc -p tsconfig.json` - DO NOT USE
+- Any direct TypeScript compilation
+
+## File Editing Rules
+
+1. Only edit files in `packages/*/src/` directories
+2. Never edit files in `packages/*/lib/` directories (these are generated)
+3. Build artifacts go to `lib/`, not `src/`
+4. Always use `pnpm` as the package manager, never `npm` or `yarn`
+
+## Before Suggesting Commands
+
+1. Check if the command involves TypeScript compilation
+2. If yes, suggest `pnpm run build` or `pnpm run typecheck` instead
+3. Never suggest running `tsc` for any reason
+
+## Project Structure
+
+This is a pnpm workspace monorepo. Each package in `packages/` builds to its own `lib/` directory using react-native-builder-bob.
+
+Read CLAUDE.md for complete guidelines.
