@@ -585,7 +585,8 @@ export function StorageModalWithTabs({
       // AsyncStorage - Set operations
       case "setItem":
       case "multiSet":
-      // MMKV - Set operations
+        // MMKV - Set operations
+        // falls through
       case "set.string":
       case "set.number":
       case "set.boolean":
@@ -596,7 +597,8 @@ export function StorageModalWithTabs({
       case "removeItem":
       case "multiRemove":
       case "clear":
-      // MMKV - Delete operations
+        // MMKV - Delete operations
+        // falls through
       case "delete":
       case "clearAll":
         return macOSColors.semantic.error;
