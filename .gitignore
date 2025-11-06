@@ -67,6 +67,30 @@ lerna-debug.log
 *.orig.*
 web-build/
 
+# Example app build artifacts (prevent tsc from polluting source)
+example/app/**/*.js
+example/app/**/*.d.ts
+example/app/**/*.d.ts.map
+example/app/**/*.js.map
+example/screens/**/*.js
+example/screens/**/*.d.ts
+example/screens/**/*.d.ts.map
+example/screens/**/*.js.map
+example-dev-build/app/**/*.js
+example-dev-build/app/**/*.d.ts
+example-dev-build/app/**/*.d.ts.map
+example-dev-build/app/**/*.js.map
+example-dev-build/screens/**/*.js
+example-dev-build/screens/**/*.d.ts
+example-dev-build/screens/**/*.d.ts.map
+example-dev-build/screens/**/*.js.map
+# But keep config files
+!example/metro.config.js
+!example-dev-build/metro.config.js
+# And keep ios/android native builds
+!example-dev-build/ios/
+!example-dev-build/android/
+
 # iOS
 ios/Pods/
 ios/build/

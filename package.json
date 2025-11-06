@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "example"
+    "example",
+    "example-dev-build"
   ],
   "packageManager": "pnpm@10.10.0",
   "repository": {
@@ -19,13 +20,12 @@
     "build": "pnpm run build:packages",
     "build:packages": "lerna run build --stream",
     "build:all": "pnpm run clean && pnpm install && pnpm run build:packages",
-    "clean": "lerna run clean && rimraf node_modules packages/*/node_modules example/node_modules",
+    "clean": "lerna run clean && rimraf node_modules packages/*/node_modules example/node_modules example-dev-build/node_modules",
     "clean:packages": "lerna run clean",
     "create:package": "node scripts/create-package.js",
-    "dev": "pnpm start",
-    "start": "pnpm --filter example start",
-    "ios": "pnpm --filter example ios",
-    "android": "pnpm --filter example android",
+    "start": "node scripts/choose-example.js start",
+    "ios": "node scripts/choose-example.js ios",
+    "android": "node scripts/choose-example.js android",
     "tsc": "echo '\n❌ ERROR: Do not run tsc directly in this repo!\n✅ Use: pnpm run build (to build packages)\n✅ Use: pnpm run typecheck (to check types)\n' && exit 1",
     "typecheck": "lerna run typecheck --stream",
     "typecheck:all": "pnpm run typecheck && tsc --noEmit",
