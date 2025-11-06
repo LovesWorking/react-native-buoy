@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { safeAsyncStorage as AsyncStorage } from "./safeAsyncStorage";
 import { isDevToolsStorageKey } from "@react-buoy/shared-ui";
 
 /**

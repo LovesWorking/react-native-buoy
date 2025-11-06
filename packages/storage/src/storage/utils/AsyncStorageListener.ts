@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { safeAsyncStorage as AsyncStorage } from "./safeAsyncStorage";
 
 // AsyncStorage method signatures - matching the actual AsyncStorage API
 type AsyncStorageSetItem = (key: string, value: string) => Promise<void>;

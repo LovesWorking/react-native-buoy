@@ -2,7 +2,7 @@ import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { useState } from "react";
 import { Copy, Trash2, Check } from "@react-buoy/shared-ui";
 import { macOSColors } from "@react-buoy/shared-ui";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { safeAsyncStorage as AsyncStorage } from "../utils/safeAsyncStorage";
 
 interface StorageActionButtonsProps {
   onCopy: () => void;
