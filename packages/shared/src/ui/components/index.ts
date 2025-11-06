@@ -1,5 +1,6 @@
 export { BackButton } from "./BackButton";
 export { ValueTypeBadge } from "./ValueTypeBadge";
+export { StorageTypeBadge } from "./StorageTypeBadge";
 export {
   CopyButton,
   InlineCopyButton,

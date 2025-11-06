@@ -27,10 +27,25 @@ import { computeLineDiff, DiffType } from "../utils/lineDiff";
 import { TreeDiffViewer } from "./DiffViewer/TreeDiffViewer";
 import { translateStorageAction } from "../utils/storageActionHelpers";
 
+// Unified storage event type (supports both AsyncStorage and MMKV)
+type MMKVEvent = {
+  action: string;
+  timestamp: Date;
+  instanceId: string;
+  data?: {
+    key?: string;
+    value?: any;
+    valueType?: string;
+    success?: boolean;
+  };
+};
+
+type StorageEvent = (AsyncStorageEvent & { storageType?: 'async' }) | (MMKVEvent & { storageType?: 'mmkv' });
+
 interface StorageKeyConversation {
   key: string;
-  lastEvent: AsyncStorageEvent;
-  events: AsyncStorageEvent[];
+  lastEvent: StorageEvent;
+  events: StorageEvent[];
   totalOperations: number;
   currentValue: unknown;
   valueType:
@@ -41,6 +56,7 @@ interface StorageKeyConversation {
     | "undefined"
     | "object"
     | "array";
+  storageTypes?: Set<'async' | 'mmkv'>; // Track which storage types this key appears in
 }
 
 interface StorageEventDetailContentProps {

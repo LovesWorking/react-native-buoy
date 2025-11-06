@@ -179,28 +179,10 @@ class MMKVListener {
       return;
     }
 
-    // Store original methods with safety checks
-    // v4 uses 'remove' instead of 'delete'
-    const originalMethods = {
-      set: instance.set?.bind?.(instance) || instance.set,
-      setNumber:
-        (instance.set?.bind?.(instance) as MMKVSetNumber) || instance.set,
-      setBoolean:
-        (instance.set?.bind?.(instance) as MMKVSetBoolean) || instance.set,
-      setBuffer:
-        (instance.set?.bind?.(instance) as MMKVSetBuffer) || instance.set,
-      delete:
-        instance.delete?.bind?.(instance) || instance.remove?.bind?.(instance),
-      clearAll: instance.clearAll?.bind?.(instance) || instance.clearAll,
-      getString: instance.getString?.bind?.(instance) || instance.getString,
-      getNumber: instance.getNumber?.bind?.(instance) || instance.getNumber,
-      getBoolean: instance.getBoolean?.bind?.(instance) || instance.getBoolean,
-      getBuffer: instance.getBuffer?.bind?.(instance) || instance.getBuffer,
-    };
+    // v4 COMPATIBILITY: Use ONLY native listener (no method wrapping)
+    // react-native-mmkv v4 instances have frozen/read-only methods that cannot be wrapped
+    // The native listener (addOnValueChangedListener) is sufficient for monitoring writes
 
-    // PART 1: Set up MMKV's native listener (for write operations)
-    // This fires whenever a key is written or deleted
-    // Note: addOnValueChangedListener might not be available on all MMKV instances (e.g., encrypted)
     let nativeListenerUnsubscribe: (() => void) | undefined;
 
     if (typeof instance.addOnValueChangedListener === "function") {
@@ -213,10 +195,24 @@ class MMKVListener {
             // Detect the value type
             const { value, type } = detectMMKVType(instance, key);
 
-            // Emit event (note: we can't distinguish which set method was used)
-            // We detect type after the fact
-            this.emit({
-              action:
+            // Determine action: if value is undefined/unknown, it was deleted
+            const isDelete = type === "unknown" || value === undefined;
+
+            if (isDelete) {
+              // Key was deleted
+              const event: MMKVEvent = {
+                action: "delete",
+                timestamp: new Date(),
+                instanceId,
+                data: {
+                  key,
+                  success: true,
+                },
+              };
+              this.emit(event);
+            } else {
+              // Key was set/updated
+              const action: MMKVEvent['action'] =
                 type === "string"
                   ? "set.string"
                   : type === "number"
@@ -225,16 +221,21 @@ class MMKVListener {
                   ? "set.boolean"
                   : type === "buffer"
                   ? "set.buffer"
-                  : "set.string", // fallback
-              timestamp: new Date(),
-              instanceId,
-              data: {
-                key,
-                value,
-                valueType: type,
-                success: true,
-              },
-            });
+                  : "set.string"; // fallback
+
+              const event: MMKVEvent = {
+                action,
+                timestamp: new Date(),
+                instanceId,
+                data: {
+                  key,
+                  value,
+                  valueType: type,
+                  success: true,
+                },
+              };
+              this.emit(event);
+            }
           }
         );
       } catch (error) {
@@ -242,155 +243,11 @@ class MMKVListener {
       }
     }
 
-    // PART 2: Wrap set methods for immediate type information
-    // Native listener can't tell us which set method was called, so we wrap them
-
-    // Wrap set (string)
-    instance.set = (key: string, value: string): void => {
-      if (!this.shouldIgnoreKey(key)) {
-        this.emit({
-          action: "set.string",
-          timestamp: new Date(),
-          instanceId,
-          data: {
-            key,
-            value,
-            valueType: "string",
-            success: true,
-          },
-        });
-      }
-      return originalMethods.set(key, value);
-    };
-
-    // Note: MMKV.set() is overloaded for all types
-    // In TypeScript, we can't actually distinguish at runtime which overload was called
-    // So we rely on the native listener + type detection for accurate type info
-
-    // Wrap delete/remove (v4 uses 'remove', v3 uses 'delete')
-    const originalDelete = originalMethods.delete;
-    const deleteWrapper = (key: string): void => {
-      if (!this.shouldIgnoreKey(key)) {
-        this.emit({
-          action: "delete",
-          timestamp: new Date(),
-          instanceId,
-          data: { key },
-        });
-      }
-      return originalDelete(key);
-    };
-
-    // Set wrapper on whichever method exists
-    if (instance.delete) {
-      (instance as any).delete = deleteWrapper;
-    }
-    if (instance.remove) {
-      (instance as any).remove = deleteWrapper;
-    }
-
-    // Wrap clearAll
-    const originalClearAll = originalMethods.clearAll;
-    instance.clearAll = (): void => {
-      this.emit({
-        action: "clearAll",
-        timestamp: new Date(),
-        instanceId,
-        data: {},
-      });
-      return originalClearAll();
-    };
-
-    // PART 3: Wrap get methods for read tracking
-    // MMKV listeners don't fire on reads, so we wrap get methods
-
-    // Wrap getString
-    const originalGetString = originalMethods.getString;
-    instance.getString = (key: string): string | undefined => {
-      const value = originalGetString(key);
-      if (!this.shouldIgnoreKey(key)) {
-        this.emit({
-          action: "get.string",
-          timestamp: new Date(),
-          instanceId,
-          data: {
-            key,
-            value,
-            valueType: "string",
-            success: value !== undefined,
-          },
-        });
-      }
-      return value;
-    };
-
-    // Wrap getNumber
-    const originalGetNumber = originalMethods.getNumber;
-    instance.getNumber = (key: string): number | undefined => {
-      const value = originalGetNumber(key);
-      if (!this.shouldIgnoreKey(key)) {
-        this.emit({
-          action: "get.number",
-          timestamp: new Date(),
-          instanceId,
-          data: {
-            key,
-            value,
-            valueType: "number",
-            success: value !== undefined,
-          },
-        });
-      }
-      return value;
-    };
-
-    // Wrap getBoolean
-    const originalGetBoolean = originalMethods.getBoolean;
-    instance.getBoolean = (key: string): boolean | undefined => {
-      const value = originalGetBoolean(key);
-      if (!this.shouldIgnoreKey(key)) {
-        this.emit({
-          action: "get.boolean",
-          timestamp: new Date(),
-          instanceId,
-          data: {
-            key,
-            value,
-            valueType: "boolean",
-            success: value !== undefined,
-          },
-        });
-      }
-      return value;
-    };
-
-    // Wrap getBuffer
-    const originalGetBuffer = originalMethods.getBuffer;
-    instance.getBuffer = (key: string): ArrayBuffer | undefined => {
-      const value = originalGetBuffer(key);
-      if (!this.shouldIgnoreKey(key)) {
-        this.emit({
-          action: "get.buffer",
-          timestamp: new Date(),
-          instanceId,
-          data: {
-            key,
-            value: value
-              ? `<ArrayBuffer ${value.byteLength} bytes>`
-              : undefined,
-            valueType: "buffer",
-            success: value !== undefined,
-          },
-        });
-      }
-      return value;
-    };
-
-    // Store instance tracking
+    // Store instance tracking (no originalMethods needed for v4)
     this.instances.set(instanceId, {
       instance,
       instanceId,
-      originalMethods,
+      originalMethods: {} as any, // Not used in v4
       nativeListenerUnsubscribe,
     });
   }
@@ -408,21 +265,7 @@ class MMKVListener {
       return;
     }
 
-    const { instance, originalMethods, nativeListenerUnsubscribe } = tracked;
-
-    // Restore original methods
-    instance.set = originalMethods.set;
-    if (instance.delete) {
-      (instance as any).delete = originalMethods.delete;
-    }
-    if (instance.remove) {
-      (instance as any).remove = originalMethods.delete;
-    }
-    instance.clearAll = originalMethods.clearAll;
-    instance.getString = originalMethods.getString;
-    instance.getNumber = originalMethods.getNumber;
-    instance.getBoolean = originalMethods.getBoolean;
-    instance.getBuffer = originalMethods.getBuffer;
+    const { nativeListenerUnsubscribe } = tracked;
 
     // Remove native listener
     if (nativeListenerUnsubscribe) {

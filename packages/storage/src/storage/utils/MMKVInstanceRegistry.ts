@@ -241,16 +241,11 @@ export function registerMMKVInstance(
   // Register in registry
   mmkvInstanceRegistry.register(id, instance, config);
 
-  // DISABLED: Method wrapping doesn't work with react-native-mmkv v4 read-only instances
-  // The instances returned by createMMKV() have frozen/read-only methods
-  // We would need to use Proxy or other techniques, but for now we skip monitoring
-  // TODO: Implement Proxy-based monitoring for v4 if needed
-  /*
   // Add listener for real-time monitoring (CRITICAL: enables event emission)
+  // v4: Use ONLY native listener (addOnValueChangedListener), skip method wrapping
   // Import mmkvListener dynamically to avoid circular dependency
   const { mmkvListener } = require('./MMKVListener');
   mmkvListener.addInstance(instance, id);
-  */
 }
 
 /**

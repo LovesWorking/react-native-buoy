@@ -3,6 +3,7 @@
  */
 export function translateStorageAction(action: string): string {
   switch (action) {
+    // AsyncStorage actions
     case "setItem":
       return "SET";
     case "removeItem":
@@ -17,6 +18,23 @@ export function translateStorageAction(action: string): string {
       return "MULTI REMOVE";
     case "multiMerge":
       return "MULTI MERGE";
+
+    // MMKV actions - simplified to match AsyncStorage
+    case "set.string":
+    case "set.number":
+    case "set.boolean":
+    case "set.buffer":
+      return "SET";
+    case "delete":
+      return "REMOVE";
+    case "clearAll":
+      return "CLEAR";
+    case "get.string":
+    case "get.number":
+    case "get.boolean":
+    case "get.buffer":
+      return "GET";
+
     default:
       return "UNKNOWN ACTION";
   }

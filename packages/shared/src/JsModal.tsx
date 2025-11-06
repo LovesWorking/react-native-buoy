@@ -153,6 +153,7 @@ interface JsModalProps {
   // New: Optional sticky footer rendered outside internal ScrollView
   footer?: ReactNode;
   footerHeight?: number; // Used to pad ScrollView content bottom
+  onBack?: () => void; // Callback for back button - enables tap detection on top-left corner
 }
 
 // ============================================================================
@@ -425,6 +426,7 @@ const JsModalComponent: FC<JsModalProps> = ({
   initialFloatingPosition,
   footer,
   footerHeight = 0,
+  onBack,
 }) => {
   const insets = useSafeAreaInsets();
   const [isStateLoaded, setIsStateLoaded] = useState(!enablePersistence);
@@ -1000,6 +1002,11 @@ const JsModalComponent: FC<JsModalProps> = ({
             onClose();
             return;
           }
+          if (corner === "topLeft" && !didResize && onBack) {
+            // Treat a tap on the top-left handle as a back action when no resize occurred
+            onBack();
+            return;
+          }
           didResize = false;
           // currentDimensionsRef already holds the last values
           setDimensions(currentDimensionsRef.current);
@@ -1022,6 +1029,7 @@ const JsModalComponent: FC<JsModalProps> = ({
       animatedWidth,
       animatedFloatingHeight,
       onClose,
+      onBack,
     ]
   );
 
