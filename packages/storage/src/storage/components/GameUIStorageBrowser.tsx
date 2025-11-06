@@ -24,11 +24,13 @@ import {
 } from "./StorageFilterCards";
 import { useAsyncStorageKeys } from "../hooks/useAsyncStorageKeys";
 import { addListener } from "../utils/AsyncStorageListener";
-import { useMMKVKeys } from "../hooks/useMMKVKeys";
+import { useMultiMMKVKeys } from "../hooks/useMMKVKeys";
 import { useMMKVInstances } from "../hooks/useMMKVInstances";
 import { MMKVInstanceSelector } from "./MMKVInstanceSelector";
 import { MMKVInstanceInfoPanel } from "./MMKVInstanceInfoPanel";
 import { isMMKVAvailable } from "../utils/mmkvAvailability";
+import { StorageActionButtons } from "./StorageActionButtons";
+import { copyToClipboard } from "@react-buoy/shared-ui";
 
 // Conditionally import MMKV listener
 let addMMKVListener: any;
@@ -38,7 +40,26 @@ if (isMMKVAvailable()) {
 }
 
 // Import shared Game UI components
-import { gameUIColors, macOSColors } from "@react-buoy/shared-ui";
+import { gameUIColors, macOSColors, HardDrive } from "@react-buoy/shared-ui";
+
+// MMKV Instance color palette - consistent colors per instance
+const INSTANCE_COLORS = [
+  macOSColors.semantic.info,     // Blue
+  macOSColors.semantic.success,  // Green
+  macOSColors.semantic.warning,  // Orange
+  macOSColors.semantic.debug,    // Purple
+  '#FF6B9D',                      // Pink
+  '#00D9FF',                      // Cyan
+];
+
+/**
+ * Get consistent color for an MMKV instance based on its ID
+ * Uses simple hash to ensure same instance always gets same color
+ */
+function getInstanceColor(instanceId: string): string {
+  const hash = instanceId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return INSTANCE_COLORS[hash % INSTANCE_COLORS.length];
+}
 
 interface GameUIStorageBrowserProps {
   requiredStorageKeys?: RequiredStorageKey[];
@@ -66,27 +87,13 @@ export function GameUIStorageBrowser({
     string | null
   >(null);
 
-  // Auto-enable MMKV detection when component mounts (if MMKV is available)
-  useEffect(() => {
-    if (isMMKVAvailable()) {
-      try {
-        const { enableMMKVAutoDetection } = require("../utils/mmkvAutoDetection");
-        enableMMKVAutoDetection();
-      } catch (error) {
-        // Silently fail if auto-detection isn't available
-      }
-    }
-  }, []); // Run once on mount
-
   // Get all MMKV instances
   const { instances: mmkvInstances } = useMMKVInstances(false);
 
-  // Auto-select first MMKV instance if available and none selected
-  useEffect(() => {
-    if (mmkvInstances.length > 0 && !selectedMMKVInstance) {
-      setSelectedMMKVInstance(mmkvInstances[0].id);
-    }
-  }, [mmkvInstances, selectedMMKVInstance]);
+
+  // REMOVED: Auto-selection is now handled by the instance navbar
+  // Users can manually select an instance from the navbar if they want to filter by instance
+  // By default, selectedMMKVInstance is null, which shows ALL MMKV keys
 
   // Use AsyncStorage hook
   const {
@@ -96,21 +103,27 @@ export function GameUIStorageBrowser({
     refresh: refreshAsync,
   } = useAsyncStorageKeys(requiredStorageKeys);
 
-  // Use MMKV hook (only when instance is selected)
-  const selectedInstance = mmkvInstances.find(
-    (inst) => inst.id === selectedMMKVInstance
-  )?.instance;
+  // Memoize the instances array to prevent infinite re-renders
+  const mmkvInstancesForHook = useMemo(
+    () => mmkvInstances.map((inst) => ({ instance: inst.instance, id: inst.id })),
+    [mmkvInstances]
+  );
 
+  // Use MMKV hook - always fetch from ALL instances, then filter by selected instance
   const {
-    storageKeys: mmkvStorageKeys,
+    storageKeys: allMMKVKeys,
     isLoading: isLoadingMMKV,
     error: mmkvError,
     refresh: refreshMMKV,
-  } = useMMKVKeys(
-    selectedInstance || null,
-    selectedMMKVInstance || "mmkv.default",
-    requiredStorageKeys
-  );
+  } = useMultiMMKVKeys(mmkvInstancesForHook, requiredStorageKeys);
+
+  // Filter MMKV keys by selected instance (if one is selected)
+  const mmkvStorageKeys = useMemo(() => {
+    if (!selectedMMKVInstance) {
+      return allMMKVKeys; // Show all MMKV keys
+    }
+    return allMMKVKeys.filter((k) => k.instanceId === selectedMMKVInstance);
+  }, [allMMKVKeys, selectedMMKVInstance]);
 
   // Merge storage keys from AsyncStorage and MMKV
   const allStorageKeys = useMemo(() => {
@@ -124,10 +137,48 @@ export function GameUIStorageBrowser({
   // Combined refresh function
   const refresh = useCallback(() => {
     refreshAsync();
-    if (selectedInstance) {
-      refreshMMKV();
-    }
-  }, [refreshAsync, refreshMMKV, selectedInstance]);
+    refreshMMKV();
+  }, [refreshAsync, refreshMMKV]);
+
+  // Copy handler for action buttons
+  const handleCopyStorage = useCallback(async () => {
+    const allKeys = allStorageKeys;
+
+    // Calculate stats
+    const stats = {
+      valid: allKeys.filter(k => k.status === 'required_present' || k.status === 'optional_present').length,
+      missing: allKeys.filter(k => k.status === 'required_missing').length,
+      issues: allKeys.filter(k => k.status === 'required_wrong_value' || k.status === 'required_wrong_type').length,
+      total: allKeys.length,
+    };
+
+    // Group by storage type
+    const asyncKeys = allKeys.filter(k => k.storageType === 'async');
+    const mmkvKeys = allKeys.filter(k => k.storageType === 'mmkv');
+    const secureKeys = allKeys.filter(k => k.storageType === 'secure');
+
+    // Build structured export
+    const exportData = {
+      summary: {
+        valid: stats.valid,
+        missing: stats.missing,
+        issues: stats.issues,
+        total: stats.total,
+        timestamp: new Date().toISOString(),
+      },
+      asyncStorage: asyncKeys.reduce((acc, k) => { acc[k.key] = k.value; return acc; }, {} as Record<string, any>),
+      mmkv: mmkvKeys.reduce((acc, k) => {
+        const instanceId = k.instanceId || 'default';
+        if (!acc[instanceId]) acc[instanceId] = {};
+        acc[instanceId][k.key] = k.value;
+        return acc;
+      }, {} as Record<string, Record<string, any>>),
+      secure: secureKeys.reduce((acc, k) => { acc[k.key] = k.value; return acc; }, {} as Record<string, any>),
+    };
+
+    const serialized = JSON.stringify(exportData, null, 2);
+    await copyToClipboard(serialized);
+  }, [allStorageKeys]);
 
   // Update storage data ref for copy functionality
   useEffect(() => {
@@ -177,7 +228,7 @@ export function GameUIStorageBrowser({
     };
   }, [refreshMMKV, selectedMMKVInstance]);
 
-  // Calculate stats from ALL keys (not filtered) - for storage type tab badges
+  // Calculate stats from ALL keys (not filtered) - base stats for display
   const stats = useMemo(() => {
     const allKeys = allStorageKeys;
     const appKeys = allKeys.filter((k) => !isDevToolsStorageKey(k.key));
@@ -206,6 +257,107 @@ export function GameUIStorageBrowser({
 
     return storageStats;
   }, [allStorageKeys]);
+
+  // Calculate stats for tab badges based on current filters
+  const tabStats = useMemo(() => {
+    // Start with all keys, excluding devtools keys
+    let keysForStats = allStorageKeys.filter((k) => !isDevToolsStorageKey(k.key));
+
+    // If a specific storage type is selected, filter by that type first
+    if (activeStorageType !== "all") {
+      keysForStats = keysForStats.filter((k) => k.storageType === activeStorageType);
+    }
+
+    // Calculate status counts from filtered keys
+    const validCount = keysForStats.filter(
+      (k) => k.status === "required_present" || k.status === "optional_present"
+    ).length;
+    const missingCount = keysForStats.filter((k) => k.status === "required_missing").length;
+    const issuesCount = keysForStats.filter(
+      (k) => k.status === "required_wrong_type" || k.status === "required_wrong_value"
+    ).length;
+
+    // Calculate storage type counts based on active status filter
+    let asyncCount = 0;
+    let mmkvCount = 0;
+    let secureCount = 0;
+    let totalCount = 0;
+
+    if (activeFilter === "all") {
+      // Valid: only keys with valid status
+      asyncCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "async" &&
+          (k.status === "required_present" || k.status === "optional_present")
+      ).length;
+      mmkvCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "mmkv" &&
+          (k.status === "required_present" || k.status === "optional_present")
+      ).length;
+      secureCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "secure" &&
+          (k.status === "required_present" || k.status === "optional_present")
+      ).length;
+      totalCount = asyncCount + mmkvCount + secureCount;
+    } else if (activeFilter === "missing") {
+      // Missing: only keys with missing status
+      asyncCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "async" &&
+          k.status === "required_missing"
+      ).length;
+      mmkvCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "mmkv" &&
+          k.status === "required_missing"
+      ).length;
+      secureCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "secure" &&
+          k.status === "required_missing"
+      ).length;
+      totalCount = asyncCount + mmkvCount + secureCount;
+    } else if (activeFilter === "issues") {
+      // Issues: only keys with issue status
+      asyncCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "async" &&
+          (k.status === "required_wrong_type" || k.status === "required_wrong_value")
+      ).length;
+      mmkvCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "mmkv" &&
+          (k.status === "required_wrong_type" || k.status === "required_wrong_value")
+      ).length;
+      secureCount = allStorageKeys.filter(
+        (k) =>
+          !isDevToolsStorageKey(k.key) &&
+          k.storageType === "secure" &&
+          (k.status === "required_wrong_type" || k.status === "required_wrong_value")
+      ).length;
+      totalCount = asyncCount + mmkvCount + secureCount;
+    }
+
+    return {
+      validCount,
+      missingCount,
+      issuesCount,
+      asyncCount,
+      mmkvCount,
+      secureCount,
+      totalCount,
+    };
+  }, [allStorageKeys, activeFilter, activeStorageType]);
 
   // Sort all keys by priority (issues first)
   const sortedKeys = useMemo(() => {
@@ -272,6 +424,9 @@ export function GameUIStorageBrowser({
       keys = keys.filter((k) => k.storageType === activeStorageType);
     }
 
+    // NOTE: MMKV instance filtering is now handled in mmkvStorageKeys memo (line 128)
+    // No need to filter again here
+
     return keys;
   }, [
     sortedKeys,
@@ -279,6 +434,7 @@ export function GameUIStorageBrowser({
     activeStorageType,
     ignoredPatterns,
     searchQuery,
+    selectedMMKVInstance,
   ]);
 
   // Calculate stats from FILTERED keys to show actual visible counts
@@ -366,6 +522,7 @@ export function GameUIStorageBrowser({
       {/* Filter Cards Section with integrated status */}
       <StorageFilterCards
         stats={stats}
+        tabStats={tabStats}
         healthPercentage={healthPercentage}
         healthStatus={healthStatus}
         healthColor={healthColor}
@@ -388,22 +545,132 @@ export function GameUIStorageBrowser({
         </View>
       )}
 
+      {/* MMKV Instance Filter Navbar - ONLY show in MMKV tab when instances available */}
+      {activeStorageType === "mmkv" && mmkvInstances.length > 0 && (
+        <View style={styles.instanceNavbar}>
+          <Text style={styles.instanceNavbarLabel}>INSTANCES</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.instanceNavbarScroll}
+          >
+            {/* "All Instances" button */}
+            <TouchableOpacity
+              onPress={() => setSelectedMMKVInstance(null)}
+              style={[
+                styles.instanceNavbarButton,
+                selectedMMKVInstance === null && styles.instanceNavbarButtonActive,
+              ]}
+            >
+              <HardDrive
+                size={12}
+                color={
+                  selectedMMKVInstance === null
+                    ? macOSColors.text.primary
+                    : macOSColors.text.secondary
+                }
+              />
+              <Text
+                style={[
+                  styles.instanceNavbarButtonText,
+                  selectedMMKVInstance === null && styles.instanceNavbarButtonTextActive,
+                ]}
+              >
+                All
+              </Text>
+              <View style={styles.instanceNavbarBadge}>
+                <Text style={styles.instanceNavbarBadgeText}>
+                  {mmkvInstances.reduce((sum, inst) => sum + inst.keyCount, 0)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Individual instance buttons */}
+            {mmkvInstances.map((inst) => (
+              <TouchableOpacity
+                key={inst.id}
+                onPress={() => setSelectedMMKVInstance(inst.id)}
+                style={[
+                  styles.instanceNavbarButton,
+                  inst.id === selectedMMKVInstance && styles.instanceNavbarButtonActive,
+                  {
+                    borderColor: getInstanceColor(inst.id) + '40',
+                    backgroundColor:
+                      inst.id === selectedMMKVInstance
+                        ? getInstanceColor(inst.id) + '20'
+                        : macOSColors.background.card,
+                  },
+                ]}
+              >
+                <HardDrive
+                  size={12}
+                  color={
+                    inst.id === selectedMMKVInstance
+                      ? getInstanceColor(inst.id)
+                      : macOSColors.text.secondary
+                  }
+                />
+                <Text
+                  style={[
+                    styles.instanceNavbarButtonText,
+                    inst.id === selectedMMKVInstance && {
+                      color: getInstanceColor(inst.id),
+                      fontWeight: '700',
+                    },
+                  ]}
+                >
+                  {inst.id}
+                </Text>
+                <View
+                  style={[
+                    styles.instanceNavbarBadge,
+                    inst.id === selectedMMKVInstance && {
+                      backgroundColor: getInstanceColor(inst.id) + '30',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.instanceNavbarBadgeText,
+                      inst.id === selectedMMKVInstance && {
+                        color: getInstanceColor(inst.id),
+                      },
+                    ]}
+                  >
+                    {inst.keyCount}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Filtered Storage Keys */}
       {filteredKeys.length > 0 ? (
         <View style={styles.keysSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {activeFilter === "all"
-                ? "KEYS"
-                : activeFilter === "missing"
-                ? "MISSING KEYS"
-                : "ISSUES TO FIX"}
-              {activeStorageType !== "all" &&
-                ` (${activeStorageType.toUpperCase()})`}
-            </Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{filteredKeys.length}</Text>
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionTitle}>
+                {activeFilter === "all"
+                  ? "KEYS"
+                  : activeFilter === "missing"
+                  ? "MISSING KEYS"
+                  : "ISSUES TO FIX"}
+                {activeStorageType !== "all" &&
+                  ` (${activeStorageType.toUpperCase()})`}
+              </Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{filteredKeys.length}</Text>
+              </View>
             </View>
+            {/* Storage Action Buttons in Header */}
+            <StorageActionButtons
+              onCopy={handleCopyStorage}
+              mmkvInstances={mmkvInstances.map(inst => ({ id: inst.id, instance: inst.instance }))}
+              activeStorageType={activeStorageType}
+              onClearComplete={refresh}
+            />
           </View>
           <StorageKeySection
             title=""
@@ -488,6 +755,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: macOSColors.border.default,
   },
+  sectionHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   sectionTitle: {
     fontSize: 12,
     fontWeight: "600",
@@ -562,6 +834,79 @@ const styles = StyleSheet.create({
     borderColor: macOSColors.border.default,
     alignSelf: "stretch",
   },
+
+  // Instance Navbar styles
+  instanceNavbar: {
+    marginTop: 12,
+    marginBottom: 8,
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  instanceNavbarLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: macOSColors.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
+    paddingLeft: 2,
+  },
+  instanceNavbarScroll: {
+    gap: 8,
+    paddingRight: 8,
+  },
+  instanceNavbarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    minWidth: 90,
+  },
+  instanceNavbarButtonActive: {
+    borderWidth: 1.5,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  instanceNavbarButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: macOSColors.text.secondary,
+    fontFamily: 'monospace',
+    flex: 1,
+  },
+  instanceNavbarButtonTextActive: {
+    fontWeight: '700',
+    color: macOSColors.text.primary,
+  },
+  instanceNavbarBadge: {
+    backgroundColor: macOSColors.background.input,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  instanceNavbarBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: macOSColors.text.secondary,
+    fontFamily: 'monospace',
+  },
+
   clearSearchButton: {
     marginTop: 16,
     paddingHorizontal: 16,

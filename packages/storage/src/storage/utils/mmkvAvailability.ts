@@ -23,8 +23,9 @@ export function isMMKVAvailable(): boolean {
     // Attempt to require MMKV
     const MMKVModule = require('react-native-mmkv');
 
-    // v4 exports createMMKV function instead of MMKV class
-    _MMKVClass = MMKVModule.MMKV || MMKVModule.createMMKV;
+    // v4 uses createMMKV factory function, v3 used MMKV class
+    // Try v4 API first (recommended), fall back to v3
+    _MMKVClass = MMKVModule.createMMKV || MMKVModule.MMKV;
     _isMMKVAvailable = _MMKVClass !== undefined;
     return _isMMKVAvailable;
   } catch (error) {

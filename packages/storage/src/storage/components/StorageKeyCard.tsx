@@ -21,6 +21,25 @@ import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 // Stable constants moved to module scope to prevent re-renders [[memory:4875251]]
 const HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 };
 
+// MMKV Instance color palette - consistent colors per instance
+const INSTANCE_COLORS = [
+  macOSColors.semantic.info,     // Blue
+  macOSColors.semantic.success,  // Green
+  macOSColors.semantic.warning,  // Orange
+  macOSColors.semantic.debug,    // Purple
+  '#FF6B9D',                      // Pink
+  '#00D9FF',                      // Cyan
+];
+
+/**
+ * Get consistent color for an MMKV instance based on its ID
+ * Uses simple hash to ensure same instance always gets same color
+ */
+function getInstanceColor(instanceId: string): string {
+  const hash = instanceId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return INSTANCE_COLORS[hash % INSTANCE_COLORS.length];
+}
+
 interface StorageKeyCardProps {
   storageKey: StorageKeyInfo;
   isExpanded: boolean;
@@ -157,10 +176,23 @@ export function StorageKeyCard({
                   {storageTypeLabel}
                 </Text>
               </View>
-              {/* Show MMKV instance ID if available */}
+              {/* Show MMKV instance ID if available - Enhanced with color coding */}
               {storageKey.storageType === 'mmkv' && storageKey.instanceId && (
-                <View style={styles.instanceBadge}>
-                  <Text style={styles.instanceText}>
+                <View style={[
+                  styles.instanceBadge,
+                  {
+                    backgroundColor: getInstanceColor(storageKey.instanceId) + '20',
+                    borderColor: getInstanceColor(storageKey.instanceId) + '40',
+                  }
+                ]}>
+                  <HardDrive
+                    size={9}
+                    color={getInstanceColor(storageKey.instanceId)}
+                  />
+                  <Text style={[
+                    styles.instanceText,
+                    { color: getInstanceColor(storageKey.instanceId) }
+                  ]}>
                     {storageKey.instanceId}
                   </Text>
                 </View>
@@ -350,18 +382,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   instanceBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    backgroundColor: macOSColors.semantic.info + '15',
-    borderRadius: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: macOSColors.semantic.info + '30',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   instanceText: {
-    fontSize: 8,
-    color: macOSColors.semantic.info,
-    fontWeight: "600",
+    fontSize: 9,
+    fontWeight: "700",
     fontFamily: "monospace",
+    letterSpacing: 0.3,
   },
   valueBadge: {
     paddingHorizontal: 4,

@@ -102,9 +102,7 @@
     "clean": "rimraf lib",
     "test": "pnpm run typecheck"
   },
-  "dependencies": {
-    "superjson": "^2.2.2"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "react": "*",
     "react-native": "*"

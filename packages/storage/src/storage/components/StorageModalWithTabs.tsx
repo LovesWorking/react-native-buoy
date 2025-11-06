@@ -15,6 +15,7 @@ import {
   ModalHeader,
   TabSelector,
   ValueTypeBadge,
+  StorageTypeBadge,
   formatRelativeTime,
   parseValue,
   devToolsStorageKeys,
@@ -45,7 +46,31 @@ import {
   StorageEventDetailFooter,
 } from "./StorageEventDetailContent";
 import { StorageFilterViewV2 } from "./StorageFilterViewV2";
+import { StorageEventFilterView } from "./StorageEventFilterView";
 import { translateStorageAction } from "../utils/storageActionHelpers";
+import { isMMKVAvailable } from "../utils/mmkvAvailability";
+
+// Conditionally import MMKV listener
+let addMMKVListener: any;
+type MMKVEvent = {
+  action: string;
+  timestamp: Date;
+  instanceId: string;
+  data?: {
+    key?: string;
+    value?: any;
+    valueType?: string;
+    success?: boolean;
+  };
+};
+
+if (isMMKVAvailable()) {
+  const mmkvListener = require("../utils/MMKVListener");
+  addMMKVListener = mmkvListener.addMMKVListener;
+}
+
+// Unified storage event type
+type StorageEvent = (AsyncStorageEvent & { storageType: 'async' }) | (MMKVEvent & { storageType: 'mmkv' });
 
 interface StorageModalWithTabsProps {
   visible: boolean;
@@ -57,8 +82,8 @@ interface StorageModalWithTabsProps {
 
 interface StorageKeyConversation {
   key: string;
-  lastEvent: AsyncStorageEvent;
-  events: AsyncStorageEvent[];
+  lastEvent: StorageEvent;
+  events: StorageEvent[];
   totalOperations: number;
   currentValue: unknown;
   valueType:
@@ -69,6 +94,7 @@ interface StorageKeyConversation {
     | "undefined"
     | "object"
     | "array";
+  storageTypes: Set<'async' | 'mmkv'>; // Track which storage types this key appears in
 }
 
 type TabType = "browser" | "events";
@@ -95,7 +121,7 @@ export function StorageModalWithTabs({
   const hasLoadedStorageFilters = useRef(false);
 
   // Event Listener state
-  const [events, setEvents] = useState<AsyncStorageEvent[]>([]);
+  const [events, setEvents] = useState<StorageEvent[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [selectedConversationKey, setSelectedConversationKey] = useState<
     string | null
@@ -105,7 +131,10 @@ export function StorageModalWithTabs({
   const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(
     new Set(["@RNAsyncStorage", "redux-persist", "persist:"]) // Only show @react_buoy events by default
   );
-  const lastEventRef = useRef<AsyncStorageEvent | null>(null);
+  const [enabledStorageTypes, setEnabledStorageTypes] = useState<Set<'async' | 'mmkv' | 'secure'>>(
+    new Set(['async', 'mmkv', 'secure']) // All enabled by default
+  );
+  const lastEventRef = useRef<StorageEvent | null>(null);
   const hasLoadedFilters = useRef(false);
   const hasLoadedTabState = useRef(false);
   const hasLoadedMonitoringState = useRef(false);
@@ -250,17 +279,32 @@ export function StorageModalWithTabs({
     const listening = checkIsListening();
     setIsListening(listening);
 
-    // Set up event listener
-    const unsubscribe = addListener((event) => {
-      lastEventRef.current = event;
+    // Set up AsyncStorage event listener
+    const unsubscribeAsync = addListener((event: AsyncStorageEvent) => {
+      const storageEvent: StorageEvent = { ...event, storageType: 'async' };
+      lastEventRef.current = storageEvent;
       setEvents((prev) => {
-        const updated = [event, ...prev];
+        const updated = [storageEvent, ...prev];
         return updated.slice(0, 500);
       });
     });
 
+    // Set up MMKV event listener (if available)
+    let unsubscribeMMKV = () => {};
+    if (isMMKVAvailable() && addMMKVListener) {
+      unsubscribeMMKV = addMMKVListener((event: MMKVEvent) => {
+        const storageEvent: StorageEvent = { ...event, storageType: 'mmkv' };
+        lastEventRef.current = storageEvent;
+        setEvents((prev) => {
+          const updated = [storageEvent, ...prev];
+          return updated.slice(0, 500);
+        });
+      });
+    }
+
     return () => {
-      unsubscribe();
+      unsubscribeAsync();
+      unsubscribeMMKV();
     };
   }, [visible]);
 
@@ -307,6 +351,18 @@ export function StorageModalWithTabs({
     setShowFilters(!showFilters);
   }, [showFilters]);
 
+  const handleToggleStorageType = useCallback((type: 'async' | 'mmkv' | 'secure') => {
+    setEnabledStorageTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) {
+        next.delete(type);
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  }, []);
+
   // Storage Browser handlers
   const storageDataRef = useRef<any[]>([]);
 
@@ -340,10 +396,50 @@ export function StorageModalWithTabs({
   }, [isSearchActive]);
 
   const handleCopyStorage = useCallback(async () => {
-    const exportData = storageDataRef.current.reduce((acc, keyInfo) => {
-      acc[keyInfo.key] = keyInfo.value;
-      return acc;
-    }, {} as Record<string, unknown>);
+    const allKeys = storageDataRef.current;
+
+    // Calculate stats
+    const stats = {
+      valid: allKeys.filter(k =>
+        k.status === 'required_present' || k.status === 'optional_present'
+      ).length,
+      missing: allKeys.filter(k => k.status === 'required_missing').length,
+      issues: allKeys.filter(k =>
+        k.status === 'required_wrong_value' || k.status === 'required_wrong_type'
+      ).length,
+      total: allKeys.length,
+    };
+
+    // Group by storage type
+    const asyncKeys = allKeys.filter(k => k.storageType === 'async');
+    const mmkvKeys = allKeys.filter(k => k.storageType === 'mmkv');
+    const secureKeys = allKeys.filter(k => k.storageType === 'secure');
+
+    // Build structured export
+    const exportData = {
+      summary: {
+        valid: stats.valid,
+        missing: stats.missing,
+        issues: stats.issues,
+        total: stats.total,
+        timestamp: new Date().toISOString(),
+      },
+      asyncStorage: asyncKeys.reduce((acc, k) => {
+        acc[k.key] = k.value;
+        return acc;
+      }, {} as Record<string, unknown>),
+      mmkv: mmkvKeys.reduce((acc, k) => {
+        // Group by instance
+        const instanceId = k.instanceId || 'default';
+        if (!acc[instanceId]) acc[instanceId] = {};
+        acc[instanceId][k.key] = k.value;
+        return acc;
+      }, {} as Record<string, Record<string, unknown>>),
+      secure: secureKeys.reduce((acc, k) => {
+        acc[k.key] = k.value;
+        return acc;
+      }, {} as Record<string, unknown>),
+    };
 
     const serialized = JSON.stringify(exportData, null, 2);
     await copyToClipboard(serialized);
@@ -362,7 +458,6 @@ export function StorageModalWithTabs({
               await clearAllAppStorage();
               // Refresh will be handled by GameUIStorageBrowser
             } catch (error) {
-              console.error("Failed to clear app storage:", error);
               Alert.alert("Error", "Failed to clear app storage");
             }
           },
@@ -375,7 +470,6 @@ export function StorageModalWithTabs({
               await clearAllStorageIncludingDevTools();
               // Refresh will be handled by GameUIStorageBrowser
             } catch (error) {
-              console.error("Failed to clear all storage:", error);
               Alert.alert("Error", "Failed to clear all storage");
             }
           },
@@ -407,7 +501,7 @@ export function StorageModalWithTabs({
         const keys = await AsyncStorage.getAllKeys();
         setAllStorageKeys([...keys].sort());
       } catch (error) {
-        console.error("Failed to fetch all storage keys:", error);
+        // Failed to fetch keys
       }
     };
 
@@ -437,6 +531,9 @@ export function StorageModalWithTabs({
 
       const key = event.data.key;
 
+      // Filter by enabled storage types
+      if (!enabledStorageTypes.has(event.storageType)) return;
+
       // Filter out keys that match ignored patterns
       const shouldIgnore = Array.from(ignoredPatterns).some((pattern) =>
         key.includes(pattern)
@@ -454,10 +551,12 @@ export function StorageModalWithTabs({
           totalOperations: 1,
           currentValue: event.data.value,
           valueType: getValueType(event.data.value),
+          storageTypes: new Set([event.storageType]),
         });
       } else {
         existing.events.push(event);
         existing.totalOperations++;
+        existing.storageTypes.add(event.storageType);
 
         // Update last event if this one is newer
         if (event.timestamp > existing.lastEvent.timestamp) {
@@ -473,7 +572,7 @@ export function StorageModalWithTabs({
       (a, b) =>
         b.lastEvent.timestamp.getTime() - a.lastEvent.timestamp.getTime()
     );
-  }, [events, ignoredPatterns]);
+  }, [events, ignoredPatterns, enabledStorageTypes]);
 
   // Get the live selected conversation from the current conversations array
   const selectedConversation = useMemo(() => {
@@ -483,16 +582,39 @@ export function StorageModalWithTabs({
 
   const getActionColor = (action: string) => {
     switch (action) {
+      // AsyncStorage - Set operations
       case "setItem":
       case "multiSet":
+        // MMKV - Set operations
+        // falls through
+      case "set.string":
+      case "set.number":
+      case "set.boolean":
+      case "set.buffer":
         return macOSColors.semantic.success;
+
+      // AsyncStorage - Remove operations
       case "removeItem":
       case "multiRemove":
       case "clear":
+        // MMKV - Delete operations
+        // falls through
+      case "delete":
+      case "clearAll":
         return macOSColors.semantic.error;
+
+      // AsyncStorage - Merge operations
       case "mergeItem":
       case "multiMerge":
         return macOSColors.semantic.info;
+
+      // MMKV - Get operations
+      case "get.string":
+      case "get.number":
+      case "get.boolean":
+      case "get.buffer":
+        return macOSColors.semantic.warning;
+
       default:
         return macOSColors.text.muted;
     }
@@ -536,6 +658,9 @@ export function StorageModalWithTabs({
             </Text>
           </View>
           <View style={styles.conversationDetails}>
+            {item.storageTypes && Array.from(item.storageTypes).map((storageType) => (
+              <StorageTypeBadge key={storageType} type={storageType} />
+            ))}
             <ValueTypeBadge type={item.valueType} />
             <Text style={styles.operationCount}>
               {item.totalOperations} operation
@@ -598,11 +723,13 @@ export function StorageModalWithTabs({
 
     if (showFilters) {
       return (
-        <StorageFilterViewV2
+        <StorageEventFilterView
           ignoredPatterns={ignoredPatterns}
           onTogglePattern={handleTogglePattern}
           onAddPattern={handleAddPattern}
           availableKeys={allEventKeys}
+          enabledStorageTypes={enabledStorageTypes}
+          onToggleStorageType={handleToggleStorageType}
         />
       );
     }
@@ -647,10 +774,23 @@ export function StorageModalWithTabs({
     />
   ) : null;
 
+  // Determine the appropriate back handler based on current view state
+  const currentBackHandler = showStorageFilters
+    ? () => setShowStorageFilters(false)
+    : showFilters
+    ? () => setShowFilters(false)
+    : selectedConversation
+    ? () => {
+        setSelectedConversationKey(null);
+        setSelectedEventIndex(0);
+      }
+    : onBack;
+
   return (
     <JsModal
       visible={visible}
       onClose={onClose}
+      onBack={currentBackHandler}
       persistenceKey={persistenceKey}
       header={{
         showToggleButton: true,
@@ -760,18 +900,7 @@ export function StorageModalWithTabs({
                       }
                     />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleCopyStorage}
-                    style={styles.iconButton}
-                  >
-                    <Copy size={14} color={macOSColors.text.secondary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handlePurgeStorage}
-                    style={styles.iconButton}
-                  >
-                    <Trash2 size={14} color={macOSColors.semantic.error} />
-                  </TouchableOpacity>
+                  {/* Copy and Delete buttons moved to StorageActionButtons component */}
                 </>
               )}
               {activeTab === "events" && (

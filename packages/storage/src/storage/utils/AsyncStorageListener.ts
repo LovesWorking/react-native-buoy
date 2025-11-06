@@ -122,11 +122,6 @@ class AsyncStorageListener {
 
     // Check if methods are already swizzled by checking the function name
     if (AsyncStorage.setItem.name === "swizzled_setItem") {
-      console.error(
-        "[AsyncStorageListener] CRITICAL: AsyncStorage methods are already swizzled! " +
-          "This means another instance of AsyncStorageListener is already running. " +
-          "This should not happen with singleton pattern."
-      );
       // Don't store swizzled methods as originals
       return false;
     }

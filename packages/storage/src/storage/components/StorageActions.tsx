@@ -52,7 +52,6 @@ export function StorageActions({
       await onClearAll();
       await onRefresh(); // Auto-refresh after clearing
     } catch (error) {
-      console.error("Failed to clear storage:", error);
       Alert.alert("Error", `Failed to clear storage: ${error}`);
     }
   };
@@ -71,7 +70,6 @@ export function StorageActions({
         { cancelable: true }
       );
     } catch (error) {
-      console.error("Failed to clear all storage:", error);
       Alert.alert("Error", `Failed to clear all storage: ${error}`);
     }
   };
