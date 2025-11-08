@@ -8,7 +8,11 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { useNavigation, useNavigationState } from "@react-navigation/native";
+import {
+  useSafeNavigation,
+  useSafeNavigationState,
+} from "./utils/safeReactNavigation";
+import { getSafeRouter } from "./utils/safeExpoRouter";
 
 // ============================================================================
 // Type Definitions
@@ -49,23 +53,6 @@ export interface UseNavigationStackResult {
   popToIndex: (index: number) => void;
   goBack: () => void;
   popToTop: () => void;
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get router for imperative navigation
- */
-function getRouter() {
-  try {
-    // @ts-ignore - Dynamic require for runtime resolution
-    const expoRouter = require("expo-router");
-    return expoRouter.router || null;
-  } catch (error) {
-    return null;
-  }
 }
 
 // ============================================================================
@@ -155,10 +142,10 @@ function collectRoutesFromState(
 export function useNavigationStack(): UseNavigationStackResult {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const navigation = useNavigation();
+  const navigation = useSafeNavigation();
 
   // Subscribe to navigation state changes - this will cause re-renders when state updates
-  const navigationState = useNavigationState((state) => state);
+  const navigationState = useSafeNavigationState((state) => state);
 
   // Mark as loaded once we have navigation
   useEffect(() => {
@@ -236,7 +223,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getRouter();
+    const router = getSafeRouter();
     if (!router) {
       return;
     }
@@ -260,7 +247,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getRouter();
+    const router = getSafeRouter();
     if (!router) {
       return;
     }
@@ -280,7 +267,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getRouter();
+    const router = getSafeRouter();
     if (!router) {
       return;
     }

@@ -25,7 +25,7 @@ import {
 } from "@react-buoy/shared-ui";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 import { useNavigationStack } from "../useNavigationStack";
-import { useRouter } from "expo-router";
+import { useSafeRouter } from "../utils/safeExpoRouter";
 
 // ============================================================================
 // Types
@@ -52,7 +52,7 @@ export function NavigationStack({ style }: NavigationStackProps) {
     popToTop,
   } = useNavigationStack();
 
-  const router = useRouter();
+  const router = useSafeRouter();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 

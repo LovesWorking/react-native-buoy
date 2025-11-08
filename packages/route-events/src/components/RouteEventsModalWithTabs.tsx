@@ -7,8 +7,7 @@ import {
   FlatList,
   Alert,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useSafeRouter } from "../utils/safeExpoRouter";
 import {
   JsModal,
   type ModalMode,
@@ -23,6 +22,8 @@ import {
   Trash2,
   Filter,
   SearchBar,
+  safeGetItem,
+  safeSetItem,
 } from "@react-buoy/shared-ui";
 import {
   routeObserver as defaultRouteObserver,
@@ -59,7 +60,7 @@ export function RouteEventsModalWithTabs({
   enableSharedModalDimensions = false,
   routeObserver = defaultRouteObserver,
 }: RouteEventsModalWithTabsProps) {
-  const router = useRouter();
+  const router = useSafeRouter();
   const [activeTab, setActiveTab] = useState<TabType>("events");
 
   // Automatically start route tracking when modal is visible
@@ -100,7 +101,7 @@ export function RouteEventsModalWithTabs({
 
     const loadTabState = async () => {
       try {
-        const storedTab = await AsyncStorage.getItem(
+        const storedTab = await safeGetItem(
           devToolsStorageKeys.routeEvents.activeTab()
         );
         if (storedTab && (storedTab === "routes" || storedTab === "events")) {
@@ -121,7 +122,7 @@ export function RouteEventsModalWithTabs({
 
     const loadMonitoringState = async () => {
       try {
-        const storedMonitoring = await AsyncStorage.getItem(
+        const storedMonitoring = await safeGetItem(
           devToolsStorageKeys.routeEvents.isMonitoring()
         );
         if (storedMonitoring !== null) {
@@ -143,7 +144,7 @@ export function RouteEventsModalWithTabs({
 
     const saveTabState = async () => {
       try {
-        await AsyncStorage.setItem(
+        await safeSetItem(
           devToolsStorageKeys.routeEvents.activeTab(),
           activeTab
         );
@@ -161,7 +162,7 @@ export function RouteEventsModalWithTabs({
 
     const saveMonitoringState = async () => {
       try {
-        await AsyncStorage.setItem(
+        await safeSetItem(
           devToolsStorageKeys.routeEvents.isMonitoring(),
           isListening.toString()
         );
@@ -179,7 +180,7 @@ export function RouteEventsModalWithTabs({
 
     const loadFilters = async () => {
       try {
-        const storedFilters = await AsyncStorage.getItem(
+        const storedFilters = await safeGetItem(
           devToolsStorageKeys.routeEvents.eventFilters()
         );
         if (storedFilters) {
@@ -202,7 +203,7 @@ export function RouteEventsModalWithTabs({
     const saveFilters = async () => {
       try {
         const filters = Array.from(ignoredPatterns);
-        await AsyncStorage.setItem(
+        await safeSetItem(
           devToolsStorageKeys.routeEvents.eventFilters(),
           JSON.stringify(filters)
         );
