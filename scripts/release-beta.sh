@@ -119,6 +119,11 @@ fi
 print_step "Building packages"
 pnpm run build:packages
 
+# Save the current git ref before versioning (changeset version creates commits)
+if [ "$DRY_RUN" = true ]; then
+  ORIGINAL_REF=$(git rev-parse HEAD)
+fi
+
 print_step "Applying version bumps"
 pnpm changeset version
 
@@ -138,7 +143,7 @@ if [ "$DRY_RUN" = true ]; then
   done
 
   print_step "Cleaning up (reverting version changes)"
-  git reset --hard HEAD
+  git reset --hard "$ORIGINAL_REF"
   git clean -fd .changeset/
   pnpm install
 
