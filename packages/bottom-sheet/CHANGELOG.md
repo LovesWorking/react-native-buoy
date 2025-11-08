@@ -1,8 +1,18 @@
 # Changelog
 
+## 0.1.1-beta.0
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.0
+
 All notable changes to this project will be documented in this file.
 
 ## [0.1.0] - 2025-11-06
 
 ### Added
+
 - Initial release of @react-buoy/bottom-sheet
