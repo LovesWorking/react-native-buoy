@@ -139,6 +139,7 @@ if [ "$DRY_RUN" = true ]; then
 
   print_step "Cleaning up (reverting version changes)"
   git reset --hard HEAD
+  git clean -fd .changeset/
   pnpm install
 
   print_success "✅ Dry run complete. No packages were published."
