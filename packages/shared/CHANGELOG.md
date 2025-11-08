@@ -1,5 +1,17 @@
 # @react-buoy/shared-ui
 
+## 0.1.33-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- 5abd85c: Fix back button touch handling in floating modals and resolve ESLint errors
+
+  - **JsModal**: Add `onBack` prop to enable tap detection on top-left corner resize handle, preventing accidental resize when tapping back button
+  - **StorageModalWithTabs**: Pass appropriate back handler to JsModal based on current view state
+  - **clearAllStorage**: Remove useless try/catch wrappers that only re-threw errors
+  - **Switch statements**: Add explicit fallthrough comments to satisfy ESLint no-fallthrough rule
+
 ## 0.1.33-beta.0
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.33-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.1
+
 ## 0.1.33-beta.0
 
 ### Patch Changes
