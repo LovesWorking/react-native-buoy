@@ -15,6 +15,7 @@
   "scripts": {
     "build": "bob build",
     "typecheck": "tsc --noEmit",
+    "prepare": "bob build",
     "clean": "rimraf lib",
     "test": "pnpm run typecheck"
   },

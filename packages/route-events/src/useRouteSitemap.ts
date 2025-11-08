@@ -17,16 +17,32 @@ import {
 type RouteNode = any;
 
 /**
- * Access expo-router's internal store using dynamic require
- * to avoid Metro bundler resolution issues with internal paths
+ * Access expo-router's internal store
+ * Using the source path as documented in Expo Router interception guides
  */
 function getRouterStore() {
   try {
-    // Try the build path first (more reliable)
+    // Import from source path (not build path) as per documentation
     // @ts-ignore - Dynamic require for runtime resolution
-    const routerStore = require("expo-router/build/global-state/router-store");
-    return routerStore?.store || null;
+    const routerStore = require("expo-router/src/global-state/router-store");
+
+    // The store is exported directly
+    const store = routerStore.store;
+
+    // Validate that we have the expected properties
+    if (store && typeof store === 'object' && 'routeNode' in store) {
+      return store;
+    }
+
+    if (__DEV__) {
+      console.warn('[useRouteSitemap] Store object missing expected properties');
+    }
+    return null;
   } catch (error) {
+    // Log error in development for debugging
+    if (__DEV__) {
+      console.error('[useRouteSitemap] Failed to access expo-router store:', error);
+    }
     return null;
   }
 }
@@ -38,17 +54,31 @@ function getRouteNode(): RouteNode | null {
   try {
     const store = getRouterStore();
     if (!store) {
+      if (__DEV__) {
+        console.warn('[useRouteSitemap] Router store not available');
+      }
       return null;
     }
 
-    // Check if navigation is ready
-    const navRef = store.navigationRef?.current;
-    if (!navRef || !navRef.isReady()) {
+    // The routeNode is available independently of navigation state
+    // It's set during the initial app setup via getRoutes()
+    const routeNode = store.routeNode;
+    if (!routeNode) {
+      if (__DEV__) {
+        console.warn('[useRouteSitemap] Route node not available in store');
+      }
       return null;
     }
 
-    return store.routeNode || null;
+    if (__DEV__) {
+      console.log('[useRouteSitemap] Successfully loaded route node');
+    }
+
+    return routeNode;
   } catch (error) {
+    if (__DEV__) {
+      console.error('[useRouteSitemap] Error getting route node:', error);
+    }
     return null;
   }
 }
@@ -159,10 +189,34 @@ export function useRouteSitemap(
     setIsLoaded(node !== null);
   };
 
-  // Initial load
+  // Initial load with retries
   useEffect(() => {
-    // Delay initial load to ensure router is ready
-    const timeout = setTimeout(refresh, 100);
+    let attempts = 0;
+    const maxAttempts = 10;
+    const retryDelay = 500; // ms
+
+    const attemptLoad = () => {
+      const node = getRouteNode();
+      if (node) {
+        setRouteNode(node);
+        setIsLoaded(true);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        if (__DEV__) {
+          console.log(`[useRouteSitemap] Retry attempt ${attempts}/${maxAttempts}`);
+        }
+        setTimeout(attemptLoad, retryDelay);
+      } else {
+        if (__DEV__) {
+          console.error('[useRouteSitemap] Failed to load routes after maximum retries');
+        }
+        // Set isLoaded to true anyway to show an error state rather than loading forever
+        setIsLoaded(true);
+      }
+    };
+
+    // Start initial attempt after a small delay
+    const timeout = setTimeout(attemptLoad, 100);
     return () => clearTimeout(timeout);
   }, []);
 

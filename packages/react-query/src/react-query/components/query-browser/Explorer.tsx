@@ -425,7 +425,7 @@ export default function Explorer({
                     isMainSection && styles.labelTextMain,
                   ]}
                 >
-                  {label.toUpperCase()}
+                  {label}
                 </Text>
                 <Text style={styles.textGray500}>{`${
                   String(valueType).toLowerCase() === "iterable"
@@ -592,7 +592,7 @@ export default function Explorer({
               </>
             ) : (
               <>
-                <Text style={styles.text344054}>{label.toUpperCase()}</Text>
+                <Text style={styles.text344054}>{label}</Text>
                 <Text style={styles.displayValueText}>
                   {displayValue(value)}
                 </Text>
@@ -770,7 +770,6 @@ const styles = StyleSheet.create({
     marginRight: 4,
     fontFamily: "monospace",
     letterSpacing: 0.4,
-    textTransform: "uppercase",
   },
   labelTextFocused: {
     color: gameUIColors.info,
@@ -873,7 +872,6 @@ const styles = StyleSheet.create({
     minWidth: 50,
     fontFamily: "monospace",
     letterSpacing: 0.4,
-    textTransform: "uppercase",
     opacity: 0.8,
   },
   numberInputButtons: {
