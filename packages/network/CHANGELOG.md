@@ -1,5 +1,13 @@
 # @react-buoy/network
 
+## 0.1.34-beta.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.0
+  - @react-buoy/react-query@0.1.34-beta.0
+
 ## 0.1.33
 
 ### Patch Changes

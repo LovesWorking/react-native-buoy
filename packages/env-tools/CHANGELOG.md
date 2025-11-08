@@ -1,5 +1,12 @@
 # @react-buoy/env
 
+## 0.1.34-beta.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.0
+
 ## 0.1.33
 
 ### Patch Changes

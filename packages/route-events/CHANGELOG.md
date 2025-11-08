@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.34-beta.0
+
+### Patch Changes
+
+- fix: comprehensive optional dependency improvements
+
+  - **AsyncStorage**: Enhanced error handling to catch ALL initialization errors including native module failures
+  - **expo-router**: Created safe wrappers with graceful fallbacks for all hooks
+  - **react-navigation**: Created safe wrappers with graceful fallbacks
+  - **React Query**: Added helpful error message when peer dependency is missing
+  - All optional dependencies now work reliably when packages are missing or native modules aren't linked
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.0
+
 ## 0.1.33
 
 ### Patch Changes
