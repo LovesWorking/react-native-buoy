@@ -1,5 +1,20 @@
 # example
 
+## 1.0.17-beta.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @react-buoy/bottom-sheet@0.1.2-beta.1
+  - @react-buoy/debug-borders@0.1.34-beta.1
+  - @react-buoy/core@0.1.34-beta.1
+  - @react-buoy/env@0.1.34-beta.1
+  - @react-buoy/network@0.1.34-beta.1
+  - @react-buoy/react-query@0.1.34-beta.1
+  - @react-buoy/route-events@0.1.34-beta.1
+  - @react-buoy/shared-ui@0.1.34-beta.1
+  - @react-buoy/storage@0.1.34-beta.1
+
 ## 1.0.17-beta.0
 
 ### Patch Changes
