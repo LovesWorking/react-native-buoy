@@ -18,13 +18,13 @@ print_error() {
 }
 
 # Parse arguments
-PRERELEASE_ID="${1:-beta}"
+PRERELEASE_ID="beta"
 DRY_RUN=false
 SKIP_TESTS=false
 NO_GIT=true
 
-for arg in "$@"; do
-  case $arg in
+while [[ $# -gt 0 ]]; do
+  case $1 in
     --dry-run)
       DRY_RUN=true
       shift
@@ -56,6 +56,14 @@ for arg in "$@"; do
       echo "  $0 --dry-run          # See what would happen without publishing"
       echo "  $0 beta --with-git    # Release beta and commit to git"
       exit 0
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+    *)
+      PRERELEASE_ID="$1"
+      shift
       ;;
   esac
 done
