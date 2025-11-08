@@ -6,11 +6,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import {
-  useSafePathname,
-  useSafeSegments,
-  useSafeGlobalSearchParams,
-} from "./utils/safeExpoRouter";
+import { usePathname, useSegments, useGlobalSearchParams } from "expo-router";
 import { routeObserver, type RouteChangeEvent } from "./RouteObserver";
 
 /**
@@ -32,9 +28,9 @@ import { routeObserver, type RouteChangeEvent } from "./RouteObserver";
  * ```
  */
 export function useRouteObserver(callback?: (event: RouteChangeEvent) => void) {
-  const pathname = useSafePathname();
-  const segments = useSafeSegments();
-  const params = useSafeGlobalSearchParams();
+  const pathname = usePathname();
+  const segments = useSegments();
+  const params = useGlobalSearchParams();
   const callbackRef = useRef(callback);
   const previousPathnameRef = useRef<string | undefined>(undefined);
   const previousTimestampRef = useRef<number | undefined>(undefined);

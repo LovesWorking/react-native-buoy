@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { safeAsyncStorage as AsyncStorage } from '../utils/safeAsyncStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StorageKeyInfo, RequiredStorageKey } from '../types';
 
 interface UseAsyncStorageKeysResult {

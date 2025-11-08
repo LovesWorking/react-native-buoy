@@ -7,7 +7,7 @@ import {
   FlatList,
   Alert,
 } from "react-native";
-import { useSafeRouter } from "../utils/safeExpoRouter";
+import { useRouter } from "expo-router";
 import {
   JsModal,
   type ModalMode,
@@ -60,7 +60,7 @@ export function RouteEventsModalWithTabs({
   enableSharedModalDimensions = false,
   routeObserver = defaultRouteObserver,
 }: RouteEventsModalWithTabsProps) {
-  const router = useSafeRouter();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("events");
 
   // Automatically start route tracking when modal is visible

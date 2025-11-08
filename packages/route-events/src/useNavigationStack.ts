@@ -8,11 +8,8 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import {
-  useSafeNavigation,
-  useSafeNavigationState,
-} from "./utils/safeReactNavigation";
-import { getSafeRouter } from "./utils/safeExpoRouter";
+import { useNavigation, useNavigationState } from "@react-navigation/native";
+import { router } from "expo-router";
 
 // ============================================================================
 // Type Definitions
@@ -142,10 +139,10 @@ function collectRoutesFromState(
 export function useNavigationStack(): UseNavigationStackResult {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const navigation = useSafeNavigation();
+  const navigation = useNavigation();
 
   // Subscribe to navigation state changes - this will cause re-renders when state updates
-  const navigationState = useSafeNavigationState((state) => state);
+  const navigationState = useNavigationState((state) => state);
 
   // Mark as loaded once we have navigation
   useEffect(() => {
@@ -223,7 +220,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getSafeRouter();
+    // Use router directly from expo-router
     if (!router) {
       return;
     }
@@ -247,7 +244,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getSafeRouter();
+    // Use router directly from expo-router
     if (!router) {
       return;
     }
@@ -267,7 +264,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getSafeRouter();
+    // Use router directly from expo-router
     if (!router) {
       return;
     }

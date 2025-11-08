@@ -6,7 +6,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { safeAsyncStorage as AsyncStorage } from "../utils/safeAsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AsyncStorageEvent } from "../utils/AsyncStorageListener";
 import {
   formatRelativeTime,

@@ -8,7 +8,7 @@ import {
   Alert,
   TextInput,
 } from "react-native";
-import { safeAsyncStorage as AsyncStorage, isAsyncStorageAvailable } from "../utils/safeAsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   JsModal,
   type ModalMode,
@@ -684,19 +684,6 @@ export function StorageModalWithTabs({
     : devToolsStorageKeys.storage.modal();
 
   const renderContent = () => {
-    // Show warning if AsyncStorage is not available
-    if (!isAsyncStorageAvailable()) {
-      return (
-        <View style={styles.emptyState}>
-          <AlertCircle size={48} color={macOSColors.semantic.warning} />
-          <Text style={styles.emptyTitle}>AsyncStorage Not Available</Text>
-          <Text style={styles.emptySubtitle}>
-            Install @react-native-async-storage/async-storage to use storage features
-          </Text>
-        </View>
-      );
-    }
-
     if (activeTab === "browser") {
       if (showStorageFilters) {
         return (

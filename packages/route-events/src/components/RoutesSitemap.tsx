@@ -19,7 +19,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useSafeRouter } from "../utils/safeExpoRouter";
+import { useRouter } from "expo-router";
 import {
   macOSColors,
   Search,
@@ -62,7 +62,7 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
     new Set(["Root Routes", "Dynamic Routes"])
   );
 
-  const router = useSafeRouter();
+  const router = useRouter();
 
   const { groups, stats, isLoaded, filteredRoutes } = useRouteSitemap({
     searchQuery,
