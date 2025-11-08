@@ -13,9 +13,14 @@
 let AsyncStorage: any = null;
 let isAvailable = false;
 let checkedAvailability = false;
+let checkError: Error | null = null;
 
 /**
  * Check if AsyncStorage is available in the host app
+ * This handles three cases:
+ * 1. Package not installed (module not found)
+ * 2. Package installed but native module not linked (native module null)
+ * 3. Package installed and working
  */
 function checkAsyncStorageAvailability(): boolean {
   if (checkedAvailability) {
@@ -24,12 +29,35 @@ function checkAsyncStorageAvailability(): boolean {
 
   try {
     // Attempt to require AsyncStorage
-    AsyncStorage = require("@react-native-async-storage/async-storage").default;
-    isAvailable = AsyncStorage != null;
-  } catch (error) {
-    // AsyncStorage package is not installed
+    // This might throw if:
+    // - Package is not installed (module not found)
+    // - Native module is not linked (RCTAsyncStorage is null)
+    const AsyncStorageModule = require("@react-native-async-storage/async-storage");
+    AsyncStorage = AsyncStorageModule?.default || AsyncStorageModule;
+
+    // Verify it's actually usable (has the methods we need)
+    if (AsyncStorage && typeof AsyncStorage.getItem === "function") {
+      isAvailable = true;
+    } else {
+      isAvailable = false;
+      AsyncStorage = null;
+    }
+  } catch (error: any) {
+    // Catch ALL errors:
+    // - Module not found (package not installed)
+    // - Native module errors (package installed but native not linked)
+    // - Any other initialization errors
+    checkError = error;
     isAvailable = false;
     AsyncStorage = null;
+
+    // Only log in development for debugging
+    if (__DEV__) {
+      console.log(
+        "[SafeAsyncStorage] AsyncStorage not available:",
+        error?.message || "Unknown error"
+      );
+    }
   }
 
   checkedAvailability = true;
@@ -72,10 +100,23 @@ const noOpAsyncStorage = {
  */
 export const safeAsyncStorage = new Proxy(noOpAsyncStorage, {
   get(_target, prop) {
-    checkAsyncStorageAvailability();
+    // Avoid triggering check for React internal properties or symbols
+    if (typeof prop === "symbol" || prop.startsWith("_") || prop.startsWith("$$")) {
+      return noOpAsyncStorage[prop as keyof typeof noOpAsyncStorage];
+    }
 
-    if (isAvailable && AsyncStorage) {
-      return AsyncStorage[prop];
+    // Only check availability when actually accessing AsyncStorage methods
+    try {
+      checkAsyncStorageAvailability();
+
+      if (isAvailable && AsyncStorage) {
+        return AsyncStorage[prop];
+      }
+    } catch (error) {
+      // If check throws for any reason, fall back to no-op
+      if (__DEV__) {
+        console.warn("[SafeAsyncStorage] Unexpected error during availability check:", error);
+      }
     }
 
     // Return no-op implementation
