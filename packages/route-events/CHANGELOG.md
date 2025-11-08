@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.33
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- fix: improve optional dependency handling for AsyncStorage, expo-router, and react-navigation
+
+  - Enhanced error handling to catch all AsyncStorage initialization errors (not just module not found)
+  - Now handles case where AsyncStorage package is installed but native module isn't linked
+  - Added protection against React Fast Refresh internal property access
+  - Created safe wrappers for expo-router and react-navigation hooks
+  - All optional peer dependencies now gracefully fall back when unavailable
+  - Added helpful error message for @react-buoy/react-query when React Query is missing
+
+- Updated dependencies
+- Updated dependencies [5abd85c]
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.33
+
 ## 0.1.33-beta.2
 
 ### Patch Changes

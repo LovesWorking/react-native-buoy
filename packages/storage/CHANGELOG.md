@@ -1,5 +1,31 @@
 # @react-buoy/storage
 
+## 0.1.33
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- 5abd85c: Fix back button touch handling in floating modals and resolve ESLint errors
+
+  - **JsModal**: Add `onBack` prop to enable tap detection on top-left corner resize handle, preventing accidental resize when tapping back button
+  - **StorageModalWithTabs**: Pass appropriate back handler to JsModal based on current view state
+  - **clearAllStorage**: Remove useless try/catch wrappers that only re-threw errors
+  - **Switch statements**: Add explicit fallthrough comments to satisfy ESLint no-fallthrough rule
+
+- fix: improve optional dependency handling for AsyncStorage, expo-router, and react-navigation
+
+  - Enhanced error handling to catch all AsyncStorage initialization errors (not just module not found)
+  - Now handles case where AsyncStorage package is installed but native module isn't linked
+  - Added protection against React Fast Refresh internal property access
+  - Created safe wrappers for expo-router and react-navigation hooks
+  - All optional peer dependencies now gracefully fall back when unavailable
+  - Added helpful error message for @react-buoy/react-query when React Query is missing
+
+- Updated dependencies
+- Updated dependencies [5abd85c]
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.33
+
 ## 0.1.33-beta.2
 
 ### Patch Changes
