@@ -1,5 +1,105 @@
 # @react-buoy/core
 
+## 1.5.0-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@1.5.0-beta.1
+
+## 0.1.34-beta.5
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.5
+
+## 0.1.34-beta.4
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.4
+
+## 0.1.34-beta.3
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.3
+
+## 0.1.34-beta.2
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.2
+
+## 0.1.34-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.1
+
+## 0.1.34-beta.0
+
+### Patch Changes
+
+- fix: comprehensive optional dependency improvements
+
+  - **AsyncStorage**: Enhanced error handling to catch ALL initialization errors including native module failures
+  - **expo-router**: Created safe wrappers with graceful fallbacks for all hooks
+  - **react-navigation**: Created safe wrappers with graceful fallbacks
+  - **React Query**: Added helpful error message when peer dependency is missing
+  - All optional dependencies now work reliably when packages are missing or native modules aren't linked
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.0
+
+## 0.1.33
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.33
+
+## 0.1.33-beta.2
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.2
+
+## 0.1.33-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.1
+
+## 0.1.33-beta.0
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.0
+
 ## 0.1.21
 
 ### Patch Changes

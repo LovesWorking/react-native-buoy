@@ -25,16 +25,27 @@ function loadAsyncStorage(): StorageLike | null {
     loadAttempted = true;
     try {
       // Use require for better Metro compatibility with optional dependencies
-      const AsyncStorage = require("@react-native-async-storage/async-storage")
-        .default as StorageLike | undefined;
+      // This might throw if:
+      // - Package is not installed (module not found)
+      // - Native module is not linked (RCTAsyncStorage is null)
+      const AsyncStorageModule = require("@react-native-async-storage/async-storage");
+      const AsyncStorage = (AsyncStorageModule?.default || AsyncStorageModule) as StorageLike | undefined;
+
       if (AsyncStorage && typeof AsyncStorage.getItem === "function") {
         cachedAsyncStorage = AsyncStorage;
         return cachedAsyncStorage;
       }
-    } catch (err) {
-      if (!warnedMissing) {
+    } catch (err: any) {
+      // Catch ALL errors:
+      // - Module not found (package not installed)
+      // - Native module errors (package installed but native not linked)
+      // - Any other initialization errors
+      if (!warnedMissing && typeof __DEV__ !== "undefined" && __DEV__) {
         warnedMissing = true;
-        // AsyncStorage not found - using in-memory fallback
+        console.log(
+          "[SafeAsyncStorage] AsyncStorage not available, using in-memory fallback:",
+          err?.message || "Unknown error"
+        );
       }
     }
   }

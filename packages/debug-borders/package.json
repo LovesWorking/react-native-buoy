@@ -2,8 +2,8 @@
   "name": "@react-buoy/debug-borders",
   "version": "0.1.33",
   "description": "debug-borders package",
-  "main": "lib/commonjs/index",
-  "module": "lib/module/index",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
   "types": "lib/typescript/index.d.ts",
   "react-native": "src/index.tsx",
   "source": "src/index.tsx",
@@ -15,6 +15,7 @@
   "scripts": {
     "build": "bob build",
     "typecheck": "tsc --noEmit",
+    "prepare": "bob build",
     "clean": "rimraf lib",
     "test": "pnpm run typecheck"
   },

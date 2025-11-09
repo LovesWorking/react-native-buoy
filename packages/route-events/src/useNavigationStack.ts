@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigation, useNavigationState } from "@react-navigation/native";
+import { router } from "expo-router";
 
 // ============================================================================
 // Type Definitions
@@ -49,23 +50,6 @@ export interface UseNavigationStackResult {
   popToIndex: (index: number) => void;
   goBack: () => void;
   popToTop: () => void;
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get router for imperative navigation
- */
-function getRouter() {
-  try {
-    // @ts-ignore - Dynamic require for runtime resolution
-    const expoRouter = require("expo-router");
-    return expoRouter.router || null;
-  } catch (error) {
-    return null;
-  }
 }
 
 // ============================================================================
@@ -236,7 +220,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getRouter();
+    // Use router directly from expo-router
     if (!router) {
       return;
     }
@@ -260,7 +244,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getRouter();
+    // Use router directly from expo-router
     if (!router) {
       return;
     }
@@ -280,7 +264,7 @@ export function useNavigationStack(): UseNavigationStackResult {
       return;
     }
 
-    const router = getRouter();
+    // Use router directly from expo-router
     if (!router) {
       return;
     }

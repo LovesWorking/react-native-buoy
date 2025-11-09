@@ -1,6 +1,6 @@
 {
   "name": "example-dev-build",
-  "version": "1.0.15",
+  "version": "1.0.17-beta.6",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-buoy/bottom-sheet": "workspace:*",
     "@react-buoy/core": "workspace:*",
     "@react-buoy/debug-borders": "workspace:*",
     "@react-buoy/env": "workspace:*",

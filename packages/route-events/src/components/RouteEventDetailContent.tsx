@@ -6,7 +6,6 @@ import {
   ScrollView,
 } from "react-native";
 import { useEffect, useState, useCallback, useRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { RouteChangeEvent } from "../RouteObserver";
 import {
   formatRelativeTime,
@@ -17,6 +16,8 @@ import {
   AlertCircle,
   Navigation as NavigationIcon,
   GitBranch,
+  safeGetItem,
+  safeSetItem,
 } from "@react-buoy/shared-ui";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 
@@ -55,7 +56,7 @@ export function RouteEventDetailContent({
     const loadPreferences = async () => {
       try {
         // Load detail view preference (current/diff)
-        const savedDetailView = await AsyncStorage.getItem(
+        const savedDetailView = await safeGetItem(
           devToolsStorageKeys.routeEvents.detailView()
         );
         if (savedDetailView === "current" || savedDetailView === "diff") {
@@ -75,7 +76,7 @@ export function RouteEventDetailContent({
   const handleViewChange = useCallback(async (view: "current" | "diff") => {
     setInternalActiveView(view);
     try {
-      await AsyncStorage.setItem(
+      await safeSetItem(
         devToolsStorageKeys.routeEvents.detailView(),
         view
       );

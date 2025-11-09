@@ -1,7 +1,7 @@
 {
-  "name": "@react-buoy/react-query",
-  "version": "0.1.33",
-  "description": "react-query package",
+  "name": "@react-buoy/bottom-sheet",
+  "version": "1.5.0-beta.1",
+  "description": "bottom-sheet package",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "lib/typescript/index.d.ts",
@@ -17,18 +17,17 @@
     "typecheck": "tsc --noEmit",
     "prepare": "bob build",
     "clean": "rimraf lib",
-    "test": "pnpm run typecheck"
+    "test": "pnpm run typecheck",
+    "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
     "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
-    "@tanstack/react-query": ">=5.0.0",
     "react": "*",
     "react-native": "*"
   },
   "devDependencies": {
-    "@tanstack/react-query": "^5.89.0",
     "@types/react": "^19.1.0",
     "@types/react-native": "^0.73.0",
     "typescript": "~5.8.3"
@@ -45,12 +44,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/LovesWorking/react-native-buoy.git",
-    "directory": "packages/react-query"
+    "directory": "packages/bottom-sheet"
   },
   "bugs": {
     "url": "https://github.com/LovesWorking/react-native-buoy/issues"
   },
-  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/react-query#readme",
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/bottom-sheet#readme",
   "publishConfig": {
     "access": "public",
     "tag": "latest"

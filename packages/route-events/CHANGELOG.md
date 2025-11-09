@@ -1,5 +1,146 @@
 # Changelog
 
+## 1.5.0-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@1.5.0-beta.1
+
+## 0.1.34-beta.5
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- 1994e8a: fix: revert dedicated devtools to use direct imports of their peer dependencies
+
+  - **@react-buoy/storage**: Now directly imports AsyncStorage (like react-query does with React Query)
+  - **@react-buoy/route-events**: Now directly imports expo-router and react-navigation
+  - These packages are ONLY useful when you have their peer dependencies installed
+  - Safe wrappers remain in @react-buoy/shared-ui and @react-buoy/core for optional usage
+  - Fixes AsyncStorage event listener not working (was using no-op fallback instead of real AsyncStorage)
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.5
+
+## 0.1.34-beta.4
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- 1994e8a: fix: revert dedicated devtools to use direct imports of their peer dependencies
+
+  - **@react-buoy/storage**: Now directly imports AsyncStorage (like react-query does with React Query)
+  - **@react-buoy/route-events**: Now directly imports expo-router and react-navigation
+  - These packages are ONLY useful when you have their peer dependencies installed
+  - Safe wrappers remain in @react-buoy/shared-ui and @react-buoy/core for optional usage
+  - Fixes AsyncStorage event listener not working (was using no-op fallback instead of real AsyncStorage)
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.4
+
+## 0.1.34-beta.3
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- 1994e8a: fix: revert dedicated devtools to use direct imports of their peer dependencies
+
+  - **@react-buoy/storage**: Now directly imports AsyncStorage (like react-query does with React Query)
+  - **@react-buoy/route-events**: Now directly imports expo-router and react-navigation
+  - These packages are ONLY useful when you have their peer dependencies installed
+  - Safe wrappers remain in @react-buoy/shared-ui and @react-buoy/core for optional usage
+  - Fixes AsyncStorage event listener not working (was using no-op fallback instead of real AsyncStorage)
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.3
+
+## 0.1.34-beta.2
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- 1994e8a: fix: revert dedicated devtools to use direct imports of their peer dependencies
+
+  - **@react-buoy/storage**: Now directly imports AsyncStorage (like react-query does with React Query)
+  - **@react-buoy/route-events**: Now directly imports expo-router and react-navigation
+  - These packages are ONLY useful when you have their peer dependencies installed
+  - Safe wrappers remain in @react-buoy/shared-ui and @react-buoy/core for optional usage
+  - Fixes AsyncStorage event listener not working (was using no-op fallback instead of real AsyncStorage)
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.2
+
+## 0.1.34-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.1
+
+## 0.1.34-beta.0
+
+### Patch Changes
+
+- fix: comprehensive optional dependency improvements
+
+  - **AsyncStorage**: Enhanced error handling to catch ALL initialization errors including native module failures
+  - **expo-router**: Created safe wrappers with graceful fallbacks for all hooks
+  - **react-navigation**: Created safe wrappers with graceful fallbacks
+  - **React Query**: Added helpful error message when peer dependency is missing
+  - All optional dependencies now work reliably when packages are missing or native modules aren't linked
+
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.34-beta.0
+
+## 0.1.33
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- fix: improve optional dependency handling for AsyncStorage, expo-router, and react-navigation
+
+  - Enhanced error handling to catch all AsyncStorage initialization errors (not just module not found)
+  - Now handles case where AsyncStorage package is installed but native module isn't linked
+  - Added protection against React Fast Refresh internal property access
+  - Created safe wrappers for expo-router and react-navigation hooks
+  - All optional peer dependencies now gracefully fall back when unavailable
+  - Added helpful error message for @react-buoy/react-query when React Query is missing
+
+- Updated dependencies
+- Updated dependencies [5abd85c]
+- Updated dependencies
+  - @react-buoy/shared-ui@0.1.33
+
+## 0.1.33-beta.2
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.2
+
+## 0.1.33-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.1
+
+## 0.1.33-beta.0
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+- Updated dependencies [5abd85c]
+  - @react-buoy/shared-ui@0.1.33-beta.0
+
 ## 0.1.22
 
 ### Patch Changes

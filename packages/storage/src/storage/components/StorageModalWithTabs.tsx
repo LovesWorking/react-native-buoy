@@ -30,6 +30,7 @@ import {
   Search,
   copyToClipboard,
   X,
+  AlertCircle,
 } from "@react-buoy/shared-ui";
 import { RequiredStorageKey } from "../types";
 import { StorageBrowserMode } from "./StorageBrowserMode";
