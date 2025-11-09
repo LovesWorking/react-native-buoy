@@ -30,6 +30,8 @@ export const devToolsStorageKeys = {
     state: () => `${devToolsStorageKeys.modal.root()}_state` as const,
     position: () => `${devToolsStorageKeys.modal.root()}_position` as const,
     dimensions: () => `${devToolsStorageKeys.modal.root()}_dimensions` as const,
+    hintAcknowledged: () =>
+      `${devToolsStorageKeys.modal.root()}_hint_acknowledged` as const,
   },
 
   /**

@@ -58,6 +58,17 @@ function App() {
 - ✅ Provides all three tabs (Routes, Events, Stack)
 - ✅ No configuration, no props, no hooks to call
 
+## Requirements
+
+`@react-buoy/route-events` relies on the same core libraries as Expo Router itself:
+
+- `expo-router` ≥ 2.0.0 (the Routes tab reads `store.routeNode` directly)
+- `@react-navigation/native` ≥ 7.x (Stack tab + Expo Router routing hooks)
+- `@react-native-async-storage/async-storage` (state persistence)
+- `react` / `react-native`
+
+These packages are declared as `peerDependencies`, so your app decides the exact versions. When a dependency is missing or not initialized, the devtool logs a clear `[RouteEvents] ...` console message (in dev builds) and gracefully disables the affected feature instead of crashing. See `packages/route-events/docs/ROUTES_SITEMAP_ACCESS_GUIDE.md` for the full data-flow and troubleshooting guide.
+
 ### Alternative: Manual Setup
 
 If you're not using FloatingDevTools or want more control:

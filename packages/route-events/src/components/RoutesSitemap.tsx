@@ -26,6 +26,7 @@ import {
   ChevronDown,
   ChevronRight,
   InlineCopyButton,
+  ToolbarCopyButton,
 } from "@react-buoy/shared-ui";
 import { useRouteSitemap } from "../useRouteSitemap";
 import type { RouteInfo, RouteGroup } from "../RouteParser";
@@ -64,10 +65,39 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
 
   const router = useRouter();
 
-  const { groups, stats, isLoaded, filteredRoutes } = useRouteSitemap({
+  const { groups, stats, isLoaded, filteredRoutes, routes } = useRouteSitemap({
     searchQuery,
     sortBy: "path",
   });
+
+  // Prepare copy data - memoized so it only rebuilds when dependencies change
+  const copyAllData = useMemo(() => {
+    return {
+      summary: {
+        total: stats.total,
+        static: stats.static,
+        dynamic: stats.dynamic,
+        layouts: stats.layouts,
+        groups: stats.groups,
+        timestamp: new Date().toISOString(),
+      },
+      groups: groups.map((group) => ({
+        title: group.title,
+        description: group.description,
+        count: group.routes.length,
+        routes: group.routes.map((route) => ({
+          path: route.path,
+          name: route.name,
+          type: route.type,
+          params: route.params,
+          depth: route.depth,
+          hasChildren: route.children.length > 0,
+          childrenCount: route.children.length,
+        })),
+      })),
+      allRoutes: routes.map((route) => route.path),
+    };
+  }, [groups, stats, routes]);
 
   const handleToggleGroup = useCallback((groupTitle: string) => {
     setExpandedGroups((prev) => {
@@ -218,7 +248,7 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
 
   return (
     <View style={[styles.container, style]}>
-      {/* Compact header with stats and search button */}
+      {/* Compact header with stats and action buttons */}
       {!isSearching ? (
         <View style={styles.header}>
           <View style={styles.statsRow}>
@@ -227,12 +257,18 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
             <StatItem value={stats.dynamic} label="Dynamic" />
             <StatItem value={stats.layouts} label="Layouts" />
           </View>
-          <TouchableOpacity
-            style={styles.searchButton}
-            onPress={() => setIsSearching(true)}
-          >
-            <Search size={16} color={macOSColors.text.secondary} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <ToolbarCopyButton
+              value={copyAllData}
+              buttonStyle={styles.actionButtonHeader}
+            />
+            <TouchableOpacity
+              style={styles.searchButton}
+              onPress={() => setIsSearching(true)}
+            >
+              <Search size={16} color={macOSColors.text.secondary} />
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
         /* Search mode - full width search bar */
@@ -547,6 +583,20 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  actionButtonHeader: {
+    padding: 6,
+    borderRadius: 4,
+    backgroundColor: macOSColors.background.input,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
   },
 
   searchButton: {

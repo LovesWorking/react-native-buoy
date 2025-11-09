@@ -24,6 +24,7 @@ import {
   SearchBar,
   safeGetItem,
   safeSetItem,
+  ToolbarCopyButton,
 } from "@react-buoy/shared-ui";
 import {
   routeObserver as defaultRouteObserver,
@@ -337,6 +338,30 @@ export function RouteEventsModalWithTabs({
     return eventVisitNumbers;
   }, [events]);
 
+  // Prepare copy data - memoized so it only rebuilds when dependencies change
+  const copyAllEventsData = useMemo(() => {
+    return {
+      summary: {
+        total: events.length,
+        filtered: filteredEvents.length,
+        listening: isListening,
+        ignoredPatterns: Array.from(ignoredPatterns),
+        timestamp: new Date().toISOString(),
+      },
+      events: filteredEvents.map((event, index) => ({
+        index,
+        visitNumber: visitCounts.get(index) || 1,
+        pathname: event.pathname,
+        timestamp: event.timestamp,
+        timestampRelative: formatRelativeTime(event.timestamp),
+        params: event.params,
+        segments: event.segments,
+        previousPathname: event.previousPathname,
+        timeSincePrevious: event.timeSincePrevious,
+      })),
+    };
+  }, [events.length, filteredEvents, isListening, ignoredPatterns, visitCounts]);
+
   if (!visible) return null;
 
   const persistenceKey = enableSharedModalDimensions
@@ -449,6 +474,10 @@ export function RouteEventsModalWithTabs({
             <ModalHeader.Actions onClose={onClose}>
               {activeTab === "events" && (
                 <>
+                  <ToolbarCopyButton
+                    value={copyAllEventsData}
+                    buttonStyle={styles.iconButton}
+                  />
                   <TouchableOpacity
                     onPress={handleToggleFilters}
                     style={[

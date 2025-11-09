@@ -37,8 +37,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "./hooks/useSafeAreaInsets";
 import { gameUIColors } from "./ui/gameUI";
-import { DraggableHeader } from "./ui/components";
+import { DraggableHeader, ModalHintBanner } from "./ui/components";
 import { safeGetItem, safeSetItem } from "./utils/safeAsyncStorage";
+import { devToolsStorageKeys } from "./storage/devToolsStorageKeys";
 // ============================================================================
 // CONSTANTS - Modal dimensions and configuration
 // ============================================================================
@@ -444,6 +445,8 @@ const JsModalComponent: FC<JsModalProps> = ({
     width: SCREEN.width,
     height: SCREEN.height,
   });
+  const [showHint, setShowHint] = useState(false);
+  const [hintLoaded, setHintLoaded] = useState(false);
 
   // ============================================================================
   // ANIMATED VALUES - All using native driver
@@ -523,6 +526,45 @@ const JsModalComponent: FC<JsModalProps> = ({
   const offsetY = useRef(0);
   const sHeight = useRef(0);
   const sWidth = useRef(0);
+
+  // Load hint acknowledgment status on mount
+  useEffect(() => {
+    let mounted = true;
+    const loadHintStatus = async () => {
+      try {
+        const hintKey = devToolsStorageKeys.modal.hintAcknowledged();
+        const acknowledged = await safeGetItem(hintKey);
+        if (mounted) {
+          // Show hint if not acknowledged yet
+          setShowHint(acknowledged !== "true");
+          setHintLoaded(true);
+        }
+      } catch (error) {
+        // Failed to load hint status, default to showing hint
+        if (mounted) {
+          setShowHint(true);
+          setHintLoaded(true);
+        }
+      }
+    };
+
+    loadHintStatus();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Handle hint acknowledgment
+  const handleHintAcknowledge = useCallback(async () => {
+    try {
+      const hintKey = devToolsStorageKeys.modal.hintAcknowledged();
+      await safeSetItem(hintKey, "true");
+      setShowHint(false);
+    } catch (error) {
+      // Failed to save hint acknowledgment, just hide it locally
+      setShowHint(false);
+    }
+  }, []);
 
   // Load persisted state on mount
   useEffect(() => {
@@ -1251,6 +1293,11 @@ const JsModalComponent: FC<JsModalProps> = ({
             mode={mode}
             panHandlers={bottomSheetPanResponder.panHandlers}
           />
+
+          {/* Show hint banner if not acknowledged and loaded */}
+          {hintLoaded && showHint && mode === "bottomSheet" && (
+            <ModalHintBanner onAcknowledge={handleHintAcknowledge} />
+          )}
 
           <View style={[styles.content, customStyles.content]}>
             {/* Always wrap in ScrollView with nestedScrollEnabled for FlatList compatibility */}

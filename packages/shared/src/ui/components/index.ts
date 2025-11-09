@@ -8,6 +8,7 @@ export {
   ActionCopyButton,
 } from "./CopyButton";
 export { ModalHeader } from "./ModalHeader";
+export { ModalHintBanner } from "./ModalHintBanner";
 export { SectionHeader } from "./SectionHeader";
 export { ListItem } from "./ListItem";
 export {

@@ -71,13 +71,25 @@ pnpm run start        # Metro bundler (prompts for choice)
 pnpm run ios         # iOS simulator (prompts for choice)
 pnpm run android     # Android emulator (prompts for choice)
 
-# Run specific example app directly
+# Run specific example app directly (with cache isolation)
+pnpm run start:example       # Run Expo Go app (port 8081)
+pnpm run start:dev           # Run Development Build app (port 8082)
+pnpm run start:example:clean # Run Expo Go with fresh cache
+pnpm run start:dev:clean     # Run Dev Build with fresh cache
+
+# Legacy commands (still work via choose-example.js)
 pnpm run start:go    # Run Expo Go app
 pnpm run start:dev   # Run Development Build app
 pnpm run ios:go      # Run Expo Go on iOS
 pnpm run ios:dev     # Run Dev Build on iOS
 pnpm run android:go  # Run Expo Go on Android
 pnpm run android:dev # Run Dev Build on Android
+
+# Cache management (IMPORTANT for multi-instance scenarios)
+pnpm run cache:health         # Check cache health and port status
+pnpm run clean:cache          # Clean all Metro caches
+pnpm run clean:cache:example  # Clean only example app cache
+pnpm run clean:cache:dev      # Clean only dev-build app cache
 
 # Type checking (safe - doesn't emit files)
 pnpm run typecheck
@@ -203,6 +215,86 @@ pnpm run lint
 pnpm run test
 ```
 
+## Metro Cache Isolation for Multi-Instance Development
+
+**CRITICAL**: This monorepo has TWO example apps that can run simultaneously:
+- `example/` (Expo Go) - Runs on port **8081**
+- `example-dev-build/` (Development Build) - Runs on port **8082**
+
+### Cache Isolation Configuration
+
+Both apps are configured with **project-specific cache isolation** to prevent cache contamination:
+- Unique `cacheVersion` per app (uses package name)
+- Project-specific cache directories (`node_modules/.cache/metro/`)
+- Project-specific file map caches (`.metro-file-map/`)
+- `stickyWorkers: false` to prevent worker state bleeding
+- Fixed port assignments to prevent device connection conflicts
+
+### Running Multiple Apps Simultaneously
+
+**Best Practice**: Always clean cache when switching between single and multi-instance workflows:
+
+```bash
+# Start example app on port 8081
+pnpm run start:example:clean
+
+# In a DIFFERENT terminal, start dev-build on port 8082
+pnpm run start:dev:clean
+```
+
+**Device Connection Setup**:
+
+For Android (ADB reverse):
+```bash
+# Terminal 1 (example app)
+adb reverse tcp:8081 tcp:8081
+
+# Terminal 2 (dev-build app)
+adb reverse tcp:8082 tcp:8082
+```
+
+For iOS Simulators:
+- Simulator A: Dev Menu (Cmd+D) → Configure Bundler → `localhost:8081`
+- Simulator B: Dev Menu (Cmd+D) → Configure Bundler → `localhost:8082`
+
+### Cache Management
+
+**When to clear cache**:
+- Switching between single and multi-instance workflows
+- Experiencing "funky" behavior (mixed environment variables, wrong app on simulator)
+- Hot reload affecting wrong app
+- After pulling major changes from git
+
+**Commands**:
+```bash
+pnpm run cache:health  # Check cache status and running ports
+pnpm run clean:cache   # Nuclear option - clears everything
+```
+
+**Cache Locations**:
+- Project-specific: `example/node_modules/.cache/metro/`
+- Project-specific: `example-dev-build/node_modules/.cache/metro/`
+- File maps: `example/.metro-file-map/`, `example-dev-build/.metro-file-map/`
+- Legacy system cache: `/tmp/metro-*` (should be empty with new config)
+
+### Troubleshooting Multi-Instance Issues
+
+**Problem**: Wrong app appears on simulator
+- **Cause**: Device connection to wrong port
+- **Solution**: Check iOS Dev Menu bundler URL or Android ADB reverse
+
+**Problem**: Environment variables mixed between apps
+- **Cause**: Cache collision (shouldn't happen with new config)
+- **Solution**: `pnpm run clean:cache && restart both apps`
+
+**Problem**: Hot reload affects both apps
+- **Cause**: Device connection misconfiguration
+- **Solution**: Verify each simulator is connected to correct port
+
+**Problem**: Watchman errors or "too many files"
+- **Cause**: Watchman daemon shared between instances (architectural limitation)
+- **Solution**: `watchman watch-del-all && restart apps`
+
 ## AI Assistant Best Practices
 
 1. **Always read this file first** when working in this repo
@@ -211,6 +303,8 @@ pnpm run test
 4. **Use the package manager**: Run `pnpm install` not `npm install`
 5. **Check the monorepo structure**: Changes may affect multiple packages
 6. **Test in the example app**: The `example/` directory is for testing changes
+7. **Multi-instance awareness**: Remember port assignments (8081 vs 8082) and cache isolation
+8. **Clean cache proactively**: Use `pnpm run clean:cache` when debugging weird behavior
 
 ## Troubleshooting
 

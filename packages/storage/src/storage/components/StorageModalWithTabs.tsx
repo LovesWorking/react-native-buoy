@@ -26,7 +26,6 @@ import {
   Play,
   Trash2,
   Filter,
-  Copy,
   Search,
   copyToClipboard,
   X,

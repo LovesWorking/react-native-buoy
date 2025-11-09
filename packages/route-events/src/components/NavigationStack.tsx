@@ -18,10 +18,8 @@ import {
   macOSColors,
   ChevronDown,
   ChevronRight,
-  Copy,
   Info,
   InlineCopyButton,
-  copyToClipboard,
 } from "@react-buoy/shared-ui";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 import { useNavigationStack } from "../useNavigationStack";
@@ -79,7 +77,11 @@ export function NavigationStack({ style }: NavigationStackProps) {
   }, [expandedIndex, stack, focusedRoute]);
 
   const isNonFocusedSelected = useMemo(() => {
-    return expandedIndex !== null && stack[expandedIndex] && !stack[expandedIndex].isFocused;
+    return (
+      expandedIndex !== null &&
+      stack[expandedIndex] &&
+      !stack[expandedIndex].isFocused
+    );
   }, [expandedIndex, stack]);
 
   // Loading state
@@ -180,7 +182,9 @@ export function NavigationStack({ style }: NavigationStackProps) {
 
     Alert.alert(
       "Pop to Route",
-      `Remove ${screensToRemove} screen${screensToRemove !== 1 ? 's' : ''} above ${selectedRoute.pathname}?`,
+      `Remove ${screensToRemove} screen${
+        screensToRemove !== 1 ? "s" : ""
+      } above ${selectedRoute.pathname}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -189,15 +193,10 @@ export function NavigationStack({ style }: NavigationStackProps) {
           onPress: () => {
             // Navigate to the selected route, which effectively pops everything above it
             navigateToIndex(selectedRoute.index);
-          }
+          },
         },
       ]
     );
-  };
-
-  const handleCopyStack = () => {
-    copyToClipboard(stackDataForCopy);
-    Alert.alert("Copied", "Navigation stack copied to clipboard");
   };
 
   return (
@@ -208,7 +207,12 @@ export function NavigationStack({ style }: NavigationStackProps) {
           style={[styles.iconButton, showHelp && styles.iconButtonActive]}
           onPress={() => setShowHelp(!showHelp)}
         >
-          <Info size={16} color={showHelp ? macOSColors.semantic.info : macOSColors.text.secondary} />
+          <Info
+            size={16}
+            color={
+              showHelp ? macOSColors.semantic.info : macOSColors.text.secondary
+            }
+          />
         </TouchableOpacity>
         <InlineCopyButton
           value={stackDataForCopy}
@@ -228,7 +232,10 @@ export function NavigationStack({ style }: NavigationStackProps) {
           const hasParams = Object.keys(item.params).length > 0;
 
           return (
-            <View key={`stack-${actualIndex}-${item.key}`} style={styles.stackItemWrapper}>
+            <View
+              key={`stack-${actualIndex}-${item.key}`}
+              style={styles.stackItemWrapper}
+            >
               {/* Compact Stack Item Card */}
               <View
                 style={[
@@ -314,18 +321,24 @@ export function NavigationStack({ style }: NavigationStackProps) {
         <View style={styles.actionsRow}>
           <View style={styles.actionWrapper}>
             <TouchableOpacity
-              style={[styles.actionButton, isAtRoot && styles.actionButtonDisabled]}
+              style={[
+                styles.actionButton,
+                isAtRoot && styles.actionButtonDisabled,
+              ]}
               onPress={handleGoBack}
               disabled={isAtRoot}
             >
-              <Text style={[styles.actionButtonText, isAtRoot && styles.actionButtonTextDisabled]}>
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  isAtRoot && styles.actionButtonTextDisabled,
+                ]}
+              >
                 Back
               </Text>
             </TouchableOpacity>
             {showHelp && (
-              <Text style={styles.helpText}>
-                Go back one screen
-              </Text>
+              <Text style={styles.helpText}>Go back one screen</Text>
             )}
           </View>
 
@@ -333,22 +346,22 @@ export function NavigationStack({ style }: NavigationStackProps) {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                selectedRoute?.isFocused && styles.actionButtonDisabled
+                selectedRoute?.isFocused && styles.actionButtonDisabled,
               ]}
               onPress={handleGo}
               disabled={selectedRoute?.isFocused}
             >
-              <Text style={[
-                styles.actionButtonText,
-                selectedRoute?.isFocused && styles.actionButtonTextDisabled
-              ]}>
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  selectedRoute?.isFocused && styles.actionButtonTextDisabled,
+                ]}
+              >
                 Go
               </Text>
             </TouchableOpacity>
             {showHelp && (
-              <Text style={styles.helpText}>
-                Navigate to selected route
-              </Text>
+              <Text style={styles.helpText}>Navigate to selected route</Text>
             )}
           </View>
 
@@ -356,38 +369,29 @@ export function NavigationStack({ style }: NavigationStackProps) {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                (selectedRoute?.isFocused || selectedRoute?.index === stackDepth - 1) && styles.actionButtonDisabled
+                (selectedRoute?.isFocused ||
+                  selectedRoute?.index === stackDepth - 1) &&
+                  styles.actionButtonDisabled,
               ]}
               onPress={handlePopTo}
-              disabled={selectedRoute?.isFocused || selectedRoute?.index === stackDepth - 1}
+              disabled={
+                selectedRoute?.isFocused ||
+                selectedRoute?.index === stackDepth - 1
+              }
             >
-              <Text style={[
-                styles.actionButtonText,
-                (selectedRoute?.isFocused || selectedRoute?.index === stackDepth - 1) && styles.actionButtonTextDisabled
-              ]}>
+              <Text
+                style={[
+                  styles.actionButtonText,
+                  (selectedRoute?.isFocused ||
+                    selectedRoute?.index === stackDepth - 1) &&
+                    styles.actionButtonTextDisabled,
+                ]}
+              >
                 Pop To
               </Text>
             </TouchableOpacity>
             {showHelp && (
-              <Text style={styles.helpText}>
-                Remove screens above selected
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.actionWrapper}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleCopyStack}
-            >
-              <Text style={styles.actionButtonText}>
-                Copy
-              </Text>
-            </TouchableOpacity>
-            {showHelp && (
-              <Text style={styles.helpText}>
-                Copy stack to clipboard
-              </Text>
+              <Text style={styles.helpText}>Remove screens above selected</Text>
             )}
           </View>
         </View>

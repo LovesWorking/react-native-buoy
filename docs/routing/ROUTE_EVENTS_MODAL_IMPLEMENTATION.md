@@ -479,7 +479,9 @@ packages/route-events/src/
 
 1. **Data Source**:
    - Storage: AsyncStorage queries from React Query cache
-   - Routes: RouteChangeEvent array from RouteObserver
+   - Routes: Two sources
+     - **Static sitemap** – pulled via `loadRouteNode()` (internally reads `expo-router/build/global-state/router-store` → `store.routeNode` with `/src/` fallback). Missing dependencies log `[RouteEvents]` errors but keep the UI mounted.
+     - **Live events** – `RouteObserver` fed by `useRouteObserver()` (same as before).
 
 2. **Tab 1 Content**:
    - Storage: Shows all storage keys with required/optional status

@@ -5,14 +5,14 @@
  * and search capabilities.
  */
 
-import { useState, useEffect, useMemo } from "react";
-import { useNavigationState } from "@react-navigation/native";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   RouteParser,
   type RouteInfo,
   type RouteGroup,
   type RouteStats,
 } from "./RouteParser";
+import { loadRouteNode } from "./expoRouterStore";
 
 // Type-only definition to avoid Metro resolution issues
 type RouteNode = any;
@@ -173,72 +173,46 @@ export function useRouteSitemap(
     refreshInterval = 1000,
   } = options;
 
-  // Get navigation state using React Navigation's hook
-  // This is the same approach that makes the Stack tab work!
-  const navigationState = useNavigationState((state) => state);
+  const [routeTreeState, setRouteTreeState] = useState<{
+    node: RouteNode | null;
+    version: number;
+  }>(() => ({
+    node: loadRouteNode(),
+    version: 0,
+  }));
 
-  // TEMPORARY: Create a mock route node to test if the UI works
-  const routeNode = useMemo(() => {
-    console.log('[useRouteSitemap] Creating MOCK route node for testing');
+  const routeNode = routeTreeState.node;
+  const routeNodeVersion = routeTreeState.version;
 
-    // Return a hardcoded mock route structure
-    return {
-      type: 'route',
-      route: '',
-      dynamic: null,
-      children: [
-        {
-          type: 'route',
-          route: 'index',
-          dynamic: null,
-          children: [],
-          contextKey: 'app/index.tsx',
-        },
-        {
-          type: 'route',
-          route: 'pokemon/[id]',
-          dynamic: ['id'],
-          children: [],
-          contextKey: 'app/pokemon/[id].tsx',
-        },
-        {
-          type: 'route',
-          route: 'settings',
-          dynamic: null,
-          children: [],
-          contextKey: 'app/settings.tsx',
-        },
-        {
-          type: 'route',
-          route: 'about',
-          dynamic: null,
-          children: [],
-          contextKey: 'app/about.tsx',
-        },
-      ],
-      contextKey: 'app',
-    };
+  const refresh = useCallback(() => {
+    setRouteTreeState((previous) => ({
+      node: loadRouteNode(),
+      version: previous.version + 1,
+    }));
   }, []);
 
-  const isLoaded = true; // Always loaded since we're using navigation state
+  // When the route tree isn't available yet (e.g., Expo Router still mounting),
+  // poll briefly until it becomes ready.
+  useEffect(() => {
+    if (routeNode) return;
+    const timeout = setTimeout(refresh, 250);
+    return () => clearTimeout(timeout);
+  }, [routeNode, refresh]);
 
-  // Refresh function (no-op since nav state updates automatically)
-  const refresh = () => {
-    // Navigation state updates automatically
-  };
-
-  // Auto-refresh effect (kept for API compatibility)
+  // Optional auto-refresh hook for callers that want periodic updates
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(refresh, refreshInterval);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval, refresh]);
+
+  const isLoaded = !!routeNode;
 
   // Parse routes
   const routes = useMemo(() => {
     if (!routeNode) return [];
     return RouteParser.parseRouteTree(routeNode);
-  }, [routeNode]);
+  }, [routeNode, routeNodeVersion]);
 
   // Sort routes
   const sortedRoutes = useMemo(() => {
