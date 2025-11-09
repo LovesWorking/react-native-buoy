@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/core",
-  "version": "0.1.34-beta.2",
+  "version": "0.1.34-beta.3",
   "description": "Floating dev tools launcher and AppHost",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",

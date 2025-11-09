@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/bottom-sheet",
-  "version": "0.1.2-beta.2",
+  "version": "0.1.2-beta.3",
   "description": "bottom-sheet package",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",

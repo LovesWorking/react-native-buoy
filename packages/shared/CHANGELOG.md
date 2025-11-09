@@ -1,5 +1,11 @@
 # @react-buoy/shared-ui
 
+## 0.1.34-beta.3
+
+### Patch Changes
+
+- Automated beta release for all packages.
+
 ## 0.1.34-beta.2
 
 ### Patch Changes
