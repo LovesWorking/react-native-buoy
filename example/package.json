@@ -1,6 +1,6 @@
 {
   "name": "example",
-  "version": "1.0.17-beta.4",
+  "version": "1.0.17-beta.5",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
