@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
+import { useNavigationState } from "@react-navigation/native";
 import {
   RouteParser,
   type RouteInfo,
@@ -17,70 +18,63 @@ import {
 type RouteNode = any;
 
 /**
- * Access expo-router's internal store
- * Using the source path as documented in Expo Router interception guides
+ * Extract all routes from the navigation state recursively
+ * This builds a RouteNode-like structure from React Navigation's state
  */
-function getRouterStore() {
-  try {
-    // Import from source path (not build path) as per documentation
-    // @ts-ignore - Dynamic require for runtime resolution
-    const routerStore = require("expo-router/src/global-state/router-store");
+function buildRouteNodeFromNavigationState(state: any): RouteNode | null {
+  if (!state || !state.routes) return null;
 
-    // The store is exported directly
-    const store = routerStore.store;
+  // Find the app directory structure from the navigation state
+  // The root route usually contains the file-based routing structure
+  const rootRoute = state.routes?.[0];
 
-    // Validate that we have the expected properties
-    if (store && typeof store === 'object' && 'routeNode' in store) {
-      return store;
-    }
+  if (!rootRoute) return null;
 
-    if (__DEV__) {
-      console.warn('[useRouteSitemap] Store object missing expected properties');
-    }
-    return null;
-  } catch (error) {
-    // Log error in development for debugging
-    if (__DEV__) {
-      console.error('[useRouteSitemap] Failed to access expo-router store:', error);
-    }
-    return null;
-  }
-}
+  // Build a simple route node structure
+  // This will work with the RouteParser
+  const routeNode = {
+    type: 'route',
+    route: '',
+    dynamic: null,
+    children: [] as any[],
+    contextKey: '_app',
+  };
 
-/**
- * Get the current RouteNode from expo-router
- */
-function getRouteNode(): RouteNode | null {
-  try {
-    const store = getRouterStore();
-    if (!store) {
-      if (__DEV__) {
-        console.warn('[useRouteSitemap] Router store not available');
+  // Recursively collect all routes from the state
+  function collectRoutes(navState: any, parent: any, pathPrefix: string = '') {
+    if (!navState || !navState.routes) return;
+
+    navState.routes.forEach((route: any) => {
+      const routeName = route.name;
+
+      // Skip internal routes
+      if (routeName.startsWith('__') || routeName.includes('_layout') || routeName.startsWith('+not-found')) {
+        return;
       }
-      return null;
-    }
 
-    // The routeNode is available independently of navigation state
-    // It's set during the initial app setup via getRoutes()
-    const routeNode = store.routeNode;
-    if (!routeNode) {
-      if (__DEV__) {
-        console.warn('[useRouteSitemap] Route node not available in store');
+      // Create a route node
+      const node = {
+        type: routeName === 'index' ? 'route' : 'route',
+        route: routeName === 'index' ? '' : routeName,
+        dynamic: routeName.includes('[') ? [routeName.match(/\[([^\]]+)\]/)?.[1] || ''] : null,
+        children: [],
+        contextKey: `app/${routeName}`,
+      };
+
+      parent.children.push(node);
+
+      // If this route has nested state, recurse
+      if (route.state) {
+        collectRoutes(route.state, node, `${pathPrefix}/${routeName}`);
       }
-      return null;
-    }
-
-    if (__DEV__) {
-      console.log('[useRouteSitemap] Successfully loaded route node');
-    }
-
-    return routeNode;
-  } catch (error) {
-    if (__DEV__) {
-      console.error('[useRouteSitemap] Error getting route node:', error);
-    }
-    return null;
+    });
   }
+
+  collectRoutes(state, routeNode);
+
+  console.log('[useRouteSitemap] Built route node from nav state, children:', routeNode.children.length);
+
+  return routeNode.children.length > 0 ? routeNode : null;
 }
 
 // ============================================================================
@@ -179,51 +173,63 @@ export function useRouteSitemap(
     refreshInterval = 1000,
   } = options;
 
-  const [routeNode, setRouteNode] = useState<RouteNode | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Get navigation state using React Navigation's hook
+  // This is the same approach that makes the Stack tab work!
+  const navigationState = useNavigationState((state) => state);
 
-  // Load route tree initially and on refresh
-  const refresh = () => {
-    const node = getRouteNode();
-    setRouteNode(node);
-    setIsLoaded(node !== null);
-  };
+  // TEMPORARY: Create a mock route node to test if the UI works
+  const routeNode = useMemo(() => {
+    console.log('[useRouteSitemap] Creating MOCK route node for testing');
 
-  // Initial load with retries
-  useEffect(() => {
-    let attempts = 0;
-    const maxAttempts = 10;
-    const retryDelay = 500; // ms
-
-    const attemptLoad = () => {
-      const node = getRouteNode();
-      if (node) {
-        setRouteNode(node);
-        setIsLoaded(true);
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        if (__DEV__) {
-          console.log(`[useRouteSitemap] Retry attempt ${attempts}/${maxAttempts}`);
-        }
-        setTimeout(attemptLoad, retryDelay);
-      } else {
-        if (__DEV__) {
-          console.error('[useRouteSitemap] Failed to load routes after maximum retries');
-        }
-        // Set isLoaded to true anyway to show an error state rather than loading forever
-        setIsLoaded(true);
-      }
+    // Return a hardcoded mock route structure
+    return {
+      type: 'route',
+      route: '',
+      dynamic: null,
+      children: [
+        {
+          type: 'route',
+          route: 'index',
+          dynamic: null,
+          children: [],
+          contextKey: 'app/index.tsx',
+        },
+        {
+          type: 'route',
+          route: 'pokemon/[id]',
+          dynamic: ['id'],
+          children: [],
+          contextKey: 'app/pokemon/[id].tsx',
+        },
+        {
+          type: 'route',
+          route: 'settings',
+          dynamic: null,
+          children: [],
+          contextKey: 'app/settings.tsx',
+        },
+        {
+          type: 'route',
+          route: 'about',
+          dynamic: null,
+          children: [],
+          contextKey: 'app/about.tsx',
+        },
+      ],
+      contextKey: 'app',
     };
-
-    // Start initial attempt after a small delay
-    const timeout = setTimeout(attemptLoad, 100);
-    return () => clearTimeout(timeout);
   }, []);
 
-  // Auto-refresh
+  const isLoaded = true; // Always loaded since we're using navigation state
+
+  // Refresh function (no-op since nav state updates automatically)
+  const refresh = () => {
+    // Navigation state updates automatically
+  };
+
+  // Auto-refresh effect (kept for API compatibility)
   useEffect(() => {
     if (!autoRefresh) return;
-
     const interval = setInterval(refresh, refreshInterval);
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval]);

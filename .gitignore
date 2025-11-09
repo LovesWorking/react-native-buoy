@@ -107,6 +107,12 @@ android/*.iml
 # Metro
 .metro-health-check*
 
+# Metro cache directories (project-specific isolation)
+example/node_modules/.cache/metro/
+example/.metro-file-map/
+example-dev-build/node_modules/.cache/metro/
+example-dev-build/.metro-file-map/
+
 # Temporary files
 tmp/
 temp/
