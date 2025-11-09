@@ -1,5 +1,14 @@
 # @react-buoy/network
 
+## 1.5.0-beta.1
+
+### Patch Changes
+
+- Automated beta release for all packages.
+- Updated dependencies
+  - @react-buoy/react-query@1.5.0-beta.1
+  - @react-buoy/shared-ui@1.5.0-beta.1
+
 ## 0.1.34-beta.5
 
 ### Patch Changes
