@@ -1180,7 +1180,7 @@ const JsModalComponent: FC<JsModalProps> = ({
         <View
           {...resizeHandlers.topLeft.panHandlers}
           style={[styles.cornerHandleWrapper, { top: 4, left: 4 }]}
-          hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+          hitSlop={{ top: 2, left: 2, right: 0, bottom: 0 }}
         >
           <CornerHandle
             position="topLeft"
@@ -1190,7 +1190,7 @@ const JsModalComponent: FC<JsModalProps> = ({
         <View
           {...resizeHandlers.topRight.panHandlers}
           style={[styles.cornerHandleWrapper, { top: 4, right: 4 }]}
-          hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+          hitSlop={{ top: 2, left: 2, right: 0, bottom: 0 }}
         >
           <CornerHandle
             position="topRight"
@@ -1200,7 +1200,7 @@ const JsModalComponent: FC<JsModalProps> = ({
         <View
           {...resizeHandlers.bottomLeft.panHandlers}
           style={[styles.cornerHandleWrapper, { bottom: 4, left: 4 }]}
-          hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+          hitSlop={{ top: 2, left: 2, right: 2, bottom: 2 }}
         >
           <CornerHandle
             position="bottomLeft"
@@ -1210,7 +1210,7 @@ const JsModalComponent: FC<JsModalProps> = ({
         <View
           {...resizeHandlers.bottomRight.panHandlers}
           style={[styles.cornerHandleWrapper, { bottom: 4, right: 4 }]}
-          hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+          hitSlop={{ top: 2, left: 2, right: 2, bottom: 2 }}
         >
           <CornerHandle
             position="bottomRight"
