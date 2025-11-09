@@ -6,6 +6,22 @@ const config = getDefaultConfig(__dirname);
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, '..');
 
+// Unique cache key to prevent cache collision with other Metro instances
+config.cacheVersion = require('./package.json').name;
+
+// Disable sticky workers to prevent worker state contamination between instances
+config.stickyWorkers = false;
+
+// Project-specific cache directory (instead of shared /tmp)
+config.cacheStores = [
+  new (require('metro-cache').FileStore)({
+    root: path.join(projectRoot, 'node_modules', '.cache', 'metro'),
+  }),
+];
+
+// Project-specific file map cache
+config.fileMapCacheDirectory = path.join(projectRoot, '.metro-file-map');
+
 // Watch all workspace roots for changes
 config.watchFolders = [monorepoRoot];
 

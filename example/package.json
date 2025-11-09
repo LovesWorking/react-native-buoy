@@ -3,11 +3,12 @@
   "version": "1.0.17-beta.6",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios",
-    "web": "expo start --web",
-    "reload": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios"
+    "start": "expo start --port 8801",
+    "start:clean": "expo start --clear --port 8801",
+    "android": "expo start --android --port 8801",
+    "ios": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios --port 8801",
+    "web": "expo start --web --port 8801",
+    "reload": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios --port 8801"
   },
   "dependencies": {
     "@react-buoy/bottom-sheet": "workspace:*",
