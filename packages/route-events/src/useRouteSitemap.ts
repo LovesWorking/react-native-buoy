@@ -12,7 +12,7 @@ import {
   type RouteGroup,
   type RouteStats,
 } from "./RouteParser";
-import { loadRouteNode } from "./expoRouterStore";
+import { getRouteNodeMetadata, loadRouteNode } from "./expoRouterStore";
 
 // Type-only definition to avoid Metro resolution issues
 type RouteNode = any;
@@ -145,6 +145,16 @@ export interface UseRouteSitemapResult {
    * Get parent routes for a path
    */
   getParents: (path: string) => RouteInfo[];
+
+  /**
+   * Timestamp of the most recent successful load
+   */
+  lastUpdatedAt: number | null;
+
+  /**
+   * Which expo-router path provided the route store ("build" or "src")
+   */
+  source: "build" | "src" | null;
 }
 
 // ============================================================================
@@ -176,19 +186,35 @@ export function useRouteSitemap(
   const [routeTreeState, setRouteTreeState] = useState<{
     node: RouteNode | null;
     version: number;
-  }>(() => ({
-    node: loadRouteNode(),
-    version: 0,
-  }));
+    lastUpdatedAt: number | null;
+    source: "build" | "src" | null;
+  }>(() => {
+    const node = loadRouteNode();
+    const metadata = getRouteNodeMetadata();
+    return {
+      node,
+      version: 0,
+      lastUpdatedAt: metadata.lastLoadedAt,
+      source: metadata.source,
+    };
+  });
 
   const routeNode = routeTreeState.node;
   const routeNodeVersion = routeTreeState.version;
+  const lastUpdatedAt = routeTreeState.lastUpdatedAt;
+  const source = routeTreeState.source;
 
   const refresh = useCallback(() => {
-    setRouteTreeState((previous) => ({
-      node: loadRouteNode(),
-      version: previous.version + 1,
-    }));
+    setRouteTreeState((previous) => {
+      const node = loadRouteNode();
+      const metadata = getRouteNodeMetadata();
+      return {
+        node,
+        version: previous.version + 1,
+        lastUpdatedAt: metadata.lastLoadedAt,
+        source: metadata.source,
+      };
+    });
   }, []);
 
   // When the route tree isn't available yet (e.g., Expo Router still mounting),
@@ -249,6 +275,8 @@ export function useRouteSitemap(
     refresh,
     findRoute,
     getParents,
+    lastUpdatedAt,
+    source,
   };
 }
 

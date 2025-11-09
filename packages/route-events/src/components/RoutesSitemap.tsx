@@ -27,6 +27,8 @@ import {
   ChevronRight,
   InlineCopyButton,
   ToolbarCopyButton,
+  RefreshCw,
+  formatRelativeTime,
 } from "@react-buoy/shared-ui";
 import { useRouteSitemap } from "../useRouteSitemap";
 import type { RouteInfo, RouteGroup } from "../RouteParser";
@@ -62,10 +64,20 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(["Root Routes", "Dynamic Routes"])
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const router = useRouter();
 
-  const { groups, stats, isLoaded, filteredRoutes, routes } = useRouteSitemap({
+  const {
+    groups,
+    stats,
+    isLoaded,
+    filteredRoutes,
+    routes,
+    refresh,
+    lastUpdatedAt,
+    source,
+  } = useRouteSitemap({
     searchQuery,
     sortBy: "path",
   });
@@ -221,6 +233,23 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
     [router, promptForParams]
   );
 
+  const handleManualRefresh = useCallback(() => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    refresh();
+    setTimeout(() => setIsRefreshing(false), 400);
+  }, [isRefreshing, refresh]);
+
+  const lastRefreshLabel = useMemo(() => {
+    if (!lastUpdatedAt) return "Awaiting route data";
+    return `Updated ${formatRelativeTime(lastUpdatedAt)}`;
+  }, [lastUpdatedAt]);
+
+  const sourceLabel = useMemo(() => {
+    if (!source) return "Source: unknown";
+    return `Source: ${source}`;
+  }, [source]);
+
   // When searching, show filtered routes, otherwise show groups
   const displayGroups = useMemo(() => {
     if (searchQuery && filteredRoutes.length > 0) {
@@ -248,26 +277,57 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
 
   return (
     <View style={[styles.container, style]}>
-      {/* Compact header with stats and action buttons */}
+      {/* Header with actions and stats */}
       {!isSearching ? (
         <View style={styles.header}>
-          <View style={styles.statsRow}>
+          {/* Action buttons row - Copy, Refresh, Search */}
+          <View style={styles.actionsRow}>
+            <View style={styles.actionWrapper}>
+              <ToolbarCopyButton
+                value={copyAllData}
+                buttonStyle={styles.actionButtonHeader}
+              />
+              <Text style={styles.actionLabel}>Copy</Text>
+            </View>
+            <View style={styles.actionWrapper}>
+              <TouchableOpacity
+                style={[
+                  styles.iconButton,
+                  isRefreshing && styles.refreshButtonDisabled,
+                ]}
+                onPress={handleManualRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw
+                  size={16}
+                  color={
+                    isRefreshing
+                      ? macOSColors.text.muted
+                      : macOSColors.text.secondary
+                  }
+                />
+              </TouchableOpacity>
+              <Text style={styles.actionLabel}>Refresh</Text>
+            </View>
+            <View style={styles.actionWrapper}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setIsSearching(true)}
+              >
+                <Search size={16} color={macOSColors.text.secondary} />
+              </TouchableOpacity>
+              <Text style={styles.actionLabel}>Search</Text>
+            </View>
+          </View>
+
+          {/* Stats cards row - wrapping */}
+          <View style={styles.statsGrid}>
             <StatItem value={stats.total} label="Total" />
             <StatItem value={stats.static} label="Static" />
             <StatItem value={stats.dynamic} label="Dynamic" />
+            <StatItem value={stats.catchAll} label="Catch-All" />
             <StatItem value={stats.layouts} label="Layouts" />
-          </View>
-          <View style={styles.headerActions}>
-            <ToolbarCopyButton
-              value={copyAllData}
-              buttonStyle={styles.actionButtonHeader}
-            />
-            <TouchableOpacity
-              style={styles.searchButton}
-              onPress={() => setIsSearching(true)}
-            >
-              <Search size={16} color={macOSColors.text.secondary} />
-            </TouchableOpacity>
+            <StatItem value={stats.groups} label="Groups" />
           </View>
         </View>
       ) : (
@@ -326,6 +386,14 @@ export function RoutesSitemap({ style }: RoutesSitemapProps) {
             />
           ))
         )}
+
+        {/* Meta information at bottom - Updated and Source */}
+        <View style={styles.metaFooter}>
+          <Text style={styles.metaText}>{lastRefreshLabel}</Text>
+          <View style={styles.sourceBadge}>
+            <Text style={styles.sourceText}>{sourceLabel}</Text>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -547,61 +615,118 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: "column",
     padding: 8,
     borderBottomWidth: 1,
     borderBottomColor: macOSColors.border.default,
+    gap: 12,
   },
 
-  statsRow: {
+  actionsRow: {
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
+    paddingBottom: 4,
+  },
+
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
 
   statItem: {
-    alignItems: "center",
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "30%",
+    minWidth: 90,
     backgroundColor: macOSColors.background.card,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    minWidth: 50,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: "center",
   },
 
   statValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "800",
     color: macOSColors.semantic.info,
     fontFamily: "monospace",
   },
 
   statLabel: {
-    fontSize: 8,
+    fontSize: 10,
     color: macOSColors.text.muted,
-    marginTop: 2,
+    marginTop: 4,
     fontFamily: "monospace",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
 
-  headerActions: {
-    flexDirection: "row",
+  actionWrapper: {
     alignItems: "center",
+    justifyContent: "center",
     gap: 4,
+    minWidth: 48,
   },
 
   actionButtonHeader: {
     padding: 6,
     borderRadius: 4,
     backgroundColor: macOSColors.background.input,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
   },
 
-  searchButton: {
+  iconButton: {
     padding: 6,
     borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  actionLabel: {
+    fontSize: 8,
+    color: macOSColors.text.muted,
+    fontFamily: "monospace",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  refreshButtonDisabled: {
+    opacity: 0.5,
+  },
+
+  metaFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: macOSColors.border.default,
+  },
+
+  metaText: {
+    fontSize: 12,
+    color: macOSColors.text.secondary,
+    fontFamily: "monospace",
+  },
+
+  sourceBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    backgroundColor: macOSColors.background.card,
+  },
+
+  sourceText: {
+    fontSize: 11,
+    color: macOSColors.text.secondary,
+    textTransform: "capitalize",
+    fontFamily: "monospace",
   },
 
   searchContainer: {

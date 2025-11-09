@@ -8,9 +8,11 @@ type ExpoRouterStore = {
 };
 
 let cachedStore: ExpoRouterStore | null = null;
+let cachedStoreSource: "build" | "src" | null = null;
 let importError: Error | null = null;
 let hasLoggedMissingStore = false;
 let hasLoggedMissingRouteNode = false;
+let lastRouteNodeTimestamp: number | null = null;
 
 function logOnce(message: string, error?: unknown) {
   if (__DEV__) {
@@ -31,30 +33,42 @@ export function getExpoRouterStore(): ExpoRouterStore | null {
     return cachedStore;
   }
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const module = require("expo-router/build/global-state/router-store");
-    if (module?.store) {
-      cachedStore = module.store as ExpoRouterStore;
-      importError = null;
-      hasLoggedMissingStore = false;
-      return cachedStore;
+  const loadFromBuild = () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const module = require("expo-router/build/global-state/router-store");
+      if (module?.store) {
+        cachedStore = module.store as ExpoRouterStore;
+        cachedStoreSource = "build";
+        importError = null;
+        hasLoggedMissingStore = false;
+        return true;
+      }
+    } catch (error: any) {
+      importError = error;
     }
-  } catch (error: any) {
-    importError = error;
-  }
+    return false;
+  };
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const module = require("expo-router/src/global-state/router-store");
-    if (module?.store) {
-      cachedStore = module.store as ExpoRouterStore;
-      importError = null;
-      hasLoggedMissingStore = false;
-      return cachedStore;
+  const loadFromSrc = () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const module = require("expo-router/src/global-state/router-store");
+      if (module?.store) {
+        cachedStore = module.store as ExpoRouterStore;
+        cachedStoreSource = "src";
+        importError = null;
+        hasLoggedMissingStore = false;
+        return true;
+      }
+    } catch (error: any) {
+      importError = error;
     }
-  } catch (error: any) {
-    importError = error;
+    return false;
+  };
+
+  if (loadFromBuild() || loadFromSrc()) {
+    return cachedStore;
   }
 
   if (!hasLoggedMissingStore) {
@@ -81,6 +95,7 @@ export function loadRouteNode(): RouteNode | null {
 
   if (store.routeNode) {
     hasLoggedMissingRouteNode = false;
+    lastRouteNodeTimestamp = Date.now();
     return store.routeNode;
   }
 
@@ -93,4 +108,14 @@ export function loadRouteNode(): RouteNode | null {
   }
 
   return null;
+}
+
+export function getRouteNodeMetadata(): {
+  source: "build" | "src" | null;
+  lastLoadedAt: number | null;
+} {
+  return {
+    source: cachedStoreSource,
+    lastLoadedAt: lastRouteNodeTimestamp,
+  };
 }
