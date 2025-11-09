@@ -15,9 +15,11 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-// IMPORTANT: Tell Metro to watch the SOURCE files, not the built files
-// This enables hot reload when you edit package source
+// IMPORTANT: Include 'react-native' condition for proper package resolution
+// This is critical for packages that use conditional exports
+// Metro Source: /rn-metro-clone/packages/metro-config/src/defaults/index.js:50
+// Reference: TODO_FIX_METRO_ISSUES.md - Section 1, Task 1.2
 config.resolver.unstable_enablePackageExports = true;
-config.resolver.unstable_conditionNames = ['source', 'import', 'require'];
+config.resolver.unstable_conditionNames = ['react-native', 'require'];
 
 module.exports = config;

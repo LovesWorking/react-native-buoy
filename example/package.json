@@ -1,6 +1,6 @@
 {
   "name": "example",
-  "version": "1.0.15",
+  "version": "1.0.17-beta.6",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -10,6 +10,7 @@
     "reload": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios"
   },
   "dependencies": {
+    "@react-buoy/bottom-sheet": "workspace:*",
     "@react-buoy/core": "workspace:*",
     "@react-buoy/debug-borders": "workspace:*",
     "@react-buoy/env": "workspace:*",

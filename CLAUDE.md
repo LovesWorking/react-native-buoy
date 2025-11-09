@@ -136,7 +136,13 @@ pnpm run release:version
 
 # Publish to npm
 pnpm run release:publish
+
+# Release beta versions for testing (see BETA_RELEASES.md)
+pnpm run release:beta        # Publish beta versions
+pnpm run release:beta:dry    # Preview without publishing
 ```
+
+For testing packages before production release, see [BETA_RELEASES.md](./BETA_RELEASES.md).
 
 ## Testing Changes
 
