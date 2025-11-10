@@ -35,7 +35,6 @@ export function getExpoRouterStore(): ExpoRouterStore | null {
 
   const loadFromBuild = () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const module = require("expo-router/build/global-state/router-store");
       if (module?.store) {
         cachedStore = module.store as ExpoRouterStore;
@@ -52,7 +51,6 @@ export function getExpoRouterStore(): ExpoRouterStore | null {
 
   const loadFromSrc = () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const module = require("expo-router/src/global-state/router-store");
       if (module?.store) {
         cachedStore = module.store as ExpoRouterStore;

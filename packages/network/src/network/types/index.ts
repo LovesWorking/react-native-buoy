@@ -34,7 +34,7 @@ export interface NetworkEvent {
   query?: string;
   responseType?: string;
   cached?: boolean;
-  requestClient?: "fetch" | "axios";
+  requestClient?: "fetch" | "axios" | "graphql";
 }
 
 /**

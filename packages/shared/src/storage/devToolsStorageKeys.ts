@@ -113,6 +113,7 @@ export const devToolsStorageKeys = {
   network: {
     root: () => `${devToolsStorageKeys.base}_network` as const,
     modal: () => `${devToolsStorageKeys.network.root()}_modal` as const,
+    copyModal: () => `${devToolsStorageKeys.network.root()}_copy_modal` as const,
     filters: () => `${devToolsStorageKeys.network.root()}_filters` as const,
     ignoredDomains: () =>
       `${devToolsStorageKeys.network.root()}_ignored_domains` as const,
@@ -120,6 +121,8 @@ export const devToolsStorageKeys = {
       `${devToolsStorageKeys.network.root()}_ignored_urls` as const,
     preferences: () =>
       `${devToolsStorageKeys.network.root()}_preferences` as const,
+    copyOptions: () =>
+      `${devToolsStorageKeys.network.root()}_copy_options` as const,
   },
 
   /**

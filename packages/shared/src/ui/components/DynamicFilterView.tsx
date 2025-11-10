@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "../../icons";
-import { Filter, Plus } from "../../icons";
+import { Filter, Plus, Copy } from "../../icons";
 import { macOSColors } from "../gameUI/constants/macOSDesignSystemColors";
 import { SectionHeader } from "./SectionHeader";
 import {
@@ -25,6 +25,7 @@ export interface FilterSection {
   type: "status" | "method" | "contentType" | "custom" | "patterns";
   data?: FilterOption[];
   renderCustom?: () => React.ReactNode;
+  description?: string;
 }
 
 export interface FilterOption {
@@ -37,6 +38,7 @@ export interface FilterOption {
   borderColor?: string;
   isActive?: boolean;
   value?: any;
+  description?: string;
 }
 
 export interface DynamicFilterConfig {
@@ -60,6 +62,13 @@ export interface DynamicFilterConfig {
     description?: string;
     examples?: string[];
     icon?: LucideIcon;
+  };
+  previewSection?: {
+    enabled: boolean;
+    title?: string;
+    content: () => React.ReactNode;
+    icon?: LucideIcon;
+    headerActions?: () => React.ReactNode;
   };
   onFilterChange?: (filterId: string, value: any) => void;
   onPatternToggle?: (pattern: string) => void;
@@ -85,6 +94,7 @@ export function DynamicFilterView({
   addFilterSection,
   availableItemsSection,
   howItWorksSection,
+  previewSection,
   onFilterChange,
   onPatternToggle,
   onPatternAdd,
@@ -195,63 +205,81 @@ export function DynamicFilterView({
           )}
           <SectionHeader.Title>{section.title}</SectionHeader.Title>
         </SectionHeader>
+        {section.description && (
+          <Text style={styles.sectionDescription}>{section.description}</Text>
+        )}
         <View style={styles.filterGrid}>
-          {section.data.map((option) => (
-            <TouchableOpacity
-              key={option.id}
-              style={[
-                styles.filterCard,
-                option.isActive && styles.activeFilterCard,
-              ]}
-              onPress={() => onFilterChange?.(option.id, option.value)}
-            >
-              {option.icon && (
-                <View
-                  style={[
-                    styles.filterIconContainer,
-                    {
-                      backgroundColor:
-                        option.backgroundColor || `${option.color}12`,
-                      borderColor: option.borderColor || `${option.color}20`,
-                    },
-                  ]}
-                >
-                  <option.icon size={12} color={option.color} />
-                </View>
-              )}
-              {section.type === "method" && !option.icon && (
-                <View
-                  style={[
-                    styles.methodBadge,
-                    {
-                      backgroundColor: `${option.color}15`,
-                      borderColor: `${option.color}30`,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.methodText, { color: option.color }]}>
-                    {option.label}
+          {section.data.map((option) => {
+            const hasCount = option.count !== undefined;
+            const countIsZero = hasCount && option.count === 0;
+            const showLabel = section.type !== "method" || option.icon;
+
+            return (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.filterCard,
+                  option.isActive && styles.activeFilterCard,
+                ]}
+                onPress={() => onFilterChange?.(option.id, option.value)}
+              >
+                {/* Icon or Method Badge */}
+                {option.icon ? (
+                  <option.icon
+                    size={24}
+                    color={option.color}
+                    style={styles.filterIcon}
+                  />
+                ) : section.type === "method" ? (
+                  <View
+                    style={[
+                      styles.methodBadgeCompact,
+                      {
+                        backgroundColor: `${option.color}20`,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.methodTextCompact,
+                        { color: option.color },
+                      ]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                    >
+                      {option.label}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* Count - Prominent when >0, subtle when =0 */}
+                {hasCount && (
+                  <Text
+                    style={[
+                      countIsZero
+                        ? styles.filterCountZero
+                        : styles.filterCountActive,
+                    ]}
+                  >
+                    {option.count}
                   </Text>
-                </View>
-              )}
-              {section.type !== "method" && !option.icon && (
-                <Text style={styles.filterLabel}>{option.label}</Text>
-              )}
-              {option.count !== undefined && (
-                <Text
-                  style={[
-                    styles.filterCount,
-                    option.isActive && {
-                      backgroundColor: macOSColors.semantic.info + "20",
-                      color: macOSColors.semantic.info,
-                    },
-                  ]}
-                >
-                  {option.count}
-                </Text>
-              )}
-            </TouchableOpacity>
-          ))}
+                )}
+
+                {/* Label - Only show when it adds context */}
+                {showLabel && (
+                  <Text style={styles.filterLabelCompact}>{option.label}</Text>
+                )}
+
+                {/* Description for special cases like Quick Presets */}
+                {option.description && (
+                  <Text style={styles.filterDescriptionBottom}>
+                    {option.description}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
     );
@@ -406,6 +434,29 @@ export function DynamicFilterView({
               )}
           </View>
         )}
+
+        {previewSection?.enabled && (
+          <View style={styles.previewSection}>
+            <SectionHeader>
+              <SectionHeader.Icon
+                icon={previewSection.icon || Copy}
+                color={macOSColors.semantic.info}
+                size={12}
+              />
+              <SectionHeader.Title>
+                {previewSection.title || "PREVIEW"}
+              </SectionHeader.Title>
+              {previewSection.headerActions && (
+                <SectionHeader.Actions>
+                  {previewSection.headerActions()}
+                </SectionHeader.Actions>
+              )}
+            </SectionHeader>
+            <View style={styles.previewContent}>
+              {previewSection.content()}
+            </View>
+          </View>
+        )}
       </>
     );
   };
@@ -499,64 +550,86 @@ const styles = StyleSheet.create({
   filterGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 8,
     marginTop: 8,
   },
   filterCard: {
-    backgroundColor: macOSColors.background.card,
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    backgroundColor: "transparent",
+    borderRadius: 8,
+    paddingHorizontal: 4,
     paddingVertical: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-    minHeight: 32,
-  },
-  activeFilterCard: {
-    backgroundColor: macOSColors.semantic.infoBackground,
-    borderColor: macOSColors.semantic.info + "66",
-    borderWidth: 1,
-  },
-  filterIconContainer: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    backgroundColor: macOSColors.semantic.infoBackground,
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: macOSColors.semantic.info + "26",
+    borderColor: macOSColors.border.default,
+    width: 68,
+    minHeight: 62,
   },
-  filterLabel: {
-    fontSize: 11,
-    color: macOSColors.text.secondary,
-    fontWeight: "500",
-    textTransform: "capitalize",
+  activeFilterCard: {
+    backgroundColor: macOSColors.semantic.infoBackground + "14",
+    borderColor: macOSColors.semantic.info,
+    borderWidth: 2,
   },
-  filterCount: {
-    fontSize: 11,
-    fontWeight: "600",
+  filterIcon: {
+    marginBottom: 0,
+  },
+  filterCountActive: {
+    fontSize: 14,
+    fontWeight: "700",
     color: macOSColors.text.primary,
     fontFamily: "monospace",
-    backgroundColor: macOSColors.background.hover,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    overflow: "hidden",
+    marginTop: 3,
+    marginBottom: 1,
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 1,
   },
-  methodBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  methodText: {
+  filterCountZero: {
     fontSize: 11,
+    fontWeight: "500",
+    color: macOSColors.text.muted,
+    fontFamily: "monospace",
+    marginTop: 3,
+    marginBottom: 1,
+  },
+  filterLabelCompact: {
+    fontSize: 10,
+    color: macOSColors.text.primary,
     fontWeight: "600",
-    letterSpacing: 0.5,
+    textAlign: "center",
+    textTransform: "capitalize",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 1,
+  },
+  filterDescriptionBottom: {
+    fontSize: 8,
+    color: macOSColors.text.muted,
+    textAlign: "center",
+    marginTop: 2,
+    lineHeight: 11,
+  },
+  sectionDescription: {
+    fontSize: 10,
+    color: macOSColors.text.secondary,
+    marginTop: 4,
+    marginBottom: 4,
+    lineHeight: 14,
+  },
+  methodBadgeCompact: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    minWidth: 48,
+    maxWidth: 60,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  methodTextCompact: {
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.3,
     fontFamily: "monospace",
   },
   activeFiltersSection: {
@@ -650,5 +723,18 @@ const styles = StyleSheet.create({
     color: macOSColors.text.muted,
     fontFamily: "monospace",
     lineHeight: 16,
+  },
+  previewSection: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default + "50",
+    marginTop: 12,
+    overflow: "hidden",
+  },
+  previewContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
 });

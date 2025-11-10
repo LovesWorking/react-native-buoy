@@ -22,14 +22,19 @@ import {
   devToolsStorageKeys,
   macOSColors,
   useSafeAsyncStorage,
+  Copy,
+  copyToClipboard,
+  TabSelector,
 } from "@react-buoy/shared-ui";
 import type { ModalMode } from "@react-buoy/shared-ui";
 import { NetworkEventItemCompact } from "./NetworkEventItemCompact";
 import { NetworkFilterViewV3 } from "./NetworkFilterViewV3";
 import { TickProvider } from "../hooks/useTickEveryMinute";
 import { NetworkEventDetailView } from "./NetworkEventDetailView";
+import { NetworkCopySettingsView, DEFAULT_COPY_SETTINGS, type CopySettings } from "./NetworkCopySettingsView";
 import { useNetworkEvents } from "../hooks/useNetworkEvents";
 import type { NetworkEvent } from "../types";
+import { formatBytes } from "../utils/formatting";
 
 interface NetworkModalProps {
   visible: boolean;
@@ -53,6 +58,7 @@ function EmptyState({ isEnabled }: { isEnabled: boolean }) {
   );
 }
 
+
 function NetworkModalInner({
   visible,
   onClose,
@@ -75,14 +81,17 @@ function NetworkModalInner({
 
   const [selectedEvent, setSelectedEvent] = useState<NetworkEvent | null>(null);
   const [showFilterView, setShowFilterView] = useState(false);
+  const [activeTab, setActiveTab] = useState<"filters" | "copy">("filters");
   const [searchText, setSearchText] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
   const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(
     new Set()
   );
+  const [copySettings, setCopySettings] = useState<CopySettings>(DEFAULT_COPY_SETTINGS);
   const flatListRef = useRef<FlatList<NetworkEvent>>(null);
   const hasLoadedFilters = useRef(false);
+  const hasLoadedCopySettings = useRef(false);
   const { getItem: safeGetItem, setItem: safeSetItem } = useSafeAsyncStorage();
 
   // Load persisted filters on mount
@@ -129,6 +138,45 @@ function NetworkModalInner({
     saveFilters();
   }, [ignoredPatterns, safeSetItem]);
 
+  // Load persisted copy settings on mount
+  useEffect(() => {
+    if (!visible || hasLoadedCopySettings.current) return;
+
+    const loadCopySettings = async () => {
+      try {
+        const stored = await safeGetItem(devToolsStorageKeys.network.copyOptions());
+        if (stored) {
+          const settings = JSON.parse(stored) as CopySettings;
+          setCopySettings(settings);
+        }
+      } catch (_error) {
+        // Silently fail - use defaults
+      } finally {
+        hasLoadedCopySettings.current = true;
+      }
+    };
+
+    loadCopySettings();
+  }, [visible, safeGetItem]);
+
+  // Save copy settings when they change
+  useEffect(() => {
+    if (!hasLoadedCopySettings.current) return; // Don't save on initial load
+
+    const saveCopySettings = async () => {
+      try {
+        await safeSetItem(
+          devToolsStorageKeys.network.copyOptions(),
+          JSON.stringify(copySettings)
+        );
+      } catch (_error) {
+        // Silently fail - settings will remain in memory
+      }
+    };
+
+    saveCopySettings();
+  }, [copySettings, safeSetItem]);
+
   // Simple handlers - no useCallback needed per rule2
   const handleEventPress = (event: NetworkEvent) => {
     setSelectedEvent(event);
@@ -167,6 +215,164 @@ function NetworkModalInner({
     });
   }, [events, ignoredPatterns]);
 
+  // Helper to check if payload should be included based on size
+  const shouldIncludePayload = useCallback(
+    (data: unknown): boolean => {
+      if (copySettings.bodySizeThreshold === -1) return true;
+      if (!data) return true;
+      try {
+        const size = JSON.stringify(data).length;
+        return size < copySettings.bodySizeThreshold * 1024;
+      } catch {
+        return false;
+      }
+    },
+    [copySettings.bodySizeThreshold]
+  );
+
+  // Generate copy text based on settings
+  const generateCopyText = useCallback((): string => {
+    let eventsToUse = filteredEvents;
+
+    // Apply filter mode
+    if (copySettings.filterMode === "failed") {
+      eventsToUse = eventsToUse.filter((e) => e.error || (e.status && e.status >= 400));
+    } else if (copySettings.filterMode === "success") {
+      eventsToUse = eventsToUse.filter((e) => e.status && e.status >= 200 && e.status < 300);
+    }
+
+    if (eventsToUse.length === 0) {
+      return "No requests to copy";
+    }
+
+    // Plain text format (URLs only)
+    if (copySettings.format === "plaintext") {
+      return eventsToUse
+        .map((event) => `${event.method} ${event.url}`)
+        .join("\n");
+    }
+
+    // JSON format
+    if (copySettings.format === "json") {
+      const requests = eventsToUse.map((event) => {
+        const obj: Record<string, unknown> = {};
+
+        if (copySettings.includeMethod) {
+          obj.method = event.method;
+          obj.url = event.url;
+        }
+        if (copySettings.includeStatus) {
+          obj.status = event.status;
+          obj.statusText = event.statusText;
+        }
+        if (copySettings.includeDuration) obj.duration = event.duration;
+        if (copySettings.includeTimestamp) obj.timestamp = event.timestamp;
+        if (copySettings.includeClient) obj.requestClient = event.requestClient;
+        if (copySettings.includeSizes) {
+          obj.requestSize = event.requestSize;
+          obj.responseSize = event.responseSize;
+        }
+        if (copySettings.includeErrors && event.error) obj.error = event.error;
+
+        if (copySettings.includeRequestHeaders) {
+          obj.requestHeaders = event.requestHeaders;
+        }
+        if (copySettings.includeResponseHeaders) {
+          obj.responseHeaders = event.responseHeaders;
+        }
+        if (copySettings.includeRequestBody && shouldIncludePayload(event.requestData)) {
+          obj.requestData = event.requestData;
+        }
+        if (copySettings.includeResponseBody && shouldIncludePayload(event.responseData)) {
+          obj.responseData = event.responseData;
+        }
+
+        return obj;
+      });
+
+      return JSON.stringify(requests, null, 2);
+    }
+
+    // Markdown format
+    const requests = eventsToUse.map((event, index) => {
+      let md = `# Request ${index + 1}\n\n`;
+
+      if (copySettings.includeMethod) {
+        md += `**Method:** ${event.method}\n`;
+        md += `**URL:** ${event.url}\n`;
+      }
+
+      if (copySettings.includeStatus) {
+        const status = event.status || "Pending";
+        md += `**Status:** ${status}${event.statusText ? ` (${event.statusText})` : ""}\n`;
+      }
+
+      if (copySettings.includeClient && event.requestClient) {
+        md += `**Client:** ${event.requestClient}\n`;
+      }
+
+      if (copySettings.includeDuration && event.duration) {
+        md += `**Duration:** ${event.duration}ms\n`;
+      }
+
+      if (copySettings.includeTimestamp) {
+        md += `**Timestamp:** ${new Date(event.timestamp).toISOString()}\n`;
+      }
+
+      if (copySettings.includeSizes) {
+        const reqSize = event.requestSize ? formatBytes(event.requestSize) : "N/A";
+        const resSize = event.responseSize ? formatBytes(event.responseSize) : "N/A";
+        md += `**Request Size:** ${reqSize}\n`;
+        md += `**Response Size:** ${resSize}\n`;
+      }
+
+      if (copySettings.includeErrors && event.error) {
+        md += `**Error:** ${event.error}\n`;
+      }
+
+      if (copySettings.includeRequestHeaders && Object.keys(event.requestHeaders).length > 0) {
+        md += `\n## Request Headers\n\`\`\`json\n${JSON.stringify(event.requestHeaders, null, 2)}\n\`\`\`\n`;
+      }
+
+      if (copySettings.includeRequestBody) {
+        md += `\n## Request Data\n`;
+        if (shouldIncludePayload(event.requestData)) {
+          md += `\`\`\`json\n${JSON.stringify(event.requestData, null, 2)}\n\`\`\`\n`;
+        } else {
+          const size = event.requestSize ? formatBytes(event.requestSize) : "Unknown size";
+          md += `_Payload omitted (${size}). Exceeds ${copySettings.bodySizeThreshold}KB threshold._\n`;
+        }
+      }
+
+      if (copySettings.includeResponseHeaders && Object.keys(event.responseHeaders).length > 0) {
+        md += `\n## Response Headers\n\`\`\`json\n${JSON.stringify(event.responseHeaders, null, 2)}\n\`\`\`\n`;
+      }
+
+      if (copySettings.includeResponseBody) {
+        md += `\n## Response Data\n`;
+        if (shouldIncludePayload(event.responseData)) {
+          md += `\`\`\`json\n${JSON.stringify(event.responseData, null, 2)}\n\`\`\`\n`;
+        } else {
+          const size = event.responseSize ? formatBytes(event.responseSize) : "Unknown size";
+          md += `_Payload omitted (${size}). Exceeds ${copySettings.bodySizeThreshold}KB threshold._\n`;
+        }
+      }
+
+      md += `\n---\n`;
+      return md;
+    }).join("\n");
+
+    const header = `# Network Requests (${eventsToUse.length} total)\n\n`;
+    return header + requests;
+  }, [filteredEvents, copySettings, shouldIncludePayload]);
+
+  // Direct copy handler
+  const handleDirectCopy = useCallback(async () => {
+    if (filteredEvents.length === 0) return;
+    const text = generateCopyText();
+    await copyToClipboard(text);
+  }, [filteredEvents.length, generateCopyText]);
+
   // FlatList optimization - only keep what's needed for FlatList performance
   const keyExtractor = (item: NetworkEvent) => item.id;
 
@@ -179,12 +385,23 @@ function NetworkModalInner({
 
   // Compact header with actions (like Sentry/Storage modals)
   const renderHeaderContent = () => {
-    // Filter view header - simple, no tabs
+    // Filter view header with tabs
     if (showFilterView) {
+      const tabs = [
+        { key: "filters" as const, label: "Filters" },
+        { key: "copy" as const, label: "Copy" },
+      ];
+
       return (
         <ModalHeader>
           <ModalHeader.Navigation onBack={() => setShowFilterView(false)} />
-          <ModalHeader.Content title="Filters" centered />
+          <ModalHeader.Content title="" noMargin>
+            <TabSelector
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={(tab) => setActiveTab(tab as "filters" | "copy")}
+            />
+          </ModalHeader.Content>
           <ModalHeader.Actions onClose={onClose} />
         </ModalHeader>
       );
@@ -340,6 +557,25 @@ function NetworkModalInner({
           </TouchableOpacity>
 
           <TouchableOpacity
+            sentry-label="ignore copy requests"
+            onPress={handleDirectCopy}
+            style={[
+              styles.headerActionButton,
+              filteredEvents.length === 0 && styles.headerActionButtonDisabled,
+            ]}
+            disabled={filteredEvents.length === 0}
+          >
+            <Copy
+              size={14}
+              color={
+                filteredEvents.length > 0
+                  ? macOSColors.text.secondary
+                  : macOSColors.text.disabled
+              }
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
             sentry-label="ignore toggle interception"
             onPress={toggleInterception}
             style={[
@@ -402,8 +638,8 @@ function NetworkModalInner({
       styles={{}}
     >
       <View style={styles.container}>
-        {/* Show detail view if event is selected */}
         {selectedEvent ? (
+          /* Show detail view if event is selected */
           <NetworkEventDetailView
             event={selectedEvent}
             ignoredPatterns={ignoredPatterns}
@@ -418,26 +654,35 @@ function NetworkModalInner({
             }}
           />
         ) : showFilterView ? (
-          <NetworkFilterViewV3
-            events={events}
-            filter={filter}
-            onFilterChange={setFilter}
-            ignoredPatterns={ignoredPatterns}
-            onTogglePattern={(pattern) => {
-              const newPatterns = new Set(ignoredPatterns);
-              if (newPatterns.has(pattern)) {
-                newPatterns.delete(pattern);
-              } else {
+          /* Show filter/copy view based on active tab */
+          activeTab === "copy" ? (
+            <NetworkCopySettingsView
+              settings={copySettings}
+              onSettingsChange={setCopySettings}
+              events={filteredEvents}
+            />
+          ) : (
+            <NetworkFilterViewV3
+              events={events}
+              filter={filter}
+              onFilterChange={setFilter}
+              ignoredPatterns={ignoredPatterns}
+              onTogglePattern={(pattern) => {
+                const newPatterns = new Set(ignoredPatterns);
+                if (newPatterns.has(pattern)) {
+                  newPatterns.delete(pattern);
+                } else {
+                  newPatterns.add(pattern);
+                }
+                setIgnoredPatterns(newPatterns);
+              }}
+              onAddPattern={(pattern) => {
+                const newPatterns = new Set(ignoredPatterns);
                 newPatterns.add(pattern);
-              }
-              setIgnoredPatterns(newPatterns);
-            }}
-            onAddPattern={(pattern) => {
-              const newPatterns = new Set(ignoredPatterns);
-              newPatterns.add(pattern);
-              setIgnoredPatterns(newPatterns);
-            }}
-          />
+                setIgnoredPatterns(newPatterns);
+              }}
+            />
+          )
         ) : (
           <>
             {!isEnabled ? (

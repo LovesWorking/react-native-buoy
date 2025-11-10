@@ -25,7 +25,7 @@ export interface NetworkingEvent {
     headers?: Record<string, string>;
     data?: unknown;
     params?: Record<string, string>;
-    client?: "fetch" | "axios";
+    client?: "fetch" | "axios" | "graphql";
   };
   response?: {
     status: number;
@@ -171,7 +171,7 @@ class NetworkListener {
   ): Promise<{ body: any; size: number; truncated: boolean }> {
     try {
       // Check Content-Length header first
-      const contentLength = response.headers.get('content-length');
+      const contentLength = response.headers.get("content-length");
       if (contentLength) {
         const size = parseInt(contentLength, 10);
         if (!isNaN(size) && size > maxSize) {
@@ -192,7 +192,9 @@ class NetworkListener {
         const preview = text.substring(0, maxSize);
         const omitted = size - maxSize;
         return {
-          body: `${preview}\n\n... [truncated, ${this.formatBytes(omitted)} omitted]`,
+          body: `${preview}\n\n... [truncated, ${this.formatBytes(
+            omitted
+          )} omitted]`,
           size,
           truncated: true,
         };
@@ -228,9 +230,9 @@ class NetworkListener {
    * @returns Formatted string (e.g., "1.5 MB")
    */
   private formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
   }
@@ -262,7 +264,8 @@ class NetworkListener {
     requestData: unknown,
     params: Record<string, string> | null,
     startTime: number,
-    isError = false
+    isError = false,
+    clientType: "fetch" | "axios" | "graphql" = "axios"
   ) {
     const duration = startTime ? Date.now() - startTime : 0;
 
@@ -279,10 +282,12 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType,
         },
         error: {
-          message: isError ? "Request failed" : "Network error or request aborted",
+          message: isError
+            ? "Request failed"
+            : "Network error or request aborted",
         },
       });
       return;
@@ -293,14 +298,16 @@ class NetworkListener {
     let responseSize = 0;
 
     try {
-      // Try different ways to get response
-      if (xhr.responseType === "json" && xhr.response) {
-        body = xhr.response;
-        responseSize = JSON.stringify(xhr.response).length;
-      } else if (
-        xhr.responseType === "" ||
-        xhr.responseType === "text"
-      ) {
+      const response = xhr.response;
+
+      // Debug logging to help diagnose responseType issues
+
+      // Try different ways to get response based on responseType
+      if (xhr.responseType === "json" && response) {
+        // Response is already parsed as JSON
+        body = response;
+        responseSize = JSON.stringify(response).length;
+      } else if (xhr.responseType === "" || xhr.responseType === "text") {
         // Only access responseText when responseType allows it
         if (xhr.responseText) {
           responseSize = xhr.responseText.length;
@@ -310,21 +317,71 @@ class NetworkListener {
             body = xhr.responseText;
           }
         }
-      } else if (
-        xhr.responseType === "blob" ||
-        xhr.responseType === "arraybuffer"
-      ) {
-        // For blob/arraybuffer responses, just note the type
-        body = `[${xhr.responseType} response]`;
-        responseSize =
-          xhr.response?.size || xhr.response?.byteLength || 0;
-      } else if (xhr.response) {
-        if (typeof xhr.response === "string") {
-          body = xhr.response;
-          responseSize = xhr.response.length;
+      } else if (xhr.responseType === "arraybuffer") {
+        // For arraybuffer, try to decode as text and parse as JSON
+        // This is common for Axios requests that return JSON
+        if (response) {
+          try {
+            const text = new TextDecoder("utf-8").decode(response);
+            responseSize = text.length;
+            try {
+              body = JSON.parse(text);
+            } catch {
+              // Not JSON, return as text
+              body = text;
+            }
+          } catch (decodeError) {
+            // Failed to decode, show placeholder
+            body = `[arraybuffer response - ${response.byteLength || 0} bytes]`;
+            responseSize = response.byteLength || 0;
+          }
         } else {
-          body = xhr.response;
-          responseSize = JSON.stringify(xhr.response).length;
+          body = `[arraybuffer response - no data]`;
+          responseSize = 0;
+        }
+      } else if (xhr.responseType === "blob") {
+        // For blob responses, we can't synchronously read the content
+        // Note: In React Native, most JSON responses shouldn't be blobs
+        // but if they are, we show metadata
+        if (response instanceof Blob) {
+          body = `[blob response - ${response.size} bytes, type: ${
+            response.type || "unknown"
+          }]`;
+          responseSize = response.size;
+        } else if (response) {
+          // Sometimes response might not be a Blob object but still have data
+          // Try to handle it as an object
+          try {
+            body =
+              typeof response === "string" ? JSON.parse(response) : response;
+            responseSize = JSON.stringify(body).length;
+          } catch {
+            body = `[blob response - unable to parse]`;
+            responseSize = 0;
+          }
+        } else {
+          body = `[blob response - no data]`;
+          responseSize = 0;
+        }
+      } else if (response) {
+        // Fallback: try to handle the response regardless of responseType
+        // This catches cases where Axios sets an unexpected responseType
+        if (typeof response === "string") {
+          body = response;
+          responseSize = response.length;
+          // Try to parse as JSON if it's a string
+          try {
+            body = JSON.parse(response);
+          } catch {
+            // Not JSON, keep as string
+          }
+        } else if (typeof response === "object") {
+          // Already an object, use it directly
+          body = response;
+          responseSize = JSON.stringify(response).length;
+        } else {
+          body = String(response);
+          responseSize = String(response).length;
         }
       }
     } catch (error) {
@@ -365,7 +422,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType,
         },
         response: {
           status: xhr.status,
@@ -387,7 +444,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType,
         },
         response: {
           status: xhr.status,
@@ -491,7 +548,11 @@ class NetworkListener {
 
         // Clone response to read body with size limits
         const responseClone = response.clone();
-        const { body, size: responseSize, truncated } = await self.processResponseBody(responseClone);
+        const {
+          body,
+          size: responseSize,
+          truncated,
+        } = await self.processResponseBody(responseClone);
 
         // Parse response headers
         const responseHeaders: Record<string, string> = {};
@@ -621,6 +682,12 @@ class NetworkListener {
         }
       }
 
+      // Determine client type from X-Request-Client header
+      const clientType =
+        requestHeaders["X-Request-Client"] ||
+        requestHeaders["x-request-client"] ||
+        "axios";
+
       // Emit request event
       self.emit({
         type: "request",
@@ -632,7 +699,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType as "fetch" | "axios" | "graphql",
         },
       });
 
@@ -651,7 +718,8 @@ class NetworkListener {
           requestData,
           params,
           startTime || 0,
-          isError
+          isError,
+          clientType as "fetch" | "axios" | "graphql"
         );
         // Clean up event listeners after processing to prevent memory leaks
         cleanup();
@@ -659,10 +727,10 @@ class NetworkListener {
 
       // Cleanup function to remove event listeners
       const cleanup = () => {
-        this.removeEventListener('load', loadListener);
-        this.removeEventListener('error', errorListener);
-        this.removeEventListener('abort', abortListener);
-        this.removeEventListener('readystatechange', readyStateListener);
+        this.removeEventListener("load", loadListener);
+        this.removeEventListener("error", errorListener);
+        this.removeEventListener("abort", abortListener);
+        this.removeEventListener("readystatechange", readyStateListener);
       };
 
       // Use addEventListener to listen to events WITHOUT replacing user handlers
@@ -688,10 +756,10 @@ class NetworkListener {
       };
 
       // Add event listeners that will fire alongside user handlers
-      this.addEventListener('load', loadListener);
-      this.addEventListener('error', errorListener);
-      this.addEventListener('abort', abortListener);
-      this.addEventListener('readystatechange', readyStateListener);
+      this.addEventListener("load", loadListener);
+      this.addEventListener("error", errorListener);
+      this.addEventListener("abort", abortListener);
+      this.addEventListener("readystatechange", readyStateListener);
 
       return self.originalXHRSend.call(this, data);
     };
