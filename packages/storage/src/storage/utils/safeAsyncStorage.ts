@@ -50,14 +50,6 @@ function checkAsyncStorageAvailability(): boolean {
     checkError = error;
     isAvailable = false;
     AsyncStorage = null;
-
-    // Only log in development for debugging
-    if (__DEV__) {
-      console.log(
-        "[SafeAsyncStorage] AsyncStorage not available:",
-        error?.message || "Unknown error"
-      );
-    }
   }
 
   checkedAvailability = true;
@@ -114,9 +106,6 @@ export const safeAsyncStorage = new Proxy(noOpAsyncStorage, {
       }
     } catch (error) {
       // If check throws for any reason, fall back to no-op
-      if (__DEV__) {
-        console.warn("[SafeAsyncStorage] Unexpected error during availability check:", error);
-      }
     }
 
     // Return no-op implementation

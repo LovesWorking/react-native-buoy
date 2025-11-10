@@ -72,8 +72,6 @@ function buildRouteNodeFromNavigationState(state: any): RouteNode | null {
 
   collectRoutes(state, routeNode);
 
-  console.log('[useRouteSitemap] Built route node from nav state, children:', routeNode.children.length);
-
   return routeNode.children.length > 0 ? routeNode : null;
 }
 

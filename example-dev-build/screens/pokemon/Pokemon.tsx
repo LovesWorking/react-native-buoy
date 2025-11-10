@@ -82,7 +82,7 @@ export function PokemonScreen() {
           );
         }
       } catch (error) {
-        console.warn("Failed to parse saved Pokémon from storage", error);
+        // Failed to parse saved Pokémon from storage
       }
       return [];
     },
@@ -108,7 +108,7 @@ export function PokemonScreen() {
             );
           }
         } catch (error) {
-          console.warn("Failed to parse saved Pokémon list", error);
+          // Failed to parse saved Pokémon list
         }
       }
 
@@ -157,7 +157,7 @@ export function PokemonScreen() {
             );
           }
         } catch (error) {
-          console.warn("Failed to parse saved Pokémon list", error);
+          // Failed to parse saved Pokémon list
         }
       }
 
