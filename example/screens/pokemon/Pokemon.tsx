@@ -61,8 +61,8 @@ export function PokemonScreen() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Request method toggle (fetch vs axios)
-  const { requestMethod, toggleRequestMethod, isFetch } = useRequestMethod();
+  // Request method toggle (fetch vs axios vs graphql)
+  const { requestMethod, toggleRequestMethod, isFetch, isGraphQL } = useRequestMethod();
 
   // Auto-scrolling carousel animation
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -728,12 +728,14 @@ export function PokemonScreen() {
                           colors={
                             isFetch
                               ? ["#4A90E2", "#357ABD"]
+                              : isGraphQL
+                              ? ["#E535AB", "#D946EF"]
                               : ["#9333EA", "#7C3AED"]
                           }
                           style={styles.gradientButton}
                         >
                           <Text style={styles.methodToggleTextCompact}>
-                            {isFetch ? "fetch" : "axios"}
+                            {requestMethod}
                           </Text>
                         </LinearGradient>
                       </Animated.View>
@@ -861,6 +863,7 @@ export function PokemonScreen() {
         <PokedexTrainerCollection
           shimmerAnim={shimmerAnim}
           floatAnim={floatAnim}
+          requestMethod={requestMethod}
         />
 
         {/* Route Test Button */}
@@ -1026,10 +1029,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   methodToggleTextCompact: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "900",
     color: "#FFFFFF",
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
     textTransform: "uppercase",
   },
   stackIndicator: {
