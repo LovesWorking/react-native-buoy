@@ -68,10 +68,8 @@ try {
     mode: "multi-process",
   });
 
-  console.log("✅ All MMKV instances registered with DevTools");
 } catch (error) {
   // Storage package not installed - that's fine
-  console.log("ℹ️ DevTools registration skipped (storage package not available)");
 }
 
 // ============================================================================
@@ -87,12 +85,9 @@ try {
  * - Real-world use cases
  */
 export function initializeMockMMKVData() {
-  console.log("🚀 Initializing comprehensive MMKV mock data...");
-
   // ============================================================================
   // DEFAULT STORAGE - All Data Types & Use Cases
   // ============================================================================
-  console.log("\n📦 DEFAULT STORAGE:");
 
   // ---- STRING VALUES ----
   storage.set("string.simple", "Hello World");
@@ -186,13 +181,9 @@ export function initializeMockMMKVData() {
   storage.set("@features/betaFeatures", true);
   storage.set("@features/analytics", false);
 
-  console.log(`  ✓ ${storage.getAllKeys().length} keys initialized`);
-  console.log(`  ✓ Size: ${(storage.size / 1024).toFixed(2)} KB`);
-
   // ============================================================================
   // ENCRYPTED STORAGE - Sensitive Data
   // ============================================================================
-  console.log("\n🔒 ENCRYPTED STORAGE:");
 
   // ---- AUTHENTICATION ----
   encryptedStorage.set("auth.token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...");
@@ -225,15 +216,9 @@ export function initializeMockMMKVData() {
     })
   );
 
-  console.log(`  ✓ ${encryptedStorage.getAllKeys().length} keys initialized`);
-  console.log(
-    `  ✓ Size: ${(encryptedStorage.size / 1024).toFixed(2)} KB (encrypted)`
-  );
-
   // ============================================================================
   // USER PREFERENCES STORAGE
   // ============================================================================
-  console.log("\n👤 USER PREFERENCES:");
 
   // ---- THEME SETTINGS ----
   userPrefsStorage.set("theme", "dark");
@@ -260,15 +245,9 @@ export function initializeMockMMKVData() {
   userPrefsStorage.set("recentSearches", JSON.stringify(["query1", "query2"]));
   userPrefsStorage.set("lastViewedScreen", "Home");
 
-  console.log(
-    `  ✓ ${userPrefsStorage.getAllKeys().length} keys initialized`
-  );
-  console.log(`  ✓ Size: ${(userPrefsStorage.size / 1024).toFixed(2)} KB`);
-
   // ============================================================================
   // CACHE STORAGE - API Responses & Temporary Data
   // ============================================================================
-  console.log("\n💾 CACHE STORAGE:");
 
   // ---- API CACHE ----
   cacheStorage.set(
@@ -313,13 +292,9 @@ export function initializeMockMMKVData() {
   cacheStorage.set("temp.downloadQueue", JSON.stringify([1, 2, 3]));
   cacheStorage.set("temp.retryCount", 3);
 
-  console.log(`  ✓ ${cacheStorage.getAllKeys().length} keys initialized`);
-  console.log(`  ✓ Size: ${(cacheStorage.size / 1024).toFixed(2)} KB`);
-
   // ============================================================================
   // SHARED STORAGE - Multi-process Data
   // ============================================================================
-  console.log("\n🔄 SHARED STORAGE (multi-process):");
 
   // ---- SHARED STATE ----
   sharedStorage.set("shared.counter", 0);
@@ -330,61 +305,4 @@ export function initializeMockMMKVData() {
   sharedStorage.set("sync.status", "completed");
   sharedStorage.set("sync.lastSync", new Date().toISOString());
   sharedStorage.set("sync.pendingItems", 0);
-
-  console.log(`  ✓ ${sharedStorage.getAllKeys().length} keys initialized`);
-  console.log(`  ✓ Size: ${(sharedStorage.size / 1024).toFixed(2)} KB`);
-
-  // ============================================================================
-  // SUMMARY
-  // ============================================================================
-  console.log("\n✅ MMKV INITIALIZATION COMPLETE!");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(`📦 Default Storage:     ${storage.getAllKeys().length} keys`);
-  console.log(
-    `🔒 Encrypted Storage:   ${encryptedStorage.getAllKeys().length} keys`
-  );
-  console.log(
-    `👤 User Preferences:    ${userPrefsStorage.getAllKeys().length} keys`
-  );
-  console.log(`💾 Cache Storage:       ${cacheStorage.getAllKeys().length} keys`);
-  console.log(
-    `🔄 Shared Storage:      ${sharedStorage.getAllKeys().length} keys`
-  );
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-  const totalKeys =
-    storage.getAllKeys().length +
-    encryptedStorage.getAllKeys().length +
-    userPrefsStorage.getAllKeys().length +
-    cacheStorage.getAllKeys().length +
-    sharedStorage.getAllKeys().length;
-
-  const totalSize =
-    (storage.size +
-      encryptedStorage.size +
-      userPrefsStorage.size +
-      cacheStorage.size +
-      sharedStorage.size) /
-    1024;
-
-  console.log(`📊 Total Keys:          ${totalKeys}`);
-  console.log(`📊 Total Size:          ${totalSize.toFixed(2)} KB`);
-  console.log("\n🎯 All data types covered:");
-  console.log("  ✓ Strings (simple, empty, unicode, multiline, long)");
-  console.log("  ✓ Numbers (int, float, negative, large, small)");
-  console.log("  ✓ Booleans (true, false)");
-  console.log("  ✓ Objects (user, array, nested, mixed)");
-  console.log("  ✓ Timestamps (ISO strings, unix timestamps)");
-  console.log("\n🔧 All configurations covered:");
-  console.log("  ✓ Default instance");
-  console.log("  ✓ Encrypted instance (with encryption key)");
-  console.log("  ✓ Multi-process instance");
-  console.log("  ✓ Multiple independent instances");
-  console.log("\n🎨 Real-world use cases covered:");
-  console.log("  ✓ App settings & preferences");
-  console.log("  ✓ User authentication & credentials");
-  console.log("  ✓ API response caching");
-  console.log("  ✓ Feature flags");
-  console.log("  ✓ Temporary data");
-  console.log("  ✓ Shared state across processes");
 }
