@@ -15,7 +15,7 @@ const REQUEST_METHOD_STORAGE_KEY = "@devtools/pokemon/requestMethod";
  * @returns Object with current method, toggle function, and setter
  */
 export const useRequestMethod = () => {
-  const [requestMethod, setRequestMethod] = useState<RequestMethod>("fetch");
+  const [requestMethod, setRequestMethod] = useState<RequestMethod | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load saved request method on mount
@@ -25,9 +25,11 @@ export const useRequestMethod = () => {
         const saved = await safeGetItem(REQUEST_METHOD_STORAGE_KEY);
         if (saved && (saved === "fetch" || saved === "axios" || saved === "graphql")) {
           setRequestMethod(saved as RequestMethod);
+        } else {
+          setRequestMethod("fetch"); // Default if nothing saved
         }
       } catch (error) {
-        // Ignore errors, use default
+        setRequestMethod("fetch"); // Default on error
       } finally {
         setIsLoaded(true);
       }
@@ -60,11 +62,12 @@ export const useRequestMethod = () => {
   }, []);
 
   return {
-    requestMethod,
+    requestMethod: requestMethod as RequestMethod | null,
     setRequestMethod,
     toggleRequestMethod,
     isFetch: requestMethod === "fetch",
     isAxios: requestMethod === "axios",
     isGraphQL: requestMethod === "graphql",
+    isLoaded,
   };
 };

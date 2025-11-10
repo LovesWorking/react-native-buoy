@@ -47,16 +47,21 @@ const fetchPokemon = async (
   };
 };
 
-export const usePokemon = (pokemonName: string, requestMethod: RequestMethod = "fetch") => {
+export const usePokemon = (
+  pokemonName: string,
+  requestMethod: RequestMethod | null = "fetch"
+) => {
   return useQuery({
     queryKey: ["pokemon", pokemonName, requestMethod],
-    queryFn: () => fetchPokemon(pokemonName, requestMethod),
-    enabled: pokemonName.length > 0,
+    queryFn: () => fetchPokemon(pokemonName, requestMethod as RequestMethod),
+    enabled: pokemonName.length > 0 && requestMethod !== null,
     // Keep data in cache longer
     gcTime: 1000 * 60 * 10, // 10 minutes
     staleTime: 1000 * 60 * 2, // 2 minutes
     // Don't refetch on reconnect/focus during development
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    // Prevent duplicate requests
+    networkMode: 'always',
   });
 };

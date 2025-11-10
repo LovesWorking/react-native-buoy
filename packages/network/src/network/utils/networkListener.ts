@@ -294,10 +294,24 @@ class NetworkListener {
     let responseSize = 0;
 
     try {
-      // Try different ways to get response
-      if (xhr.responseType === "json" && xhr.response) {
-        body = xhr.response;
-        responseSize = JSON.stringify(xhr.response).length;
+      const response = xhr.response;
+
+      // Debug logging to help diagnose responseType issues
+      if (__DEV__ && false) { // Set to true to enable debugging
+        console.log('[Network Debug] Response parsing:', {
+          url: cleanUrl,
+          responseType: xhr.responseType,
+          responseInstanceType: response?.constructor?.name,
+          hasResponseText: !!xhr.responseText,
+          hasResponse: !!response,
+        });
+      }
+
+      // Try different ways to get response based on responseType
+      if (xhr.responseType === "json" && response) {
+        // Response is already parsed as JSON
+        body = response;
+        responseSize = JSON.stringify(response).length;
       } else if (
         xhr.responseType === "" ||
         xhr.responseType === "text"
@@ -311,21 +325,68 @@ class NetworkListener {
             body = xhr.responseText;
           }
         }
-      } else if (
-        xhr.responseType === "blob" ||
-        xhr.responseType === "arraybuffer"
-      ) {
-        // For blob/arraybuffer responses, just note the type
-        body = `[${xhr.responseType} response]`;
-        responseSize =
-          xhr.response?.size || xhr.response?.byteLength || 0;
-      } else if (xhr.response) {
-        if (typeof xhr.response === "string") {
-          body = xhr.response;
-          responseSize = xhr.response.length;
+      } else if (xhr.responseType === "arraybuffer") {
+        // For arraybuffer, try to decode as text and parse as JSON
+        // This is common for Axios requests that return JSON
+        if (response) {
+          try {
+            const text = new TextDecoder('utf-8').decode(response);
+            responseSize = text.length;
+            try {
+              body = JSON.parse(text);
+            } catch {
+              // Not JSON, return as text
+              body = text;
+            }
+          } catch (decodeError) {
+            // Failed to decode, show placeholder
+            body = `[arraybuffer response - ${response.byteLength || 0} bytes]`;
+            responseSize = response.byteLength || 0;
+          }
         } else {
-          body = xhr.response;
-          responseSize = JSON.stringify(xhr.response).length;
+          body = `[arraybuffer response - no data]`;
+          responseSize = 0;
+        }
+      } else if (xhr.responseType === "blob") {
+        // For blob responses, we can't synchronously read the content
+        // Note: In React Native, most JSON responses shouldn't be blobs
+        // but if they are, we show metadata
+        if (response instanceof Blob) {
+          body = `[blob response - ${response.size} bytes, type: ${response.type || 'unknown'}]`;
+          responseSize = response.size;
+        } else if (response) {
+          // Sometimes response might not be a Blob object but still have data
+          // Try to handle it as an object
+          try {
+            body = typeof response === 'string' ? JSON.parse(response) : response;
+            responseSize = JSON.stringify(body).length;
+          } catch {
+            body = `[blob response - unable to parse]`;
+            responseSize = 0;
+          }
+        } else {
+          body = `[blob response - no data]`;
+          responseSize = 0;
+        }
+      } else if (response) {
+        // Fallback: try to handle the response regardless of responseType
+        // This catches cases where Axios sets an unexpected responseType
+        if (typeof response === "string") {
+          body = response;
+          responseSize = response.length;
+          // Try to parse as JSON if it's a string
+          try {
+            body = JSON.parse(response);
+          } catch {
+            // Not JSON, keep as string
+          }
+        } else if (typeof response === "object") {
+          // Already an object, use it directly
+          body = response;
+          responseSize = JSON.stringify(response).length;
+        } else {
+          body = String(response);
+          responseSize = String(response).length;
         }
       }
     } catch (error) {
