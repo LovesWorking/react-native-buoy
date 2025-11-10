@@ -18,6 +18,7 @@ import { safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
 import { usePokemon } from "./usePokemon";
 import { PokemonTheme } from "./constants/PokemonTheme";
 import { useRouter } from "expo-router";
+import type { RequestMethod } from "./apiClient";
 
 const { width } = Dimensions.get("window");
 
@@ -58,6 +59,7 @@ interface PokemonLogEntryProps {
   onCancelDeleteMode: () => void;
   onConfirmDelete: (pokemonName: string) => void;
   onNavigate: (pokemonName: string) => void;
+  requestMethod: RequestMethod;
 }
 
 function PokemonLogEntry({
@@ -71,8 +73,9 @@ function PokemonLogEntry({
   onCancelDeleteMode,
   onConfirmDelete,
   onNavigate,
+  requestMethod,
 }: PokemonLogEntryProps) {
-  const { data, isLoading } = usePokemon(pokemonName);
+  const { data, isLoading } = usePokemon(pokemonName, requestMethod);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const deleteAnim = useRef(new Animated.Value(1)).current;
   const deleteIconAnim = useRef(new Animated.Value(0)).current;
@@ -347,11 +350,13 @@ function PokemonLogEntry({
 interface PokedexTrainerCollectionProps {
   shimmerAnim: Animated.Value;
   floatAnim: Animated.Value;
+  requestMethod: RequestMethod;
 }
 
 export function PokedexTrainerCollection({
   shimmerAnim,
   floatAnim,
+  requestMethod,
 }: PokedexTrainerCollectionProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -512,6 +517,7 @@ export function PokedexTrainerCollection({
         onCancelDeleteMode={handleCancelDeleteMode}
         onConfirmDelete={handleConfirmDelete}
         onNavigate={handleNavigate}
+        requestMethod={requestMethod}
       />
     ),
     [
@@ -523,6 +529,7 @@ export function PokedexTrainerCollection({
       handleCancelDeleteMode,
       handleConfirmDelete,
       handleNavigate,
+      requestMethod,
     ]
   );
 
