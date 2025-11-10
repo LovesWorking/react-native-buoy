@@ -40,13 +40,6 @@ function loadAsyncStorage(): StorageLike | null {
       // - Module not found (package not installed)
       // - Native module errors (package installed but native not linked)
       // - Any other initialization errors
-      if (!warnedMissing && typeof __DEV__ !== "undefined" && __DEV__) {
-        warnedMissing = true;
-        console.log(
-          "[SafeAsyncStorage] AsyncStorage not available, using in-memory fallback:",
-          err?.message || "Unknown error"
-        );
-      }
     }
   }
 
