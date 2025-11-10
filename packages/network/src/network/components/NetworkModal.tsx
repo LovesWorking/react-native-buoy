@@ -22,6 +22,7 @@ import {
   devToolsStorageKeys,
   macOSColors,
   useSafeAsyncStorage,
+  ToolbarCopyButton,
 } from "@react-buoy/shared-ui";
 import type { ModalMode } from "@react-buoy/shared-ui";
 import { NetworkEventItemCompact } from "./NetworkEventItemCompact";
@@ -166,6 +167,56 @@ function NetworkModalInner({
       return !isFiltered;
     });
   }, [events, ignoredPatterns]);
+
+  // Generate formatted string of all requests for copying
+  const getAllRequestsText = useCallback(() => {
+    if (filteredEvents.length === 0) {
+      return "No network requests to copy";
+    }
+
+    const requests = filteredEvents.map((event, index) => {
+      const timestamp = new Date(event.timestamp).toISOString();
+      const status = event.status || "Pending";
+      const duration = event.duration ? `${event.duration}ms` : "N/A";
+
+      return `# Request ${index + 1}
+
+**Method:** ${event.method}
+**URL:** ${event.url}
+**Status:** ${status}${event.statusText ? ` (${event.statusText})` : ""}
+**Client:** ${event.requestClient || "N/A"}
+**Duration:** ${duration}
+**Timestamp:** ${timestamp}
+${event.error ? `**Error:** ${event.error}` : ""}
+
+## Request Headers
+\`\`\`json
+${JSON.stringify(event.requestHeaders, null, 2)}
+\`\`\`
+
+## Request Data
+\`\`\`json
+${JSON.stringify(event.requestData, null, 2)}
+\`\`\`
+
+## Response Headers
+\`\`\`json
+${JSON.stringify(event.responseHeaders, null, 2)}
+\`\`\`
+
+## Response Data
+\`\`\`json
+${JSON.stringify(event.responseData, null, 2)}
+\`\`\`
+
+---
+`;
+    }).join("\n");
+
+    return `# Network Requests (${filteredEvents.length} total)
+
+${requests}`;
+  }, [filteredEvents]);
 
   // FlatList optimization - only keep what's needed for FlatList performance
   const keyExtractor = (item: NetworkEvent) => item.id;
@@ -338,6 +389,24 @@ function NetworkModalInner({
               }
             />
           </TouchableOpacity>
+
+          <View
+            style={[
+              styles.headerActionButton,
+              filteredEvents.length === 0 && styles.headerActionButtonDisabled,
+            ]}
+          >
+            <ToolbarCopyButton
+              value={getAllRequestsText()}
+              buttonStyle={styles.copyButtonInner}
+              colors={{
+                idle: macOSColors.text.secondary,
+                idleFocused: macOSColors.semantic.info,
+                success: macOSColors.semantic.success,
+                error: macOSColors.semantic.error,
+              }}
+            />
+          </View>
 
           <TouchableOpacity
             sentry-label="ignore toggle interception"
@@ -584,6 +653,9 @@ const styles = StyleSheet.create({
   },
   headerActionButtonDisabled: {
     opacity: 0.55,
+  },
+  copyButtonInner: {
+    padding: 0,
   },
   // Shared navbar styles (matching React Query modal)
   tabNavigationContainer: {

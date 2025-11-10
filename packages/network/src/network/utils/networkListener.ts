@@ -25,7 +25,7 @@ export interface NetworkingEvent {
     headers?: Record<string, string>;
     data?: unknown;
     params?: Record<string, string>;
-    client?: "fetch" | "axios";
+    client?: "fetch" | "axios" | "graphql";
   };
   response?: {
     status: number;
@@ -262,7 +262,8 @@ class NetworkListener {
     requestData: unknown,
     params: Record<string, string> | null,
     startTime: number,
-    isError = false
+    isError = false,
+    clientType: "fetch" | "axios" | "graphql" = "axios"
   ) {
     const duration = startTime ? Date.now() - startTime : 0;
 
@@ -279,7 +280,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType,
         },
         error: {
           message: isError ? "Request failed" : "Network error or request aborted",
@@ -365,7 +366,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType,
         },
         response: {
           status: xhr.status,
@@ -387,7 +388,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType,
         },
         response: {
           status: xhr.status,
@@ -621,6 +622,9 @@ class NetworkListener {
         }
       }
 
+      // Determine client type from X-Request-Client header
+      const clientType = requestHeaders["X-Request-Client"] || requestHeaders["x-request-client"] || "axios";
+
       // Emit request event
       self.emit({
         type: "request",
@@ -632,7 +636,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "axios",
+          client: clientType as "fetch" | "axios" | "graphql",
         },
       });
 
@@ -651,7 +655,8 @@ class NetworkListener {
           requestData,
           params,
           startTime || 0,
-          isError
+          isError,
+          clientType as "fetch" | "axios" | "graphql"
         );
         // Clean up event listeners after processing to prevent memory leaks
         cleanup();

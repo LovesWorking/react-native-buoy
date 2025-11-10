@@ -69,14 +69,38 @@ const CollapsibleSection: FC<{
 };
 
 // URL breakdown component matching Sentry style
-const UrlBreakdown: FC<{ url: string }> = ({ url }) => {
+const UrlBreakdown: FC<{ url: string; requestData?: unknown }> = ({ url, requestData }) => {
   const parseUrl = (urlString: string) => {
     try {
       const urlObj = new URL(urlString);
       const protocol = String(urlObj.protocol || "");
       const host = String(urlObj.host || "");
-      const pathname = String(urlObj.pathname || "");
       const isSecure = protocol === "https:";
+
+      let pathname = String(urlObj.pathname || "");
+
+      // If this is a GraphQL request, show the operation name
+      let operationName = null;
+
+      // First try to get operation name from operationName field
+      if (requestData && typeof requestData === 'object' && 'operationName' in requestData && requestData.operationName) {
+        operationName = String(requestData.operationName);
+      }
+
+      // If not found, try to parse it from the query string
+      if (!operationName && requestData && typeof requestData === 'object' && 'query' in requestData) {
+        const query = String(requestData.query);
+        // Match: query OperationName or mutation OperationName
+        const match = query.match(/(?:query|mutation)\s+(\w+)/);
+        if (match && match[1]) {
+          operationName = match[1];
+        }
+      }
+
+      // Append operation name to pathname if found
+      if (operationName) {
+        pathname = `${pathname} (${operationName})`;
+      }
 
       // Parse query parameters
       const params: Record<string, string> = {};
@@ -272,7 +296,7 @@ ${JSON.stringify(requestDetails.responseData, null, 2)}
           </View>
         </View>
 
-        <UrlBreakdown url={event.url} />
+        <UrlBreakdown url={event.url} requestData={event.requestData} />
 
         {event.error ? (
           <View style={styles.errorBox}>

@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 
-export type RequestMethod = "fetch" | "axios";
+export type RequestMethod = "fetch" | "axios" | "graphql";
 
 interface RequestConfig {
   url: string;
@@ -61,7 +61,7 @@ export const makeRequest = async <T = unknown>(
       statusText: response.statusText,
       headers: responseHeaders,
     };
-  } else {
+  } else if (requestMethod === "axios") {
     // Axios implementation (uses XHR under the hood in React Native)
     const axiosConfig: AxiosRequestConfig = {
       url,
@@ -77,6 +77,99 @@ export const makeRequest = async <T = unknown>(
 
     return {
       data: response.data as T,
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers as Record<string, string>,
+    };
+  } else {
+    // GraphQL implementation using axios
+    // Uses the official PokéAPI GraphQL endpoint
+    const graphqlEndpoint = "https://beta.pokeapi.co/graphql/v1beta";
+
+    // Extract pokemon ID from the URL
+    // Assumes URL format like: https://pokeapi.co/api/v2/pokemon/{id}?query=params
+    // Remove query parameters first
+    const urlWithoutQuery = url.split("?")[0];
+    const pokemonId = urlWithoutQuery.split("/").filter(Boolean).pop() || "";
+
+    // GraphQL query to fetch Pokemon data
+    const graphqlQuery = {
+      query: `
+        query GetPokemon($id: String!) {
+          pokemon_v2_pokemon(where: {name: {_eq: $id}}) {
+            id
+            name
+            height
+            weight
+            pokemon_v2_pokemontypes {
+              pokemon_v2_type {
+                name
+              }
+            }
+            pokemon_v2_pokemonabilities {
+              pokemon_v2_ability {
+                name
+              }
+            }
+            pokemon_v2_pokemonstats {
+              base_stat
+              pokemon_v2_stat {
+                name
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        id: pokemonId,
+      },
+    };
+
+    const response = await axios({
+      url: graphqlEndpoint,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Request-Client": "graphql",
+        ...headers,
+      },
+      data: graphqlQuery,
+    });
+
+    // Transform GraphQL response to match REST API format
+    const pokemonData = response.data?.data?.pokemon_v2_pokemon?.[0];
+
+    if (!pokemonData) {
+      throw new Error(`Pokemon not found: ${pokemonId}`);
+    }
+
+    // Transform to REST API format
+    const transformedData = {
+      id: pokemonData.id,
+      name: pokemonData.name,
+      height: pokemonData.height,
+      weight: pokemonData.weight,
+      types: pokemonData.pokemon_v2_pokemontypes?.map((t: any) => ({
+        type: { name: t.pokemon_v2_type.name },
+      })) || [],
+      abilities: pokemonData.pokemon_v2_pokemonabilities?.map((a: any) => ({
+        ability: { name: a.pokemon_v2_ability.name },
+      })) || [],
+      stats: pokemonData.pokemon_v2_pokemonstats?.map((s: any) => ({
+        base_stat: s.base_stat,
+        stat: { name: s.pokemon_v2_stat.name },
+      })) || [],
+      sprites: {
+        other: {
+          "official-artwork": {
+            front_default: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonData.id}.png`,
+          },
+        },
+      },
+    };
+
+    return {
+      data: transformedData as T,
       status: response.status,
       statusText: response.statusText,
       headers: response.headers as Record<string, string>,
