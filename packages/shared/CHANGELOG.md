@@ -1,5 +1,11 @@
 # @react-buoy/shared-ui
 
+## 1.5.8
+
+### Patch Changes
+
+- Automated patch release for all packages.
+
 ## 1.5.0-beta.1
 
 ### Patch Changes
