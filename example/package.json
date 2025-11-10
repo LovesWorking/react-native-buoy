@@ -1,6 +1,6 @@
 {
   "name": "example",
-  "version": "1.0.17-beta.6",
+  "version": "1.0.17",
   "main": "index.ts",
   "scripts": {
     "start": "expo start --port 8801",
