@@ -374,7 +374,7 @@ export function PokedexTrainerCollection({
         }
         return cleaned;
       } catch (error) {
-        console.warn("Failed to parse saved Pokémon from storage", error);
+        // Failed to parse saved Pokémon from storage
       }
       return [];
     },
@@ -399,7 +399,7 @@ export function PokedexTrainerCollection({
           const parsed = JSON.parse(raw);
           savedList = dedupeAndNormalizePokemon(parsed);
         } catch (error) {
-          console.warn("Failed to parse saved Pokémon list", error);
+          // Failed to parse saved Pokémon list
         }
       }
 
@@ -493,7 +493,6 @@ export function PokedexTrainerCollection({
   }, [deletingPokemonId]);
 
   const handleNavigate = useCallback((pokemonName: string) => {
-    console.log(`🔍 Navigating to Pokemon: ${pokemonName}`);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push(`/pokemon/${pokemonName}`);
   }, [router]);
