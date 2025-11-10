@@ -62,7 +62,7 @@ export function PokemonScreen() {
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Request method toggle (fetch vs axios vs graphql)
-  const { requestMethod, toggleRequestMethod, isFetch, isGraphQL } = useRequestMethod();
+  const { requestMethod, toggleRequestMethod, isFetch, isGraphQL, isLoaded } = useRequestMethod();
 
   // Auto-scrolling carousel animation
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -829,6 +829,7 @@ export function PokemonScreen() {
                     floatAnim={floatAnim}
                     cardGlowAnim={cardGlowAnim}
                     requestMethod={requestMethod}
+                    isRequestMethodLoaded={isLoaded}
                   />
                 );
               })
@@ -864,6 +865,7 @@ export function PokemonScreen() {
           shimmerAnim={shimmerAnim}
           floatAnim={floatAnim}
           requestMethod={requestMethod}
+          isRequestMethodLoaded={isLoaded}
         />
 
         {/* Route Test Button */}

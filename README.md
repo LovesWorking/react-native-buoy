@@ -1,5 +1,11 @@
 # React Buoy Devtools
 
+> **⚠️ ACTIVE DEVELOPMENT**
+> This project is under active development. If you encounter any issues, please [open an issue on GitHub](https://github.com/LovesWorking/rn-buoy/issues).
+> Feature requests and suggestions are also highly encouraged! I love to hear what you need!
+>
+> ⭐ **Please star this repo!** We ship updates frequently, and starring helps you stay notified of new features and improvements.
+
 [![npm version](https://img.shields.io/npm/v/@react-buoy/core?color=brightgreen)](https://www.npmjs.com/package/@react-buoy/core)
 [![npm downloads](https://img.shields.io/npm/dm/@react-buoy/core?color=blue&label=downloads%2Fmonth)](https://www.npmjs.com/package/@react-buoy/core)
 [![Total Downloads](https://img.shields.io/npm/dt/@react-buoy/core?color=blue&label=total%20downloads)](https://www.npmjs.com/package/@react-buoy/core)
