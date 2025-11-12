@@ -14,6 +14,7 @@ interface Props {
   emptyStateMessage?: string;
   contentContainerStyle?: ViewStyle;
   queries?: Query[]; // Optional external queries to override useAllQueries
+  searchText?: string;
 }
 
 /**
@@ -26,22 +27,43 @@ export default function QueryBrowser({
   emptyStateMessage,
   contentContainerStyle,
   queries: externalQueries,
+  searchText = "",
 }: Props) {
   // Holds all queries using the working hook, or use external queries if provided
   const internalQueries = useAllQueries();
   const allQueries = externalQueries ?? internalQueries;
 
-  // Filter queries based on active filter - same logic as working implementation
+  // Filter queries based on active filter and search text
   const filteredQueries = useMemo(() => {
-    if (!activeFilter) {
-      return allQueries;
+    let filtered = allQueries;
+
+    // Apply status filter
+    if (activeFilter) {
+      filtered = filtered.filter((query: Query) => {
+        const status = getQueryStatusLabel(query);
+        return status === activeFilter;
+      });
     }
 
-    return allQueries.filter((query: Query) => {
-      const status = getQueryStatusLabel(query);
-      return status === activeFilter;
-    });
-  }, [allQueries, activeFilter]);
+    // Apply search filter on query keys
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter((query: Query) => {
+        if (!query?.queryKey) return false;
+        const keys = Array.isArray(query.queryKey)
+          ? query.queryKey
+          : [query.queryKey];
+        const keyString = keys
+          .filter((k) => k != null)
+          .map((k) => String(k))
+          .join(" ")
+          .toLowerCase();
+        return keyString.includes(searchLower);
+      });
+    }
+
+    return filtered;
+  }, [allQueries, activeFilter, searchText]);
 
   // Function to handle query selection with stable comparison
   const handleQuerySelect = useCallback(

@@ -9,6 +9,7 @@ interface MutationBrowserModeProps {
   selectedMutation: Mutation | undefined;
   onMutationSelect: (mutation: Mutation | undefined) => void;
   activeFilter: string | null;
+  searchText?: string;
 }
 
 /**
@@ -19,6 +20,7 @@ export function MutationBrowserMode({
   selectedMutation,
   onMutationSelect,
   activeFilter,
+  searchText = "",
 }: MutationBrowserModeProps) {
   // Convert function to Dispatch compatible format
   const handleMutationSelect: Dispatch<SetStateAction<Mutation | undefined>> = (
@@ -37,6 +39,7 @@ export function MutationBrowserMode({
         selectedMutation={selectedMutation}
         setSelectedMutation={handleMutationSelect}
         activeFilter={activeFilter}
+        searchText={searchText}
         hideInfoPanel={true}
         contentContainerStyle={styles.mutationListContent}
       />

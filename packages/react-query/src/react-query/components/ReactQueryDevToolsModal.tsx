@@ -39,12 +39,14 @@ export function ReactQueryDevToolsModal({
   const [activeTab, setActiveTab] = useState<"queries" | "mutations">(
     "queries",
   );
+  const [searchText, setSearchText] = useState<string>("");
 
   const resetState = useCallback(() => {
     setSelectedQueryKey(undefined);
     setSelectedMutationId(undefined);
     setActiveFilter(null);
     setActiveTab("queries");
+    setSearchText("");
   }, []);
 
   const handleClose = useCallback(() => {
@@ -69,6 +71,11 @@ export function ReactQueryDevToolsModal({
     setActiveFilter(null);
     setSelectedQueryKey(undefined);
     setSelectedMutationId(undefined);
+    setSearchText("");
+  }, []);
+
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchText(text);
   }, []);
 
   if (!visible) {
@@ -87,6 +94,8 @@ export function ReactQueryDevToolsModal({
       onFilterChange={handleFilterChange}
       activeTab={activeTab}
       onTabChange={handleTabChange}
+      searchText={searchText}
+      onSearchChange={handleSearchChange}
       enableSharedModalDimensions={enableSharedModalDimensions}
     />
   );

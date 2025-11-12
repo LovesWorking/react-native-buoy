@@ -1,6 +1,9 @@
 import { Query, Mutation } from "@tanstack/react-query";
-import { ModalHeader } from "@react-buoy/shared-ui";
+import { ModalHeader, macOSColors } from "@react-buoy/shared-ui";
 import { TabSelector } from "@react-buoy/shared-ui";
+import { Search, X } from "@react-buoy/shared-ui";
+import { useState, useRef, useEffect } from "react";
+import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 
 interface ReactQueryModalHeaderProps {
   selectedQuery?: Query;
@@ -9,6 +12,8 @@ interface ReactQueryModalHeaderProps {
   onTabChange: (tab: "queries" | "mutations") => void;
   onBack: () => void;
   onClose?: () => void;
+  searchText?: string;
+  onSearchChange?: (text: string) => void;
 }
 
 /**
@@ -22,7 +27,31 @@ export function ReactQueryModalHeader({
   onTabChange,
   onBack,
   onClose,
+  searchText = "",
+  onSearchChange,
 }: ReactQueryModalHeaderProps) {
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const searchInputRef = useRef<TextInput>(null);
+
+  // Auto-focus search input when search becomes active
+  useEffect(() => {
+    if (isSearchActive && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchActive]);
+
+  const handleSearchToggle = () => {
+    setIsSearchActive(!isSearchActive);
+    if (isSearchActive && onSearchChange) {
+      onSearchChange("");
+    }
+  };
+
+  const handleSearch = (text: string) => {
+    if (onSearchChange) {
+      onSearchChange(text);
+    }
+  };
   // Simple function to get query display text
   const getQueryText = (query: Query) => {
     if (!query?.queryKey) return "Unknown Query";
@@ -74,13 +103,86 @@ export function ReactQueryModalHeader({
   return (
     <ModalHeader>
       <ModalHeader.Content title="" noMargin>
-        <TabSelector
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={(tab) => onTabChange(tab as "queries" | "mutations")}
-        />
+        {isSearchActive ? (
+          <View style={styles.headerSearchContainer}>
+            <Search size={14} color={macOSColors.text.secondary} />
+            <TextInput
+              ref={searchInputRef}
+              style={styles.headerSearchInput}
+              placeholder="Search query keys..."
+              placeholderTextColor={macOSColors.text.muted}
+              value={searchText}
+              onChangeText={handleSearch}
+              onSubmitEditing={() => setIsSearchActive(false)}
+              onBlur={() => setIsSearchActive(false)}
+              sentry-label="ignore react query search header"
+              accessibilityLabel="Search queries and mutations"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+            />
+            {searchText.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  handleSearch("");
+                  setIsSearchActive(false);
+                }}
+                sentry-label="ignore clear search header"
+                style={styles.headerSearchClear}
+              >
+                <X size={14} color={macOSColors.text.secondary} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ) : (
+          <TabSelector
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(tab) => onTabChange(tab as "queries" | "mutations")}
+          />
+        )}
       </ModalHeader.Content>
-      {onClose && <ModalHeader.Actions onClose={onClose} />}
+      {onClose && (
+        <ModalHeader.Actions onClose={onClose}>
+          <TouchableOpacity
+            sentry-label="ignore open search"
+            onPress={handleSearchToggle}
+            style={styles.headerActionButton}
+          >
+            <Search size={14} color={macOSColors.text.secondary} />
+          </TouchableOpacity>
+        </ModalHeader.Actions>
+      )}
     </ModalHeader>
   );
 }
+
+const styles = StyleSheet.create({
+  headerSearchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 6,
+    marginHorizontal: 12,
+    marginVertical: 8,
+  },
+  headerSearchInput: {
+    flex: 1,
+    color: macOSColors.text.primary,
+    fontSize: 13,
+    fontFamily: "monospace",
+    padding: 0,
+    margin: 0,
+    minHeight: 18,
+  },
+  headerSearchClear: {
+    padding: 2,
+  },
+  headerActionButton: {
+    padding: 6,
+    borderRadius: 4,
+  },
+});

@@ -20,6 +20,8 @@ interface QueryBrowserModalProps {
   onFilterChange?: (filter: string | null) => void;
   enableSharedModalDimensions?: boolean;
   onTabChange: (tab: "queries" | "mutations") => void;
+  searchText?: string;
+  onSearchChange?: (text: string) => void;
 }
 
 /**
@@ -35,6 +37,8 @@ export function QueryBrowserModal({
   onFilterChange: externalOnFilterChange,
   enableSharedModalDimensions = false,
   onTabChange,
+  searchText = "",
+  onSearchChange,
 }: QueryBrowserModalProps) {
   const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
   // Use external filter state if provided (for persistence), otherwise use internal state
@@ -63,6 +67,8 @@ export function QueryBrowserModal({
       onTabChange={onTabChange}
       onBack={() => onQuerySelect(undefined)}
       onClose={onClose}
+      searchText={searchText}
+      onSearchChange={onSearchChange}
     />
   );
 
@@ -96,6 +102,7 @@ export function QueryBrowserModal({
           selectedQuery={selectedQuery}
           onQuerySelect={onQuerySelect}
           activeFilter={activeFilter}
+          searchText={searchText}
         />
       </View>
     </JsModal>

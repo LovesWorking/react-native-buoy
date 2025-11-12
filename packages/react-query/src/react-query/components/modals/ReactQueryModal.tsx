@@ -16,6 +16,8 @@ interface ReactQueryModalProps {
   activeTab: "queries" | "mutations";
   onTabChange: (tab: "queries" | "mutations") => void;
   enableSharedModalDimensions?: boolean;
+  searchText?: string;
+  onSearchChange?: (text: string) => void;
 }
 
 /**
@@ -39,6 +41,8 @@ export function ReactQueryModal({
   activeTab,
   onTabChange,
   enableSharedModalDimensions = false,
+  searchText = "",
+  onSearchChange,
 }: ReactQueryModalProps) {
   // Check if we have a key/id even if the query/mutation hasn't been found yet
   const inDetail = !!selectedQueryKey || !!selectedMutationId;
@@ -65,6 +69,8 @@ export function ReactQueryModal({
         selectedQueryKey={selectedQueryKey}
         onQuerySelect={onQuerySelect}
         onTabChange={onTabChange}
+        searchText={searchText}
+        onSearchChange={onSearchChange}
         {...commonProps}
       />
       <MutationBrowserModal
@@ -72,6 +78,8 @@ export function ReactQueryModal({
         selectedMutationId={selectedMutationId}
         onMutationSelect={onMutationSelect}
         onTabChange={onTabChange}
+        searchText={searchText}
+        onSearchChange={onSearchChange}
         {...commonProps}
       />
       <DataEditorModal
