@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/network",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "network package",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
