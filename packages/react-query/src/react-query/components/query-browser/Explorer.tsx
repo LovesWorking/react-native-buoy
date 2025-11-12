@@ -172,7 +172,11 @@ const ClearArrayButton = memo(
         <Text
           style={[
             styles.clearButtonText,
-            { color: isFocused ? gameUIColors.warning : gameUIColors.warning + "CC" }
+            {
+              color: isFocused
+                ? gameUIColors.warning
+                : gameUIColors.warning + "CC",
+            },
           ]}
         >
           []
@@ -188,10 +192,12 @@ const ToggleValueButton = memo(
     dataPath,
     activeQuery,
     value,
+    itemsDeletable,
   }: {
     dataPath: string[];
     activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
     value: JsonValue;
+    itemsDeletable?: boolean;
   }) => {
     const queryClient = useQueryClient();
 
@@ -202,6 +208,15 @@ const ToggleValueButton = memo(
       const newData = updateNestedDataByPath(oldData, dataPath, !currentValue);
       queryClient.setQueryData(activeQuery.queryKey, newData);
     }, [queryClient, activeQuery, dataPath, value]);
+
+    const handleDelete = useCallback(() => {
+      if (!activeQuery) return;
+      deleteItem({
+        queryClient,
+        activeQuery: activeQuery,
+        dataPath: dataPath,
+      });
+    }, [queryClient, activeQuery, dataPath]);
 
     if (!activeQuery) return null;
 
@@ -218,17 +233,27 @@ const ToggleValueButton = memo(
         hitSlop={HIT_SLOP_OPTIMIZED}
         activeOpacity={0.8}
       >
-        <View style={styles.toggleIconContainer}>
-          <View style={[styles.toggleIconSmall, iconStyle]} />
-        </View>
-        <View style={styles.toggleContent}>
-          <Text style={styles.toggleLabel}>{displayValue(value)}</Text>
-        </View>
         <View style={[styles.toggleBadge, badgeStyle]}>
           <Text style={[styles.toggleBadgeText, textStyle]}>
             {value ? "TRUE" : "FALSE"}
           </Text>
         </View>
+        {itemsDeletable && (
+          <TouchableOpacity
+            sentry-label="ignore devtools explorer delete button in toggle"
+            onPress={handleDelete}
+            style={styles.deleteButtonInToggle}
+            accessibilityLabel="Delete item"
+            hitSlop={HIT_SLOP_OPTIMIZED}
+            activeOpacity={0.7}
+          >
+            <Trash
+              size={14}
+              strokeWidth={2}
+              color={gameUIColors.error + "CC"}
+            />
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     );
   }
@@ -583,11 +608,17 @@ export default function Explorer({
                     </View>
                   )}
                 {valueType === "boolean" && (
-                  <ToggleValueButton
-                    activeQuery={activeQuery}
-                    dataPath={currentDataPath}
-                    value={value}
-                  />
+                  <View style={styles.booleanRowContainer}>
+                    <Text style={styles.booleanLabel}>{label}</Text>
+                    <View style={styles.booleanToggleWrapper}>
+                      <ToggleValueButton
+                        activeQuery={activeQuery}
+                        dataPath={currentDataPath}
+                        value={value}
+                        itemsDeletable={itemsDeletable}
+                      />
+                    </View>
+                  </View>
                 )}
               </>
             ) : (
@@ -602,7 +633,8 @@ export default function Explorer({
               itemsDeletable &&
               activeQuery !== undefined &&
               valueType !== "string" &&
-              valueType !== "number" && (
+              valueType !== "number" &&
+              valueType !== "boolean" && (
                 <DeleteItemButton
                   activeQuery={activeQuery}
                   dataPath={currentDataPath}
@@ -660,6 +692,21 @@ const styles = StyleSheet.create({
     backgroundColor: gameUIColors.error + "33",
     shadowOpacity: 0.3,
     shadowRadius: 5,
+  },
+  deleteButtonInToggle: {
+    backgroundColor: gameUIColors.error + "1A",
+    borderColor: gameUIColors.error + "4D",
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 28,
+    height: 28,
+    shadowColor: gameUIColors.error,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   clearButton: {
     backgroundColor: gameUIColors.warning + "1A",
@@ -1005,11 +1052,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: gameUIColors.muted + "99",
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 6,
     marginVertical: 2,
-    flex: 1,
     minHeight: 34,
+    gap: 8,
   },
   toggleIconContainer: {
     marginRight: 6,
@@ -1080,5 +1127,25 @@ const styles = StyleSheet.create({
   toggleTextFalse: {
     color: gameUIColors.secondary,
     fontWeight: "500",
+  },
+  // Boolean row container styles
+  booleanRowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    gap: 8,
+    paddingVertical: 2,
+  },
+  booleanLabel: {
+    color: gameUIColors.secondary,
+    fontSize: 10,
+    fontWeight: "600",
+    fontFamily: "monospace",
+    letterSpacing: 0.4,
+    minWidth: 60,
+    flexShrink: 0,
+  },
+  booleanToggleWrapper: {
+    flex: 1,
   },
 });
