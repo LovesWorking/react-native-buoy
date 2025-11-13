@@ -10,7 +10,12 @@ import {
 } from "react-native";
 // Icons are provided by installedApps; no direct icon imports here.
 import { DialIcon } from "./DialIcon";
-import { gameUIColors, dialColors, safeGetItem, safeSetItem } from "@react-buoy/shared-ui";
+import {
+  gameUIColors,
+  dialColors,
+  safeGetItem,
+  safeSetItem,
+} from "@react-buoy/shared-ui";
 import {
   DevToolsSettingsModal,
   type DevToolsSettings,
@@ -96,7 +101,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     const checkOnboarding = async () => {
       try {
         const hasSeenTooltip = await safeGetItem(ONBOARDING_STORAGE_KEY);
-        if (!hasSeenTooltip) {
+        if (hasSeenTooltip) {
           // Small delay to let the entrance animations play first
           setTimeout(() => {
             setShowOnboardingTooltip(true);

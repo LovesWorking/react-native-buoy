@@ -15,6 +15,7 @@ interface Props {
   contentContainerStyle?: ViewStyle;
   queries?: Query[]; // Optional external queries to override useAllQueries
   searchText?: string;
+  ignoredPatterns?: Set<string>;
 }
 
 /**
@@ -28,12 +29,13 @@ export default function QueryBrowser({
   contentContainerStyle,
   queries: externalQueries,
   searchText = "",
+  ignoredPatterns = new Set(),
 }: Props) {
   // Holds all queries using the working hook, or use external queries if provided
   const internalQueries = useAllQueries();
   const allQueries = externalQueries ?? internalQueries;
 
-  // Filter queries based on active filter and search text
+  // Filter queries based on active filter, search text, and ignored patterns
   const filteredQueries = useMemo(() => {
     let filtered = allQueries;
 
@@ -62,8 +64,28 @@ export default function QueryBrowser({
       });
     }
 
+    // Apply ignored patterns filter (hide queries matching any pattern)
+    if (ignoredPatterns.size > 0) {
+      filtered = filtered.filter((query: Query) => {
+        if (!query?.queryKey) return true;
+        const keys = Array.isArray(query.queryKey)
+          ? query.queryKey
+          : [query.queryKey];
+        const keyString = keys
+          .filter((k) => k != null)
+          .map((k) => String(k))
+          .join(" ")
+          .toLowerCase();
+
+        // Return true if NO patterns match (i.e., keep the query)
+        return !Array.from(ignoredPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
     return filtered;
-  }, [allQueries, activeFilter, searchText]);
+  }, [allQueries, activeFilter, searchText, ignoredPatterns]);
 
   // Function to handle query selection with stable comparison
   const handleQuerySelect = useCallback(

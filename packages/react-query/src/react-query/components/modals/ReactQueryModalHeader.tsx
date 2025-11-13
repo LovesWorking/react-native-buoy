@@ -1,7 +1,7 @@
 import { Query, Mutation } from "@tanstack/react-query";
 import { ModalHeader, macOSColors } from "@react-buoy/shared-ui";
 import { TabSelector } from "@react-buoy/shared-ui";
-import { Search, X } from "@react-buoy/shared-ui";
+import { Search, X, Filter } from "@react-buoy/shared-ui";
 import { useState, useRef, useEffect } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 
@@ -14,6 +14,8 @@ interface ReactQueryModalHeaderProps {
   onClose?: () => void;
   searchText?: string;
   onSearchChange?: (text: string) => void;
+  onFilterPress?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 /**
@@ -29,6 +31,8 @@ export function ReactQueryModalHeader({
   onClose,
   searchText = "",
   onSearchChange,
+  onFilterPress,
+  hasActiveFilters = false,
 }: ReactQueryModalHeaderProps) {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
@@ -151,6 +155,25 @@ export function ReactQueryModalHeader({
           >
             <Search size={14} color={macOSColors.text.secondary} />
           </TouchableOpacity>
+          {onFilterPress && (
+            <TouchableOpacity
+              sentry-label="ignore open filter"
+              onPress={onFilterPress}
+              style={[
+                styles.headerActionButton,
+                hasActiveFilters && styles.activeFilterButton,
+              ]}
+            >
+              <Filter
+                size={14}
+                color={
+                  hasActiveFilters
+                    ? macOSColors.semantic.info
+                    : macOSColors.text.secondary
+                }
+              />
+            </TouchableOpacity>
+          )}
         </ModalHeader.Actions>
       )}
     </ModalHeader>
@@ -184,5 +207,8 @@ const styles = StyleSheet.create({
   headerActionButton: {
     padding: 6,
     borderRadius: 4,
+  },
+  activeFilterButton: {
+    backgroundColor: macOSColors.semantic.infoBackground + "33",
   },
 });

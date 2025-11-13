@@ -103,6 +103,8 @@ export const devToolsStorageKeys = {
     mutationModal: () =>
       `${devToolsStorageKeys.reactQuery.root()}_mutation_modal` as const,
     filters: () => `${devToolsStorageKeys.reactQuery.root()}_filters` as const,
+    ignoredPatterns: () =>
+      `${devToolsStorageKeys.reactQuery.root()}_ignored_patterns` as const,
     preferences: () =>
       `${devToolsStorageKeys.reactQuery.root()}_preferences` as const,
   },

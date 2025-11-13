@@ -7,7 +7,7 @@ import {
   View,
   Easing,
 } from "react-native";
-import { gameUIColors } from "@react-buoy/shared-ui";
+import { gameUIColors, dialColors } from "@react-buoy/shared-ui";
 
 interface OnboardingTooltipProps {
   visible: boolean;
@@ -171,17 +171,17 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: "absolute",
-    bottom: 200, // Position above the center button
+    bottom: 300, // Position above the center button (raised higher)
     alignItems: "center",
     maxWidth: 280,
   },
   tooltip: {
-    backgroundColor: "rgba(10, 10, 20, 0.98)",
+    backgroundColor: dialColors.dialBackground,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: gameUIColors.primary,
+    borderColor: dialColors.dialBorder,
     padding: 20,
-    shadowColor: gameUIColors.primary,
+    shadowColor: gameUIColors.info,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 20,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     right: -4,
     bottom: -4,
     borderRadius: 18,
-    backgroundColor: gameUIColors.primary,
+    backgroundColor: "#FFFFFF",
     opacity: 0.15,
   },
   content: {
@@ -222,23 +222,23 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: gameUIColors.primary,
+    borderColor: "#FFFFFF",
   },
   buttonPressed: {
     opacity: 0.7,
-    transform: [{ scale: 0.95 }],
+    transform: [{ scale: 0.96 }],
   },
   buttonGradient: {
-    backgroundColor: gameUIColors.primary,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     paddingHorizontal: 24,
     paddingVertical: 10,
     alignItems: "center",
   },
   buttonText: {
-    color: "#000000",
+    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "900",
     fontFamily: "monospace",
@@ -247,7 +247,9 @@ const styles = StyleSheet.create({
   },
   arrowContainer: {
     position: "absolute",
-    bottom: -30,
+    bottom: -40,
+    left: 0,
+    right: 0,
     alignItems: "center",
   },
   arrow: {
@@ -258,10 +260,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 20,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderTopColor: gameUIColors.primary,
-    shadowColor: gameUIColors.primary,
+    borderTopColor: gameUIColors.info,
+    shadowColor: gameUIColors.info,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
-    shadowRadius: 8,
+    shadowRadius: 10,
   },
 });
