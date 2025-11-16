@@ -84,6 +84,13 @@ export default function QueryBrowser({
       });
     }
 
+    // Sort by most recently updated (dataUpdatedAt descending)
+    filtered.sort((a, b) => {
+      const aTime = a.state.dataUpdatedAt || 0;
+      const bTime = b.state.dataUpdatedAt || 0;
+      return bTime - aTime; // Most recent first
+    });
+
     return filtered;
   }, [allQueries, activeFilter, searchText, ignoredPatterns]);
 
@@ -123,7 +130,7 @@ export default function QueryBrowser({
     >
       {filteredQueries.map((query) => (
         <QueryRow
-          key={query.queryHash}
+          key={`${query.queryHash}-${query.state.dataUpdatedAt}-${query.state.fetchStatus}`}
           query={query}
           isSelected={selectedQuery?.queryHash === query.queryHash}
           onSelect={handleQuerySelect}

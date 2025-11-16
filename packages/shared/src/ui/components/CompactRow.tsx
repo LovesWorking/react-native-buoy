@@ -20,6 +20,7 @@ export interface CompactRowProps {
   badgeColor?: string;
   customBadge?: ReactNode;
   showChevron?: boolean;
+  bottomRightText?: string; // New: text positioned at bottom right of card
 
   // Interaction
   isSelected?: boolean;
@@ -40,6 +41,7 @@ export function CompactRow({
   badgeColor,
   customBadge,
   showChevron,
+  bottomRightText,
   isSelected,
   onPress,
   disabled,
@@ -133,6 +135,13 @@ export function CompactRow({
         {/* Expanded Content */}
         {isExpanded && expandedContent && (
           <View style={styles.expandedContent}>{expandedContent}</View>
+        )}
+
+        {/* Bottom Right Text (timestamp) */}
+        {!isExpanded && bottomRightText && (
+          <View style={styles.bottomRightContainer}>
+            <Text style={styles.bottomRightText}>{bottomRightText}</Text>
+          </View>
         )}
       </TouchableOpacity>
     </View>
@@ -239,5 +248,15 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: gameUIColors.border + "20",
     marginLeft: 24, // Align with content after status dot
+  },
+  bottomRightContainer: {
+    position: "absolute",
+    bottom: 4,
+    right: 8,
+  },
+  bottomRightText: {
+    fontSize: 9,
+    color: gameUIColors.muted,
+    fontFamily: "monospace",
   },
 });

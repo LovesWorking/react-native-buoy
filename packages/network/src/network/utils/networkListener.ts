@@ -25,7 +25,7 @@ export interface NetworkingEvent {
     headers?: Record<string, string>;
     data?: unknown;
     params?: Record<string, string>;
-    client?: "fetch" | "axios" | "graphql";
+    client?: "fetch" | "axios" | "graphql" | "grpc-web";
   };
   response?: {
     status: number;
@@ -265,7 +265,7 @@ class NetworkListener {
     params: Record<string, string> | null,
     startTime: number,
     isError = false,
-    clientType: "fetch" | "axios" | "graphql" = "axios"
+    clientType: "fetch" | "axios" | "graphql" | "grpc-web" = "axios"
   ) {
     const duration = startTime ? Date.now() - startTime : 0;
 
@@ -527,6 +527,13 @@ class NetworkListener {
         }
       }
 
+      // Determine client type from X-Request-Client header or default to fetch
+      const clientType = (
+        requestHeaders["X-Request-Client"] ||
+        requestHeaders["x-request-client"] ||
+        "fetch"
+      ) as "fetch" | "axios" | "graphql" | "grpc-web";
+
       // Emit request event
       self.emit({
         type: "request",
@@ -538,7 +545,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: "fetch",
+          client: clientType,
         },
       });
 
@@ -572,7 +579,7 @@ class NetworkListener {
             headers: requestHeaders,
             data: requestData,
             params: params || undefined,
-            client: "fetch",
+            client: clientType,
           },
           response: {
             status: response.status,
@@ -599,7 +606,7 @@ class NetworkListener {
             headers: requestHeaders,
             data: requestData,
             params: params || undefined,
-            client: "fetch",
+            client: clientType,
           },
           error: {
             message: error instanceof Error ? error.message : "Network error",
@@ -699,7 +706,7 @@ class NetworkListener {
           headers: requestHeaders,
           data: requestData,
           params: params || undefined,
-          client: clientType as "fetch" | "axios" | "graphql",
+          client: clientType as "fetch" | "axios" | "graphql" | "grpc-web",
         },
       });
 
@@ -719,7 +726,7 @@ class NetworkListener {
           params,
           startTime || 0,
           isError,
-          clientType as "fetch" | "axios" | "graphql"
+          clientType as "fetch" | "axios" | "graphql" | "grpc-web"
         );
         // Clean up event listeners after processing to prevent memory leaks
         cleanup();

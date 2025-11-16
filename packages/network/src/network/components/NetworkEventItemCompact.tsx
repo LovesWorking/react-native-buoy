@@ -186,6 +186,8 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
                       ? "rgba(74, 144, 226, 0.15)"
                       : event.requestClient === "graphql"
                       ? "rgba(229, 53, 171, 0.15)"
+                      : event.requestClient === "grpc-web"
+                      ? "rgba(16, 185, 129, 0.15)"
                       : "rgba(147, 51, 234, 0.15)",
                 },
               ]}
@@ -199,11 +201,17 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
                         ? "#4A90E2"
                         : event.requestClient === "graphql"
                         ? "#E535AB"
+                        : event.requestClient === "grpc-web"
+                        ? "#10B981"
                         : "#9333EA",
                   },
                 ]}
               >
-                {event.requestClient === "graphql" ? "GQL" : event.requestClient}
+                {event.requestClient === "graphql"
+                  ? "GQL"
+                  : event.requestClient === "grpc-web"
+                  ? "gRPC"
+                  : event.requestClient}
               </Text>
             </View>
           )}

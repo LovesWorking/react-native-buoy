@@ -39,6 +39,7 @@ export function QueryFilterViewV3({
   const statusCounts = useMemo(() => {
     const counts = {
       all: queries.length,
+      disabled: 0,
       fresh: 0,
       stale: 0,
       fetching: 0,
@@ -49,7 +50,8 @@ export function QueryFilterViewV3({
 
     queries.forEach((query) => {
       const status = getQueryStatusLabel(query);
-      if (status === "fresh") counts.fresh++;
+      if (status === "disabled") counts.disabled++;
+      else if (status === "fresh") counts.fresh++;
       else if (status === "stale") counts.stale++;
       else if (status === "fetching") counts.fetching++;
       else if (status === "paused") counts.paused++;
@@ -104,6 +106,14 @@ export function QueryFilterViewV3({
               icon: Globe,
               color: macOSColors.semantic.info,
               isActive: !activeFilter || activeFilter === "all",
+            },
+            {
+              id: "status::disabled",
+              label: "Disabled",
+              count: statusCounts.disabled,
+              icon: XCircle,
+              color: macOSColors.text.muted,
+              isActive: activeFilter === "disabled",
             },
             {
               id: "status::fresh",

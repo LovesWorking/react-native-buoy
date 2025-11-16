@@ -155,7 +155,7 @@ export default function MutationsList({
             sentry-label="ignore devtools mutations list"
             data={filteredMutations}
             renderItem={renderMutation}
-            keyExtractor={(item, index) => `${item.mutationId}-${index}`}
+            keyExtractor={(item, index) => `${item.mutationId}-${item.state.submittedAt}-${item.state.status}-${index}`}
             showsVerticalScrollIndicator
             removeClippedSubviews
             contentContainerStyle={contentContainerStyle || styles.listContent}

@@ -291,6 +291,14 @@ export default function Explorer({
   const [localInputValue, setLocalInputValue] = useState<string>("");
 
   // Sync local state with prop value
+  // ⚠️ CRITICAL: Do NOT add localInputValue to the dependency array!
+  // Adding localInputValue causes a race condition where user edits get reverted:
+  // 1. User types "5101" → setLocalInputValue("5101")
+  // 2. Cache updates
+  // 3. useEffect fires because localInputValue changed
+  // 4. At this moment, value prop is still old (5100)
+  // 5. Syncs back to 5100, reverting user's change ❌
+  // Only sync when EXTERNAL changes happen (value, label, dataVersion)
   useEffect(() => {
     if (
       value !== null &&
@@ -298,11 +306,9 @@ export default function Explorer({
       (typeof value === "string" || typeof value === "number")
     ) {
       const newValue = value.toString();
-      if (newValue !== localInputValue) {
-        setLocalInputValue(newValue);
-      }
+      setLocalInputValue(newValue);
     }
-  }, [value, label, localInputValue]);
+  }, [value, label, dataVersion]); // ⚠️ DO NOT add localInputValue here!
 
   // Determine if this is a main section
   const isMainSection = useMemo(() => {
