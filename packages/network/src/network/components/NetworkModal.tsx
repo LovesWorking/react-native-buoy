@@ -429,7 +429,7 @@ function NetworkModalInner({
               <TextInput
                 ref={searchInputRef}
                 style={styles.headerSearchInput}
-                placeholder="Search URL, method, error..."
+                placeholder="Search URL, method, operation, error..."
                 placeholderTextColor={macOSColors.text.muted}
                 value={searchText}
                 onChangeText={handleSearch}

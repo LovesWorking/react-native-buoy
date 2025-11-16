@@ -35,6 +35,18 @@ export interface NetworkEvent {
   responseType?: string;
   cached?: boolean;
   requestClient?: "fetch" | "axios" | "graphql" | "grpc-web";
+  /**
+   * GraphQL operation name extracted from request data.
+   *
+   * For GraphQL requests, this contains the operation name (e.g., "GetUser", "CreatePost")
+   * extracted from either the operationName field or parsed from the query string.
+   * This enables searching and filtering GraphQL operations by name rather than just URL.
+   *
+   * @example
+   * // For a GraphQL query like: query GetUser { user { id name } }
+   * // operationName will be: "GetUser"
+   */
+  operationName?: string;
 }
 
 /**

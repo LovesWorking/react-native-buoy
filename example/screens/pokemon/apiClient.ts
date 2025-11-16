@@ -118,7 +118,9 @@ export const makeRequest = async <T = unknown>(
     const pokemonId = urlWithoutQuery.split("/").filter(Boolean).pop() || "";
 
     // GraphQL query to fetch Pokemon data
+    // Following GraphQL spec: include explicit operationName field
     const graphqlQuery = {
+      operationName: "GetPokemon", // ✅ Explicit operation name (best practice)
       query: `
         query GetPokemon($id: String!) {
           pokemon_v2_pokemon(where: {name: {_eq: $id}}) {
@@ -174,16 +176,19 @@ export const makeRequest = async <T = unknown>(
       name: pokemonData.name,
       height: pokemonData.height,
       weight: pokemonData.weight,
-      types: pokemonData.pokemon_v2_pokemontypes?.map((t: any) => ({
-        type: { name: t.pokemon_v2_type.name },
-      })) || [],
-      abilities: pokemonData.pokemon_v2_pokemonabilities?.map((a: any) => ({
-        ability: { name: a.pokemon_v2_ability.name },
-      })) || [],
-      stats: pokemonData.pokemon_v2_pokemonstats?.map((s: any) => ({
-        base_stat: s.base_stat,
-        stat: { name: s.pokemon_v2_stat.name },
-      })) || [],
+      types:
+        pokemonData.pokemon_v2_pokemontypes?.map((t: any) => ({
+          type: { name: t.pokemon_v2_type.name },
+        })) || [],
+      abilities:
+        pokemonData.pokemon_v2_pokemonabilities?.map((a: any) => ({
+          ability: { name: a.pokemon_v2_ability.name },
+        })) || [],
+      stats:
+        pokemonData.pokemon_v2_pokemonstats?.map((s: any) => ({
+          base_stat: s.base_stat,
+          stat: { name: s.pokemon_v2_stat.name },
+        })) || [],
       sprites: {
         other: {
           "official-artwork": {

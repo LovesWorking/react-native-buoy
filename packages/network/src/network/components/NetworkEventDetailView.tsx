@@ -79,27 +79,9 @@ const UrlBreakdown: FC<{ url: string; requestData?: unknown }> = ({ url, request
 
       let pathname = String(urlObj.pathname || "");
 
-      // If this is a GraphQL request, show the operation name
-      let operationName = null;
-
-      // First try to get operation name from operationName field
-      if (requestData && typeof requestData === 'object' && 'operationName' in requestData && requestData.operationName) {
-        operationName = String(requestData.operationName);
-      }
-
-      // If not found, try to parse it from the query string
-      if (!operationName && requestData && typeof requestData === 'object' && 'query' in requestData) {
-        const query = String(requestData.query);
-        // Match: query OperationName or mutation OperationName
-        const match = query.match(/(?:query|mutation)\s+(\w+)/);
-        if (match && match[1]) {
-          operationName = match[1];
-        }
-      }
-
-      // Append operation name to pathname if found
-      if (operationName) {
-        pathname = `${pathname} (${operationName})`;
+      // If there's an operation name (e.g., GraphQL), show it with the pathname
+      if (event.operationName) {
+        pathname = `${pathname} (${event.operationName})`;
       }
 
       // Parse query parameters

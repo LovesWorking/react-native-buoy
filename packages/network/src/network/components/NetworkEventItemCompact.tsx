@@ -130,33 +130,16 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
 
     // If this is a GraphQL request, show operation name instead of path
     if (event.requestClient === "graphql") {
-      let operationName = null;
-
-      // First try to get operation name from operationName field
-      if (event.requestData && typeof event.requestData === 'object' && 'operationName' in event.requestData && event.requestData.operationName) {
-        operationName = String(event.requestData.operationName);
-      }
-
-      // If not found, try to parse it from the query string
-      if (!operationName && event.requestData && typeof event.requestData === 'object' && 'query' in event.requestData) {
-        const query = String(event.requestData.query);
-        // Match: query OperationName or mutation OperationName
-        const match = query.match(/(?:query|mutation)\s+(\w+)/);
-        if (match && match[1]) {
-          operationName = match[1];
-        }
-      }
-
-      // Use the operation name if found, otherwise show simplified path
-      if (operationName) {
-        displayUrl = operationName;
+      if (event.operationName) {
+        // Use the extracted operation name
+        displayUrl = event.operationName;
       } else {
         // If no operation name found, just remove the redundant /graphql path
         displayUrl = displayUrl.replace(/\/graphql[^?]*/, "/graphql");
       }
-    } else if (event.requestData && typeof event.requestData === 'object' && 'operationName' in event.requestData && event.requestData.operationName) {
-      // For non-GraphQL requests with operation names
-      displayUrl = `${displayUrl}\n(${event.requestData.operationName})`;
+    } else if (event.operationName) {
+      // For non-GraphQL requests with operation names (e.g., gRPC)
+      displayUrl = `${displayUrl}\n(${event.operationName})`;
     }
 
     // Format time with both absolute and relative

@@ -164,7 +164,9 @@ export function useNetworkEvents() {
           e.method.toLowerCase().includes(searchLower) ||
           e.path?.toLowerCase().includes(searchLower) ||
           e.host?.toLowerCase().includes(searchLower) ||
-          (e.error && e.error.toLowerCase().includes(searchLower)),
+          (e.error && e.error.toLowerCase().includes(searchLower)) ||
+          // Search by GraphQL operation name (e.g., "GetUser", "CreatePost")
+          (e.operationName && e.operationName.toLowerCase().includes(searchLower)),
       );
     }
 
