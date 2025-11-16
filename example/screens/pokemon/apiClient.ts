@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig } from "axios";
+import { getPokemonViaGrpcWeb } from "./grpc/pokemonService";
 
-export type RequestMethod = "fetch" | "axios" | "graphql";
+export type RequestMethod = "fetch" | "axios" | "graphql" | "grpc-web";
 
 interface RequestConfig {
   url: string;
@@ -80,6 +81,30 @@ export const makeRequest = async <T = unknown>(
       status: response.status,
       statusText: response.statusText,
       headers: response.headers as Record<string, string>,
+    };
+  } else if (requestMethod === "grpc-web") {
+    // gRPC-Web implementation using actual ConnectRPC transport
+    // This uses the real @connectrpc/connect-web package to make gRPC-web requests
+
+    // Extract pokemon ID from the URL
+    const urlWithoutQuery = url.split("?")[0];
+    const pokemonId = urlWithoutQuery.split("/").filter(Boolean).pop() || "";
+
+    // Use the real ConnectRPC gRPC-Web service
+    // This creates a ConnectRPC transport and makes a proper gRPC-Web request
+    const pokemonData = await getPokemonViaGrpcWeb(pokemonId);
+
+    // Return real Pokemon data with gRPC-Web metadata
+    return {
+      data: pokemonData as T,
+      status: 200,
+      statusText: "OK",
+      headers: {
+        "content-type": "application/grpc-web+json",
+        "x-grpc-web": "1",
+        "x-request-client": "grpc-web",
+        "connect-protocol-version": "1",
+      },
     };
   } else {
     // GraphQL implementation using axios
