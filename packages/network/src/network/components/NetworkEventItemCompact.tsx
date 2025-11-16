@@ -16,6 +16,7 @@ import type { NetworkEvent } from "../types";
 import { formatBytes, formatDuration } from "../utils/formatting";
 import { formatRelativeTime } from "@react-buoy/shared-ui";
 import { useTickEveryMinute } from "../hooks/useTickEveryMinute";
+import { formatGraphQLDisplay } from "../utils/formatGraphQLVariables";
 
 interface NetworkEventItemCompactProps {
   event: NetworkEvent;
@@ -128,11 +129,15 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
     // Format URL for display (max 2 lines)
     let displayUrl = event.path || event.url.replace(/^https?:\/\/[^/]+/, "");
 
-    // If this is a GraphQL request, show operation name instead of path
+    // If this is a GraphQL request, show operation name with variables using arrow notation
+    // Matches React Query pattern: ["pokemon", "Sandshrew"] → "pokemon › Sandshrew"
     if (event.requestClient === "graphql") {
       if (event.operationName) {
-        // Use the extracted operation name
-        displayUrl = event.operationName;
+        // Format: GetPokemon › Sandshrew (matches React Query pattern)
+        displayUrl = formatGraphQLDisplay(
+          event.operationName,
+          event.graphqlVariables
+        );
       } else {
         // If no operation name found, just remove the redundant /graphql path
         displayUrl = displayUrl.replace(/\/graphql[^?]*/, "/graphql");

@@ -50,11 +50,24 @@ class NetworkEventStore {
         : "";
       const fullUrl = `${request.url}${queryString}`;
 
-      // Extract GraphQL operation name for searchability
+      // Extract GraphQL operation name and variables for searchability
       let operationName: string | undefined;
+      let graphqlVariables: Record<string, unknown> | undefined;
+
       if (request.client === 'graphql') {
         const extracted = extractOperationName(request.data);
         operationName = extracted || undefined;
+
+        // Extract variables from GraphQL request
+        if (
+          request.data &&
+          typeof request.data === 'object' &&
+          'variables' in request.data &&
+          request.data.variables &&
+          typeof request.data.variables === 'object'
+        ) {
+          graphqlVariables = request.data.variables as Record<string, unknown>;
+        }
       }
 
       const networkEvent: NetworkEvent = {
@@ -71,6 +84,7 @@ class NetworkEventStore {
         responseHeaders: {},
         requestClient: request.client,
         operationName, // GraphQL operation name for search/filter
+        graphqlVariables, // GraphQL variables for display and search
       };
 
       // Store as pending

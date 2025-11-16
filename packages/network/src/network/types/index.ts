@@ -47,6 +47,19 @@ export interface NetworkEvent {
    * // operationName will be: "GetUser"
    */
   operationName?: string;
+  /**
+   * GraphQL variables object for the operation.
+   *
+   * Contains the input parameters passed to the GraphQL query/mutation.
+   * Used to differentiate between multiple requests with the same operation name.
+   * Displayed with arrow notation matching React Query pattern: "GetPokemon › Sandshrew"
+   *
+   * @example
+   * // For query GetPokemon($id: String!) with variables { id: "Sandshrew" }
+   * // graphqlVariables will be: { id: "Sandshrew" }
+   * // Display: "GetPokemon › Sandshrew"
+   */
+  graphqlVariables?: Record<string, unknown>;
 }
 
 /**
