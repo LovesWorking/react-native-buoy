@@ -101,7 +101,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     const checkOnboarding = async () => {
       try {
         const hasSeenTooltip = await safeGetItem(ONBOARDING_STORAGE_KEY);
-        if (hasSeenTooltip) {
+        if (!hasSeenTooltip) {
           // Small delay to let the entrance animations play first
           setTimeout(() => {
             setShowOnboardingTooltip(true);
