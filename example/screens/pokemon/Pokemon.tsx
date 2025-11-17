@@ -61,8 +61,8 @@ export function PokemonScreen() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Request method toggle (fetch vs axios vs graphql)
-  const { requestMethod, toggleRequestMethod, isFetch, isGraphQL, isLoaded } = useRequestMethod();
+  // Request method toggle (fetch vs axios vs graphql vs grpc-web)
+  const { requestMethod, toggleRequestMethod, isFetch, isGraphQL, isGrpcWeb, isLoaded } = useRequestMethod();
 
   // Auto-scrolling carousel animation
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -289,8 +289,9 @@ export function PokemonScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       const searchValue = inputValue.trim().toLowerCase();
 
-      // Navigate to the pokemon detail page
-      router.push(`/pokemon/${searchValue}`);
+      // Don't navigate - just update the card stack to show the searched Pokemon
+      // (Navigating causes duplicate API calls: 1 for detail page + 3 for card stack)
+      // router.push(`/pokemon/${searchValue}`);
 
       setPokemonStack([searchValue, ...pokemonStack]);
       setCurrentIndex(0);
@@ -367,8 +368,9 @@ export function PokemonScreen() {
     (pokemon: string) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Navigate to the pokemon detail page
-      router.push(`/pokemon/${pokemon}`);
+      // Don't navigate - just update the card stack to show the selected Pokemon
+      // (Navigating causes duplicate API calls: 1 for detail page + 3 for card stack)
+      // router.push(`/pokemon/${pokemon}`);
 
       setPokemonStack([pokemon, ...pokemonStack]);
       setCurrentIndex(0);
@@ -376,7 +378,7 @@ export function PokemonScreen() {
       setShowSuggestions(false);
       setSuggestions([]);
     },
-    [pokemonStack, router]
+    [pokemonStack]
   );
 
   const savedPokemon = savedPokemonQuery.data ?? [];
@@ -730,12 +732,18 @@ export function PokemonScreen() {
                               ? ["#4A90E2", "#357ABD"]
                               : isGraphQL
                               ? ["#E535AB", "#D946EF"]
+                              : isGrpcWeb
+                              ? ["#10B981", "#059669"]
                               : ["#9333EA", "#7C3AED"]
                           }
                           style={styles.gradientButton}
                         >
                           <Text style={styles.methodToggleTextCompact}>
-                            {requestMethod}
+                            {requestMethod === "graphql"
+                              ? "GQL"
+                              : requestMethod === "grpc-web"
+                              ? "gRPC"
+                              : requestMethod}
                           </Text>
                         </LinearGradient>
                       </Animated.View>

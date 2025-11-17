@@ -23,7 +23,7 @@ export const useRequestMethod = () => {
     const loadRequestMethod = async () => {
       try {
         const saved = await safeGetItem(REQUEST_METHOD_STORAGE_KEY);
-        if (saved && (saved === "fetch" || saved === "axios" || saved === "graphql")) {
+        if (saved && (saved === "fetch" || saved === "axios" || saved === "graphql" || saved === "grpc-web")) {
           setRequestMethod(saved as RequestMethod);
         } else {
           setRequestMethod("fetch"); // Default if nothing saved
@@ -57,6 +57,7 @@ export const useRequestMethod = () => {
     setRequestMethod((prev) => {
       if (prev === "fetch") return "axios";
       if (prev === "axios") return "graphql";
+      if (prev === "graphql") return "grpc-web";
       return "fetch";
     });
   }, []);
@@ -68,6 +69,7 @@ export const useRequestMethod = () => {
     isFetch: requestMethod === "fetch",
     isAxios: requestMethod === "axios",
     isGraphQL: requestMethod === "graphql",
+    isGrpcWeb: requestMethod === "grpc-web",
     isLoaded,
   };
 };

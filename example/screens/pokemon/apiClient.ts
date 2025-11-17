@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig } from "axios";
+import { getPokemonViaGrpcWeb } from "./grpc/pokemonService";
 
-export type RequestMethod = "fetch" | "axios" | "graphql";
+export type RequestMethod = "fetch" | "axios" | "graphql" | "grpc-web";
 
 interface RequestConfig {
   url: string;
@@ -81,6 +82,30 @@ export const makeRequest = async <T = unknown>(
       statusText: response.statusText,
       headers: response.headers as Record<string, string>,
     };
+  } else if (requestMethod === "grpc-web") {
+    // gRPC-Web implementation using actual ConnectRPC transport
+    // This uses the real @connectrpc/connect-web package to make gRPC-web requests
+
+    // Extract pokemon ID from the URL
+    const urlWithoutQuery = url.split("?")[0];
+    const pokemonId = urlWithoutQuery.split("/").filter(Boolean).pop() || "";
+
+    // Use the real ConnectRPC gRPC-Web service
+    // This creates a ConnectRPC transport and makes a proper gRPC-Web request
+    const pokemonData = await getPokemonViaGrpcWeb(pokemonId);
+
+    // Return real Pokemon data with gRPC-Web metadata
+    return {
+      data: pokemonData as T,
+      status: 200,
+      statusText: "OK",
+      headers: {
+        "content-type": "application/grpc-web+json",
+        "x-grpc-web": "1",
+        "x-request-client": "grpc-web",
+        "connect-protocol-version": "1",
+      },
+    };
   } else {
     // GraphQL implementation using axios
     // Uses the official PokéAPI GraphQL endpoint
@@ -93,7 +118,9 @@ export const makeRequest = async <T = unknown>(
     const pokemonId = urlWithoutQuery.split("/").filter(Boolean).pop() || "";
 
     // GraphQL query to fetch Pokemon data
+    // Following GraphQL spec: include explicit operationName field
     const graphqlQuery = {
+      operationName: "GetPokemon", // ✅ Explicit operation name (best practice)
       query: `
         query GetPokemon($id: String!) {
           pokemon_v2_pokemon(where: {name: {_eq: $id}}) {
@@ -149,16 +176,19 @@ export const makeRequest = async <T = unknown>(
       name: pokemonData.name,
       height: pokemonData.height,
       weight: pokemonData.weight,
-      types: pokemonData.pokemon_v2_pokemontypes?.map((t: any) => ({
-        type: { name: t.pokemon_v2_type.name },
-      })) || [],
-      abilities: pokemonData.pokemon_v2_pokemonabilities?.map((a: any) => ({
-        ability: { name: a.pokemon_v2_ability.name },
-      })) || [],
-      stats: pokemonData.pokemon_v2_pokemonstats?.map((s: any) => ({
-        base_stat: s.base_stat,
-        stat: { name: s.pokemon_v2_stat.name },
-      })) || [],
+      types:
+        pokemonData.pokemon_v2_pokemontypes?.map((t: any) => ({
+          type: { name: t.pokemon_v2_type.name },
+        })) || [],
+      abilities:
+        pokemonData.pokemon_v2_pokemonabilities?.map((a: any) => ({
+          ability: { name: a.pokemon_v2_ability.name },
+        })) || [],
+      stats:
+        pokemonData.pokemon_v2_pokemonstats?.map((s: any) => ({
+          base_stat: s.base_stat,
+          stat: { name: s.pokemon_v2_stat.name },
+        })) || [],
       sprites: {
         other: {
           "official-artwork": {
