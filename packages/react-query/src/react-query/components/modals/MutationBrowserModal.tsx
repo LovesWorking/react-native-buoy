@@ -21,6 +21,8 @@ interface MutationBrowserModalProps {
   onFilterChange?: (filter: string | null) => void;
   onTabChange: (tab: "queries" | "mutations") => void;
   enableSharedModalDimensions?: boolean;
+  searchText?: string;
+  onSearchChange?: (text: string) => void;
 }
 
 /**
@@ -36,6 +38,8 @@ export function MutationBrowserModal({
   onFilterChange: externalOnFilterChange,
   onTabChange,
   enableSharedModalDimensions = false,
+  searchText = "",
+  onSearchChange,
 }: MutationBrowserModalProps) {
   const selectedMutation = useGetMutationById(selectedMutationId);
   const [internalActiveFilter, setInternalActiveFilter] = useState<
@@ -120,6 +124,8 @@ export function MutationBrowserModal({
       onTabChange={onTabChange}
       onBack={() => onMutationSelect(undefined)}
       onClose={onClose}
+      searchText={searchText}
+      onSearchChange={onSearchChange}
     />
   );
 
@@ -159,6 +165,7 @@ export function MutationBrowserModal({
             selectedMutation={selectedMutation}
             onMutationSelect={onMutationSelect}
             activeFilter={activeFilter}
+            searchText={searchText}
           />
         </View>
       </View>

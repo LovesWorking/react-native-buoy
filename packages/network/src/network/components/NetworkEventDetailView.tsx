@@ -30,6 +30,8 @@ import {
 } from "../utils/formatting";
 import { formatRelativeTime } from "@react-buoy/shared-ui";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
+import { formatGraphQLDisplay } from "../utils/formatGraphQLVariables";
+
 interface NetworkEventDetailViewProps {
   event: NetworkEvent;
   ignoredPatterns?: Set<string>;
@@ -69,7 +71,13 @@ const CollapsibleSection: FC<{
 };
 
 // URL breakdown component matching Sentry style
-const UrlBreakdown: FC<{ url: string; requestData?: unknown }> = ({ url, requestData }) => {
+const UrlBreakdown: FC<{
+  url: string;
+  requestData?: unknown;
+  operationName?: string;
+  graphqlVariables?: Record<string, unknown>;
+  requestClient?: string;
+}> = ({ url, requestData, operationName, graphqlVariables, requestClient }) => {
   const parseUrl = (urlString: string) => {
     try {
       const urlObj = new URL(urlString);
@@ -79,26 +87,16 @@ const UrlBreakdown: FC<{ url: string; requestData?: unknown }> = ({ url, request
 
       let pathname = String(urlObj.pathname || "");
 
-      // If this is a GraphQL request, show the operation name
-      let operationName = null;
-
-      // First try to get operation name from operationName field
-      if (requestData && typeof requestData === 'object' && 'operationName' in requestData && requestData.operationName) {
-        operationName = String(requestData.operationName);
-      }
-
-      // If not found, try to parse it from the query string
-      if (!operationName && requestData && typeof requestData === 'object' && 'query' in requestData) {
-        const query = String(requestData.query);
-        // Match: query OperationName or mutation OperationName
-        const match = query.match(/(?:query|mutation)\s+(\w+)/);
-        if (match && match[1]) {
-          operationName = match[1];
-        }
-      }
-
-      // Append operation name to pathname if found
-      if (operationName) {
+      // If this is a GraphQL request with operation name, format with arrow notation
+      // Matches React Query pattern: "GetPokemon › Sandshrew"
+      if (requestClient === "graphql" && operationName) {
+        const graphqlDisplay = formatGraphQLDisplay(
+          operationName,
+          graphqlVariables
+        );
+        pathname = `${pathname} (${graphqlDisplay})`;
+      } else if (operationName) {
+        // For non-GraphQL requests with operation names (e.g., gRPC)
         pathname = `${pathname} (${operationName})`;
       }
 
@@ -296,7 +294,13 @@ ${JSON.stringify(requestDetails.responseData, null, 2)}
           </View>
         </View>
 
-        <UrlBreakdown url={event.url} requestData={event.requestData} />
+        <UrlBreakdown
+          url={event.url}
+          requestData={event.requestData}
+          operationName={event.operationName}
+          graphqlVariables={event.graphqlVariables}
+          requestClient={event.requestClient}
+        />
 
         {event.error ? (
           <View style={styles.errorBox}>

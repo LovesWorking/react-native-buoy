@@ -16,6 +16,7 @@ import type { NetworkEvent } from "../types";
 import { formatBytes, formatDuration } from "../utils/formatting";
 import { formatRelativeTime } from "@react-buoy/shared-ui";
 import { useTickEveryMinute } from "../hooks/useTickEveryMinute";
+import { formatGraphQLDisplay } from "../utils/formatGraphQLVariables";
 
 interface NetworkEventItemCompactProps {
   event: NetworkEvent;
@@ -128,35 +129,22 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
     // Format URL for display (max 2 lines)
     let displayUrl = event.path || event.url.replace(/^https?:\/\/[^/]+/, "");
 
-    // If this is a GraphQL request, show operation name instead of path
+    // If this is a GraphQL request, show operation name with variables using arrow notation
+    // Matches React Query pattern: ["pokemon", "Sandshrew"] → "pokemon › Sandshrew"
     if (event.requestClient === "graphql") {
-      let operationName = null;
-
-      // First try to get operation name from operationName field
-      if (event.requestData && typeof event.requestData === 'object' && 'operationName' in event.requestData && event.requestData.operationName) {
-        operationName = String(event.requestData.operationName);
-      }
-
-      // If not found, try to parse it from the query string
-      if (!operationName && event.requestData && typeof event.requestData === 'object' && 'query' in event.requestData) {
-        const query = String(event.requestData.query);
-        // Match: query OperationName or mutation OperationName
-        const match = query.match(/(?:query|mutation)\s+(\w+)/);
-        if (match && match[1]) {
-          operationName = match[1];
-        }
-      }
-
-      // Use the operation name if found, otherwise show simplified path
-      if (operationName) {
-        displayUrl = operationName;
+      if (event.operationName) {
+        // Format: GetPokemon › Sandshrew (matches React Query pattern)
+        displayUrl = formatGraphQLDisplay(
+          event.operationName,
+          event.graphqlVariables
+        );
       } else {
         // If no operation name found, just remove the redundant /graphql path
         displayUrl = displayUrl.replace(/\/graphql[^?]*/, "/graphql");
       }
-    } else if (event.requestData && typeof event.requestData === 'object' && 'operationName' in event.requestData && event.requestData.operationName) {
-      // For non-GraphQL requests with operation names
-      displayUrl = `${displayUrl}\n(${event.requestData.operationName})`;
+    } else if (event.operationName) {
+      // For non-GraphQL requests with operation names (e.g., gRPC)
+      displayUrl = `${displayUrl}\n(${event.operationName})`;
     }
 
     // Format time with both absolute and relative
@@ -186,6 +174,8 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
                       ? "rgba(74, 144, 226, 0.15)"
                       : event.requestClient === "graphql"
                       ? "rgba(229, 53, 171, 0.15)"
+                      : event.requestClient === "grpc-web"
+                      ? "rgba(16, 185, 129, 0.15)"
                       : "rgba(147, 51, 234, 0.15)",
                 },
               ]}
@@ -199,11 +189,17 @@ export const NetworkEventItemCompact = memo<NetworkEventItemCompactProps>(
                         ? "#4A90E2"
                         : event.requestClient === "graphql"
                         ? "#E535AB"
+                        : event.requestClient === "grpc-web"
+                        ? "#10B981"
                         : "#9333EA",
                   },
                 ]}
               >
-                {event.requestClient === "graphql" ? "GQL" : event.requestClient}
+                {event.requestClient === "graphql"
+                  ? "GQL"
+                  : event.requestClient === "grpc-web"
+                  ? "gRPC"
+                  : event.requestClient}
               </Text>
             </View>
           )}

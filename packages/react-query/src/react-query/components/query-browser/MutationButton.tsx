@@ -1,6 +1,7 @@
 import { Mutation } from "@tanstack/react-query";
 import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 import { CheckCircle, LoadingCircle, PauseCircle, XCircle } from "./svgs";
+import { formatRelativeTime } from "../../utils/formatRelativeTime";
 import { gameUIColors } from "@react-buoy/shared-ui";
 import { macOSColors } from "@react-buoy/shared-ui";
 
@@ -33,6 +34,26 @@ export default function MutationButton({
   selected,
 }: Props) {
   const submittedAt = new Date(mutation.state.submittedAt).toLocaleTimeString();
+
+  // Get last updated timestamp - always show something for debugging
+  const getTimestamp = (): string => {
+    if (mutation.state.submittedAt && mutation.state.submittedAt > 0) {
+      return formatRelativeTime(mutation.state.submittedAt);
+    }
+
+    // @ts-ignore - exploring state fields for debugging
+    const stateAny = mutation.state as any;
+
+    // Try other timestamp fields
+    if (stateAny.updatedAt && stateAny.updatedAt > 0) {
+      return formatRelativeTime(stateAny.updatedAt);
+    }
+
+    // Debug fallback
+    return `N/A (${mutation.state.submittedAt || 0})`;
+  };
+
+  const lastUpdated = getTimestamp();
 
   const getStatusInfo = () => {
     if (mutation.state.isPaused) {
@@ -96,6 +117,11 @@ export default function MutationButton({
           <Text style={styles.mutationKey}>{getMutationText(mutation)}</Text>
         </View>
       </View>
+
+      {/* Bottom Right Text (timestamp) */}
+      <View style={styles.bottomRightContainer}>
+        <Text style={styles.bottomRightText}>{lastUpdated}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -152,5 +178,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: macOSColors.text.primary,
     lineHeight: 16,
+  },
+  bottomRightContainer: {
+    position: "absolute",
+    bottom: 4,
+    right: 8,
+  },
+  bottomRightText: {
+    fontSize: 9,
+    color: macOSColors.text.muted,
+    fontFamily: "monospace",
   },
 });

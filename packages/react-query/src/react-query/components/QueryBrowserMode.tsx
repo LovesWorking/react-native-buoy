@@ -8,6 +8,8 @@ interface QueryBrowserModeProps {
   selectedQuery: Query | undefined;
   onQuerySelect: (query: Query | undefined) => void;
   activeFilter: string | null;
+  searchText?: string;
+  ignoredPatterns?: Set<string>;
 }
 
 /** Wrapper around the query list experience used inside the modal view. */
@@ -15,6 +17,8 @@ export function QueryBrowserMode({
   selectedQuery,
   onQuerySelect,
   activeFilter,
+  searchText = "",
+  ignoredPatterns = new Set(),
 }: QueryBrowserModeProps) {
   return (
     <View style={styles.queryListContainer}>
@@ -22,9 +26,15 @@ export function QueryBrowserMode({
         selectedQuery={selectedQuery}
         onQuerySelect={onQuerySelect}
         activeFilter={activeFilter}
+        searchText={searchText}
+        ignoredPatterns={ignoredPatterns}
         emptyStateMessage={
-          activeFilter
+          searchText
+            ? `No queries found matching "${searchText}"`
+            : activeFilter
             ? `No ${activeFilter} queries found`
+            : ignoredPatterns.size > 0
+            ? `No queries match the current filters. ${ignoredPatterns.size} pattern(s) active.`
             : "No React Query queries are currently active.\n\nTo see queries here:\n• Make API calls using useQuery\n• Ensure queries are within QueryClientProvider\n• Check console for debugging info"
         }
         contentContainerStyle={styles.queryListContent}

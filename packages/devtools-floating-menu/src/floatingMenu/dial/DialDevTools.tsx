@@ -10,7 +10,12 @@ import {
 } from "react-native";
 // Icons are provided by installedApps; no direct icon imports here.
 import { DialIcon } from "./DialIcon";
-import { gameUIColors, dialColors } from "@react-buoy/shared-ui";
+import {
+  gameUIColors,
+  dialColors,
+  safeGetItem,
+  safeSetItem,
+} from "@react-buoy/shared-ui";
 import {
   DevToolsSettingsModal,
   type DevToolsSettings,
@@ -22,11 +27,13 @@ import type {
   FloatingMenuState,
 } from "../types";
 import { useAppHost } from "../AppHost";
+import { OnboardingTooltip } from "./OnboardingTooltip";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CIRCLE_SIZE = Math.min(SCREEN_WIDTH * 0.75, 320); // Max 320px for better fit
 const BUTTON_SIZE = 80; // Fixed button size
 const MAX_DIAL_SLOTS = 6;
+const ONBOARDING_STORAGE_KEY = "@react_buoy_settings_tooltip_shown";
 
 export type IconType = {
   id?: string; // optional; used for special behaviors like wifi toggle
@@ -57,6 +64,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
 }) => {
   const [selectedIcon, setSelectedIcon] = useState(-1);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [showOnboardingTooltip, setShowOnboardingTooltip] = useState(false);
   const { settings: hookSettings, refreshSettings } = useDevToolsSettings();
   const { open } = useAppHost();
   // Initialize with external settings if provided, otherwise use hook settings
@@ -87,6 +95,26 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
       setIsSettingsModalOpen(true);
     }
   }, [autoOpenSettings, isSettingsModalOpen]);
+
+  // Check if we should show the onboarding tooltip
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const hasSeenTooltip = await safeGetItem(ONBOARDING_STORAGE_KEY);
+        if (hasSeenTooltip) {
+          // Small delay to let the entrance animations play first
+          setTimeout(() => {
+            setShowOnboardingTooltip(true);
+          }, 1200);
+        }
+      } catch (error) {
+        // If there's an error reading storage, don't show the tooltip
+        // to avoid annoying the user repeatedly
+      }
+    };
+
+    checkOnboarding();
+  }, []);
 
   // React Native Animated values
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -334,6 +362,18 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     };
   }, []);
 
+  const handleOnboardingDismiss = async () => {
+    try {
+      // Save to storage that the user has seen the tooltip
+      await safeSetItem(ONBOARDING_STORAGE_KEY, "true");
+      // Hide the tooltip
+      setShowOnboardingTooltip(false);
+    } catch (error) {
+      // If storage fails, still hide the tooltip to avoid blocking the user
+      setShowOnboardingTooltip(false);
+    }
+  };
+
   const handleClose = () => {
     // Stop any ongoing animations first
     if (pulseAnimationRef.current) {
@@ -560,6 +600,12 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
           setLocalSettings(newSettings);
         }}
         availableApps={availableApps}
+      />
+
+      {/* Onboarding Tooltip - Shows on first use */}
+      <OnboardingTooltip
+        visible={showOnboardingTooltip && !isSettingsModalOpen}
+        onDismiss={handleOnboardingDismiss}
       />
     </View>
   );

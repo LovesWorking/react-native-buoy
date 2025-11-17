@@ -167,10 +167,13 @@ function DataExplorer({
   selectedQuery: Query;
 }) {
   // Track data version to force re-render when data changes
+  // This increments when query.state.data reference changes (immutable updates from setQueryData)
   const [dataVersion, setDataVersion] = useState(0);
   const prevDataRef = useRef(selectedQuery.state.data);
   const prevKeysRef = useRef<string>("");
 
+  // ⚠️ CRITICAL: Do NOT add dataVersion to the dependency array!
+  // Adding dataVersion would cause infinite loops since we're setting it inside the effect
   useEffect(() => {
     const currentData = selectedQuery.state.data;
     const currentKeys = currentData
@@ -184,7 +187,7 @@ function DataExplorer({
       prevDataRef.current = currentData;
       prevKeysRef.current = currentKeys;
     }
-  }, [selectedQuery.state.data]);
+  }, [selectedQuery.state.data]); // ⚠️ DO NOT add dataVersion here!
 
   if (!visible) return null;
 
@@ -216,6 +219,15 @@ function DataEmptyState({
 }) {
   if (!visible) return null;
   const getEmptyStateContent = () => {
+    // Check if query is disabled first
+    if (selectedQuery.isDisabled()) {
+      return {
+        title: "Query Disabled",
+        description:
+          "This query is disabled and won't automatically fetch. Enable the query or manually trigger a fetch to load data.",
+      };
+    }
+
     if (
       selectedQuery.state.status === "pending" ||
       getQueryStatusLabel(selectedQuery) === "fetching"

@@ -12,6 +12,7 @@ import {
   addNetworkListener,
 } from "../utils/networkListener";
 import type { NetworkEvent, NetworkStats, NetworkFilter } from "../types";
+import { searchGraphQLVariables } from "../utils/formatGraphQLVariables";
 
 /**
  * Custom hook for accessing network events and controls
@@ -164,7 +165,12 @@ export function useNetworkEvents() {
           e.method.toLowerCase().includes(searchLower) ||
           e.path?.toLowerCase().includes(searchLower) ||
           e.host?.toLowerCase().includes(searchLower) ||
-          (e.error && e.error.toLowerCase().includes(searchLower)),
+          (e.error && e.error.toLowerCase().includes(searchLower)) ||
+          // Search by GraphQL operation name (e.g., "GetUser", "CreatePost")
+          (e.operationName && e.operationName.toLowerCase().includes(searchLower)) ||
+          // Search by GraphQL variable values (e.g., "Sandshrew", "123", "true")
+          // This enables finding specific requests like "GetPokemon › Sandshrew" by typing "Sandshrew"
+          searchGraphQLVariables(e.graphqlVariables, searchLower),
       );
     }
 

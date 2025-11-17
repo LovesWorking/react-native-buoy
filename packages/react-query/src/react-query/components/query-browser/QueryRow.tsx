@@ -1,5 +1,6 @@
 import { Query } from "@tanstack/react-query";
 import { getQueryStatusLabel } from "../../utils/getQueryStatusLabel";
+import { formatRelativeTime } from "../../utils/formatRelativeTime";
 import { gameUIColors } from "@react-buoy/shared-ui";
 import { macOSColors } from "@react-buoy/shared-ui";
 import { CompactRow } from "@react-buoy/shared-ui";
@@ -30,6 +31,8 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
   // Game UI status color mapping
   const getStatusHexColor = (status: string): string => {
     switch (status) {
+      case "disabled":
+        return macOSColors.text.muted + "80"; // More muted for disabled
       case "fresh":
         return macOSColors.semantic.success;
       case "stale":
@@ -50,13 +53,45 @@ const QueryRow: React.FC<QueryRowProps> = ({ query, isSelected, onSelect }) => {
   const isDisabled = query.isDisabled();
   const queryHash = getQueryText(query);
 
+  // Get last updated time - try multiple timestamp fields
+  const getTimestamp = (): string => {
+    // Special handling for disabled queries
+    if (isDisabled) {
+      return "Disabled";
+    }
+
+    // Primary: dataUpdatedAt (when data was last fetched/updated)
+    if (query.state.dataUpdatedAt && query.state.dataUpdatedAt > 0) {
+      return formatRelativeTime(query.state.dataUpdatedAt);
+    }
+
+    // Fallback: Check other potential timestamp fields
+    // @ts-ignore - exploring state fields for debugging
+    const stateAny = query.state as any;
+
+    // Try fetchedAt or other common timestamp fields
+    if (stateAny.fetchedAt && stateAny.fetchedAt > 0) {
+      return formatRelativeTime(stateAny.fetchedAt);
+    }
+
+    // For queries that haven't fetched yet (but aren't disabled)
+    if (query.state.dataUpdatedAt === 0) {
+      return "Not fetched";
+    }
+
+    // Debug fallback - show what we have
+    return `N/A (${query.state.dataUpdatedAt || 0})`;
+  };
+
+  const lastUpdated = getTimestamp();
+
   return (
     <CompactRow
       statusDotColor={getStatusHexColor(status)}
       statusLabel={status.charAt(0).toUpperCase() + status.slice(1)}
       statusSublabel={`${observerCount} observer${observerCount !== 1 ? "s" : ""}`}
       primaryText={queryHash}
-      secondaryText={isDisabled ? "Disabled" : undefined}
+      bottomRightText={lastUpdated}
       badgeText={observerCount}
       badgeColor={getStatusHexColor(status)}
       isSelected={isSelected}

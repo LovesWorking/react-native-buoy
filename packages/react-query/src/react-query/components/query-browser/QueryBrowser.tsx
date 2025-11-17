@@ -14,6 +14,8 @@ interface Props {
   emptyStateMessage?: string;
   contentContainerStyle?: ViewStyle;
   queries?: Query[]; // Optional external queries to override useAllQueries
+  searchText?: string;
+  ignoredPatterns?: Set<string>;
 }
 
 /**
@@ -26,22 +28,71 @@ export default function QueryBrowser({
   emptyStateMessage,
   contentContainerStyle,
   queries: externalQueries,
+  searchText = "",
+  ignoredPatterns = new Set(),
 }: Props) {
   // Holds all queries using the working hook, or use external queries if provided
   const internalQueries = useAllQueries();
   const allQueries = externalQueries ?? internalQueries;
 
-  // Filter queries based on active filter - same logic as working implementation
+  // Filter queries based on active filter, search text, and ignored patterns
   const filteredQueries = useMemo(() => {
-    if (!activeFilter) {
-      return allQueries;
+    let filtered = allQueries;
+
+    // Apply status filter
+    if (activeFilter) {
+      filtered = filtered.filter((query: Query) => {
+        const status = getQueryStatusLabel(query);
+        return status === activeFilter;
+      });
     }
 
-    return allQueries.filter((query: Query) => {
-      const status = getQueryStatusLabel(query);
-      return status === activeFilter;
+    // Apply search filter on query keys
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter((query: Query) => {
+        if (!query?.queryKey) return false;
+        const keys = Array.isArray(query.queryKey)
+          ? query.queryKey
+          : [query.queryKey];
+        const keyString = keys
+          .filter((k) => k != null)
+          .map((k) => String(k))
+          .join(" ")
+          .toLowerCase();
+        return keyString.includes(searchLower);
+      });
+    }
+
+    // Apply ignored patterns filter (hide queries matching any pattern)
+    if (ignoredPatterns.size > 0) {
+      filtered = filtered.filter((query: Query) => {
+        if (!query?.queryKey) return true;
+        const keys = Array.isArray(query.queryKey)
+          ? query.queryKey
+          : [query.queryKey];
+        const keyString = keys
+          .filter((k) => k != null)
+          .map((k) => String(k))
+          .join(" ")
+          .toLowerCase();
+
+        // Return true if NO patterns match (i.e., keep the query)
+        return !Array.from(ignoredPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
+    // Sort by most recently updated (dataUpdatedAt descending)
+    filtered.sort((a, b) => {
+      const aTime = a.state.dataUpdatedAt || 0;
+      const bTime = b.state.dataUpdatedAt || 0;
+      return bTime - aTime; // Most recent first
     });
-  }, [allQueries, activeFilter]);
+
+    return filtered;
+  }, [allQueries, activeFilter, searchText, ignoredPatterns]);
 
   // Function to handle query selection with stable comparison
   const handleQuerySelect = useCallback(
@@ -79,7 +130,7 @@ export default function QueryBrowser({
     >
       {filteredQueries.map((query) => (
         <QueryRow
-          key={query.queryHash}
+          key={`${query.queryHash}-${query.state.dataUpdatedAt}-${query.state.fetchStatus}`}
           query={query}
           isSelected={selectedQuery?.queryHash === query.queryHash}
           onSelect={handleQuerySelect}

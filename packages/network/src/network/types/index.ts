@@ -34,7 +34,32 @@ export interface NetworkEvent {
   query?: string;
   responseType?: string;
   cached?: boolean;
-  requestClient?: "fetch" | "axios" | "graphql";
+  requestClient?: "fetch" | "axios" | "graphql" | "grpc-web";
+  /**
+   * GraphQL operation name extracted from request data.
+   *
+   * For GraphQL requests, this contains the operation name (e.g., "GetUser", "CreatePost")
+   * extracted from either the operationName field or parsed from the query string.
+   * This enables searching and filtering GraphQL operations by name rather than just URL.
+   *
+   * @example
+   * // For a GraphQL query like: query GetUser { user { id name } }
+   * // operationName will be: "GetUser"
+   */
+  operationName?: string;
+  /**
+   * GraphQL variables object for the operation.
+   *
+   * Contains the input parameters passed to the GraphQL query/mutation.
+   * Used to differentiate between multiple requests with the same operation name.
+   * Displayed with arrow notation matching React Query pattern: "GetPokemon › Sandshrew"
+   *
+   * @example
+   * // For query GetPokemon($id: String!) with variables { id: "Sandshrew" }
+   * // graphqlVariables will be: { id: "Sandshrew" }
+   * // Display: "GetPokemon › Sandshrew"
+   */
+  graphqlVariables?: Record<string, unknown>;
 }
 
 /**

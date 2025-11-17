@@ -23,6 +23,7 @@ interface Props {
   activeFilter?: string | null;
   hideInfoPanel?: boolean;
   contentContainerStyle?: ViewStyle;
+  searchText?: string;
 }
 
 /**
@@ -34,6 +35,7 @@ export default function MutationsList({
   activeFilter,
   hideInfoPanel = false,
   contentContainerStyle,
+  searchText = "",
 }: Props) {
   const { mutations: allmutations } = useAllMutations();
 
@@ -44,17 +46,37 @@ export default function MutationsList({
     return status; // 'idle', 'pending', 'success', 'error'
   };
 
-  // Filter mutations based on active filter
+  // Filter mutations based on active filter and search text
   const filteredMutations = useMemo(() => {
-    if (!activeFilter) {
-      return allmutations;
+    let filtered = allmutations;
+
+    // Apply status filter
+    if (activeFilter) {
+      filtered = filtered.filter((mutation) => {
+        const status = getMutationStatus(mutation);
+        return status === activeFilter;
+      });
     }
 
-    return allmutations.filter((mutation) => {
-      const status = getMutationStatus(mutation);
-      return status === activeFilter;
-    });
-  }, [allmutations, activeFilter]);
+    // Apply search filter on mutation keys
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter((mutation) => {
+        const mutationKey = mutation.options.mutationKey;
+        if (!mutationKey) return false;
+
+        const keys = Array.isArray(mutationKey) ? mutationKey : [mutationKey];
+        const keyString = keys
+          .filter((k) => k != null)
+          .map((k) => String(k))
+          .join(" ")
+          .toLowerCase();
+        return keyString.includes(searchLower);
+      });
+    }
+
+    return filtered;
+  }, [allmutations, activeFilter, searchText]);
 
   // Height management for resizable mutation information panel
   const screenHeight = Dimensions.get("window").height;
@@ -133,7 +155,7 @@ export default function MutationsList({
             sentry-label="ignore devtools mutations list"
             data={filteredMutations}
             renderItem={renderMutation}
-            keyExtractor={(item, index) => `${item.mutationId}-${index}`}
+            keyExtractor={(item, index) => `${item.mutationId}-${item.state.submittedAt}-${item.state.status}-${index}`}
             showsVerticalScrollIndicator
             removeClippedSubviews
             contentContainerStyle={contentContainerStyle || styles.listContent}
