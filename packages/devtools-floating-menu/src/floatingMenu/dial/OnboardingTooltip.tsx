@@ -8,15 +8,22 @@ import {
   Easing,
 } from "react-native";
 import { gameUIColors, dialColors } from "@react-buoy/shared-ui";
+import { calculateTooltipPosition, ARROW_BOTTOM_OFFSET, ARROW_HEIGHT } from "./onboardingConstants";
 
 interface OnboardingTooltipProps {
   visible: boolean;
   onDismiss: () => void;
+  /** Optional custom title. Defaults to "Welcome to Buoy Dev Tools!" */
+  title?: string;
+  /** Optional custom message. Defaults to dial menu instruction */
+  message?: string;
 }
 
 export const OnboardingTooltip: FC<OnboardingTooltipProps> = ({
   visible,
   onDismiss,
+  title = "Welcome to Buoy Dev Tools!",
+  message = "Tap the center button to configure and add developer tools to your dial menu.",
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -125,11 +132,8 @@ export const OnboardingTooltip: FC<OnboardingTooltipProps> = ({
 
           {/* Content */}
           <View style={styles.content}>
-            <Text style={styles.title}>Welcome to Buoy Dev Tools!</Text>
-            <Text style={styles.message}>
-              Tap the center button to configure and add developer tools to your
-              dial menu.
-            </Text>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.message}>{message}</Text>
 
             {/* Got it button */}
             <Pressable
@@ -171,7 +175,7 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: "absolute",
-    bottom: 300, // Position above the center button (raised higher)
+    bottom: calculateTooltipPosition(),
     alignItems: "center",
     maxWidth: 280,
   },
@@ -247,7 +251,7 @@ const styles = StyleSheet.create({
   },
   arrowContainer: {
     position: "absolute",
-    bottom: -40,
+    bottom: ARROW_BOTTOM_OFFSET,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -257,7 +261,7 @@ const styles = StyleSheet.create({
     height: 0,
     borderLeftWidth: 12,
     borderRightWidth: 12,
-    borderTopWidth: 20,
+    borderTopWidth: ARROW_HEIGHT,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
     borderTopColor: gameUIColors.info,

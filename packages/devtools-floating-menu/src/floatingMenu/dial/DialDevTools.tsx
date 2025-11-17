@@ -65,6 +65,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   const [selectedIcon, setSelectedIcon] = useState(-1);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [showOnboardingTooltip, setShowOnboardingTooltip] = useState(false);
+  const onboardingDismissedRef = useRef(false); // Track if onboarding was dismissed
   const { settings: hookSettings, refreshSettings } = useDevToolsSettings();
   const { open } = useAppHost();
   // Initialize with external settings if provided, otherwise use hook settings
@@ -362,16 +363,18 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     };
   }, []);
 
-  const handleOnboardingDismiss = async () => {
-    try {
-      // Save to storage that the user has seen the tooltip
-      await safeSetItem(ONBOARDING_STORAGE_KEY, "true");
-      // Hide the tooltip
-      setShowOnboardingTooltip(false);
-    } catch (error) {
-      // If storage fails, still hide the tooltip to avoid blocking the user
-      setShowOnboardingTooltip(false);
-    }
+  const handleOnboardingDismiss = () => {
+    // Mark as dismissed immediately in ref (synchronous, no re-render needed)
+    onboardingDismissedRef.current = true;
+
+    // Hide the tooltip
+    setShowOnboardingTooltip(false);
+
+    // Save to storage asynchronously in the background
+    safeSetItem(ONBOARDING_STORAGE_KEY, "true").catch((error) => {
+      // Silently fail - user already saw onboarding, just won't persist
+      console.warn("Failed to save dial onboarding state:", error);
+    });
   };
 
   const handleClose = () => {
@@ -558,6 +561,10 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
                     } else {
                       // Open internal settings modal
                       setIsSettingsModalOpen(true);
+                      // Dismiss onboarding tooltip when user opens settings
+                      if (showOnboardingTooltip && !onboardingDismissedRef.current) {
+                        handleOnboardingDismiss();
+                      }
                       // Also call external handler if provided
                       if (onSettingsPress) {
                         onSettingsPress();
@@ -604,7 +611,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
 
       {/* Onboarding Tooltip - Shows on first use */}
       <OnboardingTooltip
-        visible={showOnboardingTooltip && !isSettingsModalOpen}
+        visible={showOnboardingTooltip && !isSettingsModalOpen && !onboardingDismissedRef.current}
         onDismiss={handleOnboardingDismiss}
       />
     </View>

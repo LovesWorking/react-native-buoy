@@ -26,6 +26,7 @@ import {
 } from "@react-buoy/shared-ui";
 import { DraggableHeader } from "./DraggableHeader";
 import { useSafeAreaInsets } from "@react-buoy/shared-ui";
+import { calculateTargetPosition } from "./dial/onboardingConstants";
 
 // Using Views to render grip dots; no react-native-svg dependency
 
@@ -390,6 +391,8 @@ export type FloatingToolsProps = {
   children?: ReactNode;
   /** When true, pushes the bubble to the side (hidden position) */
   pushToSide?: boolean;
+  /** When true, centers the bubble on screen (for onboarding) */
+  centerOnboarding?: boolean;
 };
 
 /**
@@ -424,6 +427,7 @@ export type FloatingToolsProps = {
 export function FloatingTools({
   enablePositionPersistence = true,
   pushToSide = false,
+  centerOnboarding = false,
   children,
 }: FloatingToolsProps) {
   // Animated position and drag state
@@ -543,20 +547,37 @@ export function FloatingTools({
     return () => clearTimeout(timer);
   }, [enablePositionPersistence, animatedPosition, screenWidth]);
 
-  // Default position when persistence disabled
+  // Default position when persistence disabled or during onboarding
   useEffect(() => {
     if (!enablePositionPersistence) {
-      const defaultY = Math.max(
-        safeAreaInsets.top + 20,
-        Math.min(100, screenHeight - bubbleSize.height - safeAreaInsets.bottom)
-      );
-      animatedPosition.setValue({
-        x: screenWidth - bubbleSize.width - 20,
-        y: defaultY,
-      });
+      if (centerOnboarding) {
+        // Center the bubble for onboarding - position under tooltip arrow
+        // Use shared calculation to ensure perfect alignment across all screens
+        const bottomOffset = calculateTargetPosition();
+        const centerX = (screenWidth - bubbleSize.width) / 2;
+        const centerY = screenHeight - bubbleSize.height - bottomOffset;
+        animatedPosition.setValue({
+          x: centerX,
+          y: centerY,
+        });
+      } else {
+        // Default right-side position
+        const defaultY = Math.max(
+          safeAreaInsets.top + 20,
+          Math.min(
+            100,
+            screenHeight - bubbleSize.height - safeAreaInsets.bottom
+          )
+        );
+        animatedPosition.setValue({
+          x: screenWidth - bubbleSize.width - 20,
+          y: defaultY,
+        });
+      }
     }
   }, [
     enablePositionPersistence,
+    centerOnboarding,
     animatedPosition,
     bubbleSize.width,
     bubbleSize.height,

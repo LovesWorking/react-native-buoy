@@ -1,5 +1,12 @@
 import { FC, useEffect, useMemo, useRef, useState } from "react";
-import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
+import {
+  TouchableOpacity,
+  StyleSheet,
+  View,
+  Text,
+  Dimensions,
+  Animated,
+} from "react-native";
 import { FloatingTools, UserRole, UserStatus } from "./floatingTools";
 import type {
   InstalledApp,
@@ -8,11 +15,17 @@ import type {
 } from "./types";
 import { DialDevTools } from "./dial/DialDevTools";
 import type { Environment } from "@react-buoy/shared-ui";
-import { EnvironmentIndicator, gameUIColors } from "@react-buoy/shared-ui";
+import {
+  EnvironmentIndicator,
+  gameUIColors,
+  safeGetItem,
+  safeSetItem,
+} from "@react-buoy/shared-ui";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
 import { useAppHost } from "./AppHost";
 import { useDevToolsVisibility } from "./DevToolsVisibilityContext";
 import { toggleStateManager } from "./ToggleStateManager";
+import { OnboardingTooltip } from "./dial/OnboardingTooltip";
 
 /**
  * Props for the floating developer tools launcher. Controls which apps are shown and
@@ -37,6 +50,12 @@ export interface FloatingMenuProps {
  * FloatingMenu renders the persistent developer tools entry point. It handles visibility,
  * integrates with the AppHost, and presents available tools as floating shortcuts and a dial.
  */
+const FLOATING_MENU_ONBOARDING_KEY = "@react_buoy_floating_menu_tooltip_shown";
+const ONBOARDING_STEP_KEY = "@react_buoy_onboarding_step";
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+type OnboardingStep = "positioning" | "opening" | "complete";
+
 export const FloatingMenu: FC<FloatingMenuProps> = ({
   apps,
   state,
@@ -47,11 +66,36 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 }) => {
   const [internalHidden, setInternalHidden] = useState(false);
   const [showDial, setShowDial] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep | null>(
+    null
+  );
   const [, forceUpdate] = useState(0); // Used to force re-render when toggle states change
+  const onboardingDismissedRef = useRef(false); // Track if onboarding was dismissed
 
   const { isAnyOpen, open, registerApps } = useAppHost();
   const wasAppOpenRef = useRef(isAnyOpen);
   const { setDialOpen, setToolOpen } = useDevToolsVisibility();
+
+  // Check onboarding status on first load
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const hasSeenOnboarding = await safeGetItem(
+          FLOATING_MENU_ONBOARDING_KEY
+        );
+        if (!hasSeenOnboarding) {
+          // Small delay to let the UI settle before showing tooltip
+          setTimeout(() => {
+            setOnboardingStep("positioning");
+          }, 1000);
+        }
+      } catch (error) {
+        // If there's an error reading storage, don't show onboarding
+      }
+    };
+
+    checkOnboarding();
+  }, []);
 
   // Subscribe to toggle state changes to update icon colors
   useEffect(() => {
@@ -136,8 +180,52 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
     }
   };
 
+  const handleOnboardingDismiss = () => {
+    // Mark as dismissed immediately in ref (synchronous, no re-render needed)
+    onboardingDismissedRef.current = true;
+
+    // Update state to hide tooltip
+    setOnboardingStep(null);
+
+    // Save to storage asynchronously in the background
+    safeSetItem(FLOATING_MENU_ONBOARDING_KEY, "true").catch((error) => {
+      // Silently fail - user already saw onboarding, just won't persist
+      console.warn("Failed to save onboarding state:", error);
+    });
+  };
+
+  const handleDialOpen = () => {
+    // If user opens dial during onboarding, mark onboarding as complete
+    if (isOnboarding) {
+      handleOnboardingDismiss();
+    }
+    setShowDial(true);
+  };
+
+  // Determine if we're in onboarding mode (only when explicitly set to positioning AND not dismissed)
+  const isOnboarding = onboardingStep === "positioning" && !onboardingDismissedRef.current;
+
+  // During onboarding, disable position persistence and use centered position
+  const shouldEnablePositionPersistence = !isOnboarding;
+
   return (
     <>
+      {/* Onboarding Tooltips - Render outside and before floating menu for proper z-index */}
+      {isOnboarding && !showDial && !isAnyOpen && (
+        <View style={styles.onboardingContainer}>
+          {/* Dark backdrop */}
+          <View style={styles.onboardingBackdrop} />
+
+          {/* Single onboarding tooltip */}
+          <OnboardingTooltip
+            visible={true}
+            onDismiss={handleOnboardingDismiss}
+            title="Welcome to Buoy Dev Tools!"
+            message="Grab and position this menu wherever you want, then tap the icon to open your dev tools."
+          />
+        </View>
+      )}
+
       <View
         nativeID="floating-devtools-root"
         pointerEvents={isCompletelyHidden ? "none" : "box-none"}
@@ -147,11 +235,15 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 9999,
+          zIndex: isOnboarding ? 10001 : 9999, // Higher z-index during onboarding to show above backdrop
           opacity: isCompletelyHidden ? 0 : 1,
         }}
       >
-        <FloatingTools enablePositionPersistence pushToSide={shouldPushToSide}>
+        <FloatingTools
+          enablePositionPersistence={shouldEnablePositionPersistence}
+          pushToSide={shouldPushToSide}
+          centerOnboarding={isOnboarding}
+        >
           {/* Environment badge (if enabled in settings) */}
           {devToolsSettings?.floatingTools?.environment && environment ? (
             <EnvironmentIndicator environment={environment} />
@@ -159,12 +251,12 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 
           {/* Preferred: UserStatus as the dial launcher when a userRole is provided */}
           {userRole ? (
-            <UserStatus userRole={userRole} onPress={() => setShowDial(true)} />
+            <UserStatus userRole={userRole} onPress={handleDialOpen} />
           ) : (
             // Fallback: small launcher icon to ensure settings are always accessible
             <TouchableOpacity
               accessibilityLabel="Open Dev Tools Menu"
-              onPress={() => setShowDial(true)}
+              onPress={handleDialOpen}
               style={styles.fab}
             >
               <View style={styles.menuButton}>
@@ -234,6 +326,14 @@ const styles = StyleSheet.create({
     color: "#8CA2C8",
     fontSize: 14,
     fontWeight: "900",
+  },
+  onboardingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10000,
+  },
+  onboardingBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
   },
 });
 
