@@ -11,6 +11,7 @@ import { Copy, CheckCircle2, AlertTriangle } from "../../icons/lucide-icons";
 import { ClipboardHintBanner } from "./ClipboardHintBanner";
 import { devToolsStorageKeys } from "../../storage/devToolsStorageKeys";
 import { safeGetItem, safeSetItem } from "../../utils/safeAsyncStorage";
+import { useHintsDisabled } from "../../context";
 
 type CopyState = "idle" | "success" | "error";
 
@@ -91,6 +92,7 @@ export const CopyButton = memo(function CopyButton({
 }: CopyButtonProps) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const [showHint, setShowHint] = useState(false);
+  const hintsDisabled = useHintsDisabled();
   const valueRef = useRef(value);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   valueRef.current = value;
@@ -124,9 +126,12 @@ export const CopyButton = memo(function CopyButton({
         onCopySuccess?.();
 
         // Check if we should show the hint (first successful copy)
-        const alreadyAcknowledged = await loadHintAcknowledged();
-        if (!alreadyAcknowledged) {
-          setShowHint(true);
+        // Skip if hints are globally disabled
+        if (!hintsDisabled) {
+          const alreadyAcknowledged = await loadHintAcknowledged();
+          if (!alreadyAcknowledged) {
+            setShowHint(true);
+          }
         }
 
         timeoutRef.current = setTimeout(() => {
@@ -149,7 +154,7 @@ export const CopyButton = memo(function CopyButton({
         timeoutRef.current = null;
       }, feedbackDuration);
     }
-  }, [feedbackDuration, onCopySuccess, onCopyError]);
+  }, [feedbackDuration, onCopySuccess, onCopyError, hintsDisabled]);
 
   const getColor = useCallback(() => {
     switch (copyState) {

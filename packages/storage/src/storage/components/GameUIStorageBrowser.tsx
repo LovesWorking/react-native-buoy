@@ -30,7 +30,6 @@ import { MMKVInstanceSelector } from "./MMKVInstanceSelector";
 import { MMKVInstanceInfoPanel } from "./MMKVInstanceInfoPanel";
 import { isMMKVAvailable } from "../utils/mmkvAvailability";
 import { StorageActionButtons } from "./StorageActionButtons";
-import { copyToClipboard } from "@react-buoy/shared-ui";
 
 // Conditionally import MMKV listener
 let addMMKVListener: any;
@@ -140,8 +139,8 @@ export function GameUIStorageBrowser({
     refreshMMKV();
   }, [refreshAsync, refreshMMKV]);
 
-  // Copy handler for action buttons
-  const handleCopyStorage = useCallback(async () => {
+  // Memoized export data for copy functionality
+  const copyExportData = useMemo(() => {
     const allKeys = allStorageKeys;
 
     // Calculate stats
@@ -158,7 +157,7 @@ export function GameUIStorageBrowser({
     const secureKeys = allKeys.filter(k => k.storageType === 'secure');
 
     // Build structured export
-    const exportData = {
+    return {
       summary: {
         valid: stats.valid,
         missing: stats.missing,
@@ -175,9 +174,6 @@ export function GameUIStorageBrowser({
       }, {} as Record<string, Record<string, any>>),
       secure: secureKeys.reduce((acc, k) => { acc[k.key] = k.value; return acc; }, {} as Record<string, any>),
     };
-
-    const serialized = JSON.stringify(exportData, null, 2);
-    await copyToClipboard(serialized);
   }, [allStorageKeys]);
 
   // Update storage data ref for copy functionality
@@ -666,7 +662,7 @@ export function GameUIStorageBrowser({
             </View>
             {/* Storage Action Buttons in Header */}
             <StorageActionButtons
-              onCopy={handleCopyStorage}
+              copyValue={copyExportData}
               mmkvInstances={mmkvInstances.map(inst => ({ id: inst.id, instance: inst.instance }))}
               activeStorageType={activeStorageType}
               onClearComplete={refresh}

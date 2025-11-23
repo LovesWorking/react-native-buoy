@@ -9,6 +9,7 @@ import {
 } from "./autoDiscoverPresets";
 import type { InstalledApp } from "./types";
 import { DevToolsVisibilityProvider } from "./DevToolsVisibilityContext";
+import { HintsProvider } from "@react-buoy/shared-ui";
 
 /**
  * Environment variable configuration
@@ -114,6 +115,18 @@ export interface FloatingDevToolsProps extends Omit<FloatingMenuProps, "apps"> {
    * ```
    */
   children?: React.ReactNode;
+
+  /**
+   * Disable all onboarding hints and tooltips.
+   * Set to true if you don't want to show any first-time user hints.
+   *
+   * @default false
+   * @example
+   * ```tsx
+   * <FloatingDevTools disableHints />
+   * ```
+   */
+  disableHints?: boolean;
 }
 
 /**
@@ -162,6 +175,7 @@ export const FloatingDevTools = ({
   requiredEnvVars,
   requiredStorageKeys,
   children,
+  disableHints = false,
   ...props
 }: FloatingDevToolsProps) => {
   // Build config overrides if requiredEnvVars or requiredStorageKeys are provided
@@ -225,16 +239,18 @@ export const FloatingDevTools = ({
   }, []);
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
-      <DevToolsVisibilityProvider>
-        <AppHostProvider>
-          <FloatingMenu {...props} apps={finalApps} />
-          <AppOverlay />
-        </AppHostProvider>
-        {children}
-        {DebugBordersOverlay && <DebugBordersOverlay />}
-      </DevToolsVisibilityProvider>
-    </View>
+    <HintsProvider disableHints={disableHints}>
+      <View style={styles.container} pointerEvents="box-none">
+        <DevToolsVisibilityProvider>
+          <AppHostProvider>
+            <FloatingMenu {...props} apps={finalApps} />
+            <AppOverlay />
+          </AppHostProvider>
+          {children}
+          {DebugBordersOverlay && <DebugBordersOverlay />}
+        </DevToolsVisibilityProvider>
+      </View>
+    </HintsProvider>
   );
 };
 

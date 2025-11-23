@@ -22,10 +22,10 @@ import {
   devToolsStorageKeys,
   macOSColors,
   useSafeAsyncStorage,
-  Copy,
-  copyToClipboard,
+  CopyButton,
   TabSelector,
 } from "@react-buoy/shared-ui";
+import type { ViewStyle } from "react-native";
 import type { ModalMode } from "@react-buoy/shared-ui";
 import { NetworkEventItemCompact } from "./NetworkEventItemCompact";
 import { NetworkFilterViewV3 } from "./NetworkFilterViewV3";
@@ -366,11 +366,10 @@ function NetworkModalInner({
     return header + requests;
   }, [filteredEvents, copySettings, shouldIncludePayload]);
 
-  // Direct copy handler
-  const handleDirectCopy = useCallback(async () => {
-    if (filteredEvents.length === 0) return;
-    const text = generateCopyText();
-    await copyToClipboard(text);
+  // Memoized copy text value for CopyButton
+  const copyTextValue = useMemo(() => {
+    if (filteredEvents.length === 0) return "";
+    return generateCopyText();
   }, [filteredEvents.length, generateCopyText]);
 
   // FlatList optimization - only keep what's needed for FlatList performance
@@ -556,24 +555,19 @@ function NetworkModalInner({
             />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            sentry-label="ignore copy requests"
-            onPress={handleDirectCopy}
-            style={[
-              styles.headerActionButton,
-              filteredEvents.length === 0 && styles.headerActionButtonDisabled,
-            ]}
+          <CopyButton
+            value={copyTextValue}
+            size={14}
+            buttonStyle={styles.headerActionButton as ViewStyle}
+            colors={{
+              idle: filteredEvents.length > 0
+                ? macOSColors.text.secondary
+                : macOSColors.text.disabled,
+              success: macOSColors.semantic.success,
+              error: macOSColors.semantic.error,
+            }}
             disabled={filteredEvents.length === 0}
-          >
-            <Copy
-              size={14}
-              color={
-                filteredEvents.length > 0
-                  ? macOSColors.text.secondary
-                  : macOSColors.text.disabled
-              }
-            />
-          </TouchableOpacity>
+          />
 
           <TouchableOpacity
             sentry-label="ignore toggle interception"

@@ -188,6 +188,14 @@ npm install @react-buoy/{tool-name}
 
 That's all you need! But if you want validation...
 
+### Disabling Onboarding Hints
+
+If you don't want to show any first-time user hints (clipboard tips, modal hints, onboarding tooltips), you can disable them all with a single prop:
+
+```tsx
+<FloatingDevTools disableHints environment="local" userRole="admin" />
+```
+
 ### With Environment Variable Validation
 
 ```tsx

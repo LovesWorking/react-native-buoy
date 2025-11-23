@@ -40,6 +40,7 @@ import { gameUIColors } from "./ui/gameUI";
 import { DraggableHeader, ModalHintBanner } from "./ui/components";
 import { safeGetItem, safeSetItem } from "./utils/safeAsyncStorage";
 import { devToolsStorageKeys } from "./storage/devToolsStorageKeys";
+import { useHintsDisabled } from "./context";
 // ============================================================================
 // CONSTANTS - Modal dimensions and configuration
 // ============================================================================
@@ -447,6 +448,7 @@ const JsModalComponent: FC<JsModalProps> = ({
   });
   const [showHint, setShowHint] = useState(false);
   const [hintLoaded, setHintLoaded] = useState(false);
+  const hintsDisabled = useHintsDisabled();
 
   // ============================================================================
   // ANIMATED VALUES - All using native driver
@@ -1294,8 +1296,8 @@ const JsModalComponent: FC<JsModalProps> = ({
             panHandlers={bottomSheetPanResponder.panHandlers}
           />
 
-          {/* Show hint banner if not acknowledged and loaded */}
-          {hintLoaded && showHint && mode === "bottomSheet" && (
+          {/* Show hint banner if not acknowledged, loaded, and hints not disabled */}
+          {hintLoaded && showHint && mode === "bottomSheet" && !hintsDisabled && (
             <ModalHintBanner onAcknowledge={handleHintAcknowledge} />
           )}
 

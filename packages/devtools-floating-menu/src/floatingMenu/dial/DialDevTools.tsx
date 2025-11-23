@@ -15,6 +15,7 @@ import {
   dialColors,
   safeGetItem,
   safeSetItem,
+  useHintsDisabled,
 } from "@react-buoy/shared-ui";
 import {
   DevToolsSettingsModal,
@@ -66,6 +67,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [showOnboardingTooltip, setShowOnboardingTooltip] = useState(false);
   const onboardingDismissedRef = useRef(false); // Track if onboarding was dismissed
+  const hintsDisabled = useHintsDisabled();
   const { settings: hookSettings, refreshSettings } = useDevToolsSettings();
   const { open } = useAppHost();
   // Initialize with external settings if provided, otherwise use hook settings
@@ -99,6 +101,11 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
 
   // Check if we should show the onboarding tooltip
   useEffect(() => {
+    // Skip onboarding if hints are disabled
+    if (hintsDisabled) {
+      return;
+    }
+
     const checkOnboarding = async () => {
       try {
         const hasSeenTooltip = await safeGetItem(ONBOARDING_STORAGE_KEY);
@@ -115,7 +122,7 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     };
 
     checkOnboarding();
-  }, []);
+  }, [hintsDisabled]);
 
   // React Native Animated values
   const backdropOpacity = useRef(new Animated.Value(0)).current;

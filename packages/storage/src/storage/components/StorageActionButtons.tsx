@@ -1,29 +1,24 @@
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { useState } from "react";
-import { Copy, Trash2, Check } from "@react-buoy/shared-ui";
+import { Trash2, CopyButton } from "@react-buoy/shared-ui";
 import { macOSColors } from "@react-buoy/shared-ui";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface StorageActionButtonsProps {
-  onCopy: () => void;
+  /** Value to copy to clipboard */
+  copyValue: unknown;
+  /** @deprecated Use copyValue instead */
+  onCopy?: () => void;
   mmkvInstances?: Array<{ id: string; instance: any }>;
   activeStorageType?: "all" | "async" | "mmkv" | "secure";
   onClearComplete?: () => void;
 }
 
 export function StorageActionButtons({
-  onCopy,
+  copyValue,
   mmkvInstances = [],
   activeStorageType = "all",
   onClearComplete,
 }: StorageActionButtonsProps) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await onCopy();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const handleClearAsyncStorage = () => {
     Alert.alert(
@@ -128,17 +123,17 @@ export function StorageActionButtons({
 
   return (
     <View style={styles.container}>
-      {/* Copy Button - Icon only, matches modal header style */}
-      <TouchableOpacity
-        onPress={handleCopy}
-        style={[styles.actionButton, copied && styles.actionButtonSuccess]}
-      >
-        {copied ? (
-          <Check size={16} color={macOSColors.semantic.success} />
-        ) : (
-          <Copy size={16} color={macOSColors.text.secondary} />
-        )}
-      </TouchableOpacity>
+      {/* Copy Button - Uses shared CopyButton for consistent hint behavior */}
+      <CopyButton
+        value={copyValue}
+        size={16}
+        buttonStyle={styles.actionButton}
+        colors={{
+          idle: macOSColors.text.secondary,
+          success: macOSColors.semantic.success,
+          error: macOSColors.semantic.error,
+        }}
+      />
 
       {/* Clear All - Only show when viewing "all" storage types */}
       {showClearAll && (
@@ -189,9 +184,5 @@ const styles = StyleSheet.create({
     backgroundColor: macOSColors.background.input,
     borderWidth: 1,
     borderColor: macOSColors.border.default,
-  },
-  actionButtonSuccess: {
-    backgroundColor: macOSColors.semantic.successBackground,
-    borderColor: macOSColors.semantic.success + "40",
   },
 });

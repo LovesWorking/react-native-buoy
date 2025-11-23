@@ -20,6 +20,7 @@ import {
   gameUIColors,
   safeGetItem,
   safeSetItem,
+  useHintsDisabled,
 } from "@react-buoy/shared-ui";
 import { useDevToolsSettings } from "./DevToolsSettingsModal";
 import { useAppHost } from "./AppHost";
@@ -71,6 +72,7 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   );
   const [, forceUpdate] = useState(0); // Used to force re-render when toggle states change
   const onboardingDismissedRef = useRef(false); // Track if onboarding was dismissed
+  const hintsDisabled = useHintsDisabled();
 
   const { isAnyOpen, open, registerApps } = useAppHost();
   const wasAppOpenRef = useRef(isAnyOpen);
@@ -78,6 +80,11 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
 
   // Check onboarding status on first load
   useEffect(() => {
+    // Skip onboarding if hints are disabled
+    if (hintsDisabled) {
+      return;
+    }
+
     const checkOnboarding = async () => {
       try {
         const hasSeenOnboarding = await safeGetItem(
@@ -95,7 +102,7 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
     };
 
     checkOnboarding();
-  }, []);
+  }, [hintsDisabled]);
 
   // Subscribe to toggle state changes to update icon colors
   useEffect(() => {
@@ -202,8 +209,8 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
     setShowDial(true);
   };
 
-  // Determine if we're in onboarding mode (only when explicitly set to positioning AND not dismissed)
-  const isOnboarding = onboardingStep === "positioning" && !onboardingDismissedRef.current;
+  // Determine if we're in onboarding mode (only when explicitly set to positioning AND not dismissed AND hints not disabled)
+  const isOnboarding = onboardingStep === "positioning" && !onboardingDismissedRef.current && !hintsDisabled;
 
   // During onboarding, disable position persistence and use centered position
   const shouldEnablePositionPersistence = !isOnboarding;
