@@ -288,10 +288,7 @@ ${JSON.stringify(requestDetails.responseData, null, 2)}
               </Text>
             </View>
           ) : null}
-          <View style={styles.copyFullContainer}>
-            <Text style={styles.copyFullLabel}>Copy Full Request</Text>
-            <InlineCopyButton value={getFullRequestDetails()} />
-          </View>
+          <InlineCopyButton value={getFullRequestDetails()} buttonStyle={styles.copyFullButton} />
         </View>
 
         <UrlBreakdown
@@ -572,6 +569,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     marginBottom: 12,
+    flexWrap: "nowrap",
   },
   httpMethodBadge: {
     backgroundColor: macOSColors.semantic.infoBackground,
@@ -612,22 +610,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginLeft: "auto",
   },
   httpDurationText: {
     color: macOSColors.text.secondary,
     fontSize: 11,
   },
-  copyFullContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  copyFullButton: {
     marginLeft: "auto",
-  },
-  copyFullLabel: {
-    color: macOSColors.text.secondary,
-    fontSize: 11,
-    fontWeight: "500",
+    flexShrink: 0,
+    padding: 4,
   },
   // URL breakdown styles
   urlBreakdown: {
