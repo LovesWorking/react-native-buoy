@@ -9,6 +9,7 @@ export {
 } from "./CopyButton";
 export { ModalHeader } from "./ModalHeader";
 export { ModalHintBanner } from "./ModalHintBanner";
+export { ClipboardHintBanner } from "./ClipboardHintBanner";
 export { SectionHeader } from "./SectionHeader";
 export { ListItem } from "./ListItem";
 export {

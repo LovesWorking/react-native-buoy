@@ -47,6 +47,15 @@ export const devToolsStorageKeys = {
   },
 
   /**
+   * Clipboard-related storage keys
+   */
+  clipboard: {
+    root: () => `${devToolsStorageKeys.base}_clipboard` as const,
+    hintAcknowledged: () =>
+      `${devToolsStorageKeys.clipboard.root()}_hint_acknowledged` as const,
+  },
+
+  /**
    * Environment-related storage keys
    */
   env: {

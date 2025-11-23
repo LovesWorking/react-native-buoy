@@ -8,6 +8,9 @@ import {
 import { copyToClipboard } from "../../clipboard/copyToClipboard";
 import { gameUIColors } from "../gameUI/constants/gameUIColors";
 import { Copy, CheckCircle2, AlertTriangle } from "../../icons/lucide-icons";
+import { ClipboardHintBanner } from "./ClipboardHintBanner";
+import { devToolsStorageKeys } from "../../storage/devToolsStorageKeys";
+import { safeGetItem, safeSetItem } from "../../utils/safeAsyncStorage";
 
 type CopyState = "idle" | "success" | "error";
 
@@ -40,6 +43,41 @@ interface CopyButtonProps extends Omit<TouchableOpacityProps, "onPress"> {
  * Shows different icons for idle, success, and error states
  * Based on the React Query dev tools copy button implementation
  */
+// Global state to track if hint has been shown (shared across all CopyButton instances)
+let globalHintAcknowledged: boolean | null = null;
+let globalHintLoadPromise: Promise<boolean> | null = null;
+
+async function loadHintAcknowledged(): Promise<boolean> {
+  if (globalHintAcknowledged !== null) {
+    return globalHintAcknowledged;
+  }
+  if (!globalHintLoadPromise) {
+    globalHintLoadPromise = (async () => {
+      try {
+        const hintKey = devToolsStorageKeys.clipboard.hintAcknowledged();
+        const acknowledged = await safeGetItem(hintKey);
+        globalHintAcknowledged = acknowledged === "true";
+        return globalHintAcknowledged;
+      } catch {
+        globalHintAcknowledged = false;
+        return false;
+      }
+    })();
+  }
+  return globalHintLoadPromise;
+}
+
+async function setHintAcknowledged(): Promise<void> {
+  try {
+    const hintKey = devToolsStorageKeys.clipboard.hintAcknowledged();
+    await safeSetItem(hintKey, "true");
+    globalHintAcknowledged = true;
+  } catch {
+    // Failed to save, just update local state
+    globalHintAcknowledged = true;
+  }
+}
+
 export const CopyButton = memo(function CopyButton({
   value,
   isFocused = false,
@@ -52,6 +90,7 @@ export const CopyButton = memo(function CopyButton({
   ...touchableProps
 }: CopyButtonProps) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [showHint, setShowHint] = useState(false);
   const valueRef = useRef(value);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   valueRef.current = value;
@@ -63,6 +102,12 @@ export const CopyButton = memo(function CopyButton({
         clearTimeout(timeoutRef.current);
       }
     };
+  }, []);
+
+  // Handle hint acknowledgment
+  const handleHintAcknowledge = useCallback(async () => {
+    setShowHint(false);
+    await setHintAcknowledged();
   }, []);
 
   const handleCopy = useCallback(async () => {
@@ -77,6 +122,13 @@ export const CopyButton = memo(function CopyButton({
       if (copied) {
         setCopyState("success");
         onCopySuccess?.();
+
+        // Check if we should show the hint (first successful copy)
+        const alreadyAcknowledged = await loadHintAcknowledged();
+        if (!alreadyAcknowledged) {
+          setShowHint(true);
+        }
+
         timeoutRef.current = setTimeout(() => {
           setCopyState("idle");
           timeoutRef.current = null;
@@ -113,31 +165,37 @@ export const CopyButton = memo(function CopyButton({
   }, [copyState, isFocused, colors]);
 
   return (
-    <TouchableOpacity
-      {...touchableProps}
-      style={[styles.button, buttonStyle]}
-      onPress={copyState === "idle" ? handleCopy : undefined}
-      activeOpacity={0.7}
-      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      accessibilityLabel={
-        copyState === "idle"
-          ? "Copy to clipboard"
-          : copyState === "success"
-          ? "Copied to clipboard"
-          : "Failed to copy"
-      }
-      accessibilityRole="button"
-    >
-      {copyState === "idle" && (
-        <Copy size={size} color={getColor()} strokeWidth={2} />
-      )}
-      {copyState === "success" && (
-        <CheckCircle2 size={size} color={getColor()} strokeWidth={2} />
-      )}
-      {copyState === "error" && (
-        <AlertTriangle size={size} color={getColor()} strokeWidth={2} />
-      )}
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        {...touchableProps}
+        style={[styles.button, buttonStyle]}
+        onPress={copyState === "idle" ? handleCopy : undefined}
+        activeOpacity={0.7}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityLabel={
+          copyState === "idle"
+            ? "Copy to clipboard"
+            : copyState === "success"
+            ? "Copied to clipboard"
+            : "Failed to copy"
+        }
+        accessibilityRole="button"
+      >
+        {copyState === "idle" && (
+          <Copy size={size} color={getColor()} strokeWidth={2} />
+        )}
+        {copyState === "success" && (
+          <CheckCircle2 size={size} color={getColor()} strokeWidth={2} />
+        )}
+        {copyState === "error" && (
+          <AlertTriangle size={size} color={getColor()} strokeWidth={2} />
+        )}
+      </TouchableOpacity>
+      <ClipboardHintBanner
+        visible={showHint}
+        onAcknowledge={handleHintAcknowledge}
+      />
+    </>
   );
 });
 
