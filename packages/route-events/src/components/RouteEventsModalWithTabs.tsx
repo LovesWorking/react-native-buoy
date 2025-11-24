@@ -218,9 +218,9 @@ export function RouteEventsModalWithTabs({
     saveFilters();
   }, [ignoredPatterns]);
 
-  // Event listener setup
+  // Event listener setup - keeps capturing even when minimized
   useEffect(() => {
-    if (!visible || !isListening) return;
+    if (!isListening) return;
 
     // Set up event listener
     const unsubscribe = routeObserver.addListener((event) => {
@@ -234,7 +234,7 @@ export function RouteEventsModalWithTabs({
     return () => {
       unsubscribe();
     };
-  }, [visible, isListening, routeObserver]);
+  }, [isListening, routeObserver]);
 
   const handleToggleListening = useCallback(() => {
     setIsListening((prev) => !prev);
