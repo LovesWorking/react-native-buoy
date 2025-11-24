@@ -261,8 +261,83 @@ export const useAppHost = () => {
 };
 
 /**
- * Renders the active dev tool surface on top of the host application. Handles all supported
- * launch modes (self-managed modals, host-wrapped modal, or inline overlays).
+ * Renders a single app instance. Keeps component mounted even when minimized
+ * by passing visible={false} instead of unmounting.
+ */
+const AppRenderer = ({
+  app,
+  isTopVisible,
+  onClose,
+  onMinimize,
+  minimizeTargetPosition,
+}: {
+  app: AppInstance;
+  isTopVisible: boolean;
+  onClose: () => void;
+  onMinimize: (modalState?: ModalRestoreState) => void;
+  minimizeTargetPosition: { x: number; y: number };
+}) => {
+  const Comp = app.component as any;
+  const isVisible = !app.minimized && isTopVisible;
+
+  if (app.launchMode === "self-modal") {
+    return (
+      <Comp
+        {...(app.props ?? {})}
+        visible={isVisible}
+        onClose={onClose}
+        onRequestClose={onClose}
+        onMinimize={onMinimize}
+        minimizeTargetPosition={minimizeTargetPosition}
+        initialModalState={app.restoreState}
+        instanceId={app.instanceId}
+      />
+    );
+  }
+
+  if (app.launchMode === "inline") {
+    if (!isVisible) return null;
+    return (
+      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <Comp
+          {...(app.props ?? {})}
+          onClose={onClose}
+          onMinimize={onMinimize}
+          minimizeTargetPosition={minimizeTargetPosition}
+          initialModalState={app.restoreState}
+          instanceId={app.instanceId}
+        />
+      </View>
+    );
+  }
+
+  // host-modal mode
+  return (
+    <Modal
+      visible={isVisible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.backdrop}>
+        <View style={styles.card}>
+          <Comp
+            {...(app.props ?? {})}
+            onClose={onClose}
+            onMinimize={onMinimize}
+            minimizeTargetPosition={minimizeTargetPosition}
+            initialModalState={app.restoreState}
+            instanceId={app.instanceId}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+/**
+ * Renders all dev tool surfaces. Keeps minimized apps mounted but hidden
+ * so their state and listeners are preserved (similar to React Navigation screens).
  */
 export const AppOverlay = () => {
   const { openApps, close, minimize } = useAppHost();
@@ -271,85 +346,47 @@ export const AppOverlay = () => {
     getNextIconPosition,
   } = useMinimizedTools();
 
-  // Filter out minimized apps - they shouldn't be rendered
-  const visibleApps = openApps.filter(
-    (app) => !app.minimized && app.launchMode !== "toggle-only"
+  // Filter to renderable apps (exclude toggle-only)
+  const renderableApps = openApps.filter(
+    (app) => app.launchMode !== "toggle-only"
   );
 
-  if (visibleApps.length === 0) return null;
+  if (renderableApps.length === 0) return null;
 
-  const top = visibleApps[visibleApps.length - 1];
-
-  const Comp = top.component as any;
-
-  // Get target position for minimize animation
-  const minimizeTargetPosition = getNextIconPosition();
-
-  // Handler for minimize action - receives modal state from the modal component
-  const handleMinimize = (modalState?: ModalRestoreState) => {
-    // Add to minimized tools stack with modal state for restoration
-    addToMinimizedStack({
-      instanceId: top.instanceId,
-      id: top.id,
-      title: top.title || top.id,
-      icon: top.icon,
-      color: top.color,
-      modalState: modalState,
-    });
-    // Mark as minimized in AppHost (hides the modal)
-    minimize(top.instanceId);
-  };
-
-  if (top.launchMode === "self-modal") {
-    return (
-      <Comp
-        {...(top.props ?? {})}
-        visible={true}
-        onClose={() => close(top.instanceId)}
-        onRequestClose={() => close(top.instanceId)}
-        onMinimize={handleMinimize}
-        minimizeTargetPosition={minimizeTargetPosition}
-        initialModalState={top.restoreState}
-        instanceId={top.instanceId}
-      />
-    );
-  }
-
-  if (top.launchMode === "inline") {
-    return (
-      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        <Comp
-          {...(top.props ?? {})}
-          onClose={() => close(top.instanceId)}
-          onMinimize={handleMinimize}
-          minimizeTargetPosition={minimizeTargetPosition}
-          initialModalState={top.restoreState}
-          instanceId={top.instanceId}
-        />
-      </View>
-    );
-  }
+  // Find the top visible (non-minimized) app
+  const visibleApps = renderableApps.filter((app) => !app.minimized);
+  const topVisibleApp = visibleApps[visibleApps.length - 1];
 
   return (
-    <Modal
-      visible
-      transparent
-      animationType="slide"
-      onRequestClose={() => close(top.instanceId)}
-    >
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
-          <Comp
-            {...(top.props ?? {})}
-            onClose={() => close(top.instanceId)}
+    <>
+      {renderableApps.map((app) => {
+        const isTopVisible = topVisibleApp?.instanceId === app.instanceId;
+        const minimizeTargetPosition = getNextIconPosition();
+
+        const handleMinimize = (modalState?: ModalRestoreState) => {
+          addToMinimizedStack({
+            instanceId: app.instanceId,
+            id: app.id,
+            title: app.title || app.id,
+            icon: app.icon,
+            color: app.color,
+            modalState: modalState,
+          });
+          minimize(app.instanceId);
+        };
+
+        return (
+          <AppRenderer
+            key={app.instanceId}
+            app={app}
+            isTopVisible={isTopVisible}
+            onClose={() => close(app.instanceId)}
             onMinimize={handleMinimize}
             minimizeTargetPosition={minimizeTargetPosition}
-            initialModalState={top.restoreState}
-            instanceId={top.instanceId}
           />
-        </View>
-      </View>
-    </Modal>
+        );
+      })}
+    </>
   );
 };
 

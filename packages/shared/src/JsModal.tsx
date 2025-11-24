@@ -1297,9 +1297,19 @@ const JsModalComponent: FC<JsModalProps> = ({
   // RENDER: Modal UI with transform-based animations
   // ============================================================================
 
-  // Render nothing if not visible (but hooks have already been called)
+  // When not visible, render off-screen to keep children mounted (preserves state/listeners)
+  // This is similar to how React Navigation keeps screens mounted
   if (!visible) {
-    return null;
+    return (
+      <View
+        style={styles.hiddenContainer}
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        {children}
+      </View>
+    );
   }
 
   // Render floating mode
@@ -1492,6 +1502,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 20,
+  },
+  hiddenContainer: {
+    position: "absolute",
+    left: -9999,
+    top: -9999,
+    opacity: 0,
   },
   floatingModal: {
     position: "absolute",
