@@ -12,8 +12,10 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Configuration
-WB_MOBILE_APP_ROOT="/Users/austinjohnson/Desktop/wb-mobile-app"
+# Configuration - use dynamic path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RN_BUOY_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WB_MOBILE_APP_ROOT="$HOME/Desktop/wb-mobile-rn"
 
 echo -e "${BLUE}🔓 React Native Buoy - Unlink from Development App${NC}"
 echo -e "${BLUE}====================================================${NC}\n"
@@ -84,5 +86,5 @@ echo -e "${GREEN}🎉 Unlink complete!${NC}\n"
 echo -e "${BLUE}wb-mobile-app is now using published npm packages.${NC}"
 echo -e ""
 echo -e "To link again for development, run:"
-echo -e "  ${YELLOW}cd /Users/austinjohnson/Desktop/rn-buoy && ./scripts/link-to-dev-app.sh${NC}"
+echo -e "  ${YELLOW}cd $RN_BUOY_ROOT && ./scripts/link-to-dev-app.sh${NC}"
 echo -e ""
