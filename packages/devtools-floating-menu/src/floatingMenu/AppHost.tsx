@@ -16,6 +16,10 @@ import {
   OpenDefinition,
   resolveOpenAppsState,
 } from "./AppHostLogic";
+import {
+  useMinimizedTools,
+  ModalRestoreState,
+} from "./MinimizedToolsContext";
 
 type AppHostContextValue = {
   openApps: AppInstance[];
@@ -24,6 +28,12 @@ type AppHostContextValue = {
   close: (instanceId?: string) => void;
   closeAll: () => void;
   registerApps?: (apps: any[]) => void;
+  /** Minimize a tool - hides the modal but keeps state */
+  minimize: (instanceId: string) => void;
+  /** Restore a minimized tool to visible state, optionally with saved modal state */
+  restore: (instanceId: string, restoreState?: ModalRestoreState) => void;
+  /** Check if a specific tool is minimized */
+  isMinimized: (instanceId: string) => boolean;
 };
 
 const AppHostContext = createContext<AppHostContextValue | null>(null);
@@ -155,6 +165,38 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
 
   const closeAll = useCallback(() => setOpenApps([]), []);
 
+  const minimize: AppHostContextValue["minimize"] = useCallback(
+    (instanceId) => {
+      setOpenApps((s) =>
+        s.map((app) =>
+          app.instanceId === instanceId ? { ...app, minimized: true } : app
+        )
+      );
+    },
+    []
+  );
+
+  const restore: AppHostContextValue["restore"] = useCallback(
+    (instanceId, restoreState) => {
+      setOpenApps((s) =>
+        s.map((app) =>
+          app.instanceId === instanceId
+            ? { ...app, minimized: false, restoreState }
+            : app
+        )
+      );
+    },
+    []
+  );
+
+  const isMinimized: AppHostContextValue["isMinimized"] = useCallback(
+    (instanceId) => {
+      const app = openApps.find((a) => a.instanceId === instanceId);
+      return app?.minimized ?? false;
+    },
+    [openApps]
+  );
+
   React.useEffect(() => {
     if (openApps.length === 0) return;
 
@@ -169,15 +211,20 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo<AppHostContextValue>(
     () => ({
       openApps,
-      // Only count non-toggle-only tools as "open" (toggle-only tools don't show modals)
+      // Only count non-toggle-only and non-minimized tools as "open"
       isAnyOpen:
-        openApps.filter((app) => app.launchMode !== "toggle-only").length > 0,
+        openApps.filter(
+          (app) => app.launchMode !== "toggle-only" && !app.minimized
+        ).length > 0,
       open,
       close,
       closeAll,
       registerApps,
+      minimize,
+      restore,
+      isMinimized,
     }),
-    [openApps, open, close, closeAll, registerApps]
+    [openApps, open, close, closeAll, registerApps, minimize, restore, isMinimized]
   );
 
   return (
@@ -199,6 +246,9 @@ export const useAppHost = () => {
       open: () => "",
       close: () => {},
       closeAll: () => {},
+      minimize: () => {},
+      restore: (_instanceId: string, _restoreState?: ModalRestoreState) => {},
+      isMinimized: () => false,
     };
   }
   return ctx;
@@ -209,17 +259,40 @@ export const useAppHost = () => {
  * launch modes (self-managed modals, host-wrapped modal, or inline overlays).
  */
 export const AppOverlay = () => {
-  const { openApps, close } = useAppHost();
-  if (openApps.length === 0) return null;
+  const { openApps, close, minimize } = useAppHost();
+  const {
+    minimize: addToMinimizedStack,
+    getNextIconPosition,
+  } = useMinimizedTools();
 
-  const top = openApps[openApps.length - 1];
+  // Filter out minimized apps - they shouldn't be rendered
+  const visibleApps = openApps.filter(
+    (app) => !app.minimized && app.launchMode !== "toggle-only"
+  );
 
-  // Skip rendering for toggle-only tools (they don't need a modal/overlay)
-  if (top.launchMode === "toggle-only") {
-    return null;
-  }
+  if (visibleApps.length === 0) return null;
+
+  const top = visibleApps[visibleApps.length - 1];
 
   const Comp = top.component as any;
+
+  // Get target position for minimize animation
+  const minimizeTargetPosition = getNextIconPosition();
+
+  // Handler for minimize action - receives modal state from the modal component
+  const handleMinimize = (modalState?: ModalRestoreState) => {
+    // Add to minimized tools stack with modal state for restoration
+    addToMinimizedStack({
+      instanceId: top.instanceId,
+      id: top.id,
+      title: top.title || top.id,
+      icon: top.icon,
+      color: top.color,
+      modalState: modalState,
+    });
+    // Mark as minimized in AppHost (hides the modal)
+    minimize(top.instanceId);
+  };
 
   if (top.launchMode === "self-modal") {
     return (
@@ -228,6 +301,10 @@ export const AppOverlay = () => {
         visible={true}
         onClose={() => close(top.instanceId)}
         onRequestClose={() => close(top.instanceId)}
+        onMinimize={handleMinimize}
+        minimizeTargetPosition={minimizeTargetPosition}
+        initialModalState={top.restoreState}
+        instanceId={top.instanceId}
       />
     );
   }
@@ -235,7 +312,14 @@ export const AppOverlay = () => {
   if (top.launchMode === "inline") {
     return (
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        <Comp {...(top.props ?? {})} onClose={() => close(top.instanceId)} />
+        <Comp
+          {...(top.props ?? {})}
+          onClose={() => close(top.instanceId)}
+          onMinimize={handleMinimize}
+          minimizeTargetPosition={minimizeTargetPosition}
+          initialModalState={top.restoreState}
+          instanceId={top.instanceId}
+        />
       </View>
     );
   }
@@ -249,7 +333,14 @@ export const AppOverlay = () => {
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Comp {...(top.props ?? {})} onClose={() => close(top.instanceId)} />
+          <Comp
+            {...(top.props ?? {})}
+            onClose={() => close(top.instanceId)}
+            onMinimize={handleMinimize}
+            minimizeTargetPosition={minimizeTargetPosition}
+            initialModalState={top.restoreState}
+            instanceId={top.instanceId}
+          />
         </View>
       </View>
     </Modal>

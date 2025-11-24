@@ -1097,6 +1097,28 @@ export const Minus = ({
   </Svg>
 );
 
+export const Maximize2 = ({
+  size = 24,
+  color = "currentColor",
+  strokeWidth = 2,
+  ...props
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" {...props}>
+    {/* Top-left corner */}
+    <Line x1={5} y1={9} x2={5} y2={5} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={5} y1={5} x2={9} y2={5} stroke={color} strokeWidth={strokeWidth} />
+    {/* Top-right corner */}
+    <Line x1={15} y1={5} x2={19} y2={5} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={19} y1={5} x2={19} y2={9} stroke={color} strokeWidth={strokeWidth} />
+    {/* Bottom-left corner */}
+    <Line x1={5} y1={15} x2={5} y2={19} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={5} y1={19} x2={9} y2={19} stroke={color} strokeWidth={strokeWidth} />
+    {/* Bottom-right corner */}
+    <Line x1={15} y1={19} x2={19} y2={19} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={19} y1={19} x2={19} y2={15} stroke={color} strokeWidth={strokeWidth} />
+  </Svg>
+);
+
 export const Palette = ({
   size = 24,
   color = "currentColor",
@@ -1821,6 +1843,7 @@ export const HashIcon = Hash; // Uses optimized version
 export const InfoIcon = Info; // Uses optimized version
 export const KeyIcon = Key; // Uses optimized version
 export const LayersIcon = Layers; // Uses optimized version
+export const Maximize2Icon = Maximize2; // Uses optimized version
 export const MinusIcon = Minus; // Uses optimized version
 export const PaletteIcon = Palette; // Uses optimized version
 export const PauseIcon = Pause; // Uses optimized version

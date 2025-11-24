@@ -11,6 +11,7 @@ interface DataEditorModalProps {
   selectedQueryKey?: QueryKey;
   onQuerySelect: (query: any) => void;
   onClose: () => void;
+  onMinimize?: (modalState: any) => void;
   enableSharedModalDimensions?: boolean;
   onTabChange: (tab: "queries" | "mutations") => void;
 }
@@ -24,6 +25,7 @@ export function DataEditorModal({
   selectedQueryKey,
   onQuerySelect,
   onClose,
+  onMinimize,
   enableSharedModalDimensions = false,
   onTabChange,
 }: DataEditorModalProps) {
@@ -40,7 +42,6 @@ export function DataEditorModal({
       activeTab="queries"
       onTabChange={onTabChange}
       onBack={() => onQuerySelect(undefined)}
-      onClose={onClose}
     />
   );
 
@@ -61,6 +62,7 @@ export function DataEditorModal({
     <JsModal
       visible={visible}
       onClose={onClose}
+      onMinimize={onMinimize}
       persistenceKey={storagePrefix}
       header={{
         customContent: renderHeaderContent(),

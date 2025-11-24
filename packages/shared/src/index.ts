@@ -55,7 +55,7 @@ export { useSafeAreaInsets, useFilterManager } from "./hooks";
 
 // JsModal
 export { JsModal } from "./JsModal";
-export type { ModalMode } from "./JsModal";
+export type { ModalMode, ModalState } from "./JsModal";
 // game ui colors
 export { gameUIColors } from "./ui/gameUI/constants/gameUIColors";
 export { macOSColors } from "./ui/gameUI/constants/macOSDesignSystemColors";

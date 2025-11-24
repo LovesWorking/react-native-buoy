@@ -52,6 +52,9 @@ export interface InstalledApp {
   launchMode?: "self-modal" | "host-modal" | "inline" | "toggle-only";
   /** Prevent more than one instance of this app at a time. */
   singleton?: boolean;
-  /** Optional callback invoked when the app icon is pressed. */
-  onPress?: () => void;
+  /**
+   * Optional callback invoked when the app icon is pressed.
+   * For toggle-only tools, call `actions?.notifyToggleChange?.()` to update icon colors.
+   */
+  onPress?: (actions?: FloatingMenuActions) => void;
 }

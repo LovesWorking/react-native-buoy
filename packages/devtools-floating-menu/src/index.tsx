@@ -36,3 +36,17 @@ export {
 
 // Export toggle state manager
 export { toggleStateManager } from "./floatingMenu/ToggleStateManager";
+
+// Export minimized tools components
+export {
+  MinimizedToolsProvider,
+  useMinimizedTools,
+  getIconPosition,
+  getIconSize,
+} from "./floatingMenu/MinimizedToolsContext";
+export type {
+  MinimizedTool,
+  ModalRestoreState,
+  IconPosition,
+} from "./floatingMenu/MinimizedToolsContext";
+export { MinimizedToolsStack } from "./floatingMenu/MinimizedToolsStack";

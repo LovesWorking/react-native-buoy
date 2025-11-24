@@ -1,4 +1,5 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
+import type { ModalRestoreState } from "./MinimizedToolsContext";
 
 export type LaunchMode = "self-modal" | "host-modal" | "inline" | "toggle-only";
 
@@ -10,6 +11,14 @@ export type AppInstance = {
   props?: Record<string, unknown>;
   launchMode: LaunchMode;
   singleton?: boolean;
+  /** Whether this app instance is currently minimized */
+  minimized?: boolean;
+  /** Icon to display when minimized */
+  icon?: ReactNode;
+  /** Accent color for the tool */
+  color?: string;
+  /** Modal state to restore when un-minimizing */
+  restoreState?: ModalRestoreState;
 };
 
 export type OpenDefinition = Omit<AppInstance, "instanceId">;

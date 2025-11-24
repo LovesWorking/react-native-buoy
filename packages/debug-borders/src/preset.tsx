@@ -16,16 +16,17 @@
  */
 
 import { Layers } from "@react-buoy/shared-ui";
+import type { FloatingMenuActions } from "@react-buoy/core";
 
 const DebugBordersManager = require("./debug-borders/utils/DebugBordersManager");
 
-// Get the toggle state manager if available
-let manager: any = null;
+// Get the toggle state manager if available (for notifying FloatingMenu of state changes)
+let toggleManager: { notify: () => void } | null = null;
 try {
   const coreModule = require("@react-buoy/core");
-  manager = coreModule.toggleStateManager;
+  toggleManager = coreModule.toggleStateManager;
 } catch (e) {
-  // Manager not available, that's ok - icons just won't update
+  // Manager not available, will fall back to actions.notifyToggleChange
 }
 
 /**
@@ -64,10 +65,11 @@ export const debugBordersToolPreset = {
   component: EmptyComponent,
   props: {},
   launchMode: "toggle-only" as const,
-  onPress: () => {
+  onPress: (actions?: FloatingMenuActions) => {
     DebugBordersManager.toggle();
-    // Notify FloatingMenu to re-render and update icon
-    manager?.notify();
+    // Notify FloatingMenu to re-render and update icon (use both mechanisms for reliability)
+    toggleManager?.notify();
+    actions?.notifyToggleChange?.();
   },
 };
 
@@ -118,9 +120,11 @@ export function createDebugBordersTool(options?: {
     component: EmptyComponent,
     props: {},
     launchMode: "toggle-only" as const,
-    onPress: () => {
+    onPress: (actions?: FloatingMenuActions) => {
       DebugBordersManager.toggle();
-      manager?.notify();
+      // Notify FloatingMenu to re-render and update icon (use both mechanisms for reliability)
+      toggleManager?.notify();
+      actions?.notifyToggleChange?.();
     },
   };
 }

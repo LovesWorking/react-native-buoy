@@ -17,6 +17,7 @@ interface MutationBrowserModalProps {
   selectedMutationId?: number;
   onMutationSelect: (mutation: Mutation | undefined) => void;
   onClose: () => void;
+  onMinimize?: (modalState: any) => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
   onTabChange: (tab: "queries" | "mutations") => void;
@@ -34,6 +35,7 @@ export function MutationBrowserModal({
   selectedMutationId,
   onMutationSelect,
   onClose,
+  onMinimize,
   activeFilter: externalActiveFilter,
   onFilterChange: externalOnFilterChange,
   onTabChange,
@@ -123,7 +125,6 @@ export function MutationBrowserModal({
       activeTab="mutations"
       onTabChange={onTabChange}
       onBack={() => onMutationSelect(undefined)}
-      onClose={onClose}
       searchText={searchText}
       onSearchChange={onSearchChange}
     />
@@ -141,6 +142,7 @@ export function MutationBrowserModal({
     <JsModal
       visible={visible}
       onClose={onClose}
+      onMinimize={onMinimize}
       persistenceKey={storagePrefix}
       header={{
         customContent: renderHeaderContent(),

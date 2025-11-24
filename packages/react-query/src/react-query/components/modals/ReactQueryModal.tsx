@@ -11,6 +11,7 @@ interface ReactQueryModalProps {
   onQuerySelect: (query: Query | undefined) => void;
   onMutationSelect: (mutation: Mutation | undefined) => void;
   onClose: () => void;
+  onMinimize?: (modalState: any) => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
   activeTab: "queries" | "mutations";
@@ -36,6 +37,7 @@ export function ReactQueryModal({
   onQuerySelect,
   onMutationSelect,
   onClose,
+  onMinimize,
   activeFilter,
   onFilterChange,
   activeTab,
@@ -51,6 +53,7 @@ export function ReactQueryModal({
 
   const commonProps = {
     onClose,
+    onMinimize,
     activeFilter,
     onFilterChange,
     enableSharedModalDimensions,

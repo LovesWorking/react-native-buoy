@@ -524,7 +524,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
                 }
               />
             </ModalHeader.Content>
-            <ModalHeader.Actions onClose={onClose} />
+            <ModalHeader.Actions />
           </ModalHeader>
         ),
       }}

@@ -40,6 +40,7 @@ interface NetworkModalProps {
   visible: boolean;
   onClose: () => void;
   onBack?: () => void;
+  onMinimize?: (modalState: any) => void;
   enableSharedModalDimensions?: boolean;
 }
 
@@ -63,6 +64,7 @@ function NetworkModalInner({
   visible,
   onClose,
   onBack,
+  onMinimize,
   enableSharedModalDimensions = false,
 }: NetworkModalProps) {
   const {
@@ -401,7 +403,6 @@ function NetworkModalInner({
               onTabChange={(tab) => setActiveTab(tab as "filters" | "copy")}
             />
           </ModalHeader.Content>
-          <ModalHeader.Actions onClose={onClose} />
         </ModalHeader>
       );
     }
@@ -412,7 +413,6 @@ function NetworkModalInner({
         <ModalHeader>
           <ModalHeader.Navigation onBack={handleBack} />
           <ModalHeader.Content title="Request Details" centered />
-          <ModalHeader.Actions onClose={onClose} />
         </ModalHeader>
       );
     }
@@ -526,7 +526,7 @@ function NetworkModalInner({
             </View>
           )}
         </ModalHeader.Content>
-        <ModalHeader.Actions onClose={onClose}>
+        <ModalHeader.Actions>
           <TouchableOpacity
             sentry-label="ignore open search"
             onPress={() => setIsSearchActive(true)}
@@ -620,6 +620,7 @@ function NetworkModalInner({
     <JsModal
       visible={visible}
       onClose={onClose}
+      onMinimize={onMinimize}
       persistenceKey={persistenceKey}
       header={{
         showToggleButton: true,

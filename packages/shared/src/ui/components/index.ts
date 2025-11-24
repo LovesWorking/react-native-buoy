@@ -54,3 +54,4 @@ export {
 export type {
   DynamicFilterConfig,
 } from "./DynamicFilterView";
+export { WindowControls } from "./WindowControls";

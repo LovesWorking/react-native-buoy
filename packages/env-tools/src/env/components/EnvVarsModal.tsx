@@ -29,6 +29,8 @@ interface EnvVarsModalProps {
   requiredEnvVars: RequiredEnvVar[];
   /** Optional handler fired when navigating back to the parent surface. */
   onBack?: () => void;
+  /** Optional handler fired when the modal is minimized. */
+  onMinimize?: (modalState: any) => void;
   /**
    * When true, reuse the shared modal sizing keys so multiple dev tools can
    * persist their window dimensions in a single location.
@@ -46,6 +48,7 @@ export function EnvVarsModal({
   onClose,
   requiredEnvVars,
   onBack,
+  onMinimize,
   enableSharedModalDimensions = false,
 }: EnvVarsModalProps) {
   const [activeFilter, setActiveFilter] = useState<EnvFilterType>("all");
@@ -187,6 +190,7 @@ export function EnvVarsModal({
     <JsModal
       visible={visible}
       onClose={onClose}
+      onMinimize={onMinimize}
       persistenceKey={storagePrefix}
       header={{
         customContent: (
@@ -218,7 +222,7 @@ export function EnvVarsModal({
                 </View>
               )}
             </ModalHeader.Content>
-            <ModalHeader.Actions onClose={onClose}>
+            <ModalHeader.Actions>
               {!isSearchActive && (
                 <HeaderSearchButton
                   onPress={() => setIsSearchActive(true)}

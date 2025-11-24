@@ -186,8 +186,8 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
           : app.icon,
       color: app.color ?? gameUIColors.primary,
       onPress: () => {
-        // Call the app's onPress callback if provided
-        app?.onPress?.();
+        // Call the app's onPress callback if provided, passing actions for toggle tools
+        app?.onPress?.(actions);
 
         // Only open modal if not a toggle-only tool
         if (app.launchMode !== "toggle-only") {
@@ -569,7 +569,10 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
                       // Open internal settings modal
                       setIsSettingsModalOpen(true);
                       // Dismiss onboarding tooltip when user opens settings
-                      if (showOnboardingTooltip && !onboardingDismissedRef.current) {
+                      if (
+                        showOnboardingTooltip &&
+                        !onboardingDismissedRef.current
+                      ) {
                         handleOnboardingDismiss();
                       }
                       // Also call external handler if provided
@@ -618,7 +621,11 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
 
       {/* Onboarding Tooltip - Shows on first use */}
       <OnboardingTooltip
-        visible={showOnboardingTooltip && !isSettingsModalOpen && !onboardingDismissedRef.current}
+        visible={
+          showOnboardingTooltip &&
+          !isSettingsModalOpen &&
+          !onboardingDismissedRef.current
+        }
         onDismiss={handleOnboardingDismiss}
       />
     </View>

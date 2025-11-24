@@ -37,7 +37,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "./hooks/useSafeAreaInsets";
 import { gameUIColors } from "./ui/gameUI";
-import { DraggableHeader, ModalHintBanner } from "./ui/components";
+import {
+  DraggableHeader,
+  ModalHintBanner,
+  WindowControls,
+} from "./ui/components";
 import { safeGetItem, safeSetItem } from "./utils/safeAsyncStorage";
 import { devToolsStorageKeys } from "./storage/devToolsStorageKeys";
 import { useHintsDisabled } from "./context";
@@ -129,11 +133,22 @@ interface HeaderConfig {
   showToggleButton?: boolean;
   customContent?: ReactNode;
   hideCloseButton?: boolean;
+  hideMinimizeButton?: boolean;
 }
 
 interface CustomStyles {
   container?: ViewStyle;
   content?: ViewStyle;
+}
+
+/**
+ * Modal state that can be saved and restored when minimizing/restoring
+ */
+export interface ModalState {
+  mode: ModalMode;
+  panelHeight?: number;
+  floatingPosition?: { x: number; y: number };
+  floatingDimensions?: { width: number; height: number };
 }
 
 interface JsModalProps {
@@ -156,6 +171,12 @@ interface JsModalProps {
   footer?: ReactNode;
   footerHeight?: number; // Used to pad ScrollView content bottom
   onBack?: () => void; // Callback for back button - enables tap detection on top-left corner
+  /** Callback when minimize is requested - receives current modal state for restoration */
+  onMinimize?: (modalState: ModalState) => void;
+  /** Target position for minimize animation (where the icon will appear) */
+  minimizeTargetPosition?: { x: number; y: number };
+  /** Initial modal state to restore from (when restoring from minimized) */
+  initialModalState?: ModalState;
 }
 
 // ============================================================================
@@ -225,6 +246,7 @@ interface ModalHeaderProps {
   header?: HeaderConfig;
   onClose: () => void;
   onToggleMode: () => void;
+  onMinimize?: () => void;
   isResizing: boolean;
   mode: ModalMode;
   panHandlers?: GestureResponderHandlers;
@@ -234,6 +256,7 @@ const ModalHeader = memo(function ModalHeader({
   header,
   onClose,
   onToggleMode,
+  onMinimize,
   isResizing,
   mode,
   panHandlers,
@@ -265,12 +288,14 @@ const ModalHeader = memo(function ModalHeader({
         // Double tap - toggle mode
         onToggleMode();
       } else if (tapCountRef.current >= 3) {
-        // Triple tap - close modal
-        onClose();
+        // Triple tap - minimize modal (if available)
+        if (onMinimize) {
+          onMinimize();
+        }
       }
       tapCountRef.current = 0;
     }, 300);
-  }, [onToggleMode, onClose]);
+  }, [onToggleMode, onMinimize]);
 
   // Clean up timeout on unmount
   useEffect(() => {
@@ -311,6 +336,15 @@ const ModalHeader = memo(function ModalHeader({
 
     // Otherwise, render custom content within the standard header structure
     // Apply pan handlers to the outer View for dragging in floating mode
+    // If the custom content is a React element, inject onMinimize so it can trigger minimize
+    let customContentWithMinimize = header.customContent;
+    if (isValidElement(header.customContent) && onMinimize) {
+      customContentWithMinimize = cloneElement(
+        header.customContent as ReactElement<any>,
+        { onMinimize } as any
+      );
+    }
+
     const headerContent = (
       <View style={styles.headerInner}>
         <DragIndicator
@@ -318,7 +352,7 @@ const ModalHeader = memo(function ModalHeader({
           mode={mode}
           hasCustomContent={true}
         />
-        {header.customContent}
+        {customContentWithMinimize}
       </View>
     );
 
@@ -429,6 +463,9 @@ const JsModalComponent: FC<JsModalProps> = ({
   footer,
   footerHeight = 0,
   onBack,
+  onMinimize,
+  minimizeTargetPosition,
+  initialModalState,
 }) => {
   const insets = useSafeAreaInsets();
   const [isStateLoaded, setIsStateLoaded] = useState(!enablePersistence);
@@ -684,6 +721,117 @@ const JsModalComponent: FC<JsModalProps> = ({
     setIsDragging(false);
     setIsResizing(false);
   }, [mode]);
+
+  // Minimize handler - captures current state and animates out
+  const handleMinimize = useCallback(() => {
+    if (!onMinimize) return;
+
+    // Capture current modal state for restoration
+    const currentState: ModalState = {
+      mode,
+      panelHeight: currentHeightRef.current,
+      floatingPosition: {
+        x: currentDimensionsRef.current.left,
+        y: currentDimensionsRef.current.top,
+      },
+      floatingDimensions: {
+        width: currentDimensionsRef.current.width,
+        height: currentDimensionsRef.current.height,
+      },
+    };
+
+    // Animate modal shrinking toward target position
+    const targetX = minimizeTargetPosition?.x ?? SCREEN.width - 50;
+    const targetY = minimizeTargetPosition?.y ?? SCREEN.height - 150;
+
+    // Calculate animation based on current mode
+    if (mode === "bottomSheet") {
+      // Animate bottom sheet shrinking and moving toward target
+      Animated.parallel([
+        Animated.timing(visibilityProgress, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomSheetTranslateY, {
+          toValue: SCREEN.height,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        onMinimize(currentState);
+      });
+    } else {
+      // Floating mode - animate scale and position toward icon
+      Animated.parallel([
+        Animated.timing(floatingScale, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(visibilityProgress, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatingPosition, {
+          toValue: { x: targetX, y: targetY },
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        onMinimize(currentState);
+      });
+    }
+  }, [
+    mode,
+    onMinimize,
+    minimizeTargetPosition,
+    visibilityProgress,
+    bottomSheetTranslateY,
+    floatingScale,
+    floatingPosition,
+  ]);
+
+  // Apply initial modal state when restoring from minimized
+  useEffect(() => {
+    if (!initialModalState) return;
+
+    // Restore mode
+    if (initialModalState.mode) {
+      setMode(initialModalState.mode);
+      onModeChange?.(initialModalState.mode);
+    }
+
+    // Restore bottom sheet height
+    if (initialModalState.panelHeight) {
+      setPanelHeight(initialModalState.panelHeight);
+      currentHeightRef.current = initialModalState.panelHeight;
+      animatedBottomPosition.setValue(initialModalState.panelHeight);
+    }
+
+    // Restore floating dimensions and position
+    if (
+      initialModalState.floatingDimensions &&
+      initialModalState.floatingPosition
+    ) {
+      const newDimensions = {
+        width: initialModalState.floatingDimensions.width,
+        height: initialModalState.floatingDimensions.height,
+        top: initialModalState.floatingPosition.y,
+        left: initialModalState.floatingPosition.x,
+      };
+      setDimensions(newDimensions);
+      floatingPosition.setValue({
+        x: initialModalState.floatingPosition.x,
+        y: initialModalState.floatingPosition.y,
+      });
+      animatedWidth.setValue(initialModalState.floatingDimensions.width);
+      animatedFloatingHeight.setValue(
+        initialModalState.floatingDimensions.height
+      );
+    }
+  }, [initialModalState]);
 
   // ============================================================================
   // EFFECT: Visibility Animations - All using native driver!
@@ -1041,16 +1189,6 @@ const JsModalComponent: FC<JsModalProps> = ({
 
         onPanResponderRelease: () => {
           setIsResizing(false);
-          if (corner === "topRight" && !didResize) {
-            // Treat a tap on the top-right handle as a close action when no resize occurred
-            onClose();
-            return;
-          }
-          if (corner === "topLeft" && !didResize && onBack) {
-            // Treat a tap on the top-left handle as a back action when no resize occurred
-            onBack();
-            return;
-          }
           didResize = false;
           // currentDimensionsRef already holds the last values
           setDimensions(currentDimensionsRef.current);
@@ -1137,12 +1275,14 @@ const JsModalComponent: FC<JsModalProps> = ({
         // Double tap - toggle mode
         toggleMode();
       } else if (tapCountRef.current >= 3) {
-        // Triple tap - close modal
-        onClose();
+        // Triple tap - minimize modal (if available)
+        if (onMinimize) {
+          handleMinimize();
+        }
       }
       tapCountRef.current = 0;
     }, 300);
-  }, [toggleMode, onClose]);
+  }, [toggleMode, onMinimize, handleMinimize]);
 
   // Clean up timeout on unmount for main component tap handler
   useEffect(() => {
@@ -1197,10 +1337,20 @@ const JsModalComponent: FC<JsModalProps> = ({
             header={header}
             onClose={onClose}
             onToggleMode={toggleMode}
+            onMinimize={onMinimize ? handleMinimize : undefined}
             isResizing={isDragging || isResizing}
             mode={mode}
           />
         </DraggableHeader>
+
+        {/* macOS-style window controls - absolute positioned top-right */}
+        <View style={styles.windowControlsContainer}>
+          <WindowControls
+            onClose={onClose}
+            onMinimize={onMinimize ? handleMinimize : undefined}
+            onToggleMode={toggleMode}
+          />
+        </View>
 
         <View style={[styles.content, customStyles.content]}>
           {/* Always wrap in ScrollView with nestedScrollEnabled for FlatList compatibility */}
@@ -1220,27 +1370,7 @@ const JsModalComponent: FC<JsModalProps> = ({
           ) : null}
         </View>
 
-        {/* Corner resize handles - positioned absolutely on the outer container */}
-        <View
-          {...resizeHandlers.topLeft.panHandlers}
-          style={[styles.cornerHandleWrapper, { top: 4, left: 4 }]}
-          hitSlop={{ top: 2, left: 2, right: 0, bottom: 0 }}
-        >
-          <CornerHandle
-            position="topLeft"
-            isActive={isDragging || isResizing}
-          />
-        </View>
-        <View
-          {...resizeHandlers.topRight.panHandlers}
-          style={[styles.cornerHandleWrapper, { top: 4, right: 4 }]}
-          hitSlop={{ top: 2, left: 2, right: 0, bottom: 0 }}
-        >
-          <CornerHandle
-            position="topRight"
-            isActive={isDragging || isResizing}
-          />
-        </View>
+        {/* Corner resize handles - only bottom corners to avoid conflict with window controls */}
         <View
           {...resizeHandlers.bottomLeft.panHandlers}
           style={[styles.cornerHandleWrapper, { bottom: 4, left: 4 }]}
@@ -1291,15 +1421,28 @@ const JsModalComponent: FC<JsModalProps> = ({
             header={header}
             onClose={onClose}
             onToggleMode={toggleMode}
+            onMinimize={onMinimize ? handleMinimize : undefined}
             isResizing={isResizing}
             mode={mode}
             panHandlers={bottomSheetPanResponder.panHandlers}
           />
 
+          {/* macOS-style window controls - absolute positioned top-right */}
+          <View style={styles.windowControlsContainer}>
+            <WindowControls
+              onClose={onClose}
+              onMinimize={onMinimize ? handleMinimize : undefined}
+              onToggleMode={toggleMode}
+            />
+          </View>
+
           {/* Show hint banner if not acknowledged, loaded, and hints not disabled */}
-          {hintLoaded && showHint && mode === "bottomSheet" && !hintsDisabled && (
-            <ModalHintBanner onAcknowledge={handleHintAcknowledge} />
-          )}
+          {hintLoaded &&
+            showHint &&
+            mode === "bottomSheet" &&
+            !hintsDisabled && (
+              <ModalHintBanner onAcknowledge={handleHintAcknowledge} />
+            )}
 
           <View style={[styles.content, customStyles.content]}>
             {/* Always wrap in ScrollView with nestedScrollEnabled for FlatList compatibility */}
@@ -1386,6 +1529,12 @@ const styles = StyleSheet.create({
   floatingHeader: {
     borderTopLeftRadius: 14,
     borderTopRightRadius: 14,
+  },
+  windowControlsContainer: {
+    position: "absolute",
+    top: 2,
+    right: 8,
+    zIndex: 10,
   },
   floatingModeHeader: {
     borderTopLeftRadius: 14,

@@ -75,6 +75,7 @@ interface StorageModalWithTabsProps {
   visible: boolean;
   onClose: () => void;
   onBack?: () => void;
+  onMinimize?: (modalState: any) => void;
   enableSharedModalDimensions?: boolean;
   requiredStorageKeys?: RequiredStorageKey[];
 }
@@ -102,6 +103,7 @@ export function StorageModalWithTabs({
   visible,
   onClose,
   onBack,
+  onMinimize,
   enableSharedModalDimensions = false,
   requiredStorageKeys = [],
 }: StorageModalWithTabsProps) {
@@ -740,6 +742,7 @@ export function StorageModalWithTabs({
       visible={visible}
       onClose={onClose}
       onBack={currentBackHandler}
+      onMinimize={onMinimize}
       persistenceKey={persistenceKey}
       header={{
         showToggleButton: true,
@@ -747,7 +750,6 @@ export function StorageModalWithTabs({
           <ModalHeader>
             <ModalHeader.Navigation
               onBack={() => setShowStorageFilters(false)}
-              onClose={onClose}
             />
             <ModalHeader.Content title="Filters" />
           </ModalHeader>
@@ -755,7 +757,6 @@ export function StorageModalWithTabs({
           <ModalHeader>
             <ModalHeader.Navigation
               onBack={() => setShowFilters(false)}
-              onClose={onClose}
             />
             <ModalHeader.Content title="Event Filters" />
           </ModalHeader>
@@ -766,7 +767,6 @@ export function StorageModalWithTabs({
                 setSelectedConversationKey(null);
                 setSelectedEventIndex(0);
               }}
-              onClose={onClose}
             />
             <ModalHeader.Content title={selectedConversation.key} />
           </ModalHeader>
@@ -823,7 +823,7 @@ export function StorageModalWithTabs({
                 />
               )}
             </ModalHeader.Content>
-            <ModalHeader.Actions onClose={onClose}>
+            <ModalHeader.Actions>
               {activeTab === "browser" && !isSearchActive && (
                 <>
                   <TouchableOpacity
