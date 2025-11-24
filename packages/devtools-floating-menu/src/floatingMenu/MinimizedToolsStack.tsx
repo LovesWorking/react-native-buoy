@@ -22,11 +22,11 @@ import { useMinimizedTools, MinimizedTool } from "./MinimizedToolsContext";
 const ANIMATION_DURATION = 250;
 const PEEK_WIDTH = 20; // Width of the half-circle peek (how much shows)
 const PEEK_HEIGHT = 40; // Height of the half-circle peek
-const TOOLBAR_WIDTH = 70; // Width of the expanded pill toolbar
-const TOOL_ITEM_HEIGHT = 60; // Height of each tool item (icon + label)
-const ICON_GAP = 4; // Gap between tool items
-const TOOLBAR_PADDING = 12; // Padding inside the toolbar
-const COLLAPSE_BUTTON_SIZE = 28; // Size of the collapse button
+const TOOLBAR_WIDTH = 44; // Width of the expanded pill toolbar (thinner, icons only)
+const TOOL_ITEM_SIZE = 32; // Size of each tool icon
+const ICON_GAP = 6; // Gap between tool items
+const TOOLBAR_PADDING = 8; // Padding inside the toolbar
+const COLLAPSE_BUTTON_SIZE = 24; // Size of the collapse button
 const BOTTOM_OFFSET = 140; // Distance from bottom
 const RIGHT_MARGIN = 12; // Distance from right edge of screen
 
@@ -74,7 +74,7 @@ function CollapsedPeek({ count, onPress, animatedValue }: CollapsedPeekProps) {
         accessibilityLabel={`Show ${count} minimized tools`}
         accessibilityRole="button"
       >
-        <ChevronLeft size={18} color={gameUIColors.info} strokeWidth={2.5} />
+        <ChevronLeft size={14} color={gameUIColors.muted} strokeWidth={2} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -97,10 +97,38 @@ function ExpandedToolbar({
   onCollapse,
   animatedValue,
 }: ExpandedToolbarProps) {
-  // Calculate toolbar height based on number of tools
+  // Breathing animation for the glow effect
+  const breatheAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const breathe = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breatheAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(breatheAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    breathe.start();
+    return () => breathe.stop();
+  }, [breatheAnim]);
+
+  // Interpolate breathing to subtle opacity change
+  const breatheOpacity = breatheAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 0.7],
+  });
+
+  // Calculate toolbar height based on number of tools (icons only, no labels)
   const toolbarHeight =
     TOOLBAR_PADDING * 2 +
-    tools.length * TOOL_ITEM_HEIGHT +
+    tools.length * TOOL_ITEM_SIZE +
     (tools.length - 1) * ICON_GAP +
     ICON_GAP +
     COLLAPSE_BUTTON_SIZE;
@@ -108,7 +136,7 @@ function ExpandedToolbar({
   // Animate from off-screen (positive = right/hidden) to visible (0)
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, TOOLBAR_WIDTH + 10], // 0 = visible, 1 = hidden off right
+    outputRange: [0, TOOLBAR_WIDTH + RIGHT_MARGIN + 10], // 0 = visible, 1 = hidden off right
   });
 
   return (
@@ -121,7 +149,18 @@ function ExpandedToolbar({
         },
       ]}
     >
-      {/* Tool Icons - matching DialIcon style */}
+      {/* Background gradient layers */}
+      <Animated.View
+        style={[
+          styles.gradientLayer,
+          styles.gradientLayer1,
+          { opacity: breatheOpacity },
+        ]}
+      />
+      <View style={[styles.gradientLayer, styles.gradientLayer2]} />
+      <View style={[styles.gradientLayer, styles.gradientLayer3]} />
+
+      {/* Tool Icons - compact, no labels */}
       {tools.map((tool) => (
         <TouchableOpacity
           key={tool.instanceId}
@@ -131,29 +170,23 @@ function ExpandedToolbar({
           accessibilityLabel={`Restore ${tool.title}`}
           accessibilityRole="button"
         >
-          {/* Subtle background layers like DialIcon */}
-          <View style={styles.toolGradientBg} />
-          <View style={styles.toolInnerGlow} />
-
-          {/* Icon */}
-          <View style={styles.toolIconWrapper}>{tool.icon}</View>
-
-          {/* Label - matching DialIcon style */}
-          <Text style={styles.toolLabel} numberOfLines={1}>
-            {tool.title.toUpperCase()}
-          </Text>
+          {/* Icon only */}
+          {tool.icon}
         </TouchableOpacity>
       ))}
 
-      {/* Collapse Button */}
+      {/* Collapse Area - subtle bottom section */}
       <TouchableOpacity
         onPress={onCollapse}
-        activeOpacity={0.7}
-        style={styles.collapseButton}
+        activeOpacity={0.6}
+        style={styles.collapseArea}
         accessibilityLabel="Collapse minimized tools"
         accessibilityRole="button"
       >
-        <ChevronRight size={14} color={gameUIColors.secondary} />
+        {/* Subtle divider line */}
+        <View style={styles.collapseDivider} />
+        {/* Small chevron pointing right (to hide) */}
+        <ChevronRight size={12} color={gameUIColors.muted} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -176,7 +209,7 @@ export function MinimizedToolsStack({
   const toolbarHeight =
     minimizedTools.length > 0
       ? TOOLBAR_PADDING * 2 +
-        minimizedTools.length * TOOL_ITEM_HEIGHT +
+        minimizedTools.length * TOOL_ITEM_SIZE +
         (minimizedTools.length - 1) * ICON_GAP +
         ICON_GAP +
         COLLAPSE_BUTTON_SIZE
@@ -350,20 +383,39 @@ const styles = StyleSheet.create({
   peekButton: {
     width: PEEK_WIDTH,
     height: PEEK_HEIGHT,
-    borderTopLeftRadius: PEEK_HEIGHT / 2,
-    borderBottomLeftRadius: PEEK_HEIGHT / 2,
-    backgroundColor: gameUIColors.panel,
-    borderWidth: 1.5,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
+    backgroundColor: "#1A1A1C", // Match floating menu bg (macOS card color)
+    borderWidth: 1,
     borderRightWidth: 0,
-    borderColor: gameUIColors.info,
+    borderColor: gameUIColors.muted + "66",
     alignItems: "center",
     justifyContent: "center",
-    paddingLeft: 4,
-    shadowColor: gameUIColors.info,
-    shadowOffset: { width: -2, height: 0 },
+    // Subtle shadow matching floating tools
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 6,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  // Grip dots pattern - matching floating tools exactly
+  peekGripContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  peekGripColumn: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  peekGripDot: {
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: gameUIColors.secondary + "CC",
   },
 
   // ==================== Expanded Toolbar Styles ====================
@@ -372,72 +424,71 @@ const styles = StyleSheet.create({
     right: RIGHT_MARGIN, // Float away from edge
     top: 0,
     width: TOOLBAR_WIDTH,
-    backgroundColor: dialColors.dialBackground,
+    backgroundColor: "#1A1A1C", // Match floating menu bg (macOS card color)
     borderRadius: TOOLBAR_WIDTH / 2, // Full pill shape
     borderWidth: 1,
-    borderColor: dialColors.dialBorder,
+    borderColor: gameUIColors.muted + "66", // Match floating menu border
     paddingVertical: TOOLBAR_PADDING,
     alignItems: "center",
     gap: ICON_GAP,
-    // Matching dial glow effect
-    shadowColor: dialColors.dialShadow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
+    overflow: "hidden", // Clip gradient layers to pill shape
+    // Matching floating menu shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  // Tool button - matching DialIcon style (no border, transparent bg)
+  // Gradient background layers - matching dial's layered depth
+  gradientLayer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: TOOLBAR_WIDTH / 2,
+  },
+  gradientLayer1: {
+    backgroundColor: dialColors.dialGradient1,
+    opacity: 0.6,
+  },
+  gradientLayer2: {
+    backgroundColor: dialColors.dialGradient2,
+    opacity: 0.4,
+    top: "20%",
+    left: "10%",
+    right: "10%",
+  },
+  gradientLayer3: {
+    backgroundColor: dialColors.dialGradient3,
+    opacity: 0.3,
+    top: "40%",
+    left: "20%",
+    right: "20%",
+  },
+  // Tool button - compact icon only
   toolButton: {
-    width: TOOLBAR_WIDTH - 8,
-    height: TOOL_ITEM_HEIGHT,
+    width: TOOL_ITEM_SIZE,
+    height: TOOL_ITEM_SIZE,
     alignItems: "center",
     justifyContent: "center",
-    padding: 4,
     backgroundColor: "transparent",
   },
-  // Subtle gradient background like DialIcon
-  toolGradientBg: {
-    position: "absolute",
-    width: "85%",
-    height: "85%",
-    borderRadius: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
-    opacity: 0.3,
-  },
-  // Inner glow effect like DialIcon
-  toolInnerGlow: {
-    position: "absolute",
-    width: "70%",
-    height: "70%",
-    borderRadius: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.02)",
-    opacity: 0.5,
-  },
-  // Icon wrapper with margin for label
-  toolIconWrapper: {
-    marginBottom: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  // Label style matching DialIcon exactly
-  toolLabel: {
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-    fontFamily: "monospace",
-    marginTop: 2,
-    color: gameUIColors.secondary,
-    textAlign: "center",
-  },
-  collapseButton: {
-    width: COLLAPSE_BUTTON_SIZE,
+  // Collapse area - subtle integrated bottom section
+  collapseArea: {
+    width: TOOLBAR_WIDTH - 8,
     height: COLLAPSE_BUTTON_SIZE,
-    borderRadius: COLLAPSE_BUTTON_SIZE / 2,
-    backgroundColor: gameUIColors.muted + "22",
-    borderWidth: 1,
-    borderColor: gameUIColors.muted + "44",
     alignItems: "center",
     justifyContent: "center",
     marginTop: ICON_GAP,
+  },
+  // Subtle divider line above collapse icon
+  collapseDivider: {
+    position: "absolute",
+    top: 0,
+    left: 4,
+    right: 4,
+    height: 1,
+    backgroundColor: gameUIColors.muted + "33",
   },
 });
