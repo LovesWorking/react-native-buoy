@@ -8,6 +8,8 @@ export interface ReactQueryDevToolsModalProps {
   visible: boolean;
   /** Fired when the modal should dismiss (after internal state resets). */
   onClose: () => void;
+  /** Callback when minimize is requested - receives current modal state for restoration */
+  onMinimize?: (modalState: any) => void;
   /**
    * If true, reuse the shared modal dimension keys so sizing is consistent with other dev tools.
    */
@@ -27,6 +29,7 @@ type OnTabChange = NonNullable<ReactQueryModalProps["onTabChange"]>;
 export function ReactQueryDevToolsModal({
   visible,
   onClose,
+  onMinimize,
   enableSharedModalDimensions = true,
 }: ReactQueryDevToolsModalProps) {
   const [selectedQueryKey, setSelectedQueryKey] = useState<QueryKey | undefined>(
@@ -90,6 +93,7 @@ export function ReactQueryDevToolsModal({
       onQuerySelect={handleQuerySelect}
       onMutationSelect={handleMutationSelect}
       onClose={handleClose}
+      onMinimize={onMinimize}
       activeFilter={activeFilter}
       onFilterChange={handleFilterChange}
       activeTab={activeTab}

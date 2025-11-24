@@ -263,22 +263,26 @@ export const useAppHost = () => {
 /**
  * Renders a single app instance. Keeps component mounted even when minimized
  * by passing visible={false} instead of unmounting.
+ *
+ * Supports multiple simultaneous modals - each gets its own z-index based on
+ * position in the open apps stack (later opened = higher z-index).
  */
 const AppRenderer = ({
   app,
-  isTopVisible,
+  zIndex,
   onClose,
   onMinimize,
   minimizeTargetPosition,
 }: {
   app: AppInstance;
-  isTopVisible: boolean;
+  zIndex: number;
   onClose: () => void;
   onMinimize: (modalState?: ModalRestoreState) => void;
   minimizeTargetPosition: { x: number; y: number };
 }) => {
   const Comp = app.component as any;
-  const isVisible = !app.minimized && isTopVisible;
+  // All non-minimized apps are visible - supports multiple simultaneous modals
+  const isVisible = !app.minimized;
 
   if (app.launchMode === "self-modal") {
     return (
@@ -291,6 +295,7 @@ const AppRenderer = ({
         minimizeTargetPosition={minimizeTargetPosition}
         initialModalState={app.restoreState}
         instanceId={app.instanceId}
+        zIndex={zIndex}
       />
     );
   }
@@ -298,7 +303,7 @@ const AppRenderer = ({
   if (app.launchMode === "inline") {
     if (!isVisible) return null;
     return (
-      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex }]}>
         <Comp
           {...(app.props ?? {})}
           onClose={onClose}
@@ -338,6 +343,9 @@ const AppRenderer = ({
 /**
  * Renders all dev tool surfaces. Keeps minimized apps mounted but hidden
  * so their state and listeners are preserved (similar to React Navigation screens).
+ *
+ * Supports multiple simultaneous modals - each modal gets a z-index based on
+ * its position in the stack (later opened modals appear on top).
  */
 export const AppOverlay = () => {
   const { openApps, close, minimize } = useAppHost();
@@ -353,17 +361,23 @@ export const AppOverlay = () => {
 
   if (renderableApps.length === 0) return null;
 
-  // Find the top visible (non-minimized) app
-  const visibleApps = renderableApps.filter((app) => !app.minimized);
-  const topVisibleApp = visibleApps[visibleApps.length - 1];
+  // Base z-index for modals - each subsequent modal gets +1
+  const BASE_ZINDEX = 9000;
 
   return (
     <>
-      {renderableApps.map((app) => {
-        const isTopVisible = topVisibleApp?.instanceId === app.instanceId;
+      {renderableApps.map((app, index) => {
+        // z-index based on position - later in array = higher z-index (on top)
+        const zIndex = BASE_ZINDEX + index;
         const minimizeTargetPosition = getNextIconPosition();
 
         const handleMinimize = (modalState?: ModalRestoreState) => {
+          // IMPORTANT: Order matters here!
+          // 1. First mark the app as minimized in AppHost - this updates isAnyOpen
+          //    so that pushToSide becomes false before the icon component mounts
+          minimize(app.instanceId);
+          // 2. Then add to the minimized stack - this triggers the icon to mount
+          //    By now isAnyOpen is false, so the icon mounts with pushToSide=false
           addToMinimizedStack({
             instanceId: app.instanceId,
             id: app.id,
@@ -372,14 +386,13 @@ export const AppOverlay = () => {
             color: app.color,
             modalState: modalState,
           });
-          minimize(app.instanceId);
         };
 
         return (
           <AppRenderer
             key={app.instanceId}
             app={app}
-            isTopVisible={isTopVisible}
+            zIndex={zIndex}
             onClose={() => close(app.instanceId)}
             onMinimize={handleMinimize}
             minimizeTargetPosition={minimizeTargetPosition}

@@ -177,6 +177,8 @@ interface JsModalProps {
   minimizeTargetPosition?: { x: number; y: number };
   /** Initial modal state to restore from (when restoring from minimized) */
   initialModalState?: ModalState;
+  /** z-index for stacking multiple modals (higher = on top) */
+  zIndex?: number;
 }
 
 // ============================================================================
@@ -466,6 +468,7 @@ const JsModalComponent: FC<JsModalProps> = ({
   onMinimize,
   minimizeTargetPosition,
   initialModalState,
+  zIndex,
 }) => {
   const insets = useSafeAreaInsets();
   const [isStateLoaded, setIsStateLoaded] = useState(!enablePersistence);
@@ -1327,6 +1330,7 @@ const JsModalComponent: FC<JsModalProps> = ({
               { translateX: floatingPosition.x },
               { translateY: floatingPosition.y },
             ],
+            ...(zIndex !== undefined && { zIndex }),
           },
           (isDragging || isResizing) && styles.floatingModalDragging,
           customStyles.container,
@@ -1407,7 +1411,7 @@ const JsModalComponent: FC<JsModalProps> = ({
 
   // Render bottom sheet mode with proper height animation
   return (
-    <View style={styles.fullScreenContainer} pointerEvents="box-none">
+    <View style={[styles.fullScreenContainer, zIndex !== undefined && { zIndex }]} pointerEvents="box-none">
       <Animated.View
         nativeID="jsmodal-root"
         style={[
