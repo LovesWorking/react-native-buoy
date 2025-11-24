@@ -191,6 +191,10 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
 
         // Only open modal if not a toggle-only tool
         if (app.launchMode !== "toggle-only") {
+          const resolvedIcon =
+            typeof app.icon === "function"
+              ? app.icon({ slot: "dial", size: 20 })
+              : app.icon;
           open({
             id: app.id,
             title: app.name,
@@ -198,6 +202,8 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
             props: app.props,
             launchMode: app.launchMode ?? "self-modal",
             singleton: app.singleton ?? true,
+            icon: resolvedIcon,
+            color: app.color,
           });
         }
 

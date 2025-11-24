@@ -87,6 +87,10 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
         (app: any) => app.id === appId
       );
       if (appDef) {
+        const resolvedIcon =
+          typeof appDef.icon === "function"
+            ? appDef.icon({ slot: "dial", size: 20 })
+            : appDef.icon;
         open({
           id: appDef.id,
           title: appDef.name,
@@ -94,6 +98,8 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
           props: appDef.props,
           launchMode: appDef.launchMode || "self-modal",
           singleton: appDef.singleton,
+          icon: resolvedIcon,
+          color: appDef.color,
         });
       }
     });
