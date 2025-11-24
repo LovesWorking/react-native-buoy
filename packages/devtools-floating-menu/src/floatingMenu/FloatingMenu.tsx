@@ -291,7 +291,18 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
                 onPress={() => handlePress(app)}
                 style={styles.fab}
               >
-  {(() => {
+  {/*
+                   * ⚠️ IMPORTANT - DO NOT CHANGE THIS RENDERING PATTERN ⚠️
+                   * Icons MUST be rendered as JSX components (<IconComponent />),
+                   * NOT called as functions (app.icon({...})).
+                   *
+                   * This allows icon components to use React hooks (useState, useEffect)
+                   * for subscribing to state changes (e.g., WiFi toggle subscribing to onlineManager).
+                   *
+                   * If you change this to call icons as functions, hooks will break and
+                   * dynamic icon updates (like WiFi color changing) will stop working.
+                   */}
+                {(() => {
                   if (typeof app.icon === "function") {
                     const IconComponent = app.icon;
                     return (

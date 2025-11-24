@@ -51,7 +51,7 @@ import { useHintsDisabled } from "./context";
 const SCREEN = Dimensions.get("window");
 const MIN_HEIGHT = 100;
 const DEFAULT_HEIGHT = 400;
-const FLOATING_WIDTH = 380;
+const FLOATING_WIDTH = SCREEN.width; // Full width
 const FLOATING_HEIGHT = 500;
 const FLOATING_MIN_WIDTH = SCREEN.width * 0.25; // 1/4 of screen width
 const FLOATING_MIN_HEIGHT = 80; // Just a bit more than header height (60px header + 20px content)
@@ -480,7 +480,7 @@ const JsModalComponent: FC<JsModalProps> = ({
     width: FLOATING_WIDTH,
     height: FLOATING_HEIGHT,
     top: (SCREEN.height - FLOATING_HEIGHT) / 2,
-    left: (SCREEN.width - FLOATING_WIDTH) / 2,
+    left: 0, // Flush with left edge
   });
   const [containerBounds] = useState({
     width: SCREEN.width,
@@ -551,7 +551,7 @@ const JsModalComponent: FC<JsModalProps> = ({
   // Floating mode animations - use initialFloatingPosition if provided
   const floatingPosition = useRef(
     new Animated.ValueXY({
-      x: initialFloatingPosition?.x ?? (SCREEN.width - FLOATING_WIDTH) / 2,
+      x: initialFloatingPosition?.x ?? 0, // Flush with left edge
       y: initialFloatingPosition?.y ?? (SCREEN.height - FLOATING_HEIGHT) / 2,
     })
   ).current;

@@ -35,11 +35,32 @@ const saveWifiState = async (enabled: boolean) => {
   }
 };
 
-// Simple WiFi icon component - reads current state directly without hooks
-// This is called as a function in the dial, not rendered as JSX, so it cannot use hooks
+import { useState, useEffect } from "react";
+
+/**
+ * WiFi icon component - uses hooks to subscribe to onlineManager changes.
+ *
+ * ⚠️ IMPORTANT - DO NOT MODIFY THIS COMPONENT ⚠️
+ * This component MUST use useState and useEffect hooks to subscribe to onlineManager.
+ * It is rendered as a JSX component (<IconComponent />) in FloatingMenu and DialIcon,
+ * which allows hooks to work properly.
+ *
+ * If you remove the hooks or change this to read onlineManager.isOnline() directly,
+ * the icon color will NOT update when the WiFi toggle is pressed.
+ *
+ * See: FloatingMenu.tsx (renders as <IconComponent />)
+ * See: DialIcon.tsx (renders as <icon.iconComponent />)
+ */
 function WifiIcon({ size }: { size: number }) {
-  // Read current state directly - the icon will re-render when the dial re-renders
-  const isOnline = onlineManager.isOnline();
+  const [isOnline, setIsOnline] = useState(() => onlineManager.isOnline());
+
+  useEffect(() => {
+    const unsubscribe = onlineManager.subscribe((online) => {
+      setIsOnline(online);
+    });
+    return unsubscribe;
+  }, []);
+
   const color = isOnline ? "#10B981" : "#DC2626";
   return <Wifi size={size} color={color} />;
 }
@@ -177,9 +198,23 @@ export function createWifiToggleTool(options?: {
   const onColor = options?.onColor || "#10B981";
   const offColor = options?.offColor || "#DC2626";
 
-  // Simple icon component without hooks - called as a function, not rendered as JSX
+  /**
+   * Custom WiFi icon component with hooks - rendered as JSX component.
+   *
+   * ⚠️ IMPORTANT - DO NOT MODIFY THIS COMPONENT ⚠️
+   * This component MUST use useState and useEffect hooks to subscribe to onlineManager.
+   * See the comment on WifiIcon above for full explanation.
+   */
   const CustomWifiIcon = ({ size }: { size: number }) => {
-    const isOnline = onlineManager.isOnline();
+    const [isOnline, setIsOnline] = useState(() => onlineManager.isOnline());
+
+    useEffect(() => {
+      const unsubscribe = onlineManager.subscribe((online) => {
+        setIsOnline(online);
+      });
+      return unsubscribe;
+    }, []);
+
     return <Wifi size={size} color={isOnline ? onColor : offColor} />;
   };
 
