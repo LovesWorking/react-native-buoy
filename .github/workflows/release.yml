@@ -46,14 +46,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: pnpm run build:packages
+
       - name: Lint
         run: pnpm run lint
 
       - name: Typecheck
         run: pnpm run typecheck
-
-      - name: Build packages
-        run: pnpm run build:packages
 
       - name: Smoke tests
         run: pnpm run smoke
