@@ -285,8 +285,8 @@ importers:
   packages/debug-borders:
     dependencies:
       '@react-buoy/core':
-        specifier: '*'
-        version: 1.5.13(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+        specifier: workspace:*
+        version: link:../devtools-floating-menu
       '@react-buoy/shared-ui':
         specifier: workspace:*
         version: link:../shared
@@ -381,9 +381,6 @@ importers:
 
   packages/react-query:
     dependencies:
-      '@react-buoy/core':
-        specifier: '*'
-        version: 1.5.13(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@react-buoy/shared-ui':
         specifier: workspace:*
         version: link:../shared
@@ -2057,18 +2054,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  '@react-buoy/core@1.5.13':
-    resolution: {integrity: sha512-BVkd+0X9BhB+yABSyHD+7YJ1+9RSUUnKPPGab3UcGkGZaYGHv+I34inWFgqi8iMhU7jlPWeThiB3Sr5sjOfdVQ==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-
-  '@react-buoy/shared-ui@1.5.13':
-    resolution: {integrity: sha512-WYnel7ZJsolnzVnqQkjxFY4up2CaD5qglGGiQmt9F6kuzjf7qERvRYShTiKH93lqF0uI4ShywKLro6XQYmU3Rg==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
 
   '@react-native-async-storage/async-storage@2.2.0':
     resolution: {integrity: sha512-gvRvjR5JAaUZF8tv2Kcq/Gbt3JHwbKFYfmb445rhOj6NUMx3qPLixmDx5pZAyb9at1bYvJ4/eTUipU5aki45xw==}
@@ -8921,17 +8906,6 @@ snapshots:
       react: 19.1.0
     optionalDependencies:
       '@types/react': 19.1.17
-
-  '@react-buoy/core@1.5.13(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
-    dependencies:
-      '@react-buoy/shared-ui': 1.5.13(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      react: 19.1.0
-      react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
-
-  '@react-buoy/shared-ui@1.5.13(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
-    dependencies:
-      react: 19.1.0
-      react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
 
   '@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
     dependencies:

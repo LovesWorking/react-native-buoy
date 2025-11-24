@@ -5,12 +5,10 @@
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "lib/typescript/module/index.d.ts",
-  "react-native": "src/index.ts",
-  "source": "src/index.ts",
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "react-native": "./src/index.ts",
+      "react-native": "./lib/commonjs/index.js",
       "import": {
         "default": "./lib/module/index.js",
         "types": "./lib/typescript/module/index.d.ts"
@@ -22,7 +20,7 @@
     },
     "./ui": {
       "source": "./src/ui/index.ts",
-      "react-native": "./src/ui/index.ts",
+      "react-native": "./lib/commonjs/ui/index.js",
       "import": {
         "default": "./lib/module/ui/index.js",
         "types": "./lib/typescript/module/ui/index.d.ts"
@@ -34,7 +32,7 @@
     },
     "./hooks": {
       "source": "./src/hooks/index.ts",
-      "react-native": "./src/hooks/index.ts",
+      "react-native": "./lib/commonjs/hooks/index.js",
       "import": {
         "default": "./lib/module/hooks/index.js",
         "types": "./lib/typescript/module/hooks/index.d.ts"
@@ -46,7 +44,7 @@
     },
     "./utils": {
       "source": "./src/utils/index.ts",
-      "react-native": "./src/utils/index.ts",
+      "react-native": "./lib/commonjs/utils/index.js",
       "import": {
         "default": "./lib/module/utils/index.js",
         "types": "./lib/typescript/module/utils/index.d.ts"
@@ -58,7 +56,7 @@
     },
     "./dataViewer": {
       "source": "./src/dataViewer/index.ts",
-      "react-native": "./src/dataViewer/index.ts",
+      "react-native": "./lib/commonjs/dataViewer/index.js",
       "import": {
         "default": "./lib/module/dataViewer/index.js",
         "types": "./lib/typescript/module/dataViewer/index.d.ts"
@@ -105,7 +103,7 @@
   "scripts": {
     "build": "bob build",
     "typecheck": "tsc --noEmit",
-    "prepare": "bob build",
+    "prepublishOnly": "bob build",
     "clean": "rimraf lib",
     "test": "pnpm run typecheck"
   },
