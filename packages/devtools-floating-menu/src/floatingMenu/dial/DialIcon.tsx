@@ -137,8 +137,8 @@ export const DialIcon: FC<Props> = ({
     ],
   };
 
-  // Check if this is an empty spot
-  const isEmpty = icon.icon === null;
+  // Check if this is an empty spot (no icon and no iconComponent)
+  const isEmpty = icon.icon === null && !icon.iconComponent;
 
   return (
     <Animated.View style={[styles.view, animatedStyle]}>
@@ -174,8 +174,27 @@ export const DialIcon: FC<Props> = ({
             ]}
           />
 
-          {/* Icon */}
-          <View style={styles.iconWrapper}>{icon.icon}</View>
+          {/*
+           * ⚠️ IMPORTANT - DO NOT CHANGE THIS RENDERING PATTERN ⚠️
+           * Icons with iconComponent MUST be rendered as JSX components,
+           * NOT called as plain functions and stored.
+           *
+           * This allows icon components to use React hooks (useState, useEffect)
+           * for subscribing to state changes (e.g., WiFi toggle subscribing to onlineManager).
+           *
+           * If you pre-render icons as functions and store the result, hooks will break and
+           * dynamic icon updates (like WiFi color changing) will stop working.
+           */}
+          <View style={styles.iconWrapper}>
+            {icon.iconComponent ? (
+              (() => {
+                const IconComp = icon.iconComponent!;
+                return <IconComp slot="dial" size={32} />;
+              })()
+            ) : (
+              icon.icon
+            )}
+          </View>
 
           {/* Label */}
           <Text style={styles.label}>{icon.name.toUpperCase()}</Text>

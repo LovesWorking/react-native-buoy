@@ -46,7 +46,7 @@ export function BubbleSettingsModal({
               subtitle="Configure visibility"
               centered
             />
-            <ModalHeader.Actions onClose={onClose} />
+            <ModalHeader.Actions />
           </ModalHeader>
         ),
       }}

@@ -14,6 +14,7 @@ interface MutationEditorModalProps {
   selectedMutationId?: number;
   onMutationSelect: (mutation: Mutation | undefined) => void;
   onClose: () => void;
+  onMinimize?: (modalState: any) => void;
   onTabChange: (tab: "queries" | "mutations") => void;
   enableSharedModalDimensions?: boolean;
 }
@@ -27,6 +28,7 @@ export function MutationEditorModal({
   selectedMutationId,
   onMutationSelect,
   onClose,
+  onMinimize,
   onTabChange,
   enableSharedModalDimensions = false,
 }: MutationEditorModalProps) {
@@ -43,7 +45,6 @@ export function MutationEditorModal({
       activeTab="mutations"
       onTabChange={onTabChange}
       onBack={() => onMutationSelect(undefined)}
-      onClose={onClose}
     />
   );
 
@@ -57,6 +58,7 @@ export function MutationEditorModal({
     <JsModal
       visible={visible}
       onClose={onClose}
+      onMinimize={onMinimize}
       persistenceKey={storagePrefix}
       header={{
         customContent: renderHeaderContent(),

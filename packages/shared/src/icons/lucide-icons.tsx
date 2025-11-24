@@ -1097,6 +1097,89 @@ export const Minus = ({
   </Svg>
 );
 
+export const Maximize2 = ({
+  size = 24,
+  color = "currentColor",
+  strokeWidth = 2,
+  ...props
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" {...props}>
+    {/* Top-left corner */}
+    <Line x1={5} y1={9} x2={5} y2={5} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={5} y1={5} x2={9} y2={5} stroke={color} strokeWidth={strokeWidth} />
+    {/* Top-right corner */}
+    <Line x1={15} y1={5} x2={19} y2={5} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={19} y1={5} x2={19} y2={9} stroke={color} strokeWidth={strokeWidth} />
+    {/* Bottom-left corner */}
+    <Line x1={5} y1={15} x2={5} y2={19} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={5} y1={19} x2={9} y2={19} stroke={color} strokeWidth={strokeWidth} />
+    {/* Bottom-right corner */}
+    <Line x1={15} y1={19} x2={19} y2={19} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={19} y1={19} x2={19} y2={15} stroke={color} strokeWidth={strokeWidth} />
+  </Svg>
+);
+
+/**
+ * Icon showing a rectangle docked to the bottom - indicates "dock to bottom sheet"
+ * Used when modal is floating and clicking will dock it to bottom
+ */
+export const DockBottom = ({
+  size = 24,
+  color = "currentColor",
+  strokeWidth = 2,
+  ...props
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" {...props}>
+    {/* Outer rectangle frame */}
+    <Rect
+      x={3}
+      y={3}
+      width={18}
+      height={18}
+      rx={2}
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    {/* Bottom panel indicator - filled rectangle at bottom */}
+    <Rect
+      x={3}
+      y={14}
+      width={18}
+      height={7}
+      fill={color}
+    />
+  </Svg>
+);
+
+/**
+ * Icon showing a floating window with offset shadow - indicates "make floating"
+ * Used when modal is bottom sheet and clicking will make it float
+ */
+export const FloatWindow = ({
+  size = 24,
+  color = "currentColor",
+  strokeWidth = 2,
+  ...props
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" {...props}>
+    {/* Main floating window */}
+    <Rect
+      x={3}
+      y={3}
+      width={14}
+      height={14}
+      rx={2}
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    {/* Shadow/offset indicator showing it's floating */}
+    <Line x1={7} y1={17} x2={7} y2={21} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={7} y1={21} x2={21} y2={21} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={21} y1={21} x2={21} y2={7} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={17} y1={7} x2={21} y2={7} stroke={color} strokeWidth={strokeWidth} />
+  </Svg>
+);
+
 export const Palette = ({
   size = 24,
   color = "currentColor",
@@ -1821,6 +1904,7 @@ export const HashIcon = Hash; // Uses optimized version
 export const InfoIcon = Info; // Uses optimized version
 export const KeyIcon = Key; // Uses optimized version
 export const LayersIcon = Layers; // Uses optimized version
+export const Maximize2Icon = Maximize2; // Uses optimized version
 export const MinusIcon = Minus; // Uses optimized version
 export const PaletteIcon = Palette; // Uses optimized version
 export const PauseIcon = Pause; // Uses optimized version

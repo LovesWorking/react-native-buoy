@@ -207,13 +207,15 @@ export function NetworkEventDetailView({
       status: event.status,
       statusText: event.statusText,
       timestamp: new Date(event.timestamp).toISOString(),
-      duration: event.duration ? `${event.duration}ms` : 'N/A',
+      duration: event.duration ? `${event.duration}ms` : "N/A",
       requestHeaders: event.requestHeaders,
       requestData: event.requestData,
       responseHeaders: event.responseHeaders,
       responseData: event.responseData,
-      requestSize: event.requestSize ? formatBytes(event.requestSize) : 'N/A',
-      responseSize: event.responseSize ? formatBytes(event.responseSize) : 'N/A',
+      requestSize: event.requestSize ? formatBytes(event.requestSize) : "N/A",
+      responseSize: event.responseSize
+        ? formatBytes(event.responseSize)
+        : "N/A",
       error: event.error,
       client: event.requestClient,
     };
@@ -223,15 +225,17 @@ export function NetworkEventDetailView({
 ## Request
 - **Method:** ${requestDetails.method}
 - **URL:** ${requestDetails.url}
-- **Client:** ${requestDetails.client || 'N/A'}
+- **Client:** ${requestDetails.client || "N/A"}
 - **Timestamp:** ${requestDetails.timestamp}
 
 ## Response
-- **Status:** ${requestDetails.status || 'Pending'}${requestDetails.statusText ? ` (${requestDetails.statusText})` : ''}
+- **Status:** ${requestDetails.status || "Pending"}${
+      requestDetails.statusText ? ` (${requestDetails.statusText})` : ""
+    }
 - **Duration:** ${requestDetails.duration}
 - **Request Size:** ${requestDetails.requestSize}
 - **Response Size:** ${requestDetails.responseSize}
-${requestDetails.error ? `- **Error:** ${requestDetails.error}` : ''}
+${requestDetails.error ? `- **Error:** ${requestDetails.error}` : ""}
 
 ## Request Headers
 \`\`\`json
@@ -288,7 +292,10 @@ ${JSON.stringify(requestDetails.responseData, null, 2)}
               </Text>
             </View>
           ) : null}
-          <InlineCopyButton value={getFullRequestDetails()} buttonStyle={styles.copyFullButton} />
+          <InlineCopyButton
+            value={getFullRequestDetails()}
+            buttonStyle={styles.copyFullButton}
+          />
         </View>
 
         <UrlBreakdown

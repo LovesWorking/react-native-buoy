@@ -107,7 +107,6 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   // Subscribe to toggle state changes to update icon colors
   useEffect(() => {
     const unsubscribe = toggleStateManager.subscribe(() => {
-      // Force re-render when any toggle state changes
       forceUpdate((prev) => prev + 1);
     });
     return unsubscribe;
@@ -150,6 +149,7 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
       closeMenu: () => setShowDial(false),
       hideFloatingRow: () => setInternalHidden(true),
       showFloatingRow: () => setInternalHidden(false),
+      notifyToggleChange: () => forceUpdate((prev) => prev + 1),
     } as FloatingMenuActions;
   }, [actions]);
 
@@ -171,11 +171,17 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   // Dial is the default/only layout
 
   const handlePress = (app: InstalledApp) => {
-    // Call the app's onPress callback if provided
-    app?.onPress?.();
+    // Call the app's onPress callback if provided, passing actions for toggle tools
+    app?.onPress?.(mergedActions);
 
     // Only open modal if not a toggle-only tool
     if (app.launchMode !== "toggle-only") {
+      // Resolve the icon for minimize stack display
+      const resolvedIcon =
+        typeof app.icon === "function"
+          ? app.icon({ slot: "dial", size: 20 })
+          : app.icon;
+
       open({
         id: app.id,
         title: app.name,
@@ -183,6 +189,8 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
         props: app.props,
         launchMode: app.launchMode ?? "self-modal",
         singleton: app.singleton ?? true,
+        icon: resolvedIcon,
+        color: app.color,
       });
     }
   };
@@ -283,14 +291,31 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
                 onPress={() => handlePress(app)}
                 style={styles.fab}
               >
-                {typeof app.icon === "function"
-                  ? app.icon({
-                      slot: "row",
-                      size: 16,
-                      state,
-                      actions: mergedActions,
-                    })
-                  : app.icon}
+  {/*
+                   * ⚠️ IMPORTANT - DO NOT CHANGE THIS RENDERING PATTERN ⚠️
+                   * Icons MUST be rendered as JSX components (<IconComponent />),
+                   * NOT called as functions (app.icon({...})).
+                   *
+                   * This allows icon components to use React hooks (useState, useEffect)
+                   * for subscribing to state changes (e.g., WiFi toggle subscribing to onlineManager).
+                   *
+                   * If you change this to call icons as functions, hooks will break and
+                   * dynamic icon updates (like WiFi color changing) will stop working.
+                   */}
+                {(() => {
+                  if (typeof app.icon === "function") {
+                    const IconComponent = app.icon;
+                    return (
+                      <IconComponent
+                        slot="row"
+                        size={16}
+                        state={state}
+                        actions={mergedActions}
+                      />
+                    );
+                  }
+                  return app.icon;
+                })()}
               </TouchableOpacity>
             ))}
         </FloatingTools>

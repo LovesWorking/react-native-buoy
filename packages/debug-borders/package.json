@@ -23,6 +23,7 @@
     "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
+    "@react-buoy/core": "*",
     "react": "*",
     "react-native": "*"
   },

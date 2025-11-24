@@ -11,7 +11,6 @@ interface ReactQueryModalHeaderProps {
   activeTab: "queries" | "mutations";
   onTabChange: (tab: "queries" | "mutations") => void;
   onBack: () => void;
-  onClose?: () => void;
   searchText?: string;
   onSearchChange?: (text: string) => void;
   onFilterPress?: () => void;
@@ -28,7 +27,6 @@ export function ReactQueryModalHeader({
   activeTab,
   onTabChange,
   onBack,
-  onClose,
   searchText = "",
   onSearchChange,
   onFilterPress,
@@ -95,7 +93,7 @@ export function ReactQueryModalHeader({
   if (selectedQuery || selectedMutation) {
     return (
       <ModalHeader>
-        <ModalHeader.Navigation onBack={onBack} onClose={onClose} />
+        <ModalHeader.Navigation onBack={onBack} />
         <ModalHeader.Content
           title={getItemText(selectedQuery ?? selectedMutation!)}
         />
@@ -146,36 +144,34 @@ export function ReactQueryModalHeader({
           />
         )}
       </ModalHeader.Content>
-      {onClose && (
-        <ModalHeader.Actions onClose={onClose}>
+      <ModalHeader.Actions>
+        <TouchableOpacity
+          sentry-label="ignore open search"
+          onPress={handleSearchToggle}
+          style={styles.headerActionButton}
+        >
+          <Search size={14} color={macOSColors.text.secondary} />
+        </TouchableOpacity>
+        {onFilterPress && (
           <TouchableOpacity
-            sentry-label="ignore open search"
-            onPress={handleSearchToggle}
-            style={styles.headerActionButton}
+            sentry-label="ignore open filter"
+            onPress={onFilterPress}
+            style={[
+              styles.headerActionButton,
+              hasActiveFilters && styles.activeFilterButton,
+            ]}
           >
-            <Search size={14} color={macOSColors.text.secondary} />
+            <Filter
+              size={14}
+              color={
+                hasActiveFilters
+                  ? macOSColors.semantic.info
+                  : macOSColors.text.secondary
+              }
+            />
           </TouchableOpacity>
-          {onFilterPress && (
-            <TouchableOpacity
-              sentry-label="ignore open filter"
-              onPress={onFilterPress}
-              style={[
-                styles.headerActionButton,
-                hasActiveFilters && styles.activeFilterButton,
-              ]}
-            >
-              <Filter
-                size={14}
-                color={
-                  hasActiveFilters
-                    ? macOSColors.semantic.info
-                    : macOSColors.text.secondary
-                }
-              />
-            </TouchableOpacity>
-          )}
-        </ModalHeader.Actions>
-      )}
+        )}
+      </ModalHeader.Actions>
     </ModalHeader>
   );
 }

@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback, ReactNode } from "react";
 import { View, StyleSheet } from "react-native";
-import { AppHostProvider } from "./AppHost";
+import { AppHostProvider, useAppHost } from "./AppHost";
 import { FloatingMenu, type FloatingMenuProps } from "./FloatingMenu";
 import { AppOverlay } from "./AppHost";
 import {
@@ -10,6 +10,12 @@ import {
 import type { InstalledApp } from "./types";
 import { DevToolsVisibilityProvider } from "./DevToolsVisibilityContext";
 import { HintsProvider } from "@react-buoy/shared-ui";
+import {
+  MinimizedToolsProvider,
+  useMinimizedTools,
+  MinimizedTool,
+} from "./MinimizedToolsContext";
+import { MinimizedToolsStack } from "./MinimizedToolsStack";
 
 /**
  * Environment variable configuration
@@ -238,13 +244,29 @@ export const FloatingDevTools = ({
     }
   }, []);
 
+  // Get tool icon helper for the MinimizedToolsProvider
+  const getToolIcon = useCallback(
+    (id: string): ReactNode => {
+      const tool = finalApps.find((app) => app.id === id);
+      if (!tool) return null;
+      if (typeof tool.icon === "function") {
+        return tool.icon({ slot: "dial", size: 20 });
+      }
+      return tool.icon;
+    },
+    [finalApps]
+  );
+
   return (
     <HintsProvider disableHints={disableHints}>
       <View style={styles.container} pointerEvents="box-none">
         <DevToolsVisibilityProvider>
           <AppHostProvider>
-            <FloatingMenu {...props} apps={finalApps} />
-            <AppOverlay />
+            <MinimizedToolsProvider getToolIcon={getToolIcon}>
+              <FloatingMenu {...props} apps={finalApps} />
+              <AppOverlay />
+              <MinimizedToolsStackConnected apps={finalApps} />
+            </MinimizedToolsProvider>
           </AppHostProvider>
           {children}
           {DebugBordersOverlay && <DebugBordersOverlay />}
@@ -253,6 +275,29 @@ export const FloatingDevTools = ({
     </HintsProvider>
   );
 };
+
+/**
+ * Internal component that connects MinimizedToolsStack to AppHost
+ * Must be rendered inside both AppHostProvider and MinimizedToolsProvider
+ */
+function MinimizedToolsStackConnected({ apps }: { apps: InstalledApp[] }) {
+  const { restore: restoreInAppHost, isAnyOpen } = useAppHost();
+
+  const handleRestore = useCallback(
+    (tool: MinimizedTool) => {
+      // Restore the tool in AppHost with saved modal state
+      restoreInAppHost(tool.instanceId, tool.modalState);
+    },
+    [restoreInAppHost]
+  );
+
+  return (
+    <MinimizedToolsStack
+      onRestore={handleRestore}
+      pushToSide={isAnyOpen}
+    />
+  );
+}
 
 const styles = StyleSheet.create({
   container: {

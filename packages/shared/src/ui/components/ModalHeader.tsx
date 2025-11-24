@@ -4,6 +4,7 @@ import { ChevronLeft, X } from "../../icons";
 import { gameUIColors } from "../gameUI";
 
 // Base ModalHeader container component
+// Note: onClose and onMinimize are now handled by WindowControls in JsModal
 interface ModalHeaderProps {
   children: ReactNode;
 }
@@ -20,7 +21,7 @@ interface NavigationProps {
   closeIcon?: ReactNode;
 }
 
-function Navigation({ onBack, onClose, backIcon, closeIcon }: NavigationProps) {
+export function Navigation({ onBack, onClose, backIcon, closeIcon }: NavigationProps) {
   // When only showing close button, position it on the right
   if (!onBack && onClose) {
     return (
@@ -64,7 +65,7 @@ interface ContentProps {
   noMargin?: boolean;
 }
 
-function Content({
+export function Content({
   title,
   subtitle,
   children,
@@ -109,24 +110,19 @@ function Content({
 }
 
 // Actions component for header action buttons
+// Note: onClose and onMinimize are now handled by WindowControls in JsModal
 interface ActionsProps {
   children?: ReactNode;
-  onClose?: () => void;
-  closeIcon?: ReactNode;
 }
 
-function Actions({ children, onClose, closeIcon }: ActionsProps) {
+export function Actions({ children }: ActionsProps) {
   return (
     <View style={styles.headerActions}>
       {children}
-      {onClose && (
-        <TouchableOpacity onPress={onClose} style={styles.navigationButton}>
-          {closeIcon || <X size={20} color={gameUIColors.secondary} />}
-        </TouchableOpacity>
-      )}
     </View>
   );
 }
+Actions.displayName = "ModalHeaderActions";
 
 // Attach sub-components to the main component
 ModalHeader.Navigation = Navigation;

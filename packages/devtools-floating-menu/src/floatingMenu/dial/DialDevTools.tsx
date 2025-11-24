@@ -40,6 +40,14 @@ export type IconType = {
   id?: string; // optional; used for special behaviors like wifi toggle
   name: string;
   icon: ReactNode;
+  /**
+   * Original icon component/function for dynamic rendering with hooks.
+   *
+   * ⚠️ IMPORTANT - DO NOT REMOVE THIS PROPERTY ⚠️
+   * This allows DialIcon to render the icon as a JSX component, enabling
+   * React hooks to work (e.g., WiFi toggle subscribing to onlineManager).
+   */
+  iconComponent?: (ctx: { slot?: string; size?: number; state?: FloatingMenuState; actions?: FloatingMenuActions }) => ReactNode;
   color: string;
   onPress: () => void;
 };
@@ -180,17 +188,24 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
     enabledIcons.push({
       id: app.id,
       name: app.name,
+      // Pass both the pre-rendered icon (for non-function icons) and the component (for dynamic rendering)
       icon:
         typeof app.icon === "function"
-          ? app.icon({ slot: "dial", size: 32, state, actions })
+          ? null // Will be rendered dynamically by DialIcon
           : app.icon,
+      // Cast to the expected type - the function signature is compatible at runtime
+      iconComponent: typeof app.icon === "function" ? (app.icon as IconType["iconComponent"]) : undefined,
       color: app.color ?? gameUIColors.primary,
       onPress: () => {
-        // Call the app's onPress callback if provided
-        app?.onPress?.();
+        // Call the app's onPress callback if provided, passing actions for toggle tools
+        app?.onPress?.(actions);
 
         // Only open modal if not a toggle-only tool
         if (app.launchMode !== "toggle-only") {
+          const resolvedIcon =
+            typeof app.icon === "function"
+              ? app.icon({ slot: "dial", size: 20 })
+              : app.icon;
           open({
             id: app.id,
             title: app.name,
@@ -198,6 +213,8 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
             props: app.props,
             launchMode: app.launchMode ?? "self-modal",
             singleton: app.singleton ?? true,
+            icon: resolvedIcon,
+            color: app.color,
           });
         }
 
@@ -569,7 +586,10 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
                       // Open internal settings modal
                       setIsSettingsModalOpen(true);
                       // Dismiss onboarding tooltip when user opens settings
-                      if (showOnboardingTooltip && !onboardingDismissedRef.current) {
+                      if (
+                        showOnboardingTooltip &&
+                        !onboardingDismissedRef.current
+                      ) {
                         handleOnboardingDismiss();
                       }
                       // Also call external handler if provided
@@ -618,7 +638,11 @@ export const DialDevTools: FC<DialDevToolsProps> = ({
 
       {/* Onboarding Tooltip - Shows on first use */}
       <OnboardingTooltip
-        visible={showOnboardingTooltip && !isSettingsModalOpen && !onboardingDismissedRef.current}
+        visible={
+          showOnboardingTooltip &&
+          !isSettingsModalOpen &&
+          !onboardingDismissedRef.current
+        }
         onDismiss={handleOnboardingDismiss}
       />
     </View>

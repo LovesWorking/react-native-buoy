@@ -15,22 +15,13 @@
  * ```
  */
 
-import { ReactQueryIcon, WifiCircuitIcon, Wifi } from "@react-buoy/shared-ui";
+import { ReactQueryIcon, Wifi } from "@react-buoy/shared-ui";
 import { ReactQueryDevToolsModal } from "./react-query/components/ReactQueryDevToolsModal";
 import { onlineManager } from "@tanstack/react-query";
 import { devToolsStorageKeys, safeSetItem } from "@react-buoy/shared-ui";
 
 // Empty component for toggle-only mode
 const EmptyComponent = () => null;
-
-// Get the toggle state manager if available
-let manager: any = null;
-try {
-  const coreModule = require("@react-buoy/core");
-  manager = coreModule.toggleStateManager;
-} catch (e) {
-  // Manager not available, that's ok - icons just won't update
-}
 
 // Save WiFi state to storage
 const saveWifiState = async (enabled: boolean) => {
@@ -44,10 +35,34 @@ const saveWifiState = async (enabled: boolean) => {
   }
 };
 
-// WiFi icon that changes based on online state (no hooks!)
+import { useState, useEffect } from "react";
+
+/**
+ * WiFi icon component - uses hooks to subscribe to onlineManager changes.
+ *
+ * ⚠️ IMPORTANT - DO NOT MODIFY THIS COMPONENT ⚠️
+ * This component MUST use useState and useEffect hooks to subscribe to onlineManager.
+ * It is rendered as a JSX component (<IconComponent />) in FloatingMenu and DialIcon,
+ * which allows hooks to work properly.
+ *
+ * If you remove the hooks or change this to read onlineManager.isOnline() directly,
+ * the icon color will NOT update when the WiFi toggle is pressed.
+ *
+ * See: FloatingMenu.tsx (renders as <IconComponent />)
+ * See: DialIcon.tsx (renders as <icon.iconComponent />)
+ */
 function WifiIcon({ size }: { size: number }) {
-  const isOnline = onlineManager.isOnline();
-  return <Wifi size={size} color={isOnline ? "#10B981" : "#DC2626"} />;
+  const [isOnline, setIsOnline] = useState(() => onlineManager.isOnline());
+
+  useEffect(() => {
+    const unsubscribe = onlineManager.subscribe((online) => {
+      setIsOnline(online);
+    });
+    return unsubscribe;
+  }, []);
+
+  const color = isOnline ? "#10B981" : "#DC2626";
+  return <Wifi size={size} color={color} />;
 }
 
 /**
@@ -147,12 +162,9 @@ export const wifiTogglePreset = {
   props: {},
   launchMode: "toggle-only" as const,
   onPress: () => {
-    const currentState = onlineManager.isOnline();
-    const newState = !currentState;
+    const newState = !onlineManager.isOnline();
     onlineManager.setOnline(newState);
     saveWifiState(newState);
-    // Notify FloatingMenu to re-render and update icon
-    manager?.notify();
   },
 };
 
@@ -186,8 +198,23 @@ export function createWifiToggleTool(options?: {
   const onColor = options?.onColor || "#10B981";
   const offColor = options?.offColor || "#DC2626";
 
+  /**
+   * Custom WiFi icon component with hooks - rendered as JSX component.
+   *
+   * ⚠️ IMPORTANT - DO NOT MODIFY THIS COMPONENT ⚠️
+   * This component MUST use useState and useEffect hooks to subscribe to onlineManager.
+   * See the comment on WifiIcon above for full explanation.
+   */
   const CustomWifiIcon = ({ size }: { size: number }) => {
-    const isOnline = onlineManager.isOnline();
+    const [isOnline, setIsOnline] = useState(() => onlineManager.isOnline());
+
+    useEffect(() => {
+      const unsubscribe = onlineManager.subscribe((online) => {
+        setIsOnline(online);
+      });
+      return unsubscribe;
+    }, []);
+
     return <Wifi size={size} color={isOnline ? onColor : offColor} />;
   };
 
@@ -202,12 +229,9 @@ export function createWifiToggleTool(options?: {
     props: {},
     launchMode: "toggle-only" as const,
     onPress: () => {
-      const currentState = onlineManager.isOnline();
-      const newState = !currentState;
+      const newState = !onlineManager.isOnline();
       onlineManager.setOnline(newState);
       saveWifiState(newState);
-      // Notify FloatingMenu to re-render and update icon
-      manager?.notify();
     },
   };
 }

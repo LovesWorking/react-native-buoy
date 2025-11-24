@@ -20,6 +20,7 @@ interface QueryBrowserModalProps {
   selectedQueryKey?: QueryKey;
   onQuerySelect: (query: Query | undefined) => void;
   onClose: () => void;
+  onMinimize?: (modalState: any) => void;
   activeFilter?: string | null;
   onFilterChange?: (filter: string | null) => void;
   enableSharedModalDimensions?: boolean;
@@ -37,6 +38,7 @@ export function QueryBrowserModal({
   selectedQueryKey,
   onQuerySelect,
   onClose,
+  onMinimize,
   activeFilter: externalActiveFilter,
   onFilterChange: externalOnFilterChange,
   enableSharedModalDimensions = false,
@@ -137,7 +139,6 @@ export function QueryBrowserModal({
               onTabChange={() => {}}
             />
           </ModalHeader.Content>
-          <ModalHeader.Actions onClose={onClose} />
         </ModalHeader>
       );
     }
@@ -149,7 +150,6 @@ export function QueryBrowserModal({
         activeTab="queries"
         onTabChange={onTabChange}
         onBack={() => onQuerySelect(undefined)}
-        onClose={onClose}
         searchText={searchText}
         onSearchChange={onSearchChange}
         onFilterPress={() => setShowFilterView(true)}
@@ -170,6 +170,7 @@ export function QueryBrowserModal({
     <JsModal
       visible={visible}
       onClose={onClose}
+      onMinimize={onMinimize}
       persistenceKey={storagePrefix}
       header={{
         customContent: renderHeaderContent(),

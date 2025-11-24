@@ -12,9 +12,10 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Configuration
-RN_BUOY_ROOT="/Users/austinjohnson/Desktop/rn-buoy"
-WB_MOBILE_APP_ROOT="/Users/austinjohnson/Desktop/wb-mobile-app"
+# Configuration - use dynamic paths based on script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RN_BUOY_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WB_MOBILE_APP_ROOT="$HOME/Desktop/wb-mobile-rn"
 
 # Array of packages to link (package-folder-name:npm-package-name)
 PACKAGES=(

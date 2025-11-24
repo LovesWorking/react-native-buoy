@@ -44,6 +44,7 @@ export interface RouteEventsModalWithTabsProps {
   visible: boolean;
   onClose: () => void;
   onBack?: () => void;
+  onMinimize?: (modalState: any) => void;
   enableSharedModalDimensions?: boolean;
   /**
    * Optional route observer instance. If not provided, uses the default singleton.
@@ -58,6 +59,7 @@ export function RouteEventsModalWithTabs({
   visible,
   onClose,
   onBack,
+  onMinimize,
   enableSharedModalDimensions = false,
   routeObserver = defaultRouteObserver,
 }: RouteEventsModalWithTabsProps) {
@@ -216,9 +218,9 @@ export function RouteEventsModalWithTabs({
     saveFilters();
   }, [ignoredPatterns]);
 
-  // Event listener setup
+  // Event listener setup - keeps capturing even when minimized
   useEffect(() => {
-    if (!visible || !isListening) return;
+    if (!isListening) return;
 
     // Set up event listener
     const unsubscribe = routeObserver.addListener((event) => {
@@ -232,7 +234,7 @@ export function RouteEventsModalWithTabs({
     return () => {
       unsubscribe();
     };
-  }, [visible, isListening, routeObserver]);
+  }, [isListening, routeObserver]);
 
   const handleToggleListening = useCallback(() => {
     setIsListening((prev) => !prev);
@@ -433,6 +435,7 @@ export function RouteEventsModalWithTabs({
     <JsModal
       visible={visible}
       onClose={onClose}
+      onMinimize={onMinimize}
       persistenceKey={persistenceKey}
       header={{
         showToggleButton: true,
@@ -440,7 +443,6 @@ export function RouteEventsModalWithTabs({
           <ModalHeader>
             <ModalHeader.Navigation
               onBack={() => setShowFilters(false)}
-              onClose={onClose}
             />
             <ModalHeader.Content title="Filters" />
           </ModalHeader>
@@ -471,7 +473,7 @@ export function RouteEventsModalWithTabs({
                 onTabChange={(tab: string) => setActiveTab(tab as TabType)}
               />
             </ModalHeader.Content>
-            <ModalHeader.Actions onClose={onClose}>
+            <ModalHeader.Actions>
               {activeTab === "events" && (
                 <>
                   <ToolbarCopyButton

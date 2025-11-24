@@ -66,6 +66,8 @@ All installed tools automatically appear in your floating menu. No config needed
 
 **🔄 Persistent State** – Tools remember their position and state through reloads.
 
+**📍 Minimizable Interface** – Minimize open tools to small floating indicators. Quick-restore with a tap or swipe down to dismiss.
+
 **👥 Team-Friendly** – Same tools everywhere. Onboard new devs in minutes.
 
 **🎨 Beautiful UI** – Draggable menu with modal and bottom-sheet views.
@@ -729,12 +731,13 @@ Quickly find what you need in large payloads:
 </details>
 
 <details>
-<summary><strong>State Persistence</strong></summary>
+<summary><strong>State Persistence & Minimize Feature</strong></summary>
 
 React Buoy remembers:
 
 - Which tools are open
 - Tool positions (if dragged)
+- Minimized vs expanded state
 - User preferences
 
 **Storage Key**: `@apphost_open_apps`
@@ -744,6 +747,23 @@ This means your debugging session survives:
 - ✅ Hot reloads
 - ✅ App restarts
 - ✅ Crash recovery
+
+### Minimize Feature
+
+Keep tools running in the background without cluttering your screen:
+
+1. **Minimize** - Tap the minimize button (−) in any tool's header
+2. **Minimized State** - Tool shrinks to a small floating indicator with its icon
+3. **Restore** - Tap the minimized indicator to restore the full tool
+4. **Dismiss** - Swipe down on the minimized indicator to close the tool completely
+
+**Why minimize?**
+- 👁️ Reduces visual clutter while debugging
+- ⚡ Keeps tools running (e.g., network monitor keeps capturing)
+- 🔄 Quick restore without reloading tool state
+- 🎯 Perfect for monitoring tools you want to keep "in the background"
+
+**Example Use Case**: Minimize the Network monitor while testing your UI, then restore it when you need to check API calls—all captured data is still there.
 
 </details>
 
