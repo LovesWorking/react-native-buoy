@@ -41,6 +41,12 @@ const AppHostContext = createContext<AppHostContextValue | null>(null);
 const STORAGE_KEY_OPEN_APPS = "@react_buoy_open_apps";
 const PERSISTENCE_DELAY = 500;
 
+// Type for persisted app state
+type PersistedAppState = {
+  id: string;
+  minimized: boolean;
+};
+
 /**
  * Provides the floating dev tools application host. Tracks open tool instances, restores
  * persisted state, and exposes imperative helpers used by `FloatingMenu` and friends.
@@ -52,7 +58,7 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
     null
   );
   const installedAppsRef = useRef<any[]>([]);
-  const pendingRestoreRef = useRef<string[] | null>(null);
+  const pendingRestoreRef = useRef<PersistedAppState[] | null>(null);
 
   const open: AppHostContextValue["open"] = useCallback((def) => {
     let resolvedId = "";
@@ -74,15 +80,15 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
     if (isRestored) return;
     if (!installedAppsRef.current.length) return;
 
-    const pendingIds = pendingRestoreRef.current;
-    if (!pendingIds || pendingIds.length === 0) {
+    const pendingApps = pendingRestoreRef.current;
+    if (!pendingApps || pendingApps.length === 0) {
       setIsRestored(true);
       return;
     }
 
     pendingRestoreRef.current = null;
 
-    pendingIds.forEach((appId) => {
+    pendingApps.forEach(({ id: appId, minimized }) => {
       const appDef = installedAppsRef.current.find(
         (app: any) => app.id === appId
       );
@@ -100,6 +106,7 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
           singleton: appDef.singleton,
           icon: resolvedIcon,
           color: appDef.color,
+          minimized: minimized, // Preserve minimized state
         });
       }
     });
@@ -113,11 +120,25 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
       try {
         const saved = await safeGetItem(STORAGE_KEY_OPEN_APPS);
         if (saved) {
-          const savedApps = JSON.parse(saved) as string[];
-          if (savedApps.length) {
-            pendingRestoreRef.current = savedApps;
-            tryRestorePending();
-            return;
+          const parsed = JSON.parse(saved);
+          // Handle both old format (string[]) and new format (PersistedAppState[])
+          let savedApps: PersistedAppState[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (typeof parsed[0] === "string") {
+              // Old format: convert string[] to PersistedAppState[]
+              savedApps = (parsed as string[]).map((id) => ({
+                id,
+                minimized: false,
+              }));
+            } else {
+              // New format: already PersistedAppState[]
+              savedApps = parsed as PersistedAppState[];
+            }
+            if (savedApps.length) {
+              pendingRestoreRef.current = savedApps;
+              tryRestorePending();
+              return;
+            }
           }
         }
       } catch (error) {
@@ -141,8 +162,11 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
 
     // Set new timeout to save
     persistenceTimeoutRef.current = setTimeout(() => {
-      const appIds = openApps.map((app) => app.id);
-      safeSetItem(STORAGE_KEY_OPEN_APPS, JSON.stringify(appIds));
+      const appStates: PersistedAppState[] = openApps.map((app) => ({
+        id: app.id,
+        minimized: app.minimized ?? false,
+      }));
+      safeSetItem(STORAGE_KEY_OPEN_APPS, JSON.stringify(appStates));
     }, PERSISTENCE_DELAY);
 
     return () => {
@@ -352,7 +376,31 @@ export const AppOverlay = () => {
   const {
     minimize: addToMinimizedStack,
     getNextIconPosition,
+    minimizedTools,
   } = useMinimizedTools();
+
+  // Sync restored minimized apps to MinimizedToolsContext
+  // This handles apps that were restored from persistence with minimized=true
+  React.useEffect(() => {
+    openApps.forEach((app) => {
+      if (app.minimized && app.launchMode !== "toggle-only") {
+        // Check if this app is already in the minimized stack
+        const isInStack = minimizedTools.some(
+          (t) => t.instanceId === app.instanceId
+        );
+        if (!isInStack) {
+          // Add to minimized stack (restored from persistence)
+          addToMinimizedStack({
+            instanceId: app.instanceId,
+            id: app.id,
+            title: app.title || app.id,
+            icon: app.icon,
+            color: app.color,
+          });
+        }
+      }
+    });
+  }, [openApps, minimizedTools, addToMinimizedStack]);
 
   // Filter to renderable apps (exclude toggle-only)
   const renderableApps = openApps.filter(
