@@ -1363,6 +1363,7 @@ const JsModalComponent: FC<JsModalProps> = ({
             onClose={onClose}
             onMinimize={onMinimize ? handleMinimize : undefined}
             onToggleMode={toggleMode}
+            mode={mode}
           />
         </View>
 
@@ -1411,7 +1412,10 @@ const JsModalComponent: FC<JsModalProps> = ({
 
   // Render bottom sheet mode with proper height animation
   return (
-    <View style={[styles.fullScreenContainer, zIndex !== undefined && { zIndex }]} pointerEvents="box-none">
+    <View
+      style={[styles.fullScreenContainer, zIndex !== undefined && { zIndex }]}
+      pointerEvents="box-none"
+    >
       <Animated.View
         nativeID="jsmodal-root"
         style={[
@@ -1447,6 +1451,7 @@ const JsModalComponent: FC<JsModalProps> = ({
               onClose={onClose}
               onMinimize={onMinimize ? handleMinimize : undefined}
               onToggleMode={toggleMode}
+              mode={mode}
             />
           </View>
 
@@ -1497,8 +1502,8 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     backgroundColor: gameUIColors.panel, // Game UI panel
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
     borderWidth: 1,
     borderColor: gameUIColors.border,
     shadowColor: gameUIColors.info,
@@ -1516,7 +1521,7 @@ const styles = StyleSheet.create({
   floatingModal: {
     position: "absolute",
     backgroundColor: gameUIColors.panel,
-    borderRadius: 16,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: gameUIColors.border,
     shadowColor: gameUIColors.info,
@@ -1537,8 +1542,8 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   header: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
     backgroundColor: gameUIColors.panel, // Game UI panel color
     minHeight: 56,
     borderWidth: 1,
@@ -1547,18 +1552,18 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
   floatingHeader: {
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   windowControlsContainer: {
     position: "absolute",
-    top: 2,
-    right: 8,
+    top: -12,
+    right: -5,
     zIndex: 10,
   },
   floatingModeHeader: {
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   headerInner: {
     flex: 1,

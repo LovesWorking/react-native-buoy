@@ -12,6 +12,8 @@ import {
   dialColors,
   ChevronLeft,
   ChevronRight,
+  safeGetItem,
+  safeSetItem,
 } from "@react-buoy/shared-ui";
 import { useMinimizedTools, MinimizedTool } from "./MinimizedToolsContext";
 
@@ -27,8 +29,10 @@ const TOOL_ITEM_SIZE = 32; // Size of each tool icon
 const ICON_GAP = 6; // Gap between tool items
 const TOOLBAR_PADDING = 8; // Padding inside the toolbar
 const COLLAPSE_BUTTON_SIZE = 24; // Size of the collapse button
-const BOTTOM_OFFSET = 140; // Distance from bottom
+const BOTTOM_OFFSET = 280; // Distance from bottom (closer to center)
 const RIGHT_MARGIN = 12; // Distance from right edge of screen
+
+const STORAGE_KEY_EXPANDED = "@react_buoy_minimized_stack_expanded";
 
 // ============================================================================
 // Types
@@ -48,14 +52,20 @@ export interface MinimizedToolsStackProps {
 interface CollapsedPeekProps {
   count: number;
   onPress: () => void;
-  animatedValue: Animated.Value;
+  progress: Animated.Value; // 0 = collapsed (peek visible), 1 = expanded (peek hidden)
 }
 
-function CollapsedPeek({ count, onPress, animatedValue }: CollapsedPeekProps) {
-  // Animate from off-screen (positive = right/hidden) to visible (0)
-  const translateX = animatedValue.interpolate({
+function CollapsedPeek({ count, onPress, progress }: CollapsedPeekProps) {
+  // When progress=0 (collapsed): peek is visible (translateX=0, opacity=1)
+  // When progress=1 (expanded): peek is hidden (translateX=positive, opacity=0)
+  const translateX = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, PEEK_WIDTH + 20], // 0 = visible, 1 = hidden off right
+    outputRange: [0, PEEK_WIDTH + 20],
+  });
+
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0.5, 0],
   });
 
   return (
@@ -64,6 +74,7 @@ function CollapsedPeek({ count, onPress, animatedValue }: CollapsedPeekProps) {
         styles.peekContainer,
         {
           transform: [{ translateX }],
+          opacity,
         },
       ]}
     >
@@ -88,14 +99,14 @@ interface ExpandedToolbarProps {
   tools: MinimizedTool[];
   onToolPress: (tool: MinimizedTool) => void;
   onCollapse: () => void;
-  animatedValue: Animated.Value;
+  progress: Animated.Value; // 0 = collapsed (toolbar hidden), 1 = expanded (toolbar visible)
 }
 
 function ExpandedToolbar({
   tools,
   onToolPress,
   onCollapse,
-  animatedValue,
+  progress,
 }: ExpandedToolbarProps) {
   // Breathing animation for the glow effect
   const breatheAnim = useRef(new Animated.Value(0)).current;
@@ -133,10 +144,16 @@ function ExpandedToolbar({
     ICON_GAP +
     COLLAPSE_BUTTON_SIZE;
 
-  // Animate from off-screen (positive = right/hidden) to visible (0)
-  const translateX = animatedValue.interpolate({
+  // When progress=0 (collapsed): toolbar is hidden (translateX=positive, opacity=0)
+  // When progress=1 (expanded): toolbar is visible (translateX=0, opacity=1)
+  const translateX = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, TOOLBAR_WIDTH + RIGHT_MARGIN + 10], // 0 = visible, 1 = hidden off right
+    outputRange: [TOOLBAR_WIDTH + RIGHT_MARGIN + 10, 0],
+  });
+
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0.5, 1],
   });
 
   return (
@@ -146,6 +163,7 @@ function ExpandedToolbar({
         {
           height: toolbarHeight,
           transform: [{ translateX }],
+          opacity,
         },
       ]}
     >
@@ -202,10 +220,11 @@ export function MinimizedToolsStack({
 }: MinimizedToolsStackProps) {
   const { minimizedTools, restore } = useMinimizedTools();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isStateRestored, setIsStateRestored] = useState(false);
 
   const { height: screenHeight } = Dimensions.get("window");
 
-  // Calculate Y position (offset from bottom)
+  // Calculate toolbar height
   const toolbarHeight =
     minimizedTools.length > 0
       ? TOOLBAR_PADDING * 2 +
@@ -215,12 +234,41 @@ export function MinimizedToolsStack({
         COLLAPSE_BUTTON_SIZE
       : PEEK_HEIGHT;
 
-  const yPosition = screenHeight - BOTTOM_OFFSET - toolbarHeight;
+  // Fixed center point for the peek button (from bottom of screen)
+  const peekCenterY = screenHeight - BOTTOM_OFFSET;
 
-  // Animated values: 0 = visible, 1 = hidden
-  const peekAnim = useRef(new Animated.Value(1)).current; // Start hidden
-  const toolbarAnim = useRef(new Animated.Value(1)).current; // Start hidden
+  // Peek button position (top of peek = center - half of peek height)
+  const peekYPosition = peekCenterY - PEEK_HEIGHT / 2;
+
+  // Toolbar position (top of toolbar = center - half of toolbar height)
+  // This centers the toolbar vertically with the peek button
+  const toolbarYPosition = peekCenterY - toolbarHeight / 2;
+
+  // Single progress value: 0 = collapsed (peek visible), 1 = expanded (toolbar visible)
+  const progress = useRef(new Animated.Value(0)).current;
   const hasInitialized = useRef(false);
+
+  // Restore expanded state on mount
+  useEffect(() => {
+    const restoreExpandedState = async () => {
+      try {
+        const saved = await safeGetItem(STORAGE_KEY_EXPANDED);
+        if (saved === "true") {
+          setIsExpanded(true);
+        }
+      } catch {
+        // Ignore errors
+      }
+      setIsStateRestored(true);
+    };
+    restoreExpandedState();
+  }, []);
+
+  // Persist expanded state when it changes
+  useEffect(() => {
+    if (!isStateRestored) return;
+    safeSetItem(STORAGE_KEY_EXPANDED, isExpanded ? "true" : "false");
+  }, [isExpanded, isStateRestored]);
 
   // Handle tool press (restore)
   const handleToolPress = useCallback(
@@ -233,103 +281,55 @@ export function MinimizedToolsStack({
     [restore, onRestore]
   );
 
-  // Expand the toolbar
+  // Expand the toolbar (animate progress from 0 to 1)
   const handleExpand = useCallback(() => {
     setIsExpanded(true);
-    Animated.parallel([
-      // Hide peek
-      Animated.timing(peekAnim, {
-        toValue: 1,
-        duration: ANIMATION_DURATION,
-        useNativeDriver: true,
-      }),
-      // Show toolbar
-      Animated.spring(toolbarAnim, {
-        toValue: 0,
-        tension: 100,
-        friction: 12,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [peekAnim, toolbarAnim]);
+    Animated.spring(progress, {
+      toValue: 1,
+      tension: 65,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [progress]);
 
-  // Collapse the toolbar
+  // Collapse the toolbar (animate progress from 1 to 0)
   const handleCollapse = useCallback(() => {
-    setIsExpanded(false);
-    Animated.parallel([
-      // Hide toolbar
-      Animated.timing(toolbarAnim, {
-        toValue: 1,
-        duration: ANIMATION_DURATION,
-        useNativeDriver: true,
-      }),
-      // Show peek
-      Animated.spring(peekAnim, {
-        toValue: 0,
-        tension: 100,
-        friction: 12,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [peekAnim, toolbarAnim]);
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      // Deferred state update after animation completes
+      setTimeout(() => setIsExpanded(false), 0);
+    });
+  }, [progress]);
 
   // Initialize animation when tools first appear
   useEffect(() => {
+    // Wait for state to be restored before initializing
+    if (!isStateRestored) return;
+
     if (minimizedTools.length > 0 && !hasInitialized.current) {
       hasInitialized.current = true;
-      // Animate peek in (from 1/hidden to 0/visible)
-      Animated.spring(peekAnim, {
-        toValue: 0,
-        tension: 100,
-        friction: 12,
-        useNativeDriver: true,
-      }).start();
+      // Respect restored expanded state
+      if (isExpanded) {
+        // Show toolbar directly (no animation on restore)
+        progress.setValue(1);
+      } else {
+        // Start collapsed (peek visible)
+        progress.setValue(0);
+      }
     } else if (minimizedTools.length === 0) {
       // Reset when all tools are restored
       hasInitialized.current = false;
       setIsExpanded(false);
-      peekAnim.setValue(1);
-      toolbarAnim.setValue(1);
+      progress.setValue(0);
     }
-  }, [minimizedTools.length, peekAnim, toolbarAnim]);
+  }, [minimizedTools.length, progress, isStateRestored, isExpanded]);
 
   // Handle pushToSide prop (hide everything when modal is open)
-  useEffect(() => {
-    if (minimizedTools.length === 0) return;
-
-    if (pushToSide) {
-      // Hide both peek and toolbar
-      Animated.parallel([
-        Animated.timing(peekAnim, {
-          toValue: 1,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-        Animated.timing(toolbarAnim, {
-          toValue: 1,
-          duration: ANIMATION_DURATION,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Show appropriate view based on expanded state
-      if (isExpanded) {
-        Animated.spring(toolbarAnim, {
-          toValue: 0,
-          tension: 100,
-          friction: 12,
-          useNativeDriver: true,
-        }).start();
-      } else {
-        Animated.spring(peekAnim, {
-          toValue: 0,
-          tension: 100,
-          friction: 12,
-          useNativeDriver: true,
-        }).start();
-      }
-    }
-  }, [pushToSide, isExpanded, minimizedTools.length, peekAnim, toolbarAnim]);
+  // For now, we just keep the current state - pushToSide can be handled later
+  // The main modal will cover this anyway
 
   // Don't render anything if no minimized tools
   if (minimizedTools.length === 0) {
@@ -337,29 +337,34 @@ export function MinimizedToolsStack({
   }
 
   return (
-    <View
-      style={[styles.container, { top: yPosition }]}
-      pointerEvents="box-none"
-    >
-      {/* Collapsed State - Half Circle Peek (hide when expanded) */}
-      {!isExpanded && (
+    <>
+      {/* Collapsed State - Half Circle Peek */}
+      {/* Always rendered, animation handles visibility */}
+      <View
+        style={[styles.container, { top: peekYPosition }]}
+        pointerEvents={isExpanded ? "none" : "box-none"}
+      >
         <CollapsedPeek
           count={minimizedTools.length}
           onPress={handleExpand}
-          animatedValue={peekAnim}
+          progress={progress}
         />
-      )}
+      </View>
 
       {/* Expanded State - Pill Toolbar */}
-      {isExpanded && (
+      {/* Always rendered, animation handles visibility */}
+      <View
+        style={[styles.container, { top: toolbarYPosition }]}
+        pointerEvents={isExpanded ? "box-none" : "none"}
+      >
         <ExpandedToolbar
           tools={minimizedTools}
           onToolPress={handleToolPress}
           onCollapse={handleCollapse}
-          animatedValue={toolbarAnim}
+          progress={progress}
         />
-      )}
-    </View>
+      </View>
+    </>
   );
 }
 
