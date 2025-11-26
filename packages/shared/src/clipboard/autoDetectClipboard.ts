@@ -1,130 +1,51 @@
-import { loadOptionalModule } from "../utils/loadOptionalModule";
+/**
+ * Auto-detect Clipboard Implementation
+ *
+ * This module re-exports clipboard functionality that was configured
+ * at install time by the postinstall script (scripts/detect-clipboard.js).
+ *
+ * The postinstall script detects which clipboard library is installed:
+ * 1. expo-clipboard (preferred for Expo projects)
+ * 2. @react-native-clipboard/clipboard (for RN CLI projects)
+ * 3. none (graceful degradation)
+ *
+ * This is a TRUE zero-config solution because:
+ * - No metro.config.js changes needed
+ * - Detection happens at install time (not bundle time)
+ * - Metro sees static imports only
+ * - Works with any Metro version
+ */
 
-// Define the clipboard function type locally
-export type ClipboardFunction = (text: string) => Promise<boolean>;
+// Re-export everything from the generated implementation
+export {
+  clipboardFunction,
+  clipboardType,
+  isClipboardAvailable,
+  type ClipboardFunction,
+} from "./clipboard-impl";
 
-// Debug logging removed for production
+// For backwards compatibility, also export these wrapper functions
+import {
+  clipboardFunction,
+  isClipboardAvailable as _isClipboardAvailable,
+} from "./clipboard-impl";
 
-let cachedClipboard: ClipboardFunction | null = null;
-let loadPromise: Promise<ClipboardFunction | null> | null = null;
-let warnedMissing = false;
-
-async function loadClipboard(): Promise<ClipboardFunction | null> {
-  if (cachedClipboard) {
-    return cachedClipboard;
+/**
+ * Attempts to auto-detect and return a clipboard implementation.
+ * Returns null if no clipboard library is available.
+ */
+export function createAutoDetectedClipboard(): typeof clipboardFunction | null {
+  if (_isClipboardAvailable()) {
+    return clipboardFunction;
   }
-
-  if (!loadPromise) {
-    loadPromise = (async () => {
-      // Try expo-clipboard first (common in Expo projects)
-      // Note: We intentionally do NOT provide a custom loader here.
-      // The loadOptionalModule utility uses dynamic require/import via
-      // Function constructor which Metro cannot statically analyze.
-      // This allows the module to be truly optional at build time.
-      const expoClipboard = await loadOptionalModule<any>("expo-clipboard", {
-        logger: {
-          log: () => {},
-          warn: () => {},
-          error: (...args: unknown[]) =>
-            console.error("[RnBetterDevTools]", ...args),
-        },
-      });
-
-      if (expoClipboard?.setStringAsync) {
-        return async (text: string) => {
-          try {
-            await expoClipboard.setStringAsync(text);
-            return true;
-          } catch (error) {
-            console.error(
-              "[RnBetterDevTools] Expo clipboard copy failed:",
-              error
-            );
-            return false;
-          }
-        };
-      }
-
-      // Try @react-native-clipboard/clipboard (common in RN CLI projects)
-      const rnClipboard = await loadOptionalModule<any>(
-        "@react-native-clipboard/clipboard",
-        {
-          logger: {
-            log: () => {},
-            warn: () => {},
-            error: (...args: unknown[]) =>
-              console.error("[RnBetterDevTools]", ...args),
-          },
-        }
-      );
-
-      if (rnClipboard?.setString) {
-        return async (text: string) => {
-          try {
-            await rnClipboard.setString(text);
-            return true;
-          } catch (error) {
-            console.error(
-              "[RnBetterDevTools] RN CLI clipboard copy failed:",
-              error
-            );
-            return false;
-          }
-        };
-      }
-
-      return null;
-    })();
-  }
-
-  const clipboard = await loadPromise;
-  loadPromise = null;
-
-  if (clipboard) {
-    cachedClipboard = clipboard;
-    return cachedClipboard;
-  }
-
-  if (!warnedMissing) {
-    warnedMissing = true;
-    // Clipboard library not found - copy functionality disabled
-  }
-
   return null;
 }
 
 /**
- * Attempts to auto-detect and cache a clipboard implementation. Returns the cached implementation
- * if one has already been detected synchronously; otherwise returns null and triggers async loading.
+ * Gets the auto-detected clipboard function.
+ * Returns a function that will attempt to copy text and return success/failure.
+ * If no clipboard library is available, it logs an error and returns false.
  */
-export function createAutoDetectedClipboard(): ClipboardFunction | null {
-  if (cachedClipboard) {
-    return cachedClipboard;
-  }
-
-  // Kick off the async load; ignore errors here.
-  void loadClipboard();
-  return null;
-}
-
-/**
- * Gets the auto-detected clipboard function with proper error handling.
- * The returned function will lazily import the clipboard implementation the first time it runs.
- */
-export function getAutoDetectedClipboard(): ClipboardFunction {
-  return async (text: string) => {
-    const clipboard = await loadClipboard();
-    if (clipboard) {
-      return clipboard(text);
-    }
-
-    console.error(
-      "[RnBetterDevTools] Copy failed: No clipboard library found.\n" +
-        `Attempted to copy: ${text.substring(0, 50)}${
-          text.length > 50 ? "..." : ""
-        }\n` +
-        "Install expo-clipboard or @react-native-clipboard/clipboard, or provide a custom onCopy function.",
-    );
-    return false;
-  };
+export function getAutoDetectedClipboard(): typeof clipboardFunction {
+  return clipboardFunction;
 }
