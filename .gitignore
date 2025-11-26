@@ -56,6 +56,9 @@ lerna-debug.log
 # Except for intentional type declaration files
 !**/src/**/optionalModules.d.ts
 
+# Generated clipboard implementation (created by postinstall)
+packages/shared/src/clipboard/clipboard-impl.ts
+
 # React Native / Expo
 .expo/
 .expo-shared/
