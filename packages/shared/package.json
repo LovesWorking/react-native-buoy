@@ -99,13 +99,15 @@
   },
   "files": [
     "src",
-    "lib"
+    "lib",
+    "scripts"
   ],
   "sideEffects": false,
   "scripts": {
+    "postinstall": "node scripts/detect-clipboard.js",
     "build": "bob build",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bob build",
+    "prepublishOnly": "node scripts/detect-clipboard.js && bob build",
     "clean": "rimraf lib",
     "test": "pnpm run typecheck"
   },
