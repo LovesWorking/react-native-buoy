@@ -1557,8 +1557,8 @@ const styles = StyleSheet.create({
   },
   windowControlsContainer: {
     position: "absolute",
-    top: -12,
-    right: -5,
+    top: 4,
+    right: 4,
     zIndex: 10,
   },
   floatingModeHeader: {

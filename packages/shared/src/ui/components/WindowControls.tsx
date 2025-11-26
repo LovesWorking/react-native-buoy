@@ -18,32 +18,29 @@ interface WindowControlsProps {
 }
 
 // ============================================================================
-// Constants - Windows Vista Style with macOS Design System Colors
+// Constants - macOS Style Window Controls
 // ============================================================================
 
-// Using colors from macOSDesignSystemColors
+// macOS window control colors (matching exact macOS appearance)
 const COLORS = {
-  // Neutral actions use muted/secondary colors
-  minimize: "#A1A1A6", // text.secondary - subtle, non-destructive
-  toggleMode: "#A1A1A6", // text.secondary - subtle, non-destructive
-  // Destructive action uses red
-  close: "#FF453A", // semantic.error - clear destructive intent
+  close: "#FF5F57", // Red - close button
+  minimize: "#FEBC2E", // Yellow - minimize button
+  toggleMode: "#28C840", // Green - expand/fullscreen button
 };
 
-// Touch-friendly button sizes
-// Apple HIG recommends 44pt minimum, Android 48dp
-// Using 38x38 as a balance for toolbar controls
-const BUTTON_SIZE = 38;
-const ICON_SIZE = 16;
+// macOS-style circular button dimensions
+const BUTTON_SIZE = 12; // Small circular buttons
+const BUTTON_SPACING = 8; // Spacing between buttons
+const ICON_SIZE = 8; // Icon size inside the buttons
 
 // ============================================================================
 // Component
 // ============================================================================
 
 /**
- * Windows Vista-style window control buttons.
- * Rectangular buttons that fill the header height, positioned flush right.
- * Order: Minimize → Toggle Mode → Close
+ * macOS-style window control buttons with Windows ordering.
+ * Circular colored buttons inspired by macOS window controls.
+ * Order (left to right): Minimize (yellow) → Expand (green) → Close (red)
  */
 export function WindowControls({
   onClose,
@@ -60,45 +57,45 @@ export function WindowControls({
 
   return (
     <View style={styles.container}>
-      {/* Minimize - leftmost */}
+      {/* Minimize - leftmost (yellow button) */}
       {onMinimize && (
         <TouchableOpacity
           onPress={onMinimize}
-          style={styles.button}
-          activeOpacity={0.7}
+          style={[styles.button, styles.minimizeButton]}
+          activeOpacity={0.8}
           accessibilityLabel="Minimize modal"
           accessibilityRole="button"
         >
-          <Minus size={ICON_SIZE} color={COLORS.minimize} strokeWidth={2} />
+          <Minus size={ICON_SIZE} color="#7A5A00" strokeWidth={1.5} />
         </TouchableOpacity>
       )}
 
-      {/* Toggle Mode - middle */}
+      {/* Toggle Mode - middle (green button) */}
       {onToggleMode && (
         <TouchableOpacity
           onPress={onToggleMode}
-          style={styles.button}
-          activeOpacity={0.7}
+          style={[styles.button, styles.expandButton]}
+          activeOpacity={0.8}
           accessibilityLabel={toggleModeLabel}
           accessibilityRole="button"
         >
           <ToggleModeIcon
             size={ICON_SIZE}
-            color={COLORS.toggleMode}
-            strokeWidth={2}
+            color="#004A1A"
+            strokeWidth={1.5}
           />
         </TouchableOpacity>
       )}
 
-      {/* Close - rightmost, always visible */}
+      {/* Close - rightmost (red button) */}
       <TouchableOpacity
         onPress={onClose}
-        style={styles.button}
-        activeOpacity={0.7}
+        style={[styles.button, styles.closeButton]}
+        activeOpacity={0.8}
         accessibilityLabel="Close modal"
         accessibilityRole="button"
       >
-        <X size={ICON_SIZE} color={COLORS.close} strokeWidth={2} />
+        <X size={ICON_SIZE} color="#4A0000" strokeWidth={1.5} />
       </TouchableOpacity>
     </View>
   );
@@ -112,12 +109,22 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: BUTTON_SIZE,
+    gap: BUTTON_SPACING,
   },
   button: {
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
+    borderRadius: BUTTON_SIZE / 2, // Perfectly circular
     alignItems: "center",
     justifyContent: "center",
+  },
+  closeButton: {
+    backgroundColor: COLORS.close,
+  },
+  minimizeButton: {
+    backgroundColor: COLORS.minimize,
+  },
+  expandButton: {
+    backgroundColor: COLORS.toggleMode,
   },
 });
