@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   TouchableOpacity,
   View,
   Text,
@@ -9,9 +8,7 @@ import {
 } from "react-native";
 import {
   gameUIColors,
-  dialColors,
-  ChevronLeft,
-  ChevronRight,
+  ChevronUp,
   safeGetItem,
   safeSetItem,
 } from "@react-buoy/shared-ui";
@@ -21,16 +18,12 @@ import { useMinimizedTools, MinimizedTool } from "./MinimizedToolsContext";
 // Constants
 // ============================================================================
 
-const ANIMATION_DURATION = 250;
-const PEEK_WIDTH = 20; // Width of the half-circle peek (how much shows)
-const PEEK_HEIGHT = 40; // Height of the half-circle peek
-const TOOLBAR_WIDTH = 44; // Width of the expanded pill toolbar (thinner, icons only)
+const PEEK_HEIGHT = 28; // Height of the collapsed peek tab
+const TOOLBAR_WIDTH = 44; // Width of the toolbar (matches floating menu style)
 const TOOL_ITEM_SIZE = 32; // Size of each tool icon
 const ICON_GAP = 6; // Gap between tool items
 const TOOLBAR_PADDING = 8; // Padding inside the toolbar
 const COLLAPSE_BUTTON_SIZE = 24; // Size of the collapse button
-const BOTTOM_OFFSET = 280; // Distance from bottom (closer to center)
-const RIGHT_MARGIN = 12; // Distance from right edge of screen
 
 const STORAGE_KEY_EXPANDED = "@react_buoy_minimized_stack_expanded";
 
@@ -41,31 +34,32 @@ const STORAGE_KEY_EXPANDED = "@react_buoy_minimized_stack_expanded";
 export interface MinimizedToolsStackProps {
   /** Callback when a tool should be restored */
   onRestore?: (tool: MinimizedTool) => void;
-  /** Whether to push the stack to the side (when a modal is open) */
-  pushToSide?: boolean;
+  /** Width of the parent container (for matching widths) */
+  containerWidth?: number;
 }
 
 // ============================================================================
-// Half-Circle Peek Component (Collapsed State)
+// Collapsed Peek Tab Component (shows at top of floating menu)
 // ============================================================================
 
 interface CollapsedPeekProps {
   count: number;
   onPress: () => void;
   progress: Animated.Value; // 0 = collapsed (peek visible), 1 = expanded (peek hidden)
+  width: number;
 }
 
-function CollapsedPeek({ count, onPress, progress }: CollapsedPeekProps) {
-  // When progress=0 (collapsed): peek is visible (translateX=0, opacity=1)
-  // When progress=1 (expanded): peek is hidden (translateX=positive, opacity=0)
-  const translateX = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, PEEK_WIDTH + 20],
-  });
-
+function CollapsedPeek({ count, onPress, progress, width }: CollapsedPeekProps) {
+  // When progress=0 (collapsed): peek is visible (opacity=1, scale=1)
+  // When progress=1 (expanded): peek is hidden (opacity=0, scale=0.9)
   const opacity = progress.interpolate({
     inputRange: [0, 0.5, 1],
     outputRange: [1, 0.5, 0],
+  });
+
+  const scale = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.9],
   });
 
   return (
@@ -73,26 +67,31 @@ function CollapsedPeek({ count, onPress, progress }: CollapsedPeekProps) {
       style={[
         styles.peekContainer,
         {
-          transform: [{ translateX }],
+          width,
           opacity,
+          transform: [{ scale }],
         },
       ]}
     >
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.8}
-        style={styles.peekButton}
+        style={[styles.peekButton, { width }]}
         accessibilityLabel={`Show ${count} minimized tools`}
         accessibilityRole="button"
       >
-        <ChevronLeft size={14} color={gameUIColors.muted} strokeWidth={2} />
+        {/* Chevron points UP to indicate expansion direction */}
+        <ChevronUp size={12} color={gameUIColors.muted} strokeWidth={2} />
+        {count > 1 && (
+          <Text style={styles.peekCount}>{count}</Text>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
 // ============================================================================
-// Expanded Pill Toolbar Component
+// Expanded Toolbar Component (expands upward from the peek tab)
 // ============================================================================
 
 interface ExpandedToolbarProps {
@@ -100,6 +99,7 @@ interface ExpandedToolbarProps {
   onToolPress: (tool: MinimizedTool) => void;
   onCollapse: () => void;
   progress: Animated.Value; // 0 = collapsed (toolbar hidden), 1 = expanded (toolbar visible)
+  width: number;
 }
 
 function ExpandedToolbar({
@@ -107,53 +107,22 @@ function ExpandedToolbar({
   onToolPress,
   onCollapse,
   progress,
+  width,
 }: ExpandedToolbarProps) {
-  // Breathing animation for the glow effect
-  const breatheAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const breathe = Animated.loop(
-      Animated.sequence([
-        Animated.timing(breatheAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(breatheAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    breathe.start();
-    return () => breathe.stop();
-  }, [breatheAnim]);
-
-  // Interpolate breathing to subtle opacity change
-  const breatheOpacity = breatheAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.4, 0.7],
-  });
-
-  // Calculate toolbar height based on number of tools (icons only, no labels)
+  // Calculate toolbar height based on number of tools
+  // Layout from top to bottom: tool icons, then collapse button at bottom
   const toolbarHeight =
-    TOOLBAR_PADDING * 2 +
+    TOOLBAR_PADDING +
     tools.length * TOOL_ITEM_SIZE +
     (tools.length - 1) * ICON_GAP +
-    ICON_GAP +
-    COLLAPSE_BUTTON_SIZE;
+    ICON_GAP + // Gap before collapse button
+    COLLAPSE_BUTTON_SIZE +
+    4; // Small bottom padding
 
-  // When progress=0 (collapsed): toolbar is hidden (translateX=positive, opacity=0)
-  // When progress=1 (expanded): toolbar is visible (translateX=0, opacity=1)
-  const translateX = progress.interpolate({
+  // Animate height from 0 to full height (shrink/grow effect)
+  const animatedHeight = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [TOOLBAR_WIDTH + RIGHT_MARGIN + 10, 0],
-  });
-
-  const opacity = progress.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0.5, 1],
+    outputRange: [0, toolbarHeight],
   });
 
   return (
@@ -161,51 +130,39 @@ function ExpandedToolbar({
       style={[
         styles.toolbarContainer,
         {
-          height: toolbarHeight,
-          transform: [{ translateX }],
-          opacity,
+          width,
+          height: animatedHeight,
+          overflow: "hidden", // Clip content as height shrinks
         },
       ]}
     >
-      {/* Background gradient layers */}
-      <Animated.View
-        style={[
-          styles.gradientLayer,
-          styles.gradientLayer1,
-          { opacity: breatheOpacity },
-        ]}
-      />
-      <View style={[styles.gradientLayer, styles.gradientLayer2]} />
-      <View style={[styles.gradientLayer, styles.gradientLayer3]} />
+      {/* Inner container to keep content positioned from top */}
+      <View style={[styles.toolbarInner, { height: toolbarHeight }]}>
+        {/* Tool Icons - in reverse order so newest appears at top */}
+        {[...tools].reverse().map((tool) => (
+          <TouchableOpacity
+            key={tool.instanceId}
+            onPress={() => onToolPress(tool)}
+            activeOpacity={0.7}
+            style={styles.toolButton}
+            accessibilityLabel={`Restore ${tool.title}`}
+            accessibilityRole="button"
+          >
+            {tool.icon}
+          </TouchableOpacity>
+        ))}
 
-      {/* Tool Icons - compact, no labels */}
-      {tools.map((tool) => (
+        {/* Collapse button at bottom (chevron down to indicate collapse) */}
         <TouchableOpacity
-          key={tool.instanceId}
-          onPress={() => onToolPress(tool)}
-          activeOpacity={0.7}
-          style={styles.toolButton}
-          accessibilityLabel={`Restore ${tool.title}`}
+          onPress={onCollapse}
+          activeOpacity={0.6}
+          style={styles.collapseButton}
+          accessibilityLabel="Collapse minimized tools"
           accessibilityRole="button"
         >
-          {/* Icon only */}
-          {tool.icon}
+          <ChevronUp size={12} color={gameUIColors.muted} style={{ transform: [{ rotate: '180deg' }] }} />
         </TouchableOpacity>
-      ))}
-
-      {/* Collapse Area - subtle bottom section */}
-      <TouchableOpacity
-        onPress={onCollapse}
-        activeOpacity={0.6}
-        style={styles.collapseArea}
-        accessibilityLabel="Collapse minimized tools"
-        accessibilityRole="button"
-      >
-        {/* Subtle divider line */}
-        <View style={styles.collapseDivider} />
-        {/* Small chevron pointing right (to hide) */}
-        <ChevronRight size={12} color={gameUIColors.muted} />
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   );
 }
@@ -216,33 +173,14 @@ function ExpandedToolbar({
 
 export function MinimizedToolsStack({
   onRestore,
-  pushToSide = false,
+  containerWidth = TOOLBAR_WIDTH,
 }: MinimizedToolsStackProps) {
   const { minimizedTools, restore } = useMinimizedTools();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isStateRestored, setIsStateRestored] = useState(false);
 
-  const { height: screenHeight } = Dimensions.get("window");
-
-  // Calculate toolbar height
-  const toolbarHeight =
-    minimizedTools.length > 0
-      ? TOOLBAR_PADDING * 2 +
-        minimizedTools.length * TOOL_ITEM_SIZE +
-        (minimizedTools.length - 1) * ICON_GAP +
-        ICON_GAP +
-        COLLAPSE_BUTTON_SIZE
-      : PEEK_HEIGHT;
-
-  // Fixed center point for the peek button (from bottom of screen)
-  const peekCenterY = screenHeight - BOTTOM_OFFSET;
-
-  // Peek button position (top of peek = center - half of peek height)
-  const peekYPosition = peekCenterY - PEEK_HEIGHT / 2;
-
-  // Toolbar position (top of toolbar = center - half of toolbar height)
-  // This centers the toolbar vertically with the peek button
-  const toolbarYPosition = peekCenterY - toolbarHeight / 2;
+  // Use provided container width or default
+  const width = containerWidth;
 
   // Single progress value: 0 = collapsed (peek visible), 1 = expanded (toolbar visible)
   const progress = useRef(new Animated.Value(0)).current;
@@ -284,11 +222,10 @@ export function MinimizedToolsStack({
   // Expand the toolbar (animate progress from 0 to 1)
   const handleExpand = useCallback(() => {
     setIsExpanded(true);
-    Animated.spring(progress, {
+    Animated.timing(progress, {
       toValue: 1,
-      tension: 65,
-      friction: 10,
-      useNativeDriver: true,
+      duration: 200,
+      useNativeDriver: false, // Height animation requires JS driver
     }).start();
   }, [progress]);
 
@@ -297,10 +234,9 @@ export function MinimizedToolsStack({
     Animated.timing(progress, {
       toValue: 0,
       duration: 200,
-      useNativeDriver: true,
+      useNativeDriver: false, // Height animation requires JS driver
     }).start(() => {
-      // Deferred state update after animation completes
-      setTimeout(() => setIsExpanded(false), 0);
+      setIsExpanded(false);
     });
   }, [progress]);
 
@@ -327,34 +263,16 @@ export function MinimizedToolsStack({
     }
   }, [minimizedTools.length, progress, isStateRestored, isExpanded]);
 
-  // Handle pushToSide prop (hide everything when modal is open)
-  // For now, we just keep the current state - pushToSide can be handled later
-  // The main modal will cover this anyway
-
   // Don't render anything if no minimized tools
   if (minimizedTools.length === 0) {
     return null;
   }
 
   return (
-    <>
-      {/* Collapsed State - Half Circle Peek */}
-      {/* Always rendered, animation handles visibility */}
+    <View style={[styles.container, { height: PEEK_HEIGHT }]}>
+      {/* Expanded State - Toolbar that expands upward from bottom of container */}
       <View
-        style={[styles.container, { top: peekYPosition }]}
-        pointerEvents={isExpanded ? "none" : "box-none"}
-      >
-        <CollapsedPeek
-          count={minimizedTools.length}
-          onPress={handleExpand}
-          progress={progress}
-        />
-      </View>
-
-      {/* Expanded State - Pill Toolbar */}
-      {/* Always rendered, animation handles visibility */}
-      <View
-        style={[styles.container, { top: toolbarYPosition }]}
+        style={styles.expandedWrapper}
         pointerEvents={isExpanded ? "box-none" : "none"}
       >
         <ExpandedToolbar
@@ -362,9 +280,23 @@ export function MinimizedToolsStack({
           onToolPress={handleToolPress}
           onCollapse={handleCollapse}
           progress={progress}
+          width={width}
         />
       </View>
-    </>
+
+      {/* Collapsed State - Peek tab (always rendered, animation handles visibility) */}
+      <View
+        style={styles.peekWrapper}
+        pointerEvents={isExpanded ? "none" : "box-none"}
+      >
+        <CollapsedPeek
+          count={minimizedTools.length}
+          onPress={handleExpand}
+          progress={progress}
+          width={width}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -373,103 +305,84 @@ export function MinimizedToolsStack({
 // ============================================================================
 
 const styles = StyleSheet.create({
+  // Main container - positioned relative, overflow visible for upward expansion
   container: {
+    overflow: "visible",
+    zIndex: 1000,
+  },
+
+  // Wrapper for expanded toolbar - positioned so bottom aligns with container bottom
+  // This way the toolbar connects directly to the grabber when expanded
+  expandedWrapper: {
     position: "absolute",
+    bottom: 0, // Align bottom with container (connects to grabber)
+    left: 0,
     right: 0,
-    zIndex: 999,
+    overflow: "visible",
+  },
+
+  // Wrapper for peek tab - fills container
+  peekWrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 
   // ==================== Collapsed Peek Styles ====================
+  // Matches the floating menu's container styling exactly
   peekContainer: {
-    position: "absolute",
-    right: 0,
-    top: 0,
+    // Relative positioning within the container
   },
   peekButton: {
-    width: PEEK_WIDTH,
     height: PEEK_HEIGHT,
+    // Match floating menu border radius (6) on top corners only
     borderTopLeftRadius: 6,
-    borderBottomLeftRadius: 6,
-    backgroundColor: "#1A1A1C", // Match floating menu bg (macOS card color)
-    borderWidth: 1,
-    borderRightWidth: 0,
+    borderTopRightRadius: 6,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    // Match floating menu container background (dark)
+    backgroundColor: gameUIColors.panel,
+    // Only border on top and sides, none on bottom to seamlessly connect
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 0,
     borderColor: gameUIColors.muted + "66",
-    alignItems: "center",
-    justifyContent: "center",
-    // Subtle shadow matching floating tools
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  // Grip dots pattern - matching floating tools exactly
-  peekGripContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
   },
-  peekGripColumn: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-  },
-  peekGripDot: {
-    width: 2,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: gameUIColors.secondary + "CC",
+  peekCount: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: gameUIColors.muted,
+    marginLeft: 1,
   },
 
   // ==================== Expanded Toolbar Styles ====================
   toolbarContainer: {
-    position: "absolute",
-    right: RIGHT_MARGIN, // Float away from edge
-    top: 0,
-    width: TOOLBAR_WIDTH,
-    backgroundColor: "#1A1A1C", // Match floating menu bg (macOS card color)
-    borderRadius: TOOLBAR_WIDTH / 2, // Full pill shape
-    borderWidth: 1,
-    borderColor: gameUIColors.muted + "66", // Match floating menu border
-    paddingVertical: TOOLBAR_PADDING,
+    // Match floating menu container background (dark)
+    backgroundColor: gameUIColors.panel,
+    // Rounded corners on top only, bottom connects seamlessly
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    // Only border on top and sides - bottom connects seamlessly
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: gameUIColors.muted + "66",
+  },
+  // Inner container for toolbar content
+  toolbarInner: {
     alignItems: "center",
+    paddingTop: TOOLBAR_PADDING,
     gap: ICON_GAP,
-    overflow: "hidden", // Clip gradient layers to pill shape
-    // Matching floating menu shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  // Gradient background layers - matching dial's layered depth
-  gradientLayer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    borderRadius: TOOLBAR_WIDTH / 2,
-  },
-  gradientLayer1: {
-    backgroundColor: dialColors.dialGradient1,
-    opacity: 0.6,
-  },
-  gradientLayer2: {
-    backgroundColor: dialColors.dialGradient2,
-    opacity: 0.4,
-    top: "20%",
-    left: "10%",
-    right: "10%",
-  },
-  gradientLayer3: {
-    backgroundColor: dialColors.dialGradient3,
-    opacity: 0.3,
-    top: "40%",
-    left: "20%",
-    right: "20%",
   },
   // Tool button - compact icon only
   toolButton: {
@@ -479,21 +392,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "transparent",
   },
-  // Collapse area - subtle integrated bottom section
-  collapseArea: {
-    width: TOOLBAR_WIDTH - 8,
+  // Collapse button at bottom of expanded toolbar
+  collapseButton: {
+    width: "100%",
     height: COLLAPSE_BUTTON_SIZE,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: ICON_GAP,
-  },
-  // Subtle divider line above collapse icon
-  collapseDivider: {
-    position: "absolute",
-    top: 0,
-    left: 4,
-    right: 4,
-    height: 1,
-    backgroundColor: gameUIColors.muted + "33",
+    marginTop: ICON_GAP / 2,
   },
 });

@@ -27,6 +27,9 @@ import {
 import { DraggableHeader } from "./DraggableHeader";
 import { useSafeAreaInsets } from "@react-buoy/shared-ui";
 import { calculateTargetPosition } from "./dial/onboardingConstants";
+import { MinimizedToolsStack } from "./MinimizedToolsStack";
+import { useMinimizedTools, MinimizedTool } from "./MinimizedToolsContext";
+import { useAppHost } from "./AppHost";
 
 // Using Views to render grip dots; no react-native-svg dependency
 
@@ -702,12 +705,27 @@ export function FloatingTools({
     [animatedPosition]
   );
 
+  // Get minimized tools context and app host for restoration
+  const { minimizedTools } = useMinimizedTools();
+  const { restore: restoreInAppHost } = useAppHost();
+
+  // Check if minimized tools are showing (for seamless connection)
+  const hasMinimizedTools = minimizedTools.length > 0;
+
   const containerStyle: ViewStyle = {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: gameUIColors.panel,
-    borderRadius: 6,
-    borderWidth: isDragging ? 2 : 1,
+    // When minimized tools showing, remove top-left radius so they connect seamlessly
+    borderTopLeftRadius: hasMinimizedTools ? 0 : 6,
+    borderTopRightRadius: 6,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    // Use individual border widths when minimized tools are showing
+    borderLeftWidth: isDragging ? 2 : 1,
+    borderRightWidth: isDragging ? 2 : 1,
+    borderBottomWidth: isDragging ? 2 : 1,
+    borderTopWidth: hasMinimizedTools ? 0 : (isDragging ? 2 : 1),
     borderColor: isDragging ? gameUIColors.info : gameUIColors.muted + "66",
     overflow: "hidden",
     elevation: 8,
@@ -726,6 +744,8 @@ export function FloatingTools({
     width: 32,
     borderRightWidth: 1,
     borderRightColor: gameUIColors.muted + "66",
+    // Remove top-left radius when minimized tools are showing
+    borderTopLeftRadius: hasMinimizedTools ? 0 : undefined,
   };
 
   const contentStyle: ViewStyle = {
@@ -741,36 +761,70 @@ export function FloatingTools({
     [children]
   );
 
+  // Handle restore from minimized tools stack
+  const handleMinimizedRestore = useCallback(
+    (tool: MinimizedTool) => {
+      restoreInAppHost(tool.instanceId, tool.modalState);
+    },
+    [restoreInAppHost]
+  );
+
+  // Width for the minimized tools stack - match the drag handle width
+  const minimizedStackWidth = 32;
+
   return (
     <Animated.View style={bubbleStyle}>
-      <View
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        style={containerStyle}
-        onLayout={(event) => {
-          const { width, height } = event.nativeEvent.layout;
-          setBubbleSize({ width, height });
-        }}
-      >
-        <DraggableHeader
-          position={animatedPosition}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onTap={toggleHideShow}
-          containerBounds={{ width: screenWidth, height: screenHeight }}
-          elementSize={bubbleSize}
-          minPosition={{
-            x: safeAreaInsets.left,
-            y: safeAreaInsets.top + 20,
+      {/* Outer wrapper to allow overflow for minimized tools */}
+      <View style={{ overflow: "visible" }}>
+        {/* Minimized tools stack - positioned above the main bubble */}
+        {minimizedTools.length > 0 && (
+          <View
+            style={{
+              position: "absolute",
+              bottom: "100%",
+              left: 0,
+              width: minimizedStackWidth,
+              overflow: "visible",
+              zIndex: 1001,
+            }}
+          >
+            <MinimizedToolsStack
+              onRestore={handleMinimizedRestore}
+              containerWidth={minimizedStackWidth}
+            />
+          </View>
+        )}
+
+        {/* Main floating tools bubble */}
+        <View
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={containerStyle}
+          onLayout={(event) => {
+            const { width, height } = event.nativeEvent.layout;
+            setBubbleSize({ width, height });
           }}
-          style={dragHandleStyle}
-          enabled={true}
-          maxOverflowX={bubbleSize.width}
         >
-          <GripVerticalIcon size={12} color={gameUIColors.secondary + "CC"} />
-        </DraggableHeader>
-        <FloatingToolsContext.Provider value={{ isDragging }}>
-          <View style={contentStyle}>{actions}</View>
-        </FloatingToolsContext.Provider>
+          <DraggableHeader
+            position={animatedPosition}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onTap={toggleHideShow}
+            containerBounds={{ width: screenWidth, height: screenHeight }}
+            elementSize={bubbleSize}
+            minPosition={{
+              x: safeAreaInsets.left,
+              y: safeAreaInsets.top + 20,
+            }}
+            style={dragHandleStyle}
+            enabled={true}
+            maxOverflowX={bubbleSize.width}
+          >
+            <GripVerticalIcon size={12} color={gameUIColors.secondary + "CC"} />
+          </DraggableHeader>
+          <FloatingToolsContext.Provider value={{ isDragging }}>
+            <View style={contentStyle}>{actions}</View>
+          </FloatingToolsContext.Provider>
+        </View>
       </View>
     </Animated.View>
   );

@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, ReactNode } from "react";
 import { View, StyleSheet } from "react-native";
-import { AppHostProvider, useAppHost } from "./AppHost";
+import { AppHostProvider } from "./AppHost";
 import { FloatingMenu, type FloatingMenuProps } from "./FloatingMenu";
 import { AppOverlay } from "./AppHost";
 import {
@@ -10,12 +10,7 @@ import {
 import type { InstalledApp } from "./types";
 import { DevToolsVisibilityProvider } from "./DevToolsVisibilityContext";
 import { HintsProvider } from "@react-buoy/shared-ui";
-import {
-  MinimizedToolsProvider,
-  useMinimizedTools,
-  MinimizedTool,
-} from "./MinimizedToolsContext";
-import { MinimizedToolsStack } from "./MinimizedToolsStack";
+import { MinimizedToolsProvider } from "./MinimizedToolsContext";
 
 /**
  * Environment variable configuration
@@ -265,7 +260,7 @@ export const FloatingDevTools = ({
             <MinimizedToolsProvider getToolIcon={getToolIcon}>
               <FloatingMenu {...props} apps={finalApps} />
               <AppOverlay />
-              <MinimizedToolsStackConnected apps={finalApps} />
+              {/* MinimizedToolsStack is now integrated into FloatingTools */}
             </MinimizedToolsProvider>
           </AppHostProvider>
           {children}
@@ -275,29 +270,6 @@ export const FloatingDevTools = ({
     </HintsProvider>
   );
 };
-
-/**
- * Internal component that connects MinimizedToolsStack to AppHost
- * Must be rendered inside both AppHostProvider and MinimizedToolsProvider
- */
-function MinimizedToolsStackConnected({ apps }: { apps: InstalledApp[] }) {
-  const { restore: restoreInAppHost, isAnyOpen } = useAppHost();
-
-  const handleRestore = useCallback(
-    (tool: MinimizedTool) => {
-      // Restore the tool in AppHost with saved modal state
-      restoreInAppHost(tool.instanceId, tool.modalState);
-    },
-    [restoreInAppHost]
-  );
-
-  return (
-    <MinimizedToolsStack
-      onRestore={handleRestore}
-      pushToSide={isAnyOpen}
-    />
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
