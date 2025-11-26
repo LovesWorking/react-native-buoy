@@ -5,6 +5,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Easing,
 } from "react-native";
 import {
   gameUIColors,
@@ -26,6 +27,165 @@ const TOOLBAR_PADDING = 8; // Padding inside the toolbar
 const COLLAPSE_BUTTON_SIZE = 24; // Size of the collapse button
 
 const STORAGE_KEY_EXPANDED = "@react_buoy_minimized_stack_expanded";
+
+// Glitch effect constants
+const GLITCH_DURATION_MS = 80; // Quick glitch animation
+const MIN_GLITCH_DELAY = 2000; // Minimum delay between glitches (2s)
+const MAX_GLITCH_DELAY = 6000; // Maximum delay between glitches (6s)
+
+// ============================================================================
+// Glitch Tool Button Component
+// ============================================================================
+
+interface GlitchToolButtonProps {
+  tool: MinimizedTool;
+  onPress: (tool: MinimizedTool) => void;
+  index: number;
+}
+
+function GlitchToolButton({ tool, onPress, index }: GlitchToolButtonProps) {
+  const glitchX = useRef(new Animated.Value(0)).current;
+  const glitchOpacity = useRef(new Animated.Value(1)).current;
+  const glitchScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const runGlitch = () => {
+      if (!isMounted) return;
+
+      const d = GLITCH_DURATION_MS;
+
+      // Run glitch animations in parallel
+      Animated.parallel([
+        // X displacement - quick shake
+        Animated.sequence([
+          Animated.timing(glitchX, {
+            toValue: 3,
+            duration: d * 0.2,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchX, {
+            toValue: -3,
+            duration: d * 0.2,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchX, {
+            toValue: 2,
+            duration: d * 0.2,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchX, {
+            toValue: -1,
+            duration: d * 0.2,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchX, {
+            toValue: 0,
+            duration: d * 0.2,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+        ]),
+        // Opacity flicker
+        Animated.sequence([
+          Animated.timing(glitchOpacity, {
+            toValue: 0.4,
+            duration: d * 0.25,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchOpacity, {
+            toValue: 1,
+            duration: d * 0.25,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchOpacity, {
+            toValue: 0.6,
+            duration: d * 0.25,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchOpacity, {
+            toValue: 1,
+            duration: d * 0.25,
+            useNativeDriver: true,
+          }),
+        ]),
+        // Scale pulse
+        Animated.sequence([
+          Animated.timing(glitchScale, {
+            toValue: 1.1,
+            duration: d * 0.3,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchScale, {
+            toValue: 0.95,
+            duration: d * 0.4,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glitchScale, {
+            toValue: 1,
+            duration: d * 0.3,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    };
+
+    const scheduleNextGlitch = () => {
+      if (!isMounted) return;
+
+      // Random delay with stagger based on index
+      const delay =
+        MIN_GLITCH_DELAY +
+        Math.random() * (MAX_GLITCH_DELAY - MIN_GLITCH_DELAY) +
+        index * 300;
+
+      setTimeout(() => {
+        if (isMounted) {
+          runGlitch();
+          scheduleNextGlitch();
+        }
+      }, delay);
+    };
+
+    // Initial delay before first glitch (staggered by index)
+    const initialDelay = 500 + Math.random() * 1500 + index * 200;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        runGlitch();
+        scheduleNextGlitch();
+      }
+    }, initialDelay);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [glitchX, glitchOpacity, glitchScale, index]);
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(tool)}
+      activeOpacity={0.7}
+      style={styles.toolButton}
+      accessibilityLabel={`Restore ${tool.title}`}
+      accessibilityRole="button"
+    >
+      <Animated.View
+        style={{
+          opacity: glitchOpacity,
+          transform: [{ translateX: glitchX }, { scale: glitchScale }],
+        }}
+      >
+        {tool.icon}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
 
 // ============================================================================
 // Types
@@ -139,17 +299,13 @@ function ExpandedToolbar({
       {/* Inner container to keep content positioned from top */}
       <View style={[styles.toolbarInner, { height: toolbarHeight }]}>
         {/* Tool Icons - in reverse order so newest appears at top */}
-        {[...tools].reverse().map((tool) => (
-          <TouchableOpacity
+        {[...tools].reverse().map((tool, index) => (
+          <GlitchToolButton
             key={tool.instanceId}
-            onPress={() => onToolPress(tool)}
-            activeOpacity={0.7}
-            style={styles.toolButton}
-            accessibilityLabel={`Restore ${tool.title}`}
-            accessibilityRole="button"
-          >
-            {tool.icon}
-          </TouchableOpacity>
+            tool={tool}
+            onPress={onToolPress}
+            index={index}
+          />
         ))}
 
         {/* Collapse button at bottom (chevron down to indicate collapse) */}
