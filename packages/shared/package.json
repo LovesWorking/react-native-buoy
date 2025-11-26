@@ -110,7 +110,17 @@
   "dependencies": {},
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "expo-clipboard": "*",
+    "@react-native-clipboard/clipboard": "*"
+  },
+  "peerDependenciesMeta": {
+    "expo-clipboard": {
+      "optional": true
+    },
+    "@react-native-clipboard/clipboard": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/react": "^19.1.0",
