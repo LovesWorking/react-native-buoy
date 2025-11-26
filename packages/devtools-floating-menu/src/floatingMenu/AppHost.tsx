@@ -60,21 +60,31 @@ export const AppHostProvider = ({ children }: { children: ReactNode }) => {
   const installedAppsRef = useRef<any[]>([]);
   const pendingRestoreRef = useRef<PersistedAppState[] | null>(null);
 
+  const { restore: removeFromMinimizedStack } = useMinimizedTools();
+
   const open: AppHostContextValue["open"] = useCallback((def) => {
     let resolvedId = "";
 
     setOpenApps((current) => {
-      const { apps, instanceId } = resolveOpenAppsState(
+      const { apps, instanceId, wasMinimized } = resolveOpenAppsState(
         current,
         def,
         () => `${def.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`
       );
       resolvedId = instanceId;
+
+      // If the app was minimized, remove it from the minimized stack
+      // This needs to be done outside of setOpenApps to avoid nested state updates
+      if (wasMinimized) {
+        // Schedule the removal for after this state update completes
+        setTimeout(() => removeFromMinimizedStack(instanceId), 0);
+      }
+
       return apps;
     });
 
     return resolvedId;
-  }, []);
+  }, [removeFromMinimizedStack]);
 
   const tryRestorePending = useCallback(() => {
     if (isRestored) return;

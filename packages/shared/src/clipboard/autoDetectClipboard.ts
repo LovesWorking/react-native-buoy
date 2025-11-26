@@ -16,20 +16,17 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
 
   if (!loadPromise) {
     loadPromise = (async () => {
-      // Try expo-clipboard with static import loader
+      // Try expo-clipboard first (common in Expo projects)
+      // Note: We intentionally do NOT provide a custom loader here.
+      // The loadOptionalModule utility uses dynamic require/import via
+      // Function constructor which Metro cannot statically analyze.
+      // This allows the module to be truly optional at build time.
       const expoClipboard = await loadOptionalModule<any>("expo-clipboard", {
         logger: {
-          log: () => {}, // Debug logging removed
-          warn: () => {}, // Warnings disabled in production
-          error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
-        },
-        loader: async () => {
-          try {
-            // Static import that Metro can analyze at build time
-            return await import("expo-clipboard");
-          } catch (error) {
-            return null;
-          }
+          log: () => {},
+          warn: () => {},
+          error: (...args: unknown[]) =>
+            console.error("[RnBetterDevTools]", ...args),
         },
       });
 
@@ -41,29 +38,22 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
           } catch (error) {
             console.error(
               "[RnBetterDevTools] Expo clipboard copy failed:",
-              error,
+              error
             );
             return false;
           }
         };
       }
 
-      // Try @react-native-clipboard/clipboard with static import loader
+      // Try @react-native-clipboard/clipboard (common in RN CLI projects)
       const rnClipboard = await loadOptionalModule<any>(
         "@react-native-clipboard/clipboard",
         {
           logger: {
-            log: () => {}, // Debug logging removed
-            warn: () => {}, // Warnings disabled in production
-            error: (...args: unknown[]) => console.error("[RnBetterDevTools]", ...args),
-          },
-          loader: async () => {
-            try {
-              // Static import that Metro can analyze at build time
-              return await import("@react-native-clipboard/clipboard");
-            } catch (error) {
-              return null;
-            }
+            log: () => {},
+            warn: () => {},
+            error: (...args: unknown[]) =>
+              console.error("[RnBetterDevTools]", ...args),
           },
         }
       );
@@ -76,7 +66,7 @@ async function loadClipboard(): Promise<ClipboardFunction | null> {
           } catch (error) {
             console.error(
               "[RnBetterDevTools] RN CLI clipboard copy failed:",
-              error,
+              error
             );
             return false;
           }

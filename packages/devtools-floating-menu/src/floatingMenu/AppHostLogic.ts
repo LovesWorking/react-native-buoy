@@ -37,15 +37,18 @@ export const resolveOpenAppsState = (
   current: AppInstance[],
   def: OpenDefinition,
   generateId: () => string
-): { apps: AppInstance[]; instanceId: string } => {
+): { apps: AppInstance[]; instanceId: string; wasMinimized: boolean } => {
   if (def.singleton) {
     const existing = current.find((app) => app.id === def.id);
     if (existing) {
+      const wasMinimized = existing.minimized ?? false;
       return {
         instanceId: existing.instanceId,
+        wasMinimized,
         apps: [
           ...current.filter((app) => app.instanceId !== existing.instanceId),
-          existing,
+          // Un-minimize the existing app when re-opening it
+          { ...existing, minimized: false },
         ],
       };
     }
@@ -54,6 +57,7 @@ export const resolveOpenAppsState = (
   const instanceId = generateId();
   return {
     instanceId,
+    wasMinimized: false,
     apps: [...current, { ...def, instanceId }],
   };
 };
