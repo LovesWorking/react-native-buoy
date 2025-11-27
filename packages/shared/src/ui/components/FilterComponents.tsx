@@ -115,11 +115,13 @@ export function AddFilterInput({
 interface AddFilterButtonProps {
   onPress: () => void;
   color?: string;
+  label?: string;
 }
 
 export function AddFilterButton({
   onPress,
   color = "#E5E7EB",
+  label = "Add Filter",
 }: AddFilterButtonProps) {
   return (
     <TouchableOpacity
@@ -127,7 +129,7 @@ export function AddFilterButton({
       onPress={onPress}
     >
       <Plus size={14} color={color} />
-      <Text style={[styles.addButtonText, { color }]}>Add Filter</Text>
+      <Text style={[styles.addButtonText, { color }]}>{label}</Text>
     </TouchableOpacity>
   );
 }

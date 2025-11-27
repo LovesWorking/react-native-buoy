@@ -59,6 +59,7 @@ export function QueryBrowserModal({
   // Filter modal state
   const [showFilterView, setShowFilterView] = useState(false);
   const [ignoredPatterns, setIgnoredPatterns] = useState<Set<string>>(new Set());
+  const [includedPatterns, setIncludedPatterns] = useState<Set<string>>(new Set());
 
   // AsyncStorage for persisting ignored patterns
   const { getItem: safeGetItem, setItem: safeSetItem } = useSafeAsyncStorage();
@@ -83,6 +84,26 @@ export function QueryBrowserModal({
     loadFilters();
   }, [safeGetItem]);
 
+  // Load included patterns from storage on mount
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const stored = await safeGetItem(
+          devToolsStorageKeys.reactQuery.includedPatterns()
+        );
+        if (stored) {
+          const patterns = JSON.parse(stored);
+          if (Array.isArray(patterns)) {
+            setIncludedPatterns(new Set(patterns));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load included patterns:", error);
+      }
+    };
+    loadFilters();
+  }, [safeGetItem]);
+
   // Save ignored patterns to storage when they change
   useEffect(() => {
     const saveFilters = async () => {
@@ -99,9 +120,38 @@ export function QueryBrowserModal({
     saveFilters();
   }, [ignoredPatterns, safeSetItem]);
 
+  // Save included patterns to storage when they change
+  useEffect(() => {
+    const saveFilters = async () => {
+      try {
+        const patterns = Array.from(includedPatterns);
+        await safeSetItem(
+          devToolsStorageKeys.reactQuery.includedPatterns(),
+          JSON.stringify(patterns)
+        );
+      } catch (error) {
+        console.error("Failed to save included patterns:", error);
+      }
+    };
+    saveFilters();
+  }, [includedPatterns, safeSetItem]);
+
   // Toggle pattern in ignored set
   const handlePatternToggle = useCallback((pattern: string) => {
     setIgnoredPatterns((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(pattern)) {
+        newSet.delete(pattern);
+      } else {
+        newSet.add(pattern);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Toggle pattern in included set
+  const handleIncludedPatternToggle = useCallback((pattern: string) => {
+    setIncludedPatterns((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(pattern)) {
         newSet.delete(pattern);
@@ -153,7 +203,7 @@ export function QueryBrowserModal({
         searchText={searchText}
         onSearchChange={onSearchChange}
         onFilterPress={() => setShowFilterView(true)}
-        hasActiveFilters={activeFilter !== null || ignoredPatterns.size > 0}
+        hasActiveFilters={activeFilter !== null || ignoredPatterns.size > 0 || includedPatterns.size > 0}
       />
     );
   };
@@ -193,6 +243,8 @@ export function QueryBrowserModal({
             onFilterChange={setActiveFilter}
             ignoredPatterns={ignoredPatterns}
             onPatternToggle={handlePatternToggle}
+            includedPatterns={includedPatterns}
+            onIncludedPatternToggle={handleIncludedPatternToggle}
           />
         ) : (
           /* Show query browser */
@@ -202,6 +254,7 @@ export function QueryBrowserModal({
             activeFilter={activeFilter}
             searchText={searchText}
             ignoredPatterns={ignoredPatterns}
+            includedPatterns={includedPatterns}
           />
         )}
       </View>

@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "../../icons";
-import { Filter, Plus, Copy } from "../../icons";
+import { Filter, Plus, Copy, Eye } from "../../icons";
 import { macOSColors } from "../gameUI/constants/macOSDesignSystemColors";
 import { SectionHeader } from "./SectionHeader";
 import {
@@ -48,6 +48,17 @@ export interface DynamicFilterConfig {
     placeholder?: string;
     title?: string;
     icon?: LucideIcon;
+  };
+  /** Include-only patterns section - shows queries matching ANY of these patterns */
+  includeOnlySection?: {
+    enabled: boolean;
+    placeholder?: string;
+    title?: string;
+    description?: string;
+    icon?: LucideIcon;
+    patterns: Set<string>;
+    onPatternToggle: (pattern: string) => void;
+    onPatternAdd: (pattern: string) => void;
   };
   availableItemsSection?: {
     enabled: boolean;
@@ -92,6 +103,7 @@ interface DynamicFilterViewProps extends DynamicFilterConfig {
 export function DynamicFilterView({
   sections = [],
   addFilterSection,
+  includeOnlySection,
   availableItemsSection,
   howItWorksSection,
   previewSection,
@@ -104,6 +116,7 @@ export function DynamicFilterView({
   onTabChange,
 }: DynamicFilterViewProps) {
   const filterManager = useFilterManager(activePatterns);
+  const includeFilterManager = useFilterManager(includeOnlySection?.patterns || new Set());
   const [internalActiveTab, setInternalActiveTab] = useState(
     tabs?.[0]?.id || ""
   );
@@ -122,6 +135,13 @@ export function DynamicFilterView({
     if (filterManager.newFilter.trim() && onPatternAdd) {
       onPatternAdd(filterManager.newFilter.trim());
       filterManager.addFilter(filterManager.newFilter);
+    }
+  };
+
+  const handleAddIncludePattern = () => {
+    if (includeFilterManager.newFilter.trim() && includeOnlySection?.onPatternAdd) {
+      includeOnlySection.onPatternAdd(includeFilterManager.newFilter.trim());
+      includeFilterManager.addFilter(includeFilterManager.newFilter);
     }
   };
 
@@ -353,6 +373,67 @@ export function DynamicFilterView({
         )}
 
         {sections.map(renderFilterSection)}
+
+        {/* Include Only Section - Show ONLY queries matching these patterns */}
+        {includeOnlySection?.enabled && (
+          <View style={styles.includeOnlySection}>
+            <SectionHeader>
+              <SectionHeader.Icon
+                icon={includeOnlySection.icon || Eye}
+                color={macOSColors.semantic.success}
+                size={12}
+              />
+              <SectionHeader.Title>
+                {includeOnlySection.title || "INCLUDE ONLY FILTERS"}
+              </SectionHeader.Title>
+              {includeOnlySection.patterns.size > 0 && (
+                <SectionHeader.Badge
+                  count={includeOnlySection.patterns.size}
+                  color={macOSColors.semantic.success}
+                />
+              )}
+            </SectionHeader>
+            {includeOnlySection.description && (
+              <Text style={styles.includeOnlyDescription}>
+                {includeOnlySection.description}
+              </Text>
+            )}
+            <View style={styles.includeOnlyInputWrapper}>
+              {!includeFilterManager.showAddInput ? (
+                <AddFilterButton
+                  onPress={() => includeFilterManager.setShowAddInput(true)}
+                  color={macOSColors.semantic.success}
+                  label="Add include pattern"
+                />
+              ) : (
+                <AddFilterInput
+                  value={includeFilterManager.newFilter}
+                  onChange={includeFilterManager.setNewFilter}
+                  onSubmit={handleAddIncludePattern}
+                  onCancel={() => {
+                    includeFilterManager.setShowAddInput(false);
+                    includeFilterManager.setNewFilter("");
+                  }}
+                  placeholder={includeOnlySection.placeholder || "Enter pattern to include..."}
+                  color={macOSColors.semantic.success}
+                />
+              )}
+            </View>
+            {includeOnlySection.patterns.size > 0 && (
+              <ScrollView
+                style={styles.includeOnlyFiltersContent}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
+                <FilterList
+                  filters={includeOnlySection.patterns}
+                  onRemoveFilter={includeOnlySection.onPatternToggle}
+                  color={macOSColors.semantic.success}
+                />
+              </ScrollView>
+            )}
+          </View>
+        )}
 
         {availableItemsSection?.enabled && (
           <View style={styles.availableKeysSection}>
@@ -645,6 +726,31 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
     maxHeight: 200,
+  },
+  includeOnlySection: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.success + "40",
+    marginTop: 12,
+    overflow: "hidden",
+  },
+  includeOnlyDescription: {
+    fontSize: 10,
+    color: macOSColors.text.secondary,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    lineHeight: 14,
+  },
+  includeOnlyInputWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  includeOnlyFiltersContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    maxHeight: 150,
   },
   emptyStateText: {
     fontSize: 11,
