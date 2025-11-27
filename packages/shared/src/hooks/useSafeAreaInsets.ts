@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { Platform, Dimensions, StatusBar } from "react-native";
+import {
+  useNativeSafeAreaInsets,
+  hasSafeAreaPackage,
+  safeAreaType,
+} from "./safe-area-impl";
 
 // Types
 export interface SafeAreaInsets {
@@ -86,36 +91,10 @@ const getPureJSSafeAreaInsets = (): SafeAreaInsets => {
   };
 };
 
-// Define types for the safe area context module
-interface NativeSafeAreaInsets {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-}
-
-interface SafeAreaContextModuleType {
-  useSafeAreaInsets?: () => NativeSafeAreaInsets;
-}
-
-// Check if npm package is available at module level (not inside component)
-let hasNativePackage = false;
-let SafeAreaContextModule: SafeAreaContextModuleType | null = null;
-
-try {
-  SafeAreaContextModule = require("react-native-safe-area-context");
-  if (SafeAreaContextModule?.useSafeAreaInsets) {
-    hasNativePackage = true;
-    // react-native-safe-area-context package found - using native implementation
-  }
-} catch {
-  // react-native-safe-area-context not found - using pure JS fallback
-}
-
-// Create a wrapper hook that always exists
-const useNativeSafeAreaInsets = hasNativePackage && SafeAreaContextModule?.useSafeAreaInsets
-  ? SafeAreaContextModule.useSafeAreaInsets
-  : () => null;
+// Note: Native safe area support is detected at install time by scripts/detect-safe-area.js
+// The useNativeSafeAreaInsets hook is imported from the generated safe-area-impl.ts file
+// This uses SafeAreaInsetsContext directly with useContext(), which returns null when
+// no SafeAreaProvider is present (instead of throwing an error like useSafeAreaInsets does)
 
 /**
  * Custom hook for accessing safe area insets with automatic fallback
@@ -235,17 +214,11 @@ export const hasNotch = (): boolean => {
 export const SafeAreaConfig = {
   /**
    * Check if the native react-native-safe-area-context package is available
+   * This is detected at install time by scripts/detect-safe-area.js
    *
    * @returns True if native package is installed and available
    */
-  hasNativeSupport: (): boolean => {
-    try {
-      require("react-native-safe-area-context");
-      return true;
-    } catch {
-      return false;
-    }
-  },
+  hasNativeSupport: (): boolean => hasSafeAreaPackage,
 
   /**
    * Force pure JS implementation (useful for testing)
@@ -255,12 +228,13 @@ export const SafeAreaConfig = {
 
   /**
    * Get current implementation type being used
+   * Detected at install time by scripts/detect-safe-area.js
    *
    * @returns "native" if using react-native-safe-area-context, "pure-js" if using fallback
    */
   getImplementationType: (): "native" | "pure-js" => {
     if (SafeAreaConfig.forcePureJS) return "pure-js";
-    return SafeAreaConfig.hasNativeSupport() ? "native" : "pure-js";
+    return safeAreaType;
   },
 };
 

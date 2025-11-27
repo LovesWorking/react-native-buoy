@@ -104,10 +104,10 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "postinstall": "node scripts/detect-clipboard.js",
+    "postinstall": "node scripts/detect-clipboard.js && node scripts/detect-safe-area.js",
     "build": "bob build",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "node scripts/detect-clipboard.js && bob build",
+    "prepublishOnly": "node scripts/detect-clipboard.js && node scripts/detect-safe-area.js && bob build",
     "clean": "rimraf lib",
     "test": "pnpm run typecheck"
   },
@@ -116,13 +116,17 @@
     "react": "*",
     "react-native": "*",
     "expo-clipboard": "*",
-    "@react-native-clipboard/clipboard": "*"
+    "@react-native-clipboard/clipboard": "*",
+    "react-native-safe-area-context": "*"
   },
   "peerDependenciesMeta": {
     "expo-clipboard": {
       "optional": true
     },
     "@react-native-clipboard/clipboard": {
+      "optional": true
+    },
+    "react-native-safe-area-context": {
       "optional": true
     }
   },
