@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/env",
-  "version": "1.5.19",
+  "version": "1.5.20",
   "description": "Environment variables dev tooling",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
