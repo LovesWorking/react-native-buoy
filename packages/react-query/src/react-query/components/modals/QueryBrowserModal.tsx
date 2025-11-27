@@ -255,6 +255,7 @@ export function QueryBrowserModal({
             searchText={searchText}
             ignoredPatterns={ignoredPatterns}
             includedPatterns={includedPatterns}
+            onFilterPress={() => setShowFilterView(true)}
           />
         )}
       </View>

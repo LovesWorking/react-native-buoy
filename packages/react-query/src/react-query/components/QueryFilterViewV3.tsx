@@ -94,9 +94,47 @@ export function QueryFilterViewV3({
     return availableQueryKeys;
   }, [availableQueryKeys]);
 
+  // Calculate filtered query count based on active patterns
+  const filteredCount = useMemo(() => {
+    let filtered = queries;
+
+    // Apply included patterns filter
+    if (includedPatterns.size > 0) {
+      filtered = filtered.filter((query) => {
+        if (!query?.queryKey) return false;
+        const keys = Array.isArray(query.queryKey) ? query.queryKey : [query.queryKey];
+        const keyString = keys.filter((k) => k != null).map((k) => String(k)).join(" ").toLowerCase();
+        return Array.from(includedPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
+    // Apply ignored patterns filter
+    if (ignoredPatterns.size > 0) {
+      filtered = filtered.filter((query) => {
+        if (!query?.queryKey) return true;
+        const keys = Array.isArray(query.queryKey) ? query.queryKey : [query.queryKey];
+        const keyString = keys.filter((k) => k != null).map((k) => String(k)).join(" ").toLowerCase();
+        return !Array.from(ignoredPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
+    return filtered.length;
+  }, [queries, includedPatterns, ignoredPatterns]);
+
   // Build the filter configuration
   const filterConfig: DynamicFilterConfig = useMemo(() => {
     return {
+      filterSummarySection: {
+        enabled: true,
+        totalCount: queries.length,
+        filteredCount: filteredCount,
+        includePatterns: includedPatterns,
+        excludePatterns: ignoredPatterns,
+      },
       sections: [
         // Status section - radio button style
         {
@@ -214,7 +252,7 @@ export function QueryFilterViewV3({
       },
       activePatterns: ignoredPatterns,
     };
-  }, [statusCounts, activeFilter, ignoredPatterns, includedPatterns, suggestionItems, onIncludedPatternToggle]);
+  }, [statusCounts, activeFilter, ignoredPatterns, includedPatterns, suggestionItems, onIncludedPatternToggle, queries.length, filteredCount]);
 
   // Handle filter item clicks
   const handleFilterSelect = (itemId: string) => {

@@ -1,8 +1,10 @@
 import { View, StyleSheet } from "react-native";
+import { useMemo } from "react";
 import { Query } from "@tanstack/react-query";
 import { QueryBrowser } from "./query-browser/index";
-import { gameUIColors } from "@react-buoy/shared-ui";
+import { FilterStatusBadge } from "./FilterStatusBadge";
 import { macOSColors } from "@react-buoy/shared-ui";
+import useAllQueries from "../hooks/useAllQueries";
 
 interface QueryBrowserModeProps {
   selectedQuery: Query | undefined;
@@ -11,6 +13,7 @@ interface QueryBrowserModeProps {
   searchText?: string;
   ignoredPatterns?: Set<string>;
   includedPatterns?: Set<string>;
+  onFilterPress?: () => void;
 }
 
 /** Wrapper around the query list experience used inside the modal view. */
@@ -21,12 +24,53 @@ export function QueryBrowserMode({
   searchText = "",
   ignoredPatterns = new Set(),
   includedPatterns = new Set(),
+  onFilterPress,
 }: QueryBrowserModeProps) {
   const hasIncludeFilters = includedPatterns.size > 0;
   const hasExcludeFilters = ignoredPatterns.size > 0;
+  const allQueries = useAllQueries();
+
+  // Calculate filtered count for the badge
+  const filteredCount = useMemo(() => {
+    let filtered = allQueries;
+
+    // Apply included patterns filter
+    if (includedPatterns.size > 0) {
+      filtered = filtered.filter((query) => {
+        if (!query?.queryKey) return false;
+        const keys = Array.isArray(query.queryKey) ? query.queryKey : [query.queryKey];
+        const keyString = keys.filter((k) => k != null).map((k) => String(k)).join(" ").toLowerCase();
+        return Array.from(includedPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
+    // Apply ignored patterns filter
+    if (ignoredPatterns.size > 0) {
+      filtered = filtered.filter((query) => {
+        if (!query?.queryKey) return true;
+        const keys = Array.isArray(query.queryKey) ? query.queryKey : [query.queryKey];
+        const keyString = keys.filter((k) => k != null).map((k) => String(k)).join(" ").toLowerCase();
+        return !Array.from(ignoredPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
+    return filtered.length;
+  }, [allQueries, includedPatterns, ignoredPatterns]);
 
   return (
     <View style={styles.queryListContainer}>
+      {/* Filter status badge - shows when filters reduce the count */}
+      {(hasIncludeFilters || hasExcludeFilters) && (
+        <FilterStatusBadge
+          totalCount={allQueries.length}
+          filteredCount={filteredCount}
+          onPress={onFilterPress}
+        />
+      )}
       <QueryBrowser
         selectedQuery={selectedQuery}
         onQuerySelect={onQuerySelect}
