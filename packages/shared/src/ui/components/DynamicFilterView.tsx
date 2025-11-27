@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "../../icons";
-import { Filter, Plus, Copy } from "../../icons";
+import { Filter, Plus, Copy, Eye, Info } from "../../icons";
 import { macOSColors } from "../gameUI/constants/macOSDesignSystemColors";
 import { SectionHeader } from "./SectionHeader";
 import {
@@ -43,11 +43,30 @@ export interface FilterOption {
 
 export interface DynamicFilterConfig {
   sections?: FilterSection[];
+  /** Filter summary section - shows active filter state and result counts */
+  filterSummarySection?: {
+    enabled: boolean;
+    totalCount: number;
+    filteredCount: number;
+    includePatterns?: Set<string>;
+    excludePatterns?: Set<string>;
+  };
   addFilterSection?: {
     enabled: boolean;
     placeholder?: string;
     title?: string;
     icon?: LucideIcon;
+  };
+  /** Include-only patterns section - shows queries matching ANY of these patterns */
+  includeOnlySection?: {
+    enabled: boolean;
+    placeholder?: string;
+    title?: string;
+    description?: string;
+    icon?: LucideIcon;
+    patterns: Set<string>;
+    onPatternToggle: (pattern: string) => void;
+    onPatternAdd: (pattern: string) => void;
   };
   availableItemsSection?: {
     enabled: boolean;
@@ -91,7 +110,9 @@ interface DynamicFilterViewProps extends DynamicFilterConfig {
 
 export function DynamicFilterView({
   sections = [],
+  filterSummarySection,
   addFilterSection,
+  includeOnlySection,
   availableItemsSection,
   howItWorksSection,
   previewSection,
@@ -104,6 +125,7 @@ export function DynamicFilterView({
   onTabChange,
 }: DynamicFilterViewProps) {
   const filterManager = useFilterManager(activePatterns);
+  const includeFilterManager = useFilterManager(includeOnlySection?.patterns || new Set());
   const [internalActiveTab, setInternalActiveTab] = useState(
     tabs?.[0]?.id || ""
   );
@@ -122,6 +144,13 @@ export function DynamicFilterView({
     if (filterManager.newFilter.trim() && onPatternAdd) {
       onPatternAdd(filterManager.newFilter.trim());
       filterManager.addFilter(filterManager.newFilter);
+    }
+  };
+
+  const handleAddIncludePattern = () => {
+    if (includeFilterManager.newFilter.trim() && includeOnlySection?.onPatternAdd) {
+      includeOnlySection.onPatternAdd(includeFilterManager.newFilter.trim());
+      includeFilterManager.addFilter(includeFilterManager.newFilter);
     }
   };
 
@@ -295,15 +324,128 @@ export function DynamicFilterView({
 
     return (
       <>
-        {addFilterSection?.enabled && (
-          <View style={styles.section}>
-            {!filterManager.showAddInput ? (
-              <AddFilterButton
-                onPress={() => filterManager.setShowAddInput(true)}
-                color={macOSColors.semantic.info}
+        {/* Filter Summary Section - Shows active filter state */}
+        {filterSummarySection?.enabled && (
+          filterSummarySection.includePatterns?.size ||
+          filterSummarySection.excludePatterns?.size
+        ) ? (
+          <View style={styles.filterSummarySection}>
+            <View style={styles.filterSummaryHeader}>
+              <Info size={14} color={macOSColors.semantic.warning} />
+              <Text style={styles.filterSummaryTitle}>
+                Filters Active
+              </Text>
+            </View>
+            <Text style={styles.filterSummaryText}>
+              Showing {filterSummarySection.filteredCount} of {filterSummarySection.totalCount} queries
+              {filterSummarySection.includePatterns?.size ? (
+                <Text style={styles.filterSummaryInclude}>
+                  {" "}• Including: {Array.from(filterSummarySection.includePatterns).join(", ")}
+                </Text>
+              ) : null}
+              {filterSummarySection.excludePatterns?.size ? (
+                <Text style={styles.filterSummaryExclude}>
+                  {" "}• Excluding: {Array.from(filterSummarySection.excludePatterns).join(", ")}
+                </Text>
+              ) : null}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Status sections first */}
+        {sections.map(renderFilterSection)}
+
+        {/* Include Only Section - Show ONLY queries matching these patterns */}
+        {includeOnlySection?.enabled && (
+          <View style={styles.includeOnlySection}>
+            <SectionHeader>
+              <SectionHeader.Icon
+                icon={includeOnlySection.icon || Eye}
+                color={macOSColors.semantic.success}
+                size={12}
               />
-            ) : (
-              <View style={styles.filterInputWrapper}>
+              <SectionHeader.Title>
+                {includeOnlySection.title || "INCLUDE ONLY FILTERS"}
+              </SectionHeader.Title>
+              {includeOnlySection.patterns.size > 0 && (
+                <SectionHeader.Badge
+                  count={includeOnlySection.patterns.size}
+                  color={macOSColors.semantic.success}
+                />
+              )}
+            </SectionHeader>
+            {includeOnlySection.description && (
+              <Text style={styles.includeOnlyDescription}>
+                {includeOnlySection.description}
+              </Text>
+            )}
+            <View style={styles.includeOnlyInputWrapper}>
+              {!includeFilterManager.showAddInput ? (
+                <AddFilterButton
+                  onPress={() => includeFilterManager.setShowAddInput(true)}
+                  color={macOSColors.semantic.success}
+                  label="Add include pattern"
+                />
+              ) : (
+                <AddFilterInput
+                  value={includeFilterManager.newFilter}
+                  onChange={includeFilterManager.setNewFilter}
+                  onSubmit={handleAddIncludePattern}
+                  onCancel={() => {
+                    includeFilterManager.setShowAddInput(false);
+                    includeFilterManager.setNewFilter("");
+                  }}
+                  placeholder={includeOnlySection.placeholder || "Enter pattern to include..."}
+                  color={macOSColors.semantic.success}
+                />
+              )}
+            </View>
+            {includeOnlySection.patterns.size > 0 && (
+              <ScrollView
+                style={styles.includeOnlyFiltersContent}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
+                <FilterList
+                  filters={includeOnlySection.patterns}
+                  onRemoveFilter={includeOnlySection.onPatternToggle}
+                  color={macOSColors.semantic.success}
+                />
+              </ScrollView>
+            )}
+          </View>
+        )}
+
+        {/* Exclude Filter Section - Hide queries matching these patterns */}
+        {addFilterSection?.enabled && (
+          <View style={styles.excludeFiltersSection}>
+            <SectionHeader>
+              <SectionHeader.Icon
+                icon={Filter}
+                color={macOSColors.semantic.info}
+                size={12}
+              />
+              <SectionHeader.Title>
+                {addFilterSection.title || "EXCLUDE FILTERS"}
+              </SectionHeader.Title>
+              {activePatterns.size > 0 && (
+                <SectionHeader.Badge
+                  count={activePatterns.size}
+                  color={macOSColors.semantic.info}
+                />
+              )}
+            </SectionHeader>
+            <Text style={styles.excludeFiltersDescription}>
+              Hide queries matching these patterns from the list.
+            </Text>
+            <View style={styles.excludeFiltersInputWrapper}>
+              {!filterManager.showAddInput ? (
+                <AddFilterButton
+                  onPress={() => filterManager.setShowAddInput(true)}
+                  color={macOSColors.semantic.info}
+                  label="Add exclude pattern"
+                />
+              ) : (
                 <AddFilterInput
                   value={filterManager.newFilter}
                   onChange={filterManager.setNewFilter}
@@ -312,47 +454,26 @@ export function DynamicFilterView({
                     filterManager.setShowAddInput(false);
                     filterManager.setNewFilter("");
                   }}
-                  placeholder={
-                    addFilterSection.placeholder || "Enter pattern..."
-                  }
-                  color={macOSColors.text.primary}
+                  placeholder={addFilterSection.placeholder || "Enter pattern to exclude..."}
+                  color={macOSColors.semantic.info}
                 />
-              </View>
+              )}
+            </View>
+            {activePatterns.size > 0 && (
+              <ScrollView
+                style={styles.excludeFiltersContent}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
+                <FilterList
+                  filters={activePatterns}
+                  onRemoveFilter={onPatternToggle}
+                  color={macOSColors.semantic.info}
+                />
+              </ScrollView>
             )}
           </View>
         )}
-
-        {activePatterns.size > 0 && (
-          <View style={styles.activeFiltersSection}>
-            <SectionHeader>
-              <SectionHeader.Icon
-                icon={Filter}
-                color={macOSColors.semantic.info}
-                size={12}
-              />
-              <SectionHeader.Title>
-                {addFilterSection?.title || "ACTIVE FILTERS"}
-              </SectionHeader.Title>
-              <SectionHeader.Badge
-                count={activePatterns.size}
-                color={macOSColors.semantic.info}
-              />
-            </SectionHeader>
-            <ScrollView
-              style={styles.activeFiltersContent}
-              showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-            >
-              <FilterList
-                filters={activePatterns}
-                onRemoveFilter={onPatternToggle}
-                color={macOSColors.semantic.info}
-              />
-            </ScrollView>
-          </View>
-        )}
-
-        {sections.map(renderFilterSection)}
 
         {availableItemsSection?.enabled && (
           <View style={styles.availableKeysSection}>
@@ -645,6 +766,88 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
     maxHeight: 200,
+  },
+  includeOnlySection: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.success + "40",
+    marginTop: 12,
+    overflow: "hidden",
+  },
+  includeOnlyDescription: {
+    fontSize: 10,
+    color: macOSColors.text.secondary,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    lineHeight: 14,
+  },
+  includeOnlyInputWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  includeOnlyFiltersContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    maxHeight: 150,
+  },
+  excludeFiltersSection: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.info + "40",
+    marginTop: 12,
+    overflow: "hidden",
+  },
+  excludeFiltersDescription: {
+    fontSize: 10,
+    color: macOSColors.text.secondary,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    lineHeight: 14,
+  },
+  excludeFiltersInputWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  excludeFiltersContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    maxHeight: 150,
+  },
+  filterSummarySection: {
+    backgroundColor: macOSColors.semantic.warning + "15",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.warning + "40",
+    padding: 12,
+    marginBottom: 12,
+  },
+  filterSummaryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 6,
+  },
+  filterSummaryTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: macOSColors.semantic.warning,
+  },
+  filterSummaryText: {
+    fontSize: 11,
+    color: macOSColors.text.primary,
+    lineHeight: 16,
+  },
+  filterSummaryInclude: {
+    color: macOSColors.semantic.success,
+    fontWeight: "500",
+  },
+  filterSummaryExclude: {
+    color: macOSColors.semantic.info,
+    fontWeight: "500",
   },
   emptyStateText: {
     fontSize: 11,

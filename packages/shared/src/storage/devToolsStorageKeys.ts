@@ -114,6 +114,8 @@ export const devToolsStorageKeys = {
     filters: () => `${devToolsStorageKeys.reactQuery.root()}_filters` as const,
     ignoredPatterns: () =>
       `${devToolsStorageKeys.reactQuery.root()}_ignored_patterns` as const,
+    includedPatterns: () =>
+      `${devToolsStorageKeys.reactQuery.root()}_included_patterns` as const,
     preferences: () =>
       `${devToolsStorageKeys.reactQuery.root()}_preferences` as const,
   },

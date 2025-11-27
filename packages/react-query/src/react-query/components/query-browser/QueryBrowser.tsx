@@ -16,6 +16,7 @@ interface Props {
   queries?: Query[]; // Optional external queries to override useAllQueries
   searchText?: string;
   ignoredPatterns?: Set<string>;
+  includedPatterns?: Set<string>;
 }
 
 /**
@@ -30,6 +31,7 @@ export default function QueryBrowser({
   queries: externalQueries,
   searchText = "",
   ignoredPatterns = new Set(),
+  includedPatterns = new Set(),
 }: Props) {
   // Holds all queries using the working hook, or use external queries if provided
   const internalQueries = useAllQueries();
@@ -64,6 +66,27 @@ export default function QueryBrowser({
       });
     }
 
+    // Apply included patterns filter (show ONLY queries matching any pattern)
+    // This acts as a whitelist - if any include patterns exist, query must match at least one
+    if (includedPatterns.size > 0) {
+      filtered = filtered.filter((query: Query) => {
+        if (!query?.queryKey) return false;
+        const keys = Array.isArray(query.queryKey)
+          ? query.queryKey
+          : [query.queryKey];
+        const keyString = keys
+          .filter((k) => k != null)
+          .map((k) => String(k))
+          .join(" ")
+          .toLowerCase();
+
+        // Return true if query matches ANY included pattern
+        return Array.from(includedPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
     // Apply ignored patterns filter (hide queries matching any pattern)
     if (ignoredPatterns.size > 0) {
       filtered = filtered.filter((query: Query) => {
@@ -92,7 +115,7 @@ export default function QueryBrowser({
     });
 
     return filtered;
-  }, [allQueries, activeFilter, searchText, ignoredPatterns]);
+  }, [allQueries, activeFilter, searchText, includedPatterns, ignoredPatterns]);
 
   // Function to handle query selection with stable comparison
   const handleQuerySelect = useCallback(

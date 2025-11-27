@@ -13,6 +13,7 @@ import {
   Globe,
   Zap,
   Filter,
+  Eye,
 } from "@react-buoy/shared-ui";
 import { getQueryStatusLabel } from "../utils/getQueryStatusLabel";
 
@@ -22,6 +23,8 @@ interface QueryFilterViewV3Props {
   onFilterChange: (filter: string | null) => void;
   ignoredPatterns: Set<string>;
   onPatternToggle: (pattern: string) => void;
+  includedPatterns: Set<string>;
+  onIncludedPatternToggle: (pattern: string) => void;
 }
 
 /**
@@ -34,6 +37,8 @@ export function QueryFilterViewV3({
   onFilterChange,
   ignoredPatterns,
   onPatternToggle,
+  includedPatterns,
+  onIncludedPatternToggle,
 }: QueryFilterViewV3Props) {
   // Calculate status counts
   const statusCounts = useMemo(() => {
@@ -89,9 +94,47 @@ export function QueryFilterViewV3({
     return availableQueryKeys;
   }, [availableQueryKeys]);
 
+  // Calculate filtered query count based on active patterns
+  const filteredCount = useMemo(() => {
+    let filtered = queries;
+
+    // Apply included patterns filter
+    if (includedPatterns.size > 0) {
+      filtered = filtered.filter((query) => {
+        if (!query?.queryKey) return false;
+        const keys = Array.isArray(query.queryKey) ? query.queryKey : [query.queryKey];
+        const keyString = keys.filter((k) => k != null).map((k) => String(k)).join(" ").toLowerCase();
+        return Array.from(includedPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
+    // Apply ignored patterns filter
+    if (ignoredPatterns.size > 0) {
+      filtered = filtered.filter((query) => {
+        if (!query?.queryKey) return true;
+        const keys = Array.isArray(query.queryKey) ? query.queryKey : [query.queryKey];
+        const keyString = keys.filter((k) => k != null).map((k) => String(k)).join(" ").toLowerCase();
+        return !Array.from(ignoredPatterns).some((pattern) =>
+          keyString.includes(pattern.toLowerCase())
+        );
+      });
+    }
+
+    return filtered.length;
+  }, [queries, includedPatterns, ignoredPatterns]);
+
   // Build the filter configuration
   const filterConfig: DynamicFilterConfig = useMemo(() => {
     return {
+      filterSummarySection: {
+        enabled: true,
+        totalCount: queries.length,
+        filteredCount: filteredCount,
+        includePatterns: includedPatterns,
+        excludePatterns: ignoredPatterns,
+      },
       sections: [
         // Status section - radio button style
         {
@@ -168,9 +211,19 @@ export function QueryFilterViewV3({
       ],
       addFilterSection: {
         enabled: true,
-        placeholder: "Enter query key pattern...",
-        title: "ACTIVE FILTERS",
+        placeholder: "Enter pattern to exclude...",
+        title: "EXCLUDE FILTERS",
         icon: Filter,
+      },
+      includeOnlySection: {
+        enabled: true,
+        title: "INCLUDE ONLY FILTERS",
+        description: "Show ONLY queries matching these patterns. All non-matching queries will be hidden.",
+        placeholder: "Enter pattern to include...",
+        icon: Eye,
+        patterns: includedPatterns,
+        onPatternToggle: onIncludedPatternToggle,
+        onPatternAdd: onIncludedPatternToggle,
       },
       availableItemsSection: {
         enabled: true,
@@ -182,17 +235,24 @@ export function QueryFilterViewV3({
         enabled: true,
         title: "HOW QUERY FILTERS WORK",
         description:
-          "Patterns hide matching queries from the query list. Type a pattern or click an available query key to add it to your filters.",
+          "There are two types of query key filters:",
         examples: [
-          "• todos → filters any query whose key contains 'todos'",
-          "• user-profile → filters queries containing 'user-profile'",
-          "• api → filters any query key containing 'api'",
-          "Filters are case-insensitive and match partial query keys.",
+          "",
+          "INCLUDE ONLY (green):",
+          "• Shows ONLY queries matching the pattern",
+          "• Example: 'rewards' → shows only reward queries",
+          "• When active, non-matching queries are hidden",
+          "",
+          "EXCLUDE (blue):",
+          "• Hides queries matching the pattern",
+          "• Example: 'analytics' → hides analytics queries",
+          "",
+          "Filters are case-insensitive and match partial keys.",
         ],
       },
       activePatterns: ignoredPatterns,
     };
-  }, [statusCounts, activeFilter, ignoredPatterns, suggestionItems]);
+  }, [statusCounts, activeFilter, ignoredPatterns, includedPatterns, suggestionItems, onIncludedPatternToggle, queries.length, filteredCount]);
 
   // Handle filter item clicks
   const handleFilterSelect = (itemId: string) => {
