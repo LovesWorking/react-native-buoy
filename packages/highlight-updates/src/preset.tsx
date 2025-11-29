@@ -7,19 +7,27 @@
  * The overlay is automatically rendered by FloatingDevTools when the
  * @react-buoy/highlight-updates package is installed.
  *
+ * Two presets available:
+ * - highlightUpdatesPreset: Quick toggle (no modal)
+ * - highlightUpdatesModalPreset: Full modal with filters and render list
+ *
  * @example
  * ```tsx
- * import { highlightUpdatesPreset } from '@react-buoy/highlight-updates';
+ * import { highlightUpdatesPreset, highlightUpdatesModalPreset } from '@react-buoy/highlight-updates';
  *
- * // Just add to your FloatingDevTools - overlay is auto-rendered!
+ * // Toggle-only: Just tap to enable/disable highlighting
  * <FloatingDevTools apps={[highlightUpdatesPreset]} />
+ *
+ * // Modal: Opens interface with filters, render list, and controls
+ * <FloatingDevTools apps={[highlightUpdatesModalPreset]} />
  * ```
  */
 
 import React, { useState, useEffect } from "react";
-import { Activity } from "@react-buoy/shared-ui";
+import { StackPulseIcon } from "@react-buoy/shared-ui";
 import type { FloatingMenuActions } from "@react-buoy/core";
 import HighlightUpdatesController from "./highlight-updates/utils/HighlightUpdatesController";
+import { HighlightUpdatesModal } from "./highlight-updates/components/HighlightUpdatesModal";
 
 /**
  * Icon component that changes color based on enabled state.
@@ -42,7 +50,7 @@ function HighlightIcon({ size }: { size: number }) {
     return unsubscribe;
   }, []);
 
-  return <Activity size={size} color={enabled ? "#10b981" : "#6b7280"} />;
+  return <StackPulseIcon size={size} color={enabled ? "#10b981" : "#6b7280"} />;
 }
 
 /**
@@ -141,7 +149,7 @@ export function createHighlightUpdatesTool(options?: {
       return unsubscribe;
     }, []);
 
-    return <Activity size={size} color={enabled ? enabledColor : disabledColor} />;
+    return <StackPulseIcon size={size} color={enabled ? enabledColor : disabledColor} />;
   };
 
   return {
@@ -162,6 +170,104 @@ export function createHighlightUpdatesTool(options?: {
 
       HighlightUpdatesController.toggle();
       // Icon updates automatically via subscription
+    },
+  };
+}
+
+/**
+ * Modal preset for highlight updates tool.
+ * Opens a full modal interface with:
+ * - List of tracked component renders
+ * - Start/Stop and Pause/Resume controls
+ * - Clear button to reset render counts
+ * - Search bar in navbar (expandable)
+ * - Filter by viewType, testID, nativeID, componentName
+ *
+ * Use this preset when you want detailed render tracking and filtering.
+ */
+export const highlightUpdatesModalPreset = {
+  id: "highlight-updates-modal",
+  name: "RENDERS",
+  description: "View component render tracking modal",
+  slot: "both" as const,
+  icon: HighlightIcon,
+  component: HighlightUpdatesModal,
+  props: {},
+  launchMode: "modal" as const,
+  onPress: () => {
+    // Initialize on first press if not already initialized
+    if (!HighlightUpdatesController.isInitialized()) {
+      HighlightUpdatesController.initialize();
+    }
+  },
+};
+
+/**
+ * Create a custom highlight updates modal tool configuration.
+ * Use this if you want to override default settings for the modal version.
+ *
+ * @example
+ * ```tsx
+ * import { createHighlightUpdatesModalTool } from '@react-buoy/highlight-updates';
+ *
+ * const myRendersTool = createHighlightUpdatesModalTool({
+ *   name: "PROFILER",
+ *   enabledColor: "#8b5cf6",
+ *   disabledColor: "#9ca3af",
+ * });
+ * ```
+ */
+export function createHighlightUpdatesModalTool(options?: {
+  /** Tool name (default: "RENDERS") */
+  name?: string;
+  /** Tool description */
+  description?: string;
+  /** Icon color when tracking enabled (default: "#10b981" - green) */
+  enabledColor?: string;
+  /** Icon color when tracking disabled (default: "#6b7280" - gray) */
+  disabledColor?: string;
+  /** Custom tool ID (default: "highlight-updates-modal") */
+  id?: string;
+  /** Auto-initialize on first render (default: false) */
+  autoInitialize?: boolean;
+}) {
+  const enabledColor = options?.enabledColor || "#10b981";
+  const disabledColor = options?.disabledColor || "#6b7280";
+
+  // Auto-initialize if requested
+  if (options?.autoInitialize) {
+    setTimeout(() => {
+      HighlightUpdatesController.initialize();
+    }, 1000);
+  }
+
+  const CustomHighlightIcon = ({ size }: { size: number }) => {
+    const [enabled, setEnabled] = useState(() => HighlightUpdatesController.isEnabled());
+
+    useEffect(() => {
+      const unsubscribe = HighlightUpdatesController.subscribe((isEnabled) => {
+        setEnabled(isEnabled);
+      });
+      return unsubscribe;
+    }, []);
+
+    return <StackPulseIcon size={size} color={enabled ? enabledColor : disabledColor} />;
+  };
+
+  return {
+    id: options?.id || "highlight-updates-modal",
+    name: options?.name || "RENDERS",
+    description:
+      options?.description || "View component render tracking modal",
+    slot: "both" as const,
+    icon: CustomHighlightIcon,
+    component: HighlightUpdatesModal,
+    props: {},
+    launchMode: "modal" as const,
+    onPress: () => {
+      if (!HighlightUpdatesController.isInitialized()) {
+        HighlightUpdatesController.initialize();
+      }
     },
   };
 }

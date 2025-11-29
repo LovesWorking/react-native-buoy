@@ -34,6 +34,7 @@ import {
   enableProfilerLogging,
   disableProfilerLogging,
 } from "./ProfilerInterceptor";
+import { RenderTracker } from "./RenderTracker";
 
 interface HighlightRect {
   id: number;
@@ -180,6 +181,79 @@ function getNativeTag(instance: unknown): number | null {
   }
 
   return null;
+}
+
+/**
+ * Extract component info from a stateNode for RenderTracker
+ */
+function extractComponentInfo(stateNode: unknown): {
+  viewType: string;
+  testID?: string;
+  nativeID?: string;
+  accessibilityLabel?: string;
+  componentName?: string;
+} {
+  const node = stateNode as any;
+  const info: {
+    viewType: string;
+    testID?: string;
+    nativeID?: string;
+    accessibilityLabel?: string;
+    componentName?: string;
+  } = {
+    viewType: "Unknown",
+  };
+
+  // Get viewType from viewConfig
+  if (node?.canonical?.viewConfig?.uiViewClassName) {
+    info.viewType = node.canonical.viewConfig.uiViewClassName;
+  } else if (node?.viewConfig?.uiViewClassName) {
+    info.viewType = node.viewConfig.uiViewClassName;
+  }
+
+  // Try to get props from various locations
+  const fiber = node?.canonical?.internalInstanceHandle;
+  const currentProps = node?.canonical?.currentProps;
+  const pendingProps = node?.canonical?.pendingProps;
+  const fiberPendingProps = fiber?.pendingProps;
+  const fiberMemoizedProps = fiber?.memoizedProps;
+
+  // Extract testID
+  info.testID =
+    currentProps?.testID ||
+    pendingProps?.testID ||
+    fiberPendingProps?.testID ||
+    fiberMemoizedProps?.testID ||
+    undefined;
+
+  // Extract nativeID
+  info.nativeID =
+    currentProps?.nativeID ||
+    pendingProps?.nativeID ||
+    fiberPendingProps?.nativeID ||
+    fiberMemoizedProps?.nativeID ||
+    undefined;
+
+  // Extract accessibilityLabel
+  info.accessibilityLabel =
+    currentProps?.accessibilityLabel ||
+    pendingProps?.accessibilityLabel ||
+    fiberPendingProps?.accessibilityLabel ||
+    fiberMemoizedProps?.accessibilityLabel ||
+    undefined;
+
+  // Extract componentName from fiber debug info
+  if (fiber?._debugOwner) {
+    const owner = fiber._debugOwner;
+    info.componentName =
+      owner.type?.name ||
+      owner.type?.displayName ||
+      owner.elementType?.name ||
+      owner.elementType?.displayName ||
+      undefined;
+  }
+
+  return info;
 }
 
 /**
@@ -503,45 +577,74 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
   // Measure each node and call the highlight callback
   const measurePromises = nodesToDraw.slice(0, 20).map(
     ({ node: stateNode, color, count }) =>
-      new Promise<HighlightRect | null>((resolve) => {
+      new Promise<{ rect: HighlightRect | null; stateNode: unknown; color: string; count: number }>((resolve) => {
         const publicInstance = getPublicInstance(stateNode);
         if (!publicInstance) {
-          resolve(null);
+          resolve({ rect: null, stateNode, color, count });
           return;
         }
 
         const nativeTag = getNativeTag(stateNode) || getNativeTag(publicInstance);
         if (nativeTag == null) {
-          resolve(null);
+          resolve({ rect: null, stateNode, color, count });
           return;
         }
 
         try {
           publicInstance.measure((x, y, width, height, pageX, pageY) => {
             if (pageX == null || pageY == null || width == null || height == null) {
-              resolve(null);
+              resolve({ rect: null, stateNode, color, count });
               return;
             }
 
             resolve({
-              id: nativeTag,
-              x: pageX,
-              y: pageY,
-              width,
-              height,
+              rect: {
+                id: nativeTag,
+                x: pageX,
+                y: pageY,
+                width,
+                height,
+                color,
+                count,
+              },
+              stateNode,
               color,
               count,
             });
           });
         } catch (error) {
-          resolve(null);
+          resolve({ rect: null, stateNode, color, count });
         }
       })
   );
 
   Promise.all(measurePromises)
     .then((results) => {
-      const rects = results.filter((r): r is HighlightRect => r !== null);
+      const validResults = results.filter((r) => r.rect !== null);
+      const rects = validResults.map((r) => r.rect as HighlightRect);
+
+      // Track renders in RenderTracker (for modal)
+      for (const { rect, stateNode, color, count } of validResults) {
+        if (rect) {
+          const componentInfo = extractComponentInfo(stateNode);
+          RenderTracker.trackRender({
+            nativeTag: rect.id,
+            viewType: componentInfo.viewType,
+            testID: componentInfo.testID,
+            nativeID: componentInfo.nativeID,
+            accessibilityLabel: componentInfo.accessibilityLabel,
+            componentName: componentInfo.componentName,
+            measurements: {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            },
+            color,
+            count,
+          });
+        }
+      }
 
       if (rects.length > 0 && highlightCallback) {
         highlightCallback(rects);
@@ -751,6 +854,9 @@ function enable(): void {
   // Enable our implementation
   subscribeToTraceUpdates();
 
+  // Start tracking renders
+  RenderTracker.start();
+
   // Note: profiler logging disabled for normal operation
   // enableProfilerLogging();
 
@@ -779,6 +885,9 @@ function disable(): void {
   // Disable our implementation
   unsubscribeFromTraceUpdates();
 
+  // Stop tracking renders
+  RenderTracker.stop();
+
   // Note: profiler logging disabled for normal operation
   // disableProfilerLogging();
 
@@ -794,6 +903,15 @@ function toggle(): void {
   } else {
     enable();
   }
+}
+
+/**
+ * Clear all render counts and tracked data
+ */
+function clearRenderCounts(): void {
+  nodeRenderCounts.clear();
+  RenderTracker.clear();
+  debugLog("Cleared render counts");
 }
 
 function isEnabled(): boolean {
@@ -841,6 +959,7 @@ interface HighlightUpdatesControllerAPI {
   destroy: typeof destroy;
   isInitialized: () => boolean;
   setHighlightCallback: typeof setHighlightCallback;
+  clearRenderCounts: typeof clearRenderCounts;
 }
 
 const HighlightUpdatesController: HighlightUpdatesControllerAPI = {
@@ -854,6 +973,7 @@ const HighlightUpdatesController: HighlightUpdatesControllerAPI = {
   destroy,
   isInitialized,
   setHighlightCallback,
+  clearRenderCounts,
 };
 
 export default HighlightUpdatesController;

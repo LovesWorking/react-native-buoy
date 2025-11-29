@@ -6,10 +6,15 @@
  *
  * @example
  * ```tsx
- * // Just use with FloatingDevTools - overlay is auto-rendered!
+ * // Toggle-only preset - tap to enable/disable highlights
  * import { highlightUpdatesPreset } from '@react-buoy/highlight-updates';
  *
  * <FloatingDevTools apps={[highlightUpdatesPreset]} />
+ *
+ * // Modal preset - full interface with filters and render list
+ * import { highlightUpdatesModalPreset } from '@react-buoy/highlight-updates';
+ *
+ * <FloatingDevTools apps={[highlightUpdatesModalPreset]} />
  *
  * // Or use the standalone controller programmatically
  * import { HighlightUpdatesController } from '@react-buoy/highlight-updates';
@@ -24,6 +29,8 @@
 export {
   highlightUpdatesPreset,
   createHighlightUpdatesTool,
+  highlightUpdatesModalPreset,
+  createHighlightUpdatesModalTool,
 } from "./preset";
 
 // Controller export for standalone usage
@@ -42,3 +49,13 @@ export {
   disableProfilerLogging,
   isLoggingEnabled,
 } from "./highlight-updates/utils/ProfilerInterceptor";
+
+// RenderTracker singleton for tracking render history
+export { RenderTracker } from "./highlight-updates/utils/RenderTracker";
+export type { TrackedRender, FilterConfig } from "./highlight-updates/utils/RenderTracker";
+
+// Modal components for custom integrations
+export { HighlightUpdatesModal } from "./highlight-updates/components/HighlightUpdatesModal";
+export { RenderListItem } from "./highlight-updates/components/RenderListItem";
+export { RenderDetailView } from "./highlight-updates/components/RenderDetailView";
+export { HighlightFilterView } from "./highlight-updates/components/HighlightFilterView";
