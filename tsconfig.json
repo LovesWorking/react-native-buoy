@@ -62,6 +62,14 @@
       "@react-buoy/react-query/*": [
         "packages/react-query/lib/typescript/module/*",
         "packages/react-query/src/*"
+      ],
+      "@react-buoy/highlight-updates": [
+        "packages/highlight-updates/lib/typescript/module/index.d.ts",
+        "packages/highlight-updates/src/index.tsx"
+      ],
+      "@react-buoy/highlight-updates/*": [
+        "packages/highlight-updates/lib/typescript/module/*",
+        "packages/highlight-updates/src/*"
       ]
     }
   },

@@ -2,3 +2,4 @@ packages:
   - packages/*
   - example
   - example-dev-build
+  - example-rn-cli
