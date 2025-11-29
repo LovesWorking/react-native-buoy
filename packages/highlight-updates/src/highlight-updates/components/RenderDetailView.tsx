@@ -78,7 +78,12 @@ export function RenderDetailView({ render }: RenderDetailViewProps) {
       <View style={styles.header}>
         <View style={[styles.colorBar, { backgroundColor: render.color }]} />
         <View style={styles.headerContent}>
-          <Text style={styles.viewType}>{render.viewType}</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.displayName}>{render.displayName}</Text>
+            {render.displayName !== render.viewType && (
+              <Text style={styles.viewType}>{render.viewType}</Text>
+            )}
+          </View>
           <View style={[styles.renderBadge, { backgroundColor: render.color + "30" }]}>
             <Text style={[styles.renderCount, { color: render.color }]}>
               {render.renderCount} renders
@@ -230,14 +235,22 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 14,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
   },
-  viewType: {
+  headerText: {
+    flex: 1,
+  },
+  displayName: {
     fontSize: 16,
     fontWeight: "700",
     color: macOSColors.text.primary,
+  },
+  viewType: {
+    fontSize: 11,
+    color: macOSColors.text.muted,
     fontFamily: "monospace",
+    marginTop: 2,
   },
   renderBadge: {
     paddingHorizontal: 12,

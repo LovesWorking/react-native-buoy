@@ -86,7 +86,7 @@ export function HighlightUpdatesModal({
 
   // Subscribe to RenderTracker updates
   useEffect(() => {
-    const unsubscribeRenders = RenderTracker.subscribe((_renders) => {
+    const unsubscribeRenders = RenderTracker.subscribe(() => {
       setRenders(RenderTracker.getFilteredRenders(searchText));
       setStats(RenderTracker.getStats());
     });
@@ -165,11 +165,13 @@ export function HighlightUpdatesModal({
   // FlatList optimization
   const keyExtractor = useCallback((item: TrackedRender) => item.id, []);
 
-  const renderItem = useMemo(() => {
-    return ({ item }: { item: TrackedRender }) => (
-      <RenderListItem render={item} onPress={handleRenderPress} />
-    );
-  }, [handleRenderPress]);
+  const renderItem = useCallback(
+    ({ item }: { item: TrackedRender }) => (
+      // Key includes renderCount to force React to recreate component when count changes
+      <RenderListItem key={`${item.id}-${item.renderCount}`} render={item} onPress={handleRenderPress} />
+    ),
+    [handleRenderPress]
+  );
 
   // Header rendering
   const renderHeaderContent = () => {
@@ -365,7 +367,7 @@ export function HighlightUpdatesModal({
       enableGlitchEffects={true}
       styles={{}}
     >
-      <View style={styles.container}>
+      <View nativeID="__rn_buoy__highlight-modal" style={styles.container}>
         {selectedRender ? (
           <RenderDetailView render={selectedRender} />
         ) : showFilterView ? (
@@ -400,9 +402,9 @@ export function HighlightUpdatesModal({
                 data={renders}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
+                extraData={stats.totalRenders}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator
-                removeClippedSubviews
                 initialNumToRender={10}
                 maxToRenderPerBatch={10}
                 windowSize={10}

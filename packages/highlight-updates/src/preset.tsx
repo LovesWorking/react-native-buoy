@@ -192,8 +192,9 @@ export const highlightUpdatesModalPreset = {
   slot: "both" as const,
   icon: HighlightIcon,
   component: HighlightUpdatesModal,
-  props: {},
-  launchMode: "modal" as const,
+  props: {
+    enableSharedModalDimensions: true,
+  },
   onPress: () => {
     // Initialize on first press if not already initialized
     if (!HighlightUpdatesController.isInitialized()) {
@@ -262,8 +263,9 @@ export function createHighlightUpdatesModalTool(options?: {
     slot: "both" as const,
     icon: CustomHighlightIcon,
     component: HighlightUpdatesModal,
-    props: {},
-    launchMode: "modal" as const,
+    props: {
+      enableSharedModalDimensions: true,
+    },
     onPress: () => {
       if (!HighlightUpdatesController.isInitialized()) {
         HighlightUpdatesController.initialize();

@@ -136,7 +136,7 @@ export function autoDiscoverPresets(): InstalledApp[] {
         }
       },
     },
-    // Highlight Updates
+    // Highlight Updates (both toggle and modal presets)
     {
       name: "@react-buoy/highlight-updates",
       loader: () => {
@@ -144,8 +144,9 @@ export function autoDiscoverPresets(): InstalledApp[] {
           // @ts-ignore - Dynamic import that may not exist
           const {
             highlightUpdatesPreset,
+            highlightUpdatesModalPreset,
           } = require("@react-buoy/highlight-updates");
-          return highlightUpdatesPreset;
+          return [highlightUpdatesModalPreset, highlightUpdatesPreset];
         } catch {
           return null;
         }

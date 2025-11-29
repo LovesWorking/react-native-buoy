@@ -8,10 +8,13 @@
 
 "use strict";
 
+import { getComponentDisplayName } from "./ViewTypeMapper";
+
 export interface TrackedRender {
   id: string; // nativeTag as string for Map key
   nativeTag: number;
-  viewType: string; // "RCTView", "RCTText", etc.
+  viewType: string; // "RCTView", "RCTText", etc. (native class name)
+  displayName: string; // "View", "Text", etc. (developer-friendly name)
   testID?: string;
   nativeID?: string;
   accessibilityLabel?: string;
@@ -92,7 +95,7 @@ class RenderTrackerSingleton {
     const existing = this.renders.get(id);
 
     if (existing) {
-      // Update existing render
+      // Mutate in place to keep Map entry correct
       existing.renderCount = data.count;
       existing.lastRenderTime = now;
       existing.color = data.color;
@@ -114,6 +117,7 @@ class RenderTrackerSingleton {
         id,
         nativeTag: data.nativeTag,
         viewType: data.viewType,
+        displayName: getComponentDisplayName(data.viewType),
         testID: data.testID,
         nativeID: data.nativeID,
         accessibilityLabel: data.accessibilityLabel,
@@ -144,9 +148,10 @@ class RenderTrackerSingleton {
 
   /**
    * Get all tracked renders
+   * Creates new object copies to trigger React.memo re-renders
    */
   getRenders(): TrackedRender[] {
-    return Array.from(this.renders.values());
+    return Array.from(this.renders.values()).map(r => ({ ...r }));
   }
 
   /**
@@ -161,6 +166,7 @@ class RenderTrackerSingleton {
       renders = renders.filter((r) => {
         return (
           r.viewType.toLowerCase().includes(search) ||
+          r.displayName.toLowerCase().includes(search) ||
           r.testID?.toLowerCase().includes(search) ||
           r.nativeID?.toLowerCase().includes(search) ||
           r.accessibilityLabel?.toLowerCase().includes(search) ||

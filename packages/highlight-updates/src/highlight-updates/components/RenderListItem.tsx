@@ -5,7 +5,7 @@
  * Displays viewType, identifier (testID/nativeID/component), render count, and timing.
  */
 
-import React, { memo, useMemo } from "react";
+import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, macOSColors } from "@react-buoy/shared-ui";
 import type { TrackedRender } from "../utils/RenderTracker";
@@ -44,12 +44,18 @@ function RenderListItemInner({ render, onPress }: RenderListItemProps) {
       <View style={[styles.colorIndicator, { backgroundColor: render.color }]} />
 
       <View style={styles.content}>
-        {/* Top row: viewType and render count */}
+        {/* Top row: displayName and render count */}
         <View style={styles.topRow}>
           <View style={styles.viewTypeContainer}>
             <Text style={styles.viewType} numberOfLines={1}>
-              {render.viewType}
+              {render.displayName}
             </Text>
+            {/* Show native type if different from display name */}
+            {render.displayName !== render.viewType && (
+              <Text style={styles.nativeType} numberOfLines={1}>
+                {render.viewType}
+              </Text>
+            )}
           </View>
           <View style={[styles.renderCountBadge, { backgroundColor: render.color + "30" }]}>
             <Text style={[styles.renderCount, { color: render.color }]}>
@@ -73,7 +79,9 @@ function RenderListItemInner({ render, onPress }: RenderListItemProps) {
   );
 }
 
-export const RenderListItem = memo(RenderListItemInner);
+// Note: Not using React.memo here because FlatList with extraData handles
+// re-renders efficiently, and memo was preventing updates when render counts changed
+export const RenderListItem = RenderListItemInner;
 
 const styles = StyleSheet.create({
   container: {
@@ -111,7 +119,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: macOSColors.text.primary,
+  },
+  nativeType: {
+    fontSize: 10,
+    color: macOSColors.text.muted,
     fontFamily: "monospace",
+    marginTop: 1,
   },
   renderCountBadge: {
     paddingHorizontal: 8,

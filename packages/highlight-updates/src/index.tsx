@@ -54,6 +54,16 @@ export {
 export { RenderTracker } from "./highlight-updates/utils/RenderTracker";
 export type { TrackedRender, FilterConfig } from "./highlight-updates/utils/RenderTracker";
 
+// ViewTypeMapper for translating native view names to component names
+export {
+  VIEW_TYPE_MAP,
+  getComponentDisplayName,
+  getNativeViewType,
+  isKnownViewType,
+  getAllNativeViewTypes,
+  getAllComponentNames,
+} from "./highlight-updates/utils/ViewTypeMapper";
+
 // Modal components for custom integrations
 export { HighlightUpdatesModal } from "./highlight-updates/components/HighlightUpdatesModal";
 export { RenderListItem } from "./highlight-updates/components/RenderListItem";

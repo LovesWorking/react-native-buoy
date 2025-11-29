@@ -417,31 +417,143 @@ function isOurOverlayTag(nativeTag: number | null): boolean {
   return renderedOverlayTags.has(nativeTag);
 }
 
+// ============================================================================
+// OPTIMIZED DEV TOOLS DETECTION
+// ============================================================================
+// Performance optimizations applied:
+// 1. Result caching by nativeTag (same tag = same result)
+// 2. Set-based O(1) lookups instead of multiple string comparisons
+// 3. Component name check FIRST (appears early in tree, ~depth 5-8)
+// 4. Early exit on first match
+// 5. Cached property access to avoid repeated traversal
+// ============================================================================
+
+// O(1) lookup sets for fast detection
+const DEV_TOOLS_COMPONENT_NAMES = new Set([
+  "JsModalComponent",
+  "HighlightUpdatesModal",
+  "AppRenderer",
+  "AppOverlay",
+  "FloatingTools",
+  "DialDevTools",
+  "HighlightUpdatesOverlay",
+  "DevToolsVisibilityProvider",
+  "AppHostProvider",
+  "MinimizedToolsProvider",
+]);
+
+const DEV_TOOLS_NATIVE_IDS = new Set([
+  "highlight-updates-overlay",
+  "jsmodal-root",
+]);
+
+// Cache: nativeTag -> isDevTools (avoid re-walking tree for same node)
+const devToolsNodeCache = new Map<number, boolean>();
+const CACHE_MAX_SIZE = 500;
+
 /**
- * Check if a stateNode belongs to our overlay by checking nativeID
- * Our overlay Views have nativeIDs like "highlight-updates-overlay", "__highlight_rect_*", or "__highlight_badge_*"
+ * Check if a nativeID belongs to our dev tools (O(1) with Set + prefix check)
+ */
+function isDevToolsNativeID(nativeID: string | null | undefined): boolean {
+  if (!nativeID) return false;
+  // Direct Set lookup first (O(1))
+  if (DEV_TOOLS_NATIVE_IDS.has(nativeID)) return true;
+  // Prefix checks only if not in set (most will match set)
+  return nativeID.charCodeAt(0) === 95 && // '_' = 95, fast char check
+    (nativeID.startsWith("__highlight_") || nativeID.startsWith("__rn_buoy__"));
+}
+
+/**
+ * Get component name from fiber (cached property access pattern)
+ */
+function getComponentName(fiber: any): string | null {
+  // Most common: type.name
+  const type = fiber.type;
+  if (type) {
+    if (typeof type === 'string') return type;
+    if (type.name) return type.name;
+    if (type.displayName) return type.displayName;
+  }
+  // Fallback: elementType
+  const elementType = fiber.elementType;
+  if (elementType) {
+    if (elementType.name) return elementType.name;
+    if (elementType.displayName) return elementType.displayName;
+  }
+  return null;
+}
+
+/**
+ * Check if a stateNode belongs to our dev tools.
+ *
+ * OPTIMIZED: Uses caching, O(1) Set lookups, and early exit patterns.
+ * Walks up fiber tree checking component names (fast) before nativeIDs.
  */
 function isOurOverlayNode(stateNode: unknown): boolean {
   const node = stateNode as any;
+  const fiber = node?.canonical?.internalInstanceHandle;
 
-  // Check various locations where nativeID might be stored
-  const nativeID =
-    // Fiber pendingProps/memoizedProps
-    node?.canonical?.internalInstanceHandle?.pendingProps?.nativeID ||
-    node?.canonical?.internalInstanceHandle?.memoizedProps?.nativeID ||
-    // Canonical currentProps
+  // Get nativeTag for caching
+  const nativeTag = getNativeTag(stateNode) || getNativeTag(node?.canonical?.publicInstance);
+
+  // Check cache first (O(1))
+  if (nativeTag != null) {
+    const cached = devToolsNodeCache.get(nativeTag);
+    if (cached !== undefined) {
+      return cached;
+    }
+  }
+
+  let result = false;
+
+  // Fast path: check direct nativeID
+  const directNativeID =
+    fiber?.pendingProps?.nativeID ||
+    fiber?.memoizedProps?.nativeID ||
     node?.canonical?.currentProps?.nativeID ||
-    // Canonical pendingProps
-    node?.canonical?.pendingProps?.nativeID ||
     null;
 
-  if (!nativeID) return false;
+  if (isDevToolsNativeID(directNativeID)) {
+    result = true;
+  } else if (fiber) {
+    // Walk up fiber tree - check component names FIRST (they appear early)
+    let current = fiber;
+    let depth = 0;
 
-  // Check for our overlay nativeID patterns
-  return (
-    nativeID === "highlight-updates-overlay" ||
-    nativeID.startsWith("__highlight_")
-  );
+    // Reduced max depth - component names appear by depth 15 typically
+    while (current && depth < 30) {
+      // Component name check FIRST (faster, appears earlier in tree)
+      const name = getComponentName(current);
+      if (name && DEV_TOOLS_COMPONENT_NAMES.has(name)) {
+        result = true;
+        break;
+      }
+
+      // NativeID check (only if component name didn't match)
+      const nativeID = current.pendingProps?.nativeID || current.memoizedProps?.nativeID;
+      if (isDevToolsNativeID(nativeID)) {
+        result = true;
+        break;
+      }
+
+      current = current.return;
+      depth++;
+    }
+  }
+
+  // Cache result (with size limit to prevent memory leak)
+  if (nativeTag != null) {
+    if (devToolsNodeCache.size >= CACHE_MAX_SIZE) {
+      // Clear oldest entries (simple strategy - clear half)
+      const entries = Array.from(devToolsNodeCache.keys());
+      for (let i = 0; i < CACHE_MAX_SIZE / 2; i++) {
+        devToolsNodeCache.delete(entries[i]);
+      }
+    }
+    devToolsNodeCache.set(nativeTag, result);
+  }
+
+  return result;
 }
 
 /**
@@ -478,13 +590,43 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
 
   // TEMPORARY: Log only mode - skip all processing and just log extensive info
   if (DEBUG_LOG_ONLY) {
-    console.log(
-      `[HighlightUpdates] traceUpdates: ${nodes.size} node(s)`,
-      Array.from(nodes).map((node, index) => ({
-        index,
-        ...describeNodeForLog(node),
-      }))
-    );
+    // First, test our filter on all nodes
+    const filtered: unknown[] = [];
+    const passed: unknown[] = [];
+
+    for (const node of nodes) {
+      if (isOurOverlayNode(node)) {
+        filtered.push(node);
+      } else {
+        passed.push(node);
+      }
+    }
+
+    console.log(`\n========== [HighlightUpdates] ==========`);
+    console.log(`  Total: ${nodes.size} | FILTERED: ${filtered.length} | PASSED: ${passed.length}`);
+
+    // Only log details for passed nodes (the ones that would render)
+    if (passed.length > 0) {
+      console.log(`\n--- PASSED NODES (would render highlights) ---`);
+      passed.forEach((node, index) => {
+        const n = node as any;
+        const fiber = n?.canonical?.internalInstanceHandle;
+        const viewType = n?.canonical?.viewConfig?.uiViewClassName || "Unknown";
+        const directNativeID =
+          fiber?.pendingProps?.nativeID ||
+          fiber?.memoizedProps?.nativeID ||
+          null;
+
+        console.log(`  [${index}] ${viewType}${directNativeID ? ` (nativeID=${directNativeID})` : ''}`);
+      });
+    }
+
+    // Log a sample filtered node to verify detection
+    if (filtered.length > 0 && passed.length === 0) {
+      console.log(`  ✓ All ${filtered.length} nodes filtered (dev tools)`);
+    }
+
+    console.log(`==========================================\n`);
     return;
   }
 
@@ -881,6 +1023,7 @@ function disable(): void {
     renderingLockTimeout = null;
   }
   renderedOverlayTags.clear();
+  devToolsNodeCache.clear(); // Clear detection cache
 
   // Disable our implementation
   unsubscribeFromTraceUpdates();
