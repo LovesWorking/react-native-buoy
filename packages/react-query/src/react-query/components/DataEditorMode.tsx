@@ -30,6 +30,8 @@ interface DataEditorModeProps {
   selectedQuery: Query;
   isFloatingMode: boolean;
   disableInternalFooter?: boolean;
+  /** Version number that increments when query state changes, used to force re-renders */
+  queryVersion?: number;
 }
 
 /**
@@ -40,10 +42,11 @@ export function DataEditorMode({
   selectedQuery,
   isFloatingMode,
   disableInternalFooter = false,
+  queryVersion,
 }: DataEditorModeProps) {
   const insets = useSafeAreaInsets({ minBottom: 16 });
   const queryClient = useQueryClient();
-  const actionButtons = useActionButtons(selectedQuery, queryClient);
+  const actionButtons = useActionButtons(selectedQuery, queryClient, queryVersion);
 
   return (
     <>
@@ -127,13 +130,16 @@ export function DataEditorMode({
 export function DataEditorActionsFooter({
   selectedQuery,
   isFloatingMode,
+  queryVersion,
 }: {
   selectedQuery: Query;
   isFloatingMode: boolean;
+  /** Version number that increments when query state changes, used to force re-renders */
+  queryVersion?: number;
 }) {
   const insets = useSafeAreaInsets({ minBottom: 16 });
   const queryClient = useQueryClient();
-  const actionButtons = useActionButtons(selectedQuery, queryClient);
+  const actionButtons = useActionButtons(selectedQuery, queryClient, queryVersion);
 
   return (
     <View

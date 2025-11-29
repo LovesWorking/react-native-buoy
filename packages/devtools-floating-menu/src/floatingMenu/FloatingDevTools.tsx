@@ -239,6 +239,19 @@ export const FloatingDevTools = ({
     }
   }, []);
 
+  // Check if highlight-updates is installed and auto-render the overlay
+  const HighlightUpdatesOverlay = useMemo(() => {
+    try {
+      // @ts-ignore - Dynamic import that may not exist
+      const {
+        HighlightUpdatesOverlay: Overlay,
+      } = require("@react-buoy/highlight-updates");
+      return Overlay;
+    } catch {
+      return null;
+    }
+  }, []);
+
   // Get tool icon helper for the MinimizedToolsProvider
   const getToolIcon = useCallback(
     (id: string): ReactNode => {
@@ -265,6 +278,7 @@ export const FloatingDevTools = ({
           </AppHostProvider>
           {children}
           {DebugBordersOverlay && <DebugBordersOverlay />}
+          {HighlightUpdatesOverlay && <HighlightUpdatesOverlay />}
         </DevToolsVisibilityProvider>
       </View>
     </HintsProvider>

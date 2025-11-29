@@ -136,6 +136,21 @@ export function autoDiscoverPresets(): InstalledApp[] {
         }
       },
     },
+    // Highlight Updates
+    {
+      name: "@react-buoy/highlight-updates",
+      loader: () => {
+        try {
+          // @ts-ignore - Dynamic import that may not exist
+          const {
+            highlightUpdatesPreset,
+          } = require("@react-buoy/highlight-updates");
+          return highlightUpdatesPreset;
+        } catch {
+          return null;
+        }
+      },
+    },
   ];
 
   // Attempt to load each preset
