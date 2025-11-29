@@ -70,6 +70,7 @@ export function RenderDetailView({ render }: RenderDetailViewProps) {
 
   return (
     <ScrollView
+      nativeID="__rn_buoy__render-detail"
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}

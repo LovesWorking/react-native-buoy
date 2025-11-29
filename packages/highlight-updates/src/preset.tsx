@@ -190,16 +190,12 @@ export const highlightUpdatesModalPreset = {
   name: "RENDERS",
   description: "View component render tracking modal",
   slot: "both" as const,
-  icon: HighlightIcon,
+  icon: ({ size }: { size: number }) => (
+    <StackPulseIcon size={size} color="#10b981" />
+  ),
   component: HighlightUpdatesModal,
   props: {
     enableSharedModalDimensions: true,
-  },
-  onPress: () => {
-    // Initialize on first press if not already initialized
-    if (!HighlightUpdatesController.isInitialized()) {
-      HighlightUpdatesController.initialize();
-    }
   },
 };
 
@@ -242,34 +238,18 @@ export function createHighlightUpdatesModalTool(options?: {
     }, 1000);
   }
 
-  const CustomHighlightIcon = ({ size }: { size: number }) => {
-    const [enabled, setEnabled] = useState(() => HighlightUpdatesController.isEnabled());
-
-    useEffect(() => {
-      const unsubscribe = HighlightUpdatesController.subscribe((isEnabled) => {
-        setEnabled(isEnabled);
-      });
-      return unsubscribe;
-    }, []);
-
-    return <StackPulseIcon size={size} color={enabled ? enabledColor : disabledColor} />;
-  };
-
   return {
     id: options?.id || "highlight-updates-modal",
     name: options?.name || "RENDERS",
     description:
       options?.description || "View component render tracking modal",
     slot: "both" as const,
-    icon: CustomHighlightIcon,
+    icon: ({ size }: { size: number }) => (
+      <StackPulseIcon size={size} color={enabledColor} />
+    ),
     component: HighlightUpdatesModal,
     props: {
       enableSharedModalDimensions: true,
-    },
-    onPress: () => {
-      if (!HighlightUpdatesController.isInitialized()) {
-        HighlightUpdatesController.initialize();
-      }
     },
   };
 }

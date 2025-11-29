@@ -430,8 +430,17 @@ function isOurOverlayTag(nativeTag: number | null): boolean {
 
 // O(1) lookup sets for fast detection
 const DEV_TOOLS_COMPONENT_NAMES = new Set([
+  // React Buoy devtools components
   "JsModalComponent",
   "HighlightUpdatesModal",
+  "HighlightFilterView",
+  "RenderDetailView",
+  "RenderListItem",
+  "TypePicker",
+  "PatternInput",
+  "DetectedItemsSection",
+  "DetectedCategoryBadge",
+  "IdentifierBadge",
   "AppRenderer",
   "AppOverlay",
   "FloatingTools",
@@ -440,11 +449,31 @@ const DEV_TOOLS_COMPONENT_NAMES = new Set([
   "DevToolsVisibilityProvider",
   "AppHostProvider",
   "MinimizedToolsProvider",
+  // React Native LogBox components (shown on reload/errors)
+  "LogBox",
+  "LogBoxLog",
+  "LogBoxLogNotification",
+  "LogBoxNotificationContainer",
+  "_LogBoxNotificationContainer",
+  "LogBoxInspector",
+  "LogBoxInspectorContainer",
+  "LogBoxInspectorHeader",
+  "LogBoxInspectorBody",
+  "LogBoxInspectorFooter",
+  "LogBoxInspectorMessageHeader",
+  "LogBoxInspectorStackFrame",
+  "LogBoxInspectorSection",
+  "LogBoxButton",
+  "LogBoxMessage",
 ]);
 
 const DEV_TOOLS_NATIVE_IDS = new Set([
   "highlight-updates-overlay",
   "jsmodal-root",
+  "__rn_buoy__highlight-modal",
+  // LogBox native IDs
+  "logbox_inspector",
+  "logbox",
 ]);
 
 // Cache: nativeTag -> isDevTools (avoid re-walking tree for same node)
@@ -452,15 +481,24 @@ const devToolsNodeCache = new Map<number, boolean>();
 const CACHE_MAX_SIZE = 500;
 
 /**
- * Check if a nativeID belongs to our dev tools (O(1) with Set + prefix check)
+ * Check if a nativeID belongs to our dev tools or RN internal tools (O(1) with Set + prefix check)
  */
 function isDevToolsNativeID(nativeID: string | null | undefined): boolean {
   if (!nativeID) return false;
   // Direct Set lookup first (O(1))
   if (DEV_TOOLS_NATIVE_IDS.has(nativeID)) return true;
-  // Prefix checks only if not in set (most will match set)
-  return nativeID.charCodeAt(0) === 95 && // '_' = 95, fast char check
-    (nativeID.startsWith("__highlight_") || nativeID.startsWith("__rn_buoy__"));
+  // Prefix checks for devtools nativeIDs
+  const firstChar = nativeID.charCodeAt(0);
+  if (firstChar === 95) { // '_' = 95
+    if (nativeID.startsWith("__highlight_") || nativeID.startsWith("__rn_buoy__")) {
+      return true;
+    }
+  }
+  // Check for LogBox nativeIDs (start with 'l')
+  if (firstChar === 108 && nativeID.startsWith("logbox")) { // 'l' = 108
+    return true;
+  }
+  return false;
 }
 
 /**

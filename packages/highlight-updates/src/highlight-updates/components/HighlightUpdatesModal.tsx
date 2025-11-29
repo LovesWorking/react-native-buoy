@@ -29,6 +29,8 @@ import {
   devToolsStorageKeys,
   macOSColors,
   TabSelector,
+  safeGetItem,
+  safeSetItem,
 } from "@react-buoy/shared-ui";
 import type { ViewStyle } from "react-native";
 import HighlightUpdatesController from "../utils/HighlightUpdatesController";
@@ -83,6 +85,122 @@ export function HighlightUpdatesModal({
 
   // Filter state
   const [filters, setFilters] = useState<FilterConfig>(() => RenderTracker.getFilters());
+
+  // Persistence refs - prevent saving on initial load
+  const hasLoadedTrackingState = useRef(false);
+  const hasLoadedFilters = useRef(false);
+
+  // Load persisted tracking state on mount
+  useEffect(() => {
+    if (!visible || hasLoadedTrackingState.current) return;
+
+    const loadTrackingState = async () => {
+      try {
+        const storedTracking = await safeGetItem(
+          devToolsStorageKeys.highlightUpdates.isTracking()
+        );
+        if (storedTracking !== null) {
+          const shouldTrack = storedTracking === "true";
+          if (shouldTrack && !HighlightUpdatesController.isEnabled()) {
+            if (!HighlightUpdatesController.isInitialized()) {
+              HighlightUpdatesController.initialize();
+            }
+            HighlightUpdatesController.enable();
+          }
+        }
+        hasLoadedTrackingState.current = true;
+      } catch (error) {
+        // Failed to load tracking state
+      }
+    };
+
+    loadTrackingState();
+  }, [visible]);
+
+  // Save tracking state when it changes
+  useEffect(() => {
+    if (!hasLoadedTrackingState.current) return;
+
+    const saveTrackingState = async () => {
+      try {
+        await safeSetItem(
+          devToolsStorageKeys.highlightUpdates.isTracking(),
+          isTracking.toString()
+        );
+      } catch (error) {
+        // Failed to save tracking state
+      }
+    };
+
+    saveTrackingState();
+  }, [isTracking]);
+
+  // Load persisted filters on mount
+  useEffect(() => {
+    if (!visible || hasLoadedFilters.current) return;
+
+    const loadFilters = async () => {
+      try {
+        const storedFilters = await safeGetItem(
+          devToolsStorageKeys.highlightUpdates.filters()
+        );
+        if (storedFilters) {
+          const parsedFilters = JSON.parse(storedFilters);
+          // Convert arrays back to Sets for legacy fields, load new pattern arrays directly
+          const restoredFilters: Partial<FilterConfig> = {
+            includeTestID: new Set(parsedFilters.includeTestID || []),
+            includeNativeID: new Set(parsedFilters.includeNativeID || []),
+            includeViewType: new Set(parsedFilters.includeViewType || []),
+            includeComponent: new Set(parsedFilters.includeComponent || []),
+            excludeTestID: new Set(parsedFilters.excludeTestID || []),
+            excludeNativeID: new Set(parsedFilters.excludeNativeID || []),
+            excludeViewType: new Set(parsedFilters.excludeViewType || []),
+            excludeComponent: new Set(parsedFilters.excludeComponent || []),
+            includePatterns: parsedFilters.includePatterns || [],
+            excludePatterns: parsedFilters.excludePatterns || [],
+          };
+          RenderTracker.setFilters(restoredFilters);
+          setFilters(RenderTracker.getFilters());
+        }
+        hasLoadedFilters.current = true;
+      } catch (error) {
+        // Failed to load filters
+      }
+    };
+
+    loadFilters();
+  }, [visible]);
+
+  // Save filters when they change
+  useEffect(() => {
+    if (!hasLoadedFilters.current) return;
+
+    const saveFilters = async () => {
+      try {
+        // Convert Sets to arrays for JSON serialization, include new pattern arrays
+        const filtersToSave = {
+          includeTestID: Array.from(filters.includeTestID),
+          includeNativeID: Array.from(filters.includeNativeID),
+          includeViewType: Array.from(filters.includeViewType),
+          includeComponent: Array.from(filters.includeComponent),
+          excludeTestID: Array.from(filters.excludeTestID),
+          excludeNativeID: Array.from(filters.excludeNativeID),
+          excludeViewType: Array.from(filters.excludeViewType),
+          excludeComponent: Array.from(filters.excludeComponent),
+          includePatterns: filters.includePatterns,
+          excludePatterns: filters.excludePatterns,
+        };
+        await safeSetItem(
+          devToolsStorageKeys.highlightUpdates.filters(),
+          JSON.stringify(filtersToSave)
+        );
+      } catch (error) {
+        // Failed to save filters
+      }
+    };
+
+    saveFilters();
+  }, [filters]);
 
   // Subscribe to RenderTracker updates
   useEffect(() => {
@@ -148,18 +266,9 @@ export function HighlightUpdatesModal({
     setFilters(RenderTracker.getFilters());
   }, []);
 
-  // Get active filter count
+  // Get active filter count (using new pattern arrays)
   const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filters.includeTestID.size > 0) count++;
-    if (filters.includeNativeID.size > 0) count++;
-    if (filters.includeViewType.size > 0) count++;
-    if (filters.includeComponent.size > 0) count++;
-    if (filters.excludeTestID.size > 0) count++;
-    if (filters.excludeNativeID.size > 0) count++;
-    if (filters.excludeViewType.size > 0) count++;
-    if (filters.excludeComponent.size > 0) count++;
-    return count;
+    return filters.includePatterns.length + filters.excludePatterns.length;
   }, [filters]);
 
   // FlatList optimization
@@ -189,6 +298,7 @@ export function HighlightUpdatesModal({
               onTabChange={(tab) => setActiveTab(tab as "filters")}
             />
           </ModalHeader.Content>
+          <ModalHeader.Actions>{/* Empty for right padding */}</ModalHeader.Actions>
         </ModalHeader>
       );
     }
@@ -209,7 +319,7 @@ export function HighlightUpdatesModal({
         {onBack && <ModalHeader.Navigation onBack={onBack} />}
         <ModalHeader.Content title="">
           {isSearchActive ? (
-            <View style={styles.headerSearchContainer}>
+            <View nativeID="__rn_buoy__search-container" style={styles.headerSearchContainer}>
               <Search size={14} color={macOSColors.text.secondary} />
               <TextInput
                 ref={searchInputRef}
@@ -238,7 +348,7 @@ export function HighlightUpdatesModal({
               ) : null}
             </View>
           ) : (
-            <View style={styles.headerChipRow}>
+            <View nativeID="__rn_buoy__stats-row" style={styles.headerChipRow}>
               <View style={styles.headerChip}>
                 <Activity size={12} color={macOSColors.semantic.info} />
                 <Text
@@ -348,7 +458,7 @@ export function HighlightUpdatesModal({
 
   const persistenceKey = enableSharedModalDimensions
     ? devToolsStorageKeys.modal.root()
-    : "highlight-updates-modal";
+    : devToolsStorageKeys.highlightUpdates.modal();
 
   if (!visible) return null;
 

@@ -155,6 +155,18 @@ export const devToolsStorageKeys = {
     diffViewerMode: () =>
       `${devToolsStorageKeys.routeEvents.root()}_diff_viewer_mode` as const, // 'split' | 'tree'
   },
+
+  /**
+   * Highlight updates-related storage keys
+   */
+  highlightUpdates: {
+    root: () => `${devToolsStorageKeys.base}_highlight_updates` as const,
+    modal: () => `${devToolsStorageKeys.highlightUpdates.root()}_modal` as const,
+    isTracking: () =>
+      `${devToolsStorageKeys.highlightUpdates.root()}_is_tracking` as const,
+    filters: () =>
+      `${devToolsStorageKeys.highlightUpdates.root()}_filters` as const,
+  },
 } as const;
 
 /**

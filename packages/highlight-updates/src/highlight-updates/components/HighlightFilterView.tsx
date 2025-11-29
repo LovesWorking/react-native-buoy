@@ -1,14 +1,26 @@
 /**
  * HighlightFilterView
  *
- * Filter configuration for tracked component renders.
- * Allows filtering by viewType, testID, nativeID, componentName, and accessibilityLabel.
+ * Simplified filter configuration for tracked component renders.
+ * Uses a badge-based approach where users select a filter type
+ * (Any, ViewType, testID, Component) then enter a value.
  */
 
-import React, { useCallback, useMemo } from "react";
-import { Eye, Filter, Box, Hash } from "@react-buoy/shared-ui";
-import { DynamicFilterView, type DynamicFilterConfig } from "@react-buoy/shared-ui";
-import type { FilterConfig } from "../utils/RenderTracker";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  Modal,
+  Pressable,
+} from "react-native";
+import { Eye, Filter, Plus, X, Box, Check } from "@react-buoy/shared-ui";
+import { macOSColors, SectionHeader } from "@react-buoy/shared-ui";
+import type { FilterConfig, FilterPattern, FilterType } from "../utils/RenderTracker";
+import { IdentifierBadge, IDENTIFIER_CONFIG, type IdentifierType } from "./IdentifierBadge";
 
 interface HighlightFilterViewProps {
   filters: FilterConfig;
@@ -22,259 +34,849 @@ interface HighlightFilterViewProps {
   };
 }
 
+// Use shared identifier config (FilterType is a subset of IdentifierType)
+const getFilterConfig = (type: FilterType) => IDENTIFIER_CONFIG[type as IdentifierType];
+
+// Filter types available for selection (all identifier types)
+const FILTER_TYPES: FilterType[] = ["any", "viewType", "testID", "nativeID", "component", "accessibilityLabel"];
+
+// Type picker component
+function TypePicker({
+  onSelect,
+  onCancel,
+}: {
+  onSelect: (type: FilterType) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <View nativeID="__rn_buoy__type-picker" style={styles.typePicker}>
+      <View style={styles.typePickerRow}>
+        {FILTER_TYPES.map((type) => {
+          const config = getFilterConfig(type);
+          const IconComponent = config.icon;
+          return (
+            <TouchableOpacity
+              key={type}
+              style={[styles.typeOption, { backgroundColor: config.color + "15", borderColor: config.color + "40" }]}
+              onPress={() => onSelect(type)}
+            >
+              <IconComponent size={14} color={config.color} />
+              <Text style={[styles.typeOptionText, { color: config.color }]}>
+                {config.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      <TouchableOpacity onPress={onCancel} style={styles.typePickerCancel}>
+        <X size={16} color={macOSColors.text.muted} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// Pattern input with badge prefix
+function PatternInput({
+  type,
+  onSubmit,
+  onCancel,
+}: {
+  type: FilterType;
+  onSubmit: (value: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const config = getFilterConfig(type);
+
+  const handleSubmit = () => {
+    if (value.trim()) {
+      onSubmit(value.trim());
+    }
+  };
+
+  return (
+    <View nativeID="__rn_buoy__pattern-input" style={styles.patternInputContainer}>
+      <IdentifierBadge type={type as IdentifierType} value="" badgeOnly compact />
+      <TextInput
+        value={value}
+        onChangeText={setValue}
+        onSubmitEditing={handleSubmit}
+        placeholder="Enter pattern..."
+        placeholderTextColor={macOSColors.text.muted}
+        style={styles.patternInput}
+        autoFocus
+        returnKeyType="done"
+        autoCorrect={false}
+        autoCapitalize="none"
+      />
+      {value.trim() && (
+        <TouchableOpacity
+          onPress={handleSubmit}
+          style={[styles.addPatternButton, { backgroundColor: config.color + "20" }]}
+        >
+          <Text style={[styles.addPatternButtonText, { color: config.color }]}>Add</Text>
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
+        <X size={16} color={macOSColors.text.muted} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// Pattern chip (removable badge) - tap to remove
+function PatternChip({
+  pattern,
+  onRemove,
+}: {
+  pattern: FilterPattern;
+  onRemove: () => void;
+}) {
+  const config = getFilterConfig(pattern.type);
+  return (
+    <TouchableOpacity
+      style={[styles.patternChip, { borderColor: config.color + "40" }]}
+      onPress={onRemove}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.patternChipBadge, { backgroundColor: config.color + "20" }]}>
+        <Text style={[styles.patternChipBadgeText, { color: config.color }]}>
+          {config.shortLabel}
+        </Text>
+      </View>
+      <Text style={styles.patternChipValue} numberOfLines={1}>
+        {pattern.value}
+      </Text>
+      <X size={12} color={macOSColors.text.muted} style={styles.patternChipX} />
+    </TouchableOpacity>
+  );
+}
+
+// Category type including "all"
+type DetectedCategory = FilterType | "all";
+
+// Config for "all" category
+const ALL_CATEGORY_CONFIG = { label: "All", shortLabel: "All", color: macOSColors.text.secondary, icon: Box };
+
+// Category badge for horizontal scroll - always colored
+function DetectedCategoryBadge({
+  filterType,
+  count,
+  isSelected,
+  onPress,
+}: {
+  filterType: DetectedCategory;
+  count: number;
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  // "all" has its own config
+  const config = filterType === "all"
+    ? ALL_CATEGORY_CONFIG
+    : getFilterConfig(filterType);
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.categoryBadge,
+        {
+          backgroundColor: config.color + "15",
+          borderColor: isSelected ? config.color : config.color + "40",
+          borderWidth: isSelected ? 2 : 1,
+        }
+      ]}
+      onPress={onPress}
+    >
+      <config.icon size={12} color={config.color} />
+      <Text style={[styles.categoryBadgeText, { color: config.color }]}>
+        {config.label}
+      </Text>
+      <View style={[styles.categoryBadgeCountBubble, { backgroundColor: config.color + "25" }]}>
+        <Text style={[styles.categoryBadgeCount, { color: config.color }]}>
+          {count}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export function HighlightFilterView({
   filters,
   onFilterChange,
   availableProps,
 }: HighlightFilterViewProps) {
-  // Include pattern handlers
-  const handleAddIncludeViewType = useCallback((pattern: string) => {
-    const newSet = new Set(filters.includeViewType);
-    newSet.add(pattern);
-    onFilterChange({ includeViewType: newSet });
-  }, [filters.includeViewType, onFilterChange]);
+  // UI state for add inputs
+  const [showIncludeTypePicker, setShowIncludeTypePicker] = useState(false);
+  const [showExcludeTypePicker, setShowExcludeTypePicker] = useState(false);
+  const [includeInputType, setIncludeInputType] = useState<FilterType | null>(null);
+  const [excludeInputType, setExcludeInputType] = useState<FilterType | null>(null);
 
-  const handleToggleIncludeViewType = useCallback((pattern: string) => {
-    const newSet = new Set(filters.includeViewType);
-    if (newSet.has(pattern)) {
-      newSet.delete(pattern);
-    } else {
-      newSet.add(pattern);
+  // State for selected detected category (default to "all")
+  const [selectedCategory, setSelectedCategory] = useState<DetectedCategory>("all");
+
+  // State for action popup when tapping detected item
+  const [actionPopupItem, setActionPopupItem] = useState<{ type: FilterType; value: string } | null>(null);
+
+  // Get items for selected category with their filter type
+  const getItemsForCategory = (category: DetectedCategory): Array<{ value: string; type: FilterType }> => {
+    switch (category) {
+      case "viewType":
+        return availableProps.viewTypes.map(v => ({ value: v, type: "viewType" as FilterType }));
+      case "testID":
+        return availableProps.testIDs.map(v => ({ value: v, type: "testID" as FilterType }));
+      case "nativeID":
+        return availableProps.nativeIDs.map(v => ({ value: v, type: "nativeID" as FilterType }));
+      case "component":
+        return availableProps.componentNames.map(v => ({ value: v, type: "component" as FilterType }));
+      case "accessibilityLabel":
+        return availableProps.accessibilityLabels.map(v => ({ value: v, type: "accessibilityLabel" as FilterType }));
+      case "all":
+      default:
+        // Combine all items with their types
+        return [
+          ...availableProps.viewTypes.map(v => ({ value: v, type: "viewType" as FilterType })),
+          ...availableProps.testIDs.map(v => ({ value: v, type: "testID" as FilterType })),
+          ...availableProps.nativeIDs.map(v => ({ value: v, type: "nativeID" as FilterType })),
+          ...availableProps.componentNames.map(v => ({ value: v, type: "component" as FilterType })),
+          ...availableProps.accessibilityLabels.map(v => ({ value: v, type: "accessibilityLabel" as FilterType })),
+        ];
     }
-    onFilterChange({ includeViewType: newSet });
-  }, [filters.includeViewType, onFilterChange]);
+  };
 
-  const handleAddIncludeTestID = useCallback((pattern: string) => {
-    const newSet = new Set(filters.includeTestID);
-    newSet.add(pattern);
-    onFilterChange({ includeTestID: newSet });
-  }, [filters.includeTestID, onFilterChange]);
+  const selectedItems = getItemsForCategory(selectedCategory);
+  const totalItemCount = availableProps.viewTypes.length + availableProps.testIDs.length + availableProps.nativeIDs.length + availableProps.componentNames.length + availableProps.accessibilityLabels.length;
 
-  const handleToggleIncludeTestID = useCallback((pattern: string) => {
-    const newSet = new Set(filters.includeTestID);
-    if (newSet.has(pattern)) {
-      newSet.delete(pattern);
-    } else {
-      newSet.add(pattern);
+  // Add include pattern
+  const handleAddIncludePattern = useCallback((type: FilterType, value: string) => {
+    const newPatterns = [...filters.includePatterns, { type, value }];
+    onFilterChange({ includePatterns: newPatterns });
+    setIncludeInputType(null);
+  }, [filters.includePatterns, onFilterChange]);
+
+  // Add exclude pattern
+  const handleAddExcludePattern = useCallback((type: FilterType, value: string) => {
+    const newPatterns = [...filters.excludePatterns, { type, value }];
+    onFilterChange({ excludePatterns: newPatterns });
+    setExcludeInputType(null);
+  }, [filters.excludePatterns, onFilterChange]);
+
+  // Remove include pattern
+  const handleRemoveIncludePattern = useCallback((index: number) => {
+    const newPatterns = filters.includePatterns.filter((_, i) => i !== index);
+    onFilterChange({ includePatterns: newPatterns });
+  }, [filters.includePatterns, onFilterChange]);
+
+  // Remove exclude pattern
+  const handleRemoveExcludePattern = useCallback((index: number) => {
+    const newPatterns = filters.excludePatterns.filter((_, i) => i !== index);
+    onFilterChange({ excludePatterns: newPatterns });
+  }, [filters.excludePatterns, onFilterChange]);
+
+  // Show action popup for detected item
+  const handleDetectedItemPress = useCallback((type: FilterType, value: string) => {
+    setActionPopupItem({ type, value });
+  }, []);
+
+  // Add to include from popup
+  const handlePopupInclude = useCallback(() => {
+    if (actionPopupItem) {
+      handleAddIncludePattern(actionPopupItem.type, actionPopupItem.value);
+      setActionPopupItem(null);
     }
-    onFilterChange({ includeTestID: newSet });
-  }, [filters.includeTestID, onFilterChange]);
+  }, [actionPopupItem, handleAddIncludePattern]);
 
-  const handleAddIncludeComponent = useCallback((pattern: string) => {
-    const newSet = new Set(filters.includeComponent);
-    newSet.add(pattern);
-    onFilterChange({ includeComponent: newSet });
-  }, [filters.includeComponent, onFilterChange]);
-
-  const handleToggleIncludeComponent = useCallback((pattern: string) => {
-    const newSet = new Set(filters.includeComponent);
-    if (newSet.has(pattern)) {
-      newSet.delete(pattern);
-    } else {
-      newSet.add(pattern);
+  // Add to exclude from popup
+  const handlePopupExclude = useCallback(() => {
+    if (actionPopupItem) {
+      handleAddExcludePattern(actionPopupItem.type, actionPopupItem.value);
+      setActionPopupItem(null);
     }
-    onFilterChange({ includeComponent: newSet });
-  }, [filters.includeComponent, onFilterChange]);
-
-  // Exclude pattern handlers
-  const handleAddExcludeViewType = useCallback((pattern: string) => {
-    const newSet = new Set(filters.excludeViewType);
-    newSet.add(pattern);
-    onFilterChange({ excludeViewType: newSet });
-  }, [filters.excludeViewType, onFilterChange]);
-
-  const handleToggleExcludeViewType = useCallback((pattern: string) => {
-    const newSet = new Set(filters.excludeViewType);
-    if (newSet.has(pattern)) {
-      newSet.delete(pattern);
-    } else {
-      newSet.add(pattern);
-    }
-    onFilterChange({ excludeViewType: newSet });
-  }, [filters.excludeViewType, onFilterChange]);
-
-  const handleAddExcludeTestID = useCallback((pattern: string) => {
-    const newSet = new Set(filters.excludeTestID);
-    newSet.add(pattern);
-    onFilterChange({ excludeTestID: newSet });
-  }, [filters.excludeTestID, onFilterChange]);
-
-  const handleToggleExcludeTestID = useCallback((pattern: string) => {
-    const newSet = new Set(filters.excludeTestID);
-    if (newSet.has(pattern)) {
-      newSet.delete(pattern);
-    } else {
-      newSet.add(pattern);
-    }
-    onFilterChange({ excludeTestID: newSet });
-  }, [filters.excludeTestID, onFilterChange]);
-
-  // Tab configurations
-  const tabs: DynamicFilterConfig["tabs"] = useMemo(() => [
-    {
-      id: "viewType",
-      label: "View Type",
-      icon: Box,
-      count: filters.includeViewType.size + filters.excludeViewType.size,
-      content: () => (
-        <DynamicFilterView
-          includeOnlySection={{
-            enabled: true,
-            title: "INCLUDE ONLY VIEW TYPES",
-            description: "Show only components matching these view types (e.g., RCTView, RCTText)",
-            placeholder: "Enter view type pattern...",
-            icon: Eye,
-            patterns: filters.includeViewType,
-            onPatternToggle: handleToggleIncludeViewType,
-            onPatternAdd: handleAddIncludeViewType,
-          }}
-          addFilterSection={{
-            enabled: true,
-            title: "EXCLUDE VIEW TYPES",
-            placeholder: "Enter view type to exclude...",
-          }}
-          activePatterns={filters.excludeViewType}
-          onPatternToggle={handleToggleExcludeViewType}
-          onPatternAdd={handleAddExcludeViewType}
-          availableItemsSection={{
-            enabled: availableProps.viewTypes.length > 0,
-            title: "DETECTED VIEW TYPES",
-            emptyMessage: "No view types detected yet",
-            items: availableProps.viewTypes,
-          }}
-          howItWorksSection={{
-            enabled: true,
-            title: "HOW VIEW TYPE FILTERING WORKS",
-            description: "View type is the native component class (e.g., RCTView, RCTText, RCTScrollView). Use patterns to match multiple types.",
-            examples: [
-              "• \"RCTView\" - matches View components",
-              "• \"Text\" - matches RCTText",
-              "• \"Scroll\" - matches ScrollView components",
-            ],
-          }}
-        />
-      ),
-    },
-    {
-      id: "testID",
-      label: "testID",
-      icon: Hash,
-      count: filters.includeTestID.size + filters.excludeTestID.size,
-      content: () => (
-        <DynamicFilterView
-          includeOnlySection={{
-            enabled: true,
-            title: "INCLUDE ONLY testIDs",
-            description: "Show only components with testID matching these patterns",
-            placeholder: "Enter testID pattern...",
-            icon: Eye,
-            patterns: filters.includeTestID,
-            onPatternToggle: handleToggleIncludeTestID,
-            onPatternAdd: handleAddIncludeTestID,
-          }}
-          addFilterSection={{
-            enabled: true,
-            title: "EXCLUDE testIDs",
-            placeholder: "Enter testID to exclude...",
-          }}
-          activePatterns={filters.excludeTestID}
-          onPatternToggle={handleToggleExcludeTestID}
-          onPatternAdd={handleAddExcludeTestID}
-          availableItemsSection={{
-            enabled: availableProps.testIDs.length > 0,
-            title: "DETECTED testIDs",
-            emptyMessage: "No testIDs detected yet. Add testID props to your components.",
-            items: availableProps.testIDs,
-          }}
-          howItWorksSection={{
-            enabled: true,
-            title: "HOW testID FILTERING WORKS",
-            description: "Filter by the testID prop on your React Native components. Great for tracking specific interactive elements.",
-            examples: [
-              "• \"button\" - matches button-related testIDs",
-              "• \"counter\" - matches counter-display, counter-button, etc.",
-            ],
-          }}
-        />
-      ),
-    },
-    {
-      id: "component",
-      label: "Component",
-      icon: Hash,
-      count: filters.includeComponent.size + filters.excludeComponent.size,
-      content: () => (
-        <DynamicFilterView
-          includeOnlySection={{
-            enabled: true,
-            title: "INCLUDE ONLY COMPONENTS",
-            description: "Show only renders from these component names (from React fiber)",
-            placeholder: "Enter component name pattern...",
-            icon: Eye,
-            patterns: filters.includeComponent,
-            onPatternToggle: handleToggleIncludeComponent,
-            onPatternAdd: handleAddIncludeComponent,
-          }}
-          addFilterSection={{
-            enabled: true,
-            title: "EXCLUDE COMPONENTS",
-            placeholder: "Enter component name to exclude...",
-          }}
-          activePatterns={filters.excludeComponent}
-          onPatternToggle={(pattern) => {
-            const newSet = new Set(filters.excludeComponent);
-            if (newSet.has(pattern)) {
-              newSet.delete(pattern);
-            } else {
-              newSet.add(pattern);
-            }
-            onFilterChange({ excludeComponent: newSet });
-          }}
-          onPatternAdd={(pattern) => {
-            const newSet = new Set(filters.excludeComponent);
-            newSet.add(pattern);
-            onFilterChange({ excludeComponent: newSet });
-          }}
-          availableItemsSection={{
-            enabled: availableProps.componentNames.length > 0,
-            title: "DETECTED COMPONENTS",
-            emptyMessage: "No component names detected yet",
-            items: availableProps.componentNames,
-          }}
-          howItWorksSection={{
-            enabled: true,
-            title: "HOW COMPONENT FILTERING WORKS",
-            description: "Filter by the parent component name from React's fiber tree. Useful for tracking specific feature areas.",
-            examples: [
-              "• \"Counter\" - matches CounterDisplay, CounterButtons",
-              "• \"Button\" - matches all button-related components",
-            ],
-          }}
-        />
-      ),
-    },
-  ], [
-    filters,
-    availableProps,
-    handleAddIncludeViewType,
-    handleToggleIncludeViewType,
-    handleAddIncludeTestID,
-    handleToggleIncludeTestID,
-    handleAddIncludeComponent,
-    handleToggleIncludeComponent,
-    handleAddExcludeViewType,
-    handleToggleExcludeViewType,
-    handleAddExcludeTestID,
-    handleToggleExcludeTestID,
-    onFilterChange,
-  ]);
+  }, [actionPopupItem, handleAddExcludePattern]);
 
   return (
-    <DynamicFilterView
-      tabs={tabs}
-      activeTab="viewType"
-    />
+    <ScrollView
+      nativeID="__rn_buoy__filter-view"
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Include Only Section */}
+      <View style={styles.section}>
+        <SectionHeader>
+          <SectionHeader.Icon icon={Eye} color={macOSColors.semantic.success} size={12} />
+          <SectionHeader.Title>INCLUDE ONLY</SectionHeader.Title>
+          {filters.includePatterns.length > 0 && (
+            <SectionHeader.Badge
+              count={filters.includePatterns.length}
+              color={macOSColors.semantic.success}
+            />
+          )}
+        </SectionHeader>
+
+        <Text style={styles.sectionDescription}>
+          Show only components matching these patterns. If any are set, components must match at least one.
+        </Text>
+
+        {/* Active include patterns */}
+        {filters.includePatterns.length > 0 && (
+          <View style={styles.patternChips}>
+            {filters.includePatterns.map((pattern, index) => (
+              <PatternChip
+                key={`${pattern.type}-${pattern.value}-${index}`}
+                pattern={pattern}
+                onRemove={() => handleRemoveIncludePattern(index)}
+              />
+            ))}
+          </View>
+        )}
+
+        {/* Add include pattern UI */}
+        <View style={styles.addPatternRow}>
+          {showIncludeTypePicker ? (
+            <TypePicker
+              onSelect={(type) => {
+                setShowIncludeTypePicker(false);
+                setIncludeInputType(type);
+              }}
+              onCancel={() => setShowIncludeTypePicker(false)}
+            />
+          ) : includeInputType ? (
+            <PatternInput
+              type={includeInputType}
+              onSubmit={(value) => handleAddIncludePattern(includeInputType, value)}
+              onCancel={() => setIncludeInputType(null)}
+            />
+          ) : (
+            <TouchableOpacity
+              style={[styles.addButton, { borderColor: macOSColors.semantic.success + "40" }]}
+              onPress={() => setShowIncludeTypePicker(true)}
+            >
+              <Plus size={14} color={macOSColors.semantic.success} />
+              <Text style={[styles.addButtonText, { color: macOSColors.semantic.success }]}>
+                Add include pattern
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Exclude Section */}
+      <View style={styles.section}>
+        <SectionHeader>
+          <SectionHeader.Icon icon={Filter} color={macOSColors.semantic.info} size={12} />
+          <SectionHeader.Title>EXCLUDE</SectionHeader.Title>
+          {filters.excludePatterns.length > 0 && (
+            <SectionHeader.Badge
+              count={filters.excludePatterns.length}
+              color={macOSColors.semantic.info}
+            />
+          )}
+        </SectionHeader>
+
+        <Text style={styles.sectionDescription}>
+          Hide components matching these patterns from the list.
+        </Text>
+
+        {/* Active exclude patterns */}
+        {filters.excludePatterns.length > 0 && (
+          <View style={styles.patternChips}>
+            {filters.excludePatterns.map((pattern, index) => (
+              <PatternChip
+                key={`${pattern.type}-${pattern.value}-${index}`}
+                pattern={pattern}
+                onRemove={() => handleRemoveExcludePattern(index)}
+              />
+            ))}
+          </View>
+        )}
+
+        {/* Add exclude pattern UI */}
+        <View style={styles.addPatternRow}>
+          {showExcludeTypePicker ? (
+            <TypePicker
+              onSelect={(type) => {
+                setShowExcludeTypePicker(false);
+                setExcludeInputType(type);
+              }}
+              onCancel={() => setShowExcludeTypePicker(false)}
+            />
+          ) : excludeInputType ? (
+            <PatternInput
+              type={excludeInputType}
+              onSubmit={(value) => handleAddExcludePattern(excludeInputType, value)}
+              onCancel={() => setExcludeInputType(null)}
+            />
+          ) : (
+            <TouchableOpacity
+              style={[styles.addButton, { borderColor: macOSColors.semantic.info + "40" }]}
+              onPress={() => setShowExcludeTypePicker(true)}
+            >
+              <Plus size={14} color={macOSColors.semantic.info} />
+              <Text style={[styles.addButtonText, { color: macOSColors.semantic.info }]}>
+                Add exclude pattern
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Detected Items Section */}
+      <View style={styles.section}>
+        <SectionHeader>
+          <SectionHeader.Icon icon={Box} color={macOSColors.text.secondary} size={12} />
+          <SectionHeader.Title>DETECTED ITEMS</SectionHeader.Title>
+        </SectionHeader>
+
+        <Text style={styles.sectionDescription}>
+          Tap an item to quickly add it as an exclude pattern.
+        </Text>
+
+        {/* Horizontal scrollable category badges - only show badges with items */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryBadgeScroll}
+          contentContainerStyle={styles.categoryBadgeScrollContent}
+        >
+          {totalItemCount > 0 && (
+            <DetectedCategoryBadge
+              filterType="all"
+              count={totalItemCount}
+              isSelected={selectedCategory === "all"}
+              onPress={() => setSelectedCategory("all")}
+            />
+          )}
+          {availableProps.viewTypes.length > 0 && (
+            <DetectedCategoryBadge
+              filterType="viewType"
+              count={availableProps.viewTypes.length}
+              isSelected={selectedCategory === "viewType"}
+              onPress={() => setSelectedCategory("viewType")}
+            />
+          )}
+          {availableProps.testIDs.length > 0 && (
+            <DetectedCategoryBadge
+              filterType="testID"
+              count={availableProps.testIDs.length}
+              isSelected={selectedCategory === "testID"}
+              onPress={() => setSelectedCategory("testID")}
+            />
+          )}
+          {availableProps.nativeIDs.length > 0 && (
+            <DetectedCategoryBadge
+              filterType="nativeID"
+              count={availableProps.nativeIDs.length}
+              isSelected={selectedCategory === "nativeID"}
+              onPress={() => setSelectedCategory("nativeID")}
+            />
+          )}
+          {availableProps.componentNames.length > 0 && (
+            <DetectedCategoryBadge
+              filterType="component"
+              count={availableProps.componentNames.length}
+              isSelected={selectedCategory === "component"}
+              onPress={() => setSelectedCategory("component")}
+            />
+          )}
+          {availableProps.accessibilityLabels.length > 0 && (
+            <DetectedCategoryBadge
+              filterType="accessibilityLabel"
+              count={availableProps.accessibilityLabels.length}
+              isSelected={selectedCategory === "accessibilityLabel"}
+              onPress={() => setSelectedCategory("accessibilityLabel")}
+            />
+          )}
+        </ScrollView>
+
+        {/* Items for selected category */}
+        <View nativeID="__rn_buoy__detected-items" style={styles.detectedItemsContainer}>
+          {selectedItems.length > 0 ? (
+            <View style={styles.detectedItems}>
+              {selectedItems.map((item) => {
+                const itemConfig = getFilterConfig(item.type);
+                return (
+                  <TouchableOpacity
+                    key={`${item.type}-${item.value}`}
+                    style={[styles.detectedItem, { borderColor: itemConfig.color + "40" }]}
+                    onPress={() => handleDetectedItemPress(item.type, item.value)}
+                  >
+                    {selectedCategory === "all" ? (
+                      <IdentifierBadge
+                        type={item.type as IdentifierType}
+                        value={item.value}
+                        compact
+                        shortLabel
+                      />
+                    ) : (
+                      <Text style={styles.detectedItemText} numberOfLines={1}>
+                        {item.value}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>
+              No items detected yet. Start tracking to see components here.
+            </Text>
+          )}
+        </View>
+      </View>
+
+      {/* Action Popup Modal */}
+      <Modal
+        visible={actionPopupItem !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActionPopupItem(null)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setActionPopupItem(null)}
+        >
+          <View style={styles.actionPopup}>
+            {actionPopupItem && (
+              <>
+                <View style={styles.actionPopupHeader}>
+                  <IdentifierBadge
+                    type={actionPopupItem.type as IdentifierType}
+                    value={actionPopupItem.value}
+                    compact
+                    shortLabel
+                  />
+                </View>
+                <View style={styles.actionPopupButtons}>
+                  <TouchableOpacity
+                    style={[styles.actionPopupButton, styles.actionPopupInclude]}
+                    onPress={handlePopupInclude}
+                  >
+                    <Eye size={16} color={macOSColors.semantic.success} />
+                    <Text style={[styles.actionPopupButtonText, { color: macOSColors.semantic.success }]}>
+                      Include Only
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionPopupButton, styles.actionPopupExclude]}
+                    onPress={handlePopupExclude}
+                  >
+                    <Filter size={16} color={macOSColors.semantic.info} />
+                    <Text style={[styles.actionPopupButtonText, { color: macOSColors.semantic.info }]}>
+                      Exclude
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={styles.actionPopupCancel}
+                  onPress={() => setActionPopupItem(null)}
+                >
+                  <Text style={styles.actionPopupCancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* How It Works Section */}
+      <View style={styles.section}>
+        <SectionHeader>
+          <SectionHeader.Icon icon={Filter} color={macOSColors.text.muted} size={12} />
+          <SectionHeader.Title>HOW FILTERS WORK</SectionHeader.Title>
+        </SectionHeader>
+
+        <View style={styles.howItWorks}>
+          <Text style={styles.howItWorksText}>
+            <Text style={styles.howItWorksBold}>Any:</Text> Matches against all fields{"\n"}
+            <Text style={styles.howItWorksBold}>ViewType:</Text> Native component class (RCTView, RCTText){"\n"}
+            <Text style={styles.howItWorksBold}>testID:</Text> Component testID prop{"\n"}
+            <Text style={styles.howItWorksBold}>Component:</Text> React component name from fiber
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: macOSColors.background.base,
+  },
+  scrollContent: {
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
+  section: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default + "50",
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  sectionDescription: {
+    fontSize: 11,
+    color: macOSColors.text.secondary,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    lineHeight: 16,
+  },
+  patternChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  patternChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingVertical: 4,
+    paddingLeft: 4,
+    paddingRight: 6,
+    maxWidth: "100%",
+    gap: 4,
+  },
+  patternChipBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+    borderRadius: 4,
+  },
+  patternChipBadgeText: {
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  patternChipValue: {
+    fontSize: 11,
+    color: macOSColors.text.primary,
+    fontFamily: "monospace",
+    flexShrink: 1,
+  },
+  patternChipX: {
+    marginLeft: 2,
+  },
+  addPatternRow: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    gap: 6,
+  },
+  addButtonText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  typePicker: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  typePickerRow: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  typeOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    backgroundColor: macOSColors.background.input,
+    gap: 6,
+  },
+  typeOptionText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  typePickerCancel: {
+    padding: 8,
+  },
+  patternInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.input,
+    paddingLeft: 4,
+    paddingRight: 8,
+    paddingVertical: 4,
+    gap: 4,
+  },
+  patternInput: {
+    flex: 1,
+    fontSize: 12,
+    color: macOSColors.text.primary,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  addPatternButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+  },
+  addPatternButtonText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  cancelButton: {
+    padding: 4,
+  },
+  categoryBadgeScroll: {
+    marginTop: 12,
+  },
+  categoryBadgeScrollContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingLeft: 10,
+    paddingRight: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 6,
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  categoryBadgeCountBubble: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    minWidth: 20,
+    alignItems: "center",
+  },
+  categoryBadgeCount: {
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  detectedItemsContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  detectedItems: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  detectedItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    gap: 6,
+  },
+  detectedItemText: {
+    fontSize: 11,
+    color: macOSColors.text.primary,
+    fontFamily: "monospace",
+  },
+  emptyText: {
+    fontSize: 11,
+    color: macOSColors.text.muted,
+    fontStyle: "italic",
+    textAlign: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  howItWorks: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  howItWorksText: {
+    fontSize: 11,
+    color: macOSColors.text.muted,
+    lineHeight: 18,
+    fontFamily: "monospace",
+  },
+  howItWorksBold: {
+    fontWeight: "700",
+    color: macOSColors.text.secondary,
+  },
+  // Action popup modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  actionPopup: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    width: "100%",
+    maxWidth: 300,
+    overflow: "hidden",
+  },
+  actionPopupHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: macOSColors.border.default + "50",
+    alignItems: "center",
+  },
+  actionPopupButtons: {
+    flexDirection: "row",
+    padding: 12,
+    gap: 8,
+  },
+  actionPopupButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  actionPopupInclude: {
+    backgroundColor: macOSColors.semantic.success + "15",
+  },
+  actionPopupExclude: {
+    backgroundColor: macOSColors.semantic.info + "15",
+  },
+  actionPopupButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  actionPopupCancel: {
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: macOSColors.border.default + "50",
+    alignItems: "center",
+  },
+  actionPopupCancelText: {
+    fontSize: 13,
+    color: macOSColors.text.muted,
+    fontWeight: "500",
+  },
+});
 
 export default HighlightFilterView;

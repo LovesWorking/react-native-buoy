@@ -9,6 +9,7 @@ import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, macOSColors } from "@react-buoy/shared-ui";
 import type { TrackedRender } from "../utils/RenderTracker";
+import { IdentifierBadge, type IdentifierType } from "./IdentifierBadge";
 
 interface RenderListItemProps {
   render: TrackedRender;
@@ -16,14 +17,22 @@ interface RenderListItemProps {
 }
 
 function RenderListItemInner({ render, onPress }: RenderListItemProps) {
-  // Get best identifier to show
-  const identifier = useMemo(() => {
-    if (render.testID) return { label: "testID", value: render.testID };
-    if (render.nativeID) return { label: "nativeID", value: render.nativeID };
-    if (render.componentName) return { label: "component", value: render.componentName };
-    if (render.accessibilityLabel) return { label: "a11y", value: render.accessibilityLabel };
-    return { label: "tag", value: String(render.nativeTag) };
+  // Get best identifier to show (primary)
+  const identifier = useMemo((): { type: IdentifierType; value: string } => {
+    if (render.testID) return { type: "testID", value: render.testID };
+    if (render.nativeID) return { type: "nativeID", value: render.nativeID };
+    if (render.componentName) return { type: "component", value: render.componentName };
+    if (render.accessibilityLabel) return { type: "accessibilityLabel", value: render.accessibilityLabel };
+    return { type: "nativeTag", value: String(render.nativeTag) };
   }, [render.testID, render.nativeID, render.componentName, render.accessibilityLabel, render.nativeTag]);
+
+  // Get secondary identifier (accessibilityLabel if not already primary)
+  const secondaryIdentifier = useMemo((): { type: IdentifierType; value: string } | null => {
+    if (render.accessibilityLabel && identifier.type !== "accessibilityLabel") {
+      return { type: "accessibilityLabel", value: render.accessibilityLabel };
+    }
+    return null;
+  }, [render.accessibilityLabel, identifier.type]);
 
   // Format time since last render
   const timeSinceRender = useMemo(() => {
@@ -50,12 +59,19 @@ function RenderListItemInner({ render, onPress }: RenderListItemProps) {
             <Text style={styles.viewType} numberOfLines={1}>
               {render.displayName}
             </Text>
-            {/* Show native type if different from display name */}
-            {render.displayName !== render.viewType && (
+            {/* Show secondary identifier (accessibilityLabel) if available, otherwise fall back to native type */}
+            {secondaryIdentifier ? (
+              <IdentifierBadge
+                type={secondaryIdentifier.type}
+                value={secondaryIdentifier.value}
+                compact
+                shortLabel
+              />
+            ) : render.displayName !== render.viewType ? (
               <Text style={styles.nativeType} numberOfLines={1}>
                 {render.viewType}
               </Text>
-            )}
+            ) : null}
           </View>
           <View style={[styles.renderCountBadge, { backgroundColor: render.color + "30" }]}>
             <Text style={[styles.renderCount, { color: render.color }]}>
@@ -64,12 +80,16 @@ function RenderListItemInner({ render, onPress }: RenderListItemProps) {
           </View>
         </View>
 
-        {/* Bottom row: identifier and timing */}
+        {/* Bottom row: primary identifier and timing */}
         <View style={styles.bottomRow}>
-          <Text style={styles.identifierLabel}>{identifier.label}:</Text>
-          <Text style={styles.identifierValue} numberOfLines={1}>
-            {identifier.value}
-          </Text>
+          <View style={styles.identifierContainer}>
+            <IdentifierBadge
+              type={identifier.type}
+              value={identifier.value}
+              compact
+              shortLabel
+            />
+          </View>
           <Text style={styles.timing}>{timeSinceRender}</Text>
         </View>
       </View>
@@ -126,6 +146,12 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     marginTop: 1,
   },
+  accessibilityLabel: {
+    fontSize: 10,
+    color: macOSColors.semantic.info,
+    fontStyle: "italic",
+    marginTop: 1,
+  },
   renderCountBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -139,23 +165,19 @@ const styles = StyleSheet.create({
   bottomRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
   },
-  identifierLabel: {
-    fontSize: 10,
-    color: macOSColors.text.muted,
-    fontWeight: "500",
-    marginRight: 4,
-  },
-  identifierValue: {
+  identifierContainer: {
     flex: 1,
-    fontSize: 11,
-    color: macOSColors.text.secondary,
-    fontFamily: "monospace",
+    flexShrink: 1,
+    overflow: "hidden",
   },
   timing: {
     fontSize: 10,
     color: macOSColors.text.muted,
     fontWeight: "500",
+    flexShrink: 0,
   },
 });
 

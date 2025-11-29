@@ -31,6 +31,13 @@ export interface TrackedRender {
   color: string; // Current highlight color
 }
 
+export type FilterType = "any" | "viewType" | "testID" | "nativeID" | "component" | "accessibilityLabel";
+
+export interface FilterPattern {
+  type: FilterType;
+  value: string;
+}
+
 export interface FilterConfig {
   // Include-only patterns (show ONLY these if set)
   includeTestID: Set<string>;
@@ -43,6 +50,10 @@ export interface FilterConfig {
   excludeNativeID: Set<string>;
   excludeViewType: Set<string>;
   excludeComponent: Set<string>;
+
+  // New unified pattern lists
+  includePatterns: FilterPattern[];
+  excludePatterns: FilterPattern[];
 }
 
 type RenderTrackerListener = (renders: TrackedRender[]) => void;
@@ -66,6 +77,8 @@ class RenderTrackerSingleton {
     excludeNativeID: new Set(),
     excludeViewType: new Set(),
     excludeComponent: new Set(),
+    includePatterns: [],
+    excludePatterns: [],
   };
 
   /**
@@ -176,7 +189,17 @@ class RenderTrackerSingleton {
       });
     }
 
-    // Apply include filters (if any are set, only show matching)
+    // Apply new unified include patterns (if any are set, must match at least one)
+    if (this.filters.includePatterns.length > 0) {
+      renders = renders.filter((r) => this.matchesAnyPattern(r, this.filters.includePatterns));
+    }
+
+    // Apply new unified exclude patterns
+    if (this.filters.excludePatterns.length > 0) {
+      renders = renders.filter((r) => !this.matchesAnyPattern(r, this.filters.excludePatterns));
+    }
+
+    // Legacy filter support (for backwards compatibility)
     if (this.filters.includeViewType.size > 0) {
       renders = renders.filter((r) =>
         this.matchesPattern(r.viewType, this.filters.includeViewType)
@@ -198,8 +221,6 @@ class RenderTrackerSingleton {
           r.componentName && this.matchesPattern(r.componentName, this.filters.includeComponent)
       );
     }
-
-    // Apply exclude filters
     if (this.filters.excludeViewType.size > 0) {
       renders = renders.filter(
         (r) => !this.matchesPattern(r.viewType, this.filters.excludeViewType)
@@ -224,6 +245,58 @@ class RenderTrackerSingleton {
 
     // Sort by last render time (most recent first)
     return renders.sort((a, b) => b.lastRenderTime - a.lastRenderTime);
+  }
+
+  /**
+   * Check if a render matches any of the given patterns
+   */
+  private matchesAnyPattern(render: TrackedRender, patterns: FilterPattern[]): boolean {
+    for (const pattern of patterns) {
+      const lowerValue = pattern.value.toLowerCase();
+
+      switch (pattern.type) {
+        case "any":
+          // Match against all fields
+          if (
+            render.viewType.toLowerCase().includes(lowerValue) ||
+            render.displayName.toLowerCase().includes(lowerValue) ||
+            render.testID?.toLowerCase().includes(lowerValue) ||
+            render.nativeID?.toLowerCase().includes(lowerValue) ||
+            render.componentName?.toLowerCase().includes(lowerValue) ||
+            render.accessibilityLabel?.toLowerCase().includes(lowerValue)
+          ) {
+            return true;
+          }
+          break;
+        case "viewType":
+          if (render.viewType.toLowerCase().includes(lowerValue) ||
+              render.displayName.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "testID":
+          if (render.testID?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "nativeID":
+          if (render.nativeID?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "component":
+          if (render.componentName?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "accessibilityLabel":
+          if (render.accessibilityLabel?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+      }
+    }
+    return false;
   }
 
   /**
@@ -385,6 +458,8 @@ class RenderTrackerSingleton {
       excludeNativeID: new Set(),
       excludeViewType: new Set(),
       excludeComponent: new Set(),
+      includePatterns: [],
+      excludePatterns: [],
     };
     this.notifyListeners();
   }
