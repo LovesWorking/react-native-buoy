@@ -11,6 +11,7 @@ export {
   HighlightUpdatesIcon,
 } from "./StackPulseIcon";
 export { RenderCountIcon } from "./RenderCountIcon";
+export { BenchmarkIcon } from "./BenchmarkIcon";
 export { IconBackground } from "./IconBackground";
 
 // Export lucide icons

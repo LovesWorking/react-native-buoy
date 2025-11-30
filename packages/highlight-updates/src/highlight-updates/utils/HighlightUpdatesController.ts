@@ -35,6 +35,7 @@ import {
   disableProfilerLogging,
 } from "./ProfilerInterceptor";
 import { RenderTracker } from "./RenderTracker";
+import { PerformanceLogger, markEventReceived, type BatchTimer } from "./PerformanceLogger";
 
 interface HighlightRect {
   id: number;
@@ -728,6 +729,15 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
     return;
   }
 
+  // Mark event received for end-to-end timing
+  if (PerformanceLogger.isEnabled()) {
+    markEventReceived();
+  }
+
+  // Start performance timing
+  const batchSize = RenderTracker.getBatchSize();
+  const perfTimer = PerformanceLogger.startBatch(nodes.size, batchSize);
+
   // TEMPORARY: Log only mode - skip all processing and just log extensive info
   if (DEBUG_LOG_ONLY) {
     // First, test our filter on all nodes
@@ -809,13 +819,24 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
         continue;
       }
 
-      // Get current render count and increment (using nativeTag as stable key)
-      const currentCount = nodeRenderCounts.get(nativeTag) || 0;
-      const newCount = currentCount + 1;
-      nodeRenderCounts.set(nativeTag, newCount);
+      // Check if render counting is enabled
+      const showRenderCount = RenderTracker.getSettings().showRenderCount;
 
-      // Assign color based on render count
-      const color = getColorForRenderCount(newCount);
+      let newCount: number;
+      let color: string;
+
+      if (showRenderCount) {
+        // Get current render count and increment (using nativeTag as stable key)
+        const currentCount = nodeRenderCounts.get(nativeTag) || 0;
+        newCount = currentCount + 1;
+        nodeRenderCounts.set(nativeTag, newCount);
+        // Assign color based on render count
+        color = getColorForRenderCount(newCount);
+      } else {
+        // Skip counting - use fixed color and count of 0
+        newCount = 0;
+        color = COLORS[0]; // Use first color (cyan)
+      }
 
       nodesToDraw.push({
         node: stateNode,
@@ -825,9 +846,13 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
     }
   }
 
+  // Mark filtering phase complete
+  perfTimer.markFilteringComplete(skippedOverlayCount, nodesToDraw.length);
+
   // Only log if there are real updates (not just overlay re-renders)
   if (nodesToDraw.length === 0) {
     // All nodes were overlay nodes - silently skip
+    perfTimer.finish(); // Still log the batch even if empty
     return;
   }
 
@@ -865,7 +890,8 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
 
   // Measure each node and call the highlight callback
   // Use batch size from RenderTracker settings (default: 150)
-  const batchSize = RenderTracker.getBatchSize();
+  // Note: batchSize already retrieved above for perfTimer
+  perfTimer.markMeasurementStart();
   const measurePromises = nodesToDraw.slice(0, batchSize).map(
     ({ node: stateNode, color, count }) =>
       new Promise<{ rect: HighlightRect | null; stateNode: unknown; color: string; count: number }>((resolve) => {
@@ -914,7 +940,12 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
       const validResults = results.filter((r) => r.rect !== null);
       const rects = validResults.map((r) => r.rect as HighlightRect);
 
+      // Mark measurement phase complete
+      perfTimer.markMeasurementComplete(validResults.length, results.length - validResults.length);
+
       // Track renders in RenderTracker (for modal)
+      // Use batch mode to avoid O(n²) listener notifications
+      RenderTracker.startBatch();
       for (const { rect, stateNode, color, count } of validResults) {
         if (rect) {
           const componentInfo = extractComponentInfo(stateNode);
@@ -936,20 +967,22 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
           });
         }
       }
+      RenderTracker.endBatch();
+
+      // Mark tracking phase complete
+      perfTimer.markTrackingComplete();
 
       if (rects.length > 0 && highlightCallback) {
         highlightCallback(rects);
       }
+
+      // Mark callback phase complete and finish timing
+      perfTimer.markCallbackComplete();
+      perfTimer.finish();
     })
-    .finally(() => {
-      // NOTE: Lock disabled - relying on nativeID filtering
-      // isProcessing = false;
-      // renderingLockTimeout = setTimeout(() => {
-      //   renderingLock = false;
-      //   if (DEBUG_LOGGING) {
-      //     console.log(`[HighlightUpdates] Locks released`);
-      //   }
-      // }, RENDER_LOCK_DURATION);
+    .catch((error) => {
+      console.error("[HighlightUpdates] Error in measurement pipeline:", error);
+      perfTimer.finish(); // Still log timing even on error
     });
 }
 

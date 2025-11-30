@@ -52,7 +52,11 @@ export {
 
 // RenderTracker singleton for tracking render history
 export { RenderTracker } from "./highlight-updates/utils/RenderTracker";
-export type { TrackedRender, FilterConfig } from "./highlight-updates/utils/RenderTracker";
+export type { TrackedRender, FilterConfig, RenderTrackerSettings } from "./highlight-updates/utils/RenderTracker";
+
+// PerformanceLogger for performance measurement and debugging
+export { PerformanceLogger } from "./highlight-updates/utils/PerformanceLogger";
+export type { BatchMetrics, BatchTimer } from "./highlight-updates/utils/PerformanceLogger";
 
 // ViewTypeMapper for translating native view names to component names
 export {
@@ -69,3 +73,27 @@ export { HighlightUpdatesModal } from "./highlight-updates/components/HighlightU
 export { RenderListItem } from "./highlight-updates/components/RenderListItem";
 export { RenderDetailView } from "./highlight-updates/components/RenderDetailView";
 export { HighlightFilterView } from "./highlight-updates/components/HighlightFilterView";
+
+// Re-export benchmarking module from @react-buoy/benchmark
+// This provides backward compatibility for code that imports from highlight-updates
+export {
+  // Classes
+  BenchmarkRecorder,
+  benchmarkRecorder,
+  BenchmarkStorage,
+  BenchmarkComparator,
+  // Storage adapters
+  createAsyncStorageAdapter,
+  createMemoryStorageAdapter,
+} from "@react-buoy/benchmark";
+
+// Re-export benchmarking types
+export type {
+  BenchmarkReport,
+  BenchmarkComparison,
+  BenchmarkSessionOptions,
+  BenchmarkMetadata,
+  AggregatedStats,
+  OverlayRenderMetrics,
+  BatchMetrics as BenchmarkBatchMetrics,
+} from "@react-buoy/benchmark";

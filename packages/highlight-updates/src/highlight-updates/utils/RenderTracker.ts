@@ -9,6 +9,7 @@
 "use strict";
 
 import { getComponentDisplayName } from "./ViewTypeMapper";
+import { PerformanceLogger } from "./PerformanceLogger";
 
 export interface TrackedRender {
   id: string; // nativeTag as string for Map key
@@ -73,6 +74,19 @@ export interface RenderTrackerSettings {
    * Range: 10-500, Default: 150
    */
   batchSize: number;
+  /**
+   * Whether to show and track render counts on highlight badges.
+   * Disabling this improves performance by skipping count tracking.
+   * Default: true
+   */
+  showRenderCount: boolean;
+  /**
+   * Whether to enable performance logging to the console.
+   * Logs detailed timing metrics for each batch of highlights.
+   * Useful for debugging and optimization.
+   * Default: false
+   */
+  performanceLogging: boolean;
 }
 
 class RenderTrackerSingleton {
@@ -84,7 +98,13 @@ class RenderTrackerSingleton {
   private isPaused: boolean = false;
   private settings: RenderTrackerSettings = {
     batchSize: DEFAULT_BATCH_SIZE,
+    showRenderCount: true,
+    performanceLogging: false,
   };
+
+  // Batch mode: defer notifyListeners until endBatch is called
+  private isBatchMode: boolean = false;
+  private batchDirty: boolean = false;
   private filters: FilterConfig = {
     includeTestID: new Set(),
     includeNativeID: new Set(),
@@ -173,7 +193,32 @@ class RenderTrackerSingleton {
       }
     }
 
-    this.notifyListeners();
+    // In batch mode, defer notification until endBatch()
+    if (this.isBatchMode) {
+      this.batchDirty = true;
+    } else {
+      this.notifyListeners();
+    }
+  }
+
+  /**
+   * Start batch mode - defers listener notifications until endBatch() is called.
+   * Use this when tracking multiple renders in a loop to avoid O(n²) notifications.
+   */
+  startBatch(): void {
+    this.isBatchMode = true;
+    this.batchDirty = false;
+  }
+
+  /**
+   * End batch mode and notify listeners if any renders were tracked.
+   */
+  endBatch(): void {
+    this.isBatchMode = false;
+    if (this.batchDirty) {
+      this.batchDirty = false;
+      this.notifyListeners();
+    }
   }
 
   /**
@@ -580,6 +625,12 @@ class RenderTrackerSingleton {
       newSettings.batchSize = Math.max(10, Math.min(500, newSettings.batchSize));
     }
     this.settings = { ...this.settings, ...newSettings };
+
+    // Sync performance logging with PerformanceLogger
+    if (newSettings.performanceLogging !== undefined) {
+      PerformanceLogger.setEnabled(newSettings.performanceLogging);
+    }
+
     this.notifySettingsListeners();
   }
 

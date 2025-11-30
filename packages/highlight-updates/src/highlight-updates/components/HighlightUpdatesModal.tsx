@@ -4,38 +4,40 @@
  * Main modal interface for the Highlight Updates dev tool.
  * Shows a list of tracked component renders with controls for
  * start/stop, clear, and filtering.
+ *
+ * PERFORMANCE OPTIMIZED:
+ * - Uses isolated components to prevent parent re-renders
+ * - Stats display is isolated (StatsDisplay)
+ * - Render list is isolated (IsolatedRenderList)
+ * - Header components are memoized
+ * - Uses refs for values not displayed in UI
  */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
-  FlatList,
 } from "react-native";
 import {
-  Activity,
-  Trash2,
   Power,
-  Search,
-  Filter,
-  X,
   JsModal,
-  ModalHeader,
   devToolsStorageKeys,
   macOSColors,
-  TabSelector,
   safeGetItem,
   safeSetItem,
 } from "@react-buoy/shared-ui";
-import type { ViewStyle } from "react-native";
 import HighlightUpdatesController from "../utils/HighlightUpdatesController";
 import { RenderTracker, type TrackedRender, type FilterConfig, type RenderTrackerSettings } from "../utils/RenderTracker";
-import { RenderListItem } from "./RenderListItem";
 import { RenderDetailView } from "./RenderDetailView";
 import { HighlightFilterView } from "./HighlightFilterView";
+import { IsolatedRenderList } from "./IsolatedRenderList";
+import {
+  MainListHeader,
+  FilterViewHeader,
+  DetailViewHeader,
+} from "./ModalHeaderContent";
 
 interface HighlightUpdatesModalProps {
   visible: boolean;
@@ -45,19 +47,17 @@ interface HighlightUpdatesModalProps {
   enableSharedModalDimensions?: boolean;
 }
 
-function EmptyState({ isTracking }: { isTracking: boolean }) {
+// Disabled banner - memoized since props rarely change
+const DisabledBanner = React.memo(function DisabledBanner() {
   return (
-    <View style={styles.emptyState}>
-      <Activity size={32} color={macOSColors.text.muted} />
-      <Text style={styles.emptyTitle}>No renders tracked</Text>
-      <Text style={styles.emptyText}>
-        {isTracking
-          ? "Component renders will appear here"
-          : "Enable tracking to start capturing"}
+    <View style={styles.disabledBanner}>
+      <Power size={14} color={macOSColors.semantic.warning} />
+      <Text style={styles.disabledText}>
+        Render tracking is disabled
       </Text>
     </View>
   );
-}
+});
 
 export function HighlightUpdatesModal({
   visible,
@@ -66,30 +66,51 @@ export function HighlightUpdatesModal({
   onMinimize,
   enableSharedModalDimensions = false,
 }: HighlightUpdatesModalProps) {
-  // Tracking state
+  // ============================================================================
+  // TRACKING STATE - subscribed via isolated component
+  // ============================================================================
   const [isTracking, setIsTracking] = useState(false);
-  const [renders, setRenders] = useState<TrackedRender[]>([]);
-  const [stats, setStats] = useState({ totalComponents: 0, totalRenders: 0 });
 
-  // UI state
+  // Track if there are renders for header clear button state
+  const [hasRenders, setHasRenders] = useState(() => RenderTracker.getStats().totalComponents > 0);
+
+  // ============================================================================
+  // UI STATE - kept in parent for view switching
+  // ============================================================================
   const [selectedRender, setSelectedRender] = useState<TrackedRender | null>(null);
   const [showFilterView, setShowFilterView] = useState(false);
   const [activeTab, setActiveTab] = useState<"filters">("filters");
   const [searchText, setSearchText] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
-  const flatListRef = useRef<FlatList<TrackedRender>>(null);
 
-  // Filter state
+  // ============================================================================
+  // FILTER STATE - use ref for filter config, state for display count only
+  // ============================================================================
+  const filtersRef = useRef<FilterConfig>(RenderTracker.getFilters());
+  const [activeFilterCount, setActiveFilterCount] = useState(() => {
+    const filters = RenderTracker.getFilters();
+    return filters.includePatterns.length + filters.excludePatterns.length;
+  });
+
+  // Expose filters via state for HighlightFilterView (it needs to display them)
   const [filters, setFilters] = useState<FilterConfig>(() => RenderTracker.getFilters());
 
-  // Settings state
+  // ============================================================================
+  // SETTINGS STATE
+  // ============================================================================
   const [settings, setSettings] = useState<RenderTrackerSettings>(() => RenderTracker.getSettings());
 
-  // Persistence refs - prevent saving on initial load
+  // ============================================================================
+  // PERSISTENCE REFS - prevent saving on initial load
+  // ============================================================================
   const hasLoadedTrackingState = useRef(false);
   const hasLoadedFilters = useRef(false);
   const hasLoadedSettings = useRef(false);
+
+  // ============================================================================
+  // LOAD PERSISTED STATE
+  // ============================================================================
 
   // Load persisted tracking state on mount
   useEffect(() => {
@@ -147,7 +168,6 @@ export function HighlightUpdatesModal({
         );
         if (storedFilters) {
           const parsedFilters = JSON.parse(storedFilters);
-          // Convert arrays back to Sets for legacy fields, load new pattern arrays directly
           const restoredFilters: Partial<FilterConfig> = {
             includeTestID: new Set(parsedFilters.includeTestID || []),
             includeNativeID: new Set(parsedFilters.includeNativeID || []),
@@ -161,7 +181,10 @@ export function HighlightUpdatesModal({
             excludePatterns: parsedFilters.excludePatterns || [],
           };
           RenderTracker.setFilters(restoredFilters);
-          setFilters(RenderTracker.getFilters());
+          const newFilters = RenderTracker.getFilters();
+          filtersRef.current = newFilters;
+          setFilters(newFilters);
+          setActiveFilterCount(newFilters.includePatterns.length + newFilters.excludePatterns.length);
         }
         hasLoadedFilters.current = true;
       } catch (error) {
@@ -178,7 +201,6 @@ export function HighlightUpdatesModal({
 
     const saveFilters = async () => {
       try {
-        // Convert Sets to arrays for JSON serialization, include new pattern arrays
         const filtersToSave = {
           includeTestID: Array.from(filters.includeTestID),
           includeNativeID: Array.from(filters.includeNativeID),
@@ -214,12 +236,12 @@ export function HighlightUpdatesModal({
         );
         if (storedSettings) {
           const parsedSettings = JSON.parse(storedSettings);
-          RenderTracker.setSettings(parsedSettings);
+          const { performanceLogging: _ignored, ...settingsToRestore } = parsedSettings;
+          RenderTracker.setSettings(settingsToRestore);
           setSettings(RenderTracker.getSettings());
         }
         hasLoadedSettings.current = true;
       } catch (error) {
-        // Failed to load settings
         hasLoadedSettings.current = true;
       }
     };
@@ -233,9 +255,10 @@ export function HighlightUpdatesModal({
 
     const saveSettings = async () => {
       try {
+        const { performanceLogging: _ignored, ...settingsToSave } = settings;
         await safeSetItem(
           devToolsStorageKeys.highlightUpdates.settings(),
-          JSON.stringify(settings)
+          JSON.stringify(settingsToSave)
         );
       } catch (error) {
         // Failed to save settings
@@ -245,27 +268,20 @@ export function HighlightUpdatesModal({
     saveSettings();
   }, [settings]);
 
-  // Subscribe to RenderTracker updates
-  useEffect(() => {
-    const unsubscribeRenders = RenderTracker.subscribe(() => {
-      setRenders(RenderTracker.getFilteredRenders(searchText));
-      setStats(RenderTracker.getStats());
-    });
+  // ============================================================================
+  // SUBSCRIPTIONS - only for tracking state, not renders
+  // ============================================================================
 
+  // Subscribe to tracking state changes only
+  useEffect(() => {
     const unsubscribeState = RenderTracker.subscribeToState((state) => {
       setIsTracking(state.isTracking);
     });
 
     return () => {
-      unsubscribeRenders();
       unsubscribeState();
     };
-  }, [searchText]);
-
-  // Update filtered renders when search changes
-  useEffect(() => {
-    setRenders(RenderTracker.getFilteredRenders(searchText));
-  }, [searchText, filters]);
+  }, []);
 
   // Focus search input when activated
   useEffect(() => {
@@ -276,6 +292,10 @@ export function HighlightUpdatesModal({
     }
   }, [isSearchActive]);
 
+  // ============================================================================
+  // CALLBACKS - stable references for child components
+  // ============================================================================
+
   const handleToggleTracking = useCallback(() => {
     if (!HighlightUpdatesController.isInitialized()) {
       HighlightUpdatesController.initialize();
@@ -285,6 +305,7 @@ export function HighlightUpdatesModal({
 
   const handleClear = useCallback(() => {
     HighlightUpdatesController.clearRenderCounts();
+    setHasRenders(false);
   }, []);
 
   const handleSearch = useCallback((text: string) => {
@@ -295,13 +316,32 @@ export function HighlightUpdatesModal({
     setSelectedRender(render);
   }, []);
 
-  const handleBack = useCallback(() => {
+  const handleBackFromDetail = useCallback(() => {
     setSelectedRender(null);
+  }, []);
+
+  const handleBackFromFilter = useCallback(() => {
+    setShowFilterView(false);
+  }, []);
+
+  const handleFilterToggle = useCallback(() => {
+    setShowFilterView(true);
+  }, []);
+
+  const handleSearchToggle = useCallback(() => {
+    setIsSearchActive(true);
+  }, []);
+
+  const handleSearchClose = useCallback(() => {
+    setIsSearchActive(false);
   }, []);
 
   const handleFilterChange = useCallback((newFilters: Partial<FilterConfig>) => {
     RenderTracker.setFilters(newFilters);
-    setFilters(RenderTracker.getFilters());
+    const updatedFilters = RenderTracker.getFilters();
+    filtersRef.current = updatedFilters;
+    setFilters(updatedFilters);
+    setActiveFilterCount(updatedFilters.includePatterns.length + updatedFilters.excludePatterns.length);
   }, []);
 
   const handleSettingsChange = useCallback((newSettings: Partial<RenderTrackerSettings>) => {
@@ -309,179 +349,70 @@ export function HighlightUpdatesModal({
     setSettings(RenderTracker.getSettings());
   }, []);
 
-  // Get active filter count (using new pattern arrays)
-  const activeFilterCount = useMemo(() => {
-    return filters.includePatterns.length + filters.excludePatterns.length;
-  }, [filters]);
+  // Callback for IsolatedRenderList to update hasRenders (for header clear button)
+  const handleStatsChange = useCallback((stats: { totalComponents: number; totalRenders: number }) => {
+    setHasRenders(stats.totalComponents > 0);
+  }, []);
 
-  // FlatList optimization
-  const keyExtractor = useCallback((item: TrackedRender) => item.id, []);
+  // ============================================================================
+  // HEADER RENDERING - using memoized components
+  // ============================================================================
 
-  const renderItem = useCallback(
-    ({ item }: { item: TrackedRender }) => (
-      // Key includes renderCount to force React to recreate component when count changes
-      <RenderListItem key={`${item.id}-${item.renderCount}`} render={item} onPress={handleRenderPress} />
-    ),
-    [handleRenderPress]
-  );
-
-  // Header rendering
-  const renderHeaderContent = () => {
-    // Filter view header
+  const renderHeaderContent = useCallback(() => {
     if (showFilterView) {
-      const tabs = [{ key: "filters" as const, label: "Filters" }];
-
       return (
-        <ModalHeader>
-          <ModalHeader.Navigation onBack={() => setShowFilterView(false)} />
-          <ModalHeader.Content title="" noMargin>
-            <TabSelector
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={(tab) => setActiveTab(tab as "filters")}
-            />
-          </ModalHeader.Content>
-          <ModalHeader.Actions>{/* Empty for right padding */}</ModalHeader.Actions>
-        </ModalHeader>
+        <FilterViewHeader
+          onBack={handleBackFromFilter}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
       );
     }
 
-    // Render detail view header
     if (selectedRender) {
-      return (
-        <ModalHeader>
-          <ModalHeader.Navigation onBack={handleBack} />
-          <ModalHeader.Content title="Render Details" centered />
-        </ModalHeader>
-      );
+      return <DetailViewHeader onBack={handleBackFromDetail} />;
     }
 
-    // Main list view header with search and filters
     return (
-      <ModalHeader>
-        {onBack && <ModalHeader.Navigation onBack={onBack} />}
-        <ModalHeader.Content title="">
-          {isSearchActive ? (
-            <View nativeID="__rn_buoy__search-container" style={styles.headerSearchContainer}>
-              <Search size={14} color={macOSColors.text.secondary} />
-              <TextInput
-                ref={searchInputRef}
-                style={styles.headerSearchInput}
-                placeholder="Search testID, nativeID, component..."
-                placeholderTextColor={macOSColors.text.muted}
-                value={searchText}
-                onChangeText={handleSearch}
-                onSubmitEditing={() => setIsSearchActive(false)}
-                onBlur={() => setIsSearchActive(false)}
-                accessibilityLabel="Search renders"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-              />
-              {searchText.length > 0 ? (
-                <TouchableOpacity
-                  onPress={() => {
-                    handleSearch("");
-                    setIsSearchActive(false);
-                  }}
-                  style={styles.headerSearchClear}
-                >
-                  <X size={14} color={macOSColors.text.secondary} />
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          ) : (
-            <View nativeID="__rn_buoy__stats-row" style={styles.headerChipRow}>
-              <View style={styles.headerChip}>
-                <Activity size={12} color={macOSColors.semantic.info} />
-                <Text
-                  style={[
-                    styles.headerChipValue,
-                    { color: macOSColors.semantic.info },
-                  ]}
-                >
-                  {stats.totalComponents}
-                </Text>
-                <Text style={styles.headerChipLabel}>components</Text>
-              </View>
-
-              <View style={styles.headerChip}>
-                <Text
-                  style={[
-                    styles.headerChipValue,
-                    { color: macOSColors.semantic.warning },
-                  ]}
-                >
-                  {stats.totalRenders}
-                </Text>
-                <Text style={styles.headerChipLabel}>renders</Text>
-              </View>
-            </View>
-          )}
-        </ModalHeader.Content>
-        <ModalHeader.Actions>
-          <TouchableOpacity
-            onPress={() => setIsSearchActive(true)}
-            style={styles.headerActionButton}
-          >
-            <Search size={14} color={macOSColors.text.secondary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setShowFilterView(true)}
-            style={[
-              styles.headerActionButton,
-              activeFilterCount > 0 && styles.activeFilterButton,
-            ]}
-          >
-            <Filter
-              size={14}
-              color={
-                activeFilterCount > 0
-                  ? macOSColors.semantic.info
-                  : macOSColors.text.muted
-              }
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleToggleTracking}
-            style={[
-              styles.headerActionButton,
-              isTracking ? styles.startButton : styles.stopButton,
-            ]}
-          >
-            <Power
-              size={14}
-              color={
-                isTracking
-                  ? macOSColors.semantic.success
-                  : macOSColors.semantic.error
-              }
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleClear}
-            style={[
-              styles.headerActionButton,
-              renders.length === 0 && styles.headerActionButtonDisabled,
-            ]}
-            disabled={renders.length === 0}
-          >
-            <Trash2
-              size={14}
-              color={
-                renders.length > 0
-                  ? macOSColors.text.muted
-                  : macOSColors.text.disabled
-              }
-            />
-          </TouchableOpacity>
-        </ModalHeader.Actions>
-      </ModalHeader>
+      <MainListHeader
+        onBack={onBack}
+        isSearchActive={isSearchActive}
+        searchText={searchText}
+        onSearchChange={handleSearch}
+        onSearchToggle={handleSearchToggle}
+        onSearchClose={handleSearchClose}
+        onFilterToggle={handleFilterToggle}
+        onToggleTracking={handleToggleTracking}
+        onClear={handleClear}
+        isTracking={isTracking}
+        activeFilterCount={activeFilterCount}
+        hasRenders={hasRenders}
+        searchInputRef={searchInputRef}
+      />
     );
-  };
+  }, [
+    showFilterView,
+    selectedRender,
+    onBack,
+    isSearchActive,
+    searchText,
+    isTracking,
+    activeFilterCount,
+    hasRenders,
+    activeTab,
+    handleBackFromFilter,
+    handleBackFromDetail,
+    handleSearch,
+    handleSearchToggle,
+    handleSearchClose,
+    handleFilterToggle,
+    handleToggleTracking,
+    handleClear,
+  ]);
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   const persistenceKey = enableSharedModalDimensions
     ? devToolsStorageKeys.modal.root()
@@ -517,32 +448,15 @@ export function HighlightUpdatesModal({
           />
         ) : (
           <>
-            {!isTracking && (
-              <View style={styles.disabledBanner}>
-                <Power size={14} color={macOSColors.semantic.warning} />
-                <Text style={styles.disabledText}>
-                  Render tracking is disabled
-                </Text>
-              </View>
-            )}
+            {!isTracking && <DisabledBanner />}
 
-            {renders.length > 0 ? (
-              <FlatList
-                ref={flatListRef}
-                data={renders}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                extraData={stats.totalRenders}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator
-                initialNumToRender={10}
-                maxToRenderPerBatch={10}
-                windowSize={10}
-                scrollEnabled={false}
-              />
-            ) : (
-              <EmptyState isTracking={isTracking} />
-            )}
+            <IsolatedRenderList
+              searchText={searchText}
+              filters={filters}
+              onSelectRender={handleRenderPress}
+              onStatsChange={handleStatsChange}
+              isTracking={isTracking}
+            />
           </>
         )}
       </View>
@@ -554,78 +468,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: macOSColors.background.base,
-  },
-  headerSearchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: macOSColors.background.input,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  headerSearchInput: {
-    flex: 1,
-    color: macOSColors.text.primary,
-    fontSize: 13,
-    marginLeft: 6,
-    paddingVertical: 2,
-  },
-  headerSearchClear: {
-    marginLeft: 6,
-    padding: 4,
-  },
-  headerChipRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  headerChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: macOSColors.background.hover,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  headerChipValue: {
-    fontSize: 12,
-    fontWeight: "600",
-    fontFamily: "monospace",
-  },
-  headerChipLabel: {
-    fontSize: 10,
-    color: macOSColors.text.muted,
-    fontWeight: "500",
-  },
-  headerActionButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: macOSColors.background.hover,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerActionButtonDisabled: {
-    opacity: 0.55,
-  },
-  startButton: {
-    backgroundColor: macOSColors.semantic.successBackground,
-    borderColor: macOSColors.semantic.success + "40",
-  },
-  stopButton: {
-    backgroundColor: macOSColors.semantic.errorBackground,
-    borderColor: macOSColors.semantic.error + "40",
-  },
-  activeFilterButton: {
-    backgroundColor: macOSColors.semantic.infoBackground,
-    borderColor: macOSColors.semantic.info + "40",
   },
   disabledBanner: {
     flexDirection: "row",
@@ -643,25 +485,6 @@ const styles = StyleSheet.create({
     color: macOSColors.semantic.warning,
     fontSize: 11,
     flex: 1,
-  },
-  listContent: {
-    paddingTop: 8,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    color: macOSColors.text.primary,
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 12,
-    marginBottom: 6,
-  },
-  emptyText: {
-    color: macOSColors.text.muted,
-    fontSize: 12,
-    textAlign: "center",
   },
 });
 

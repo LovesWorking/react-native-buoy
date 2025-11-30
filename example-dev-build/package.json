@@ -12,10 +12,12 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-buoy/benchmark": "workspace:*",
     "@react-buoy/bottom-sheet": "workspace:*",
     "@react-buoy/core": "workspace:*",
     "@react-buoy/debug-borders": "workspace:*",
     "@react-buoy/env": "workspace:*",
+    "@react-buoy/highlight-updates": "workspace:*",
     "@react-buoy/network": "workspace:*",
     "@react-buoy/react-query": "workspace:*",
     "@react-buoy/route-events": "workspace:*",

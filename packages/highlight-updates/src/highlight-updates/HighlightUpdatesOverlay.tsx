@@ -6,9 +6,13 @@
  * native DebuggingOverlay component for better compatibility.
  */
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import HighlightUpdatesController from "./utils/HighlightUpdatesController";
+import { PerformanceLogger, markOverlayRendered } from "./utils/PerformanceLogger";
+
+// Declare performance API available in React Native's JavaScript environment
+declare const performance: { now: () => number };
 
 interface HighlightRect {
   id: number;
@@ -27,6 +31,30 @@ const HIGHLIGHT_DURATION = 1000;
 export function HighlightUpdatesOverlay(): React.ReactElement | null {
   const [highlights, setHighlights] = useState<HighlightRect[]>([]);
   const cleanupTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const renderStartTimeRef = useRef<number>(0);
+  const highlightCountRef = useRef<number>(0);
+
+  // Track render start time
+  if (PerformanceLogger.isEnabled()) {
+    renderStartTimeRef.current = performance.now();
+    highlightCountRef.current = highlights.length;
+  }
+
+  // Measure render completion time using useLayoutEffect (runs after DOM mutations)
+  useLayoutEffect(() => {
+    if (PerformanceLogger.isEnabled() && renderStartTimeRef.current > 0 && highlightCountRef.current > 0) {
+      const renderTime = performance.now() - renderStartTimeRef.current;
+      // Only log significant renders (more than 1ms or multiple highlights)
+      if (renderTime > 1 || highlightCountRef.current > 5) {
+        console.log(
+          `[HighlightPerf] Overlay render: ${renderTime.toFixed(1)}ms for ${highlightCountRef.current} highlights`
+        );
+      }
+      // Mark end-to-end timing (from event received to render complete)
+      // Pass renderTime for benchmark recording
+      markOverlayRendered(highlightCountRef.current, renderTime);
+    }
+  });
 
   // Callback to add new highlights
   const addHighlights = useCallback(
@@ -100,18 +128,20 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
             },
           ]}
         >
-          {/* Render count badge - fixed inset from top-right corner */}
-          <View
-            style={[styles.badge, { backgroundColor: rect.color }]}
-            nativeID={`__highlight_badge_${rect.id}__`}
-          >
-            <Text
-              style={styles.badgeText}
-              nativeID={`__highlight_text_${rect.id}__`}
+          {/* Render count badge - only show when counting is enabled (count > 0) */}
+          {rect.count > 0 && (
+            <View
+              style={[styles.badge, { backgroundColor: rect.color }]}
+              nativeID={`__highlight_badge_${rect.id}__`}
             >
-              {rect.count}
-            </Text>
-          </View>
+              <Text
+                style={styles.badgeText}
+                nativeID={`__highlight_text_${rect.id}__`}
+              >
+                {rect.count}
+              </Text>
+            </View>
+          )}
         </View>
       ))}
     </View>

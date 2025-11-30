@@ -169,6 +169,22 @@ export const devToolsStorageKeys = {
     settings: () =>
       `${devToolsStorageKeys.highlightUpdates.root()}_settings` as const,
   },
+
+  /**
+   * Benchmark-related storage keys
+   */
+  benchmark: {
+    root: () => `${devToolsStorageKeys.base}_benchmark` as const,
+    modal: () => `${devToolsStorageKeys.benchmark.root()}_modal` as const,
+    isRecording: () =>
+      `${devToolsStorageKeys.benchmark.root()}_is_recording` as const,
+    activeTab: () =>
+      `${devToolsStorageKeys.benchmark.root()}_active_tab` as const,
+    settings: () =>
+      `${devToolsStorageKeys.benchmark.root()}_settings` as const,
+    selectedReports: () =>
+      `${devToolsStorageKeys.benchmark.root()}_selected_reports` as const,
+  },
 } as const;
 
 /**

@@ -99,9 +99,22 @@ function RenderListItemInner({ render, onPress }: RenderListItemProps) {
   );
 }
 
-// Note: Not using React.memo here because FlatList with extraData handles
-// re-renders efficiently, and memo was preventing updates when render counts changed
-export const RenderListItem = RenderListItemInner;
+// Memoize with custom comparison - only re-render when relevant props change
+// This is critical for performance when the modal is open during rapid renders
+export const RenderListItem = React.memo(RenderListItemInner, (prevProps, nextProps) => {
+  // Return true if props are EQUAL (skip re-render)
+  // Return false if props are DIFFERENT (trigger re-render)
+  const prevRender = prevProps.render;
+  const nextRender = nextProps.render;
+
+  return (
+    prevRender.id === nextRender.id &&
+    prevRender.renderCount === nextRender.renderCount &&
+    prevRender.color === nextRender.color &&
+    prevRender.lastRenderTime === nextRender.lastRenderTime &&
+    prevProps.onPress === nextProps.onPress
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

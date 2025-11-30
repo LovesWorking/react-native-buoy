@@ -152,6 +152,19 @@ export function autoDiscoverPresets(): InstalledApp[] {
         }
       },
     },
+    // Benchmark Tools
+    {
+      name: "@react-buoy/benchmark",
+      loader: () => {
+        try {
+          // @ts-ignore - Dynamic import that may not exist
+          const { benchmarkPreset } = require("@react-buoy/benchmark");
+          return benchmarkPreset;
+        } catch {
+          return null;
+        }
+      },
+    },
   ];
 
   // Attempt to load each preset

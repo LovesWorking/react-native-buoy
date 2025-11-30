@@ -16,6 +16,7 @@ import {
   ScrollView,
   Modal,
   Pressable,
+  Switch,
 } from "react-native";
 import { Eye, Filter, Plus, X, Box, Check, Settings } from "@react-buoy/shared-ui";
 import { macOSColors, SectionHeader } from "@react-buoy/shared-ui";
@@ -605,7 +606,27 @@ export function HighlightFilterView({
         </SectionHeader>
 
         <View style={styles.settingsSection}>
+          {/* Show Render Count Toggle */}
           <View style={styles.settingItem}>
+            <View style={styles.settingHeader}>
+              <Text style={styles.settingLabel}>Show Render Count</Text>
+              <Switch
+                value={settings.showRenderCount}
+                onValueChange={(value) => onSettingsChange({ showRenderCount: value })}
+                trackColor={{
+                  false: macOSColors.background.input,
+                  true: macOSColors.semantic.success + "80",
+                }}
+                thumbColor={settings.showRenderCount ? macOSColors.semantic.success : macOSColors.text.muted}
+              />
+            </View>
+            <Text style={styles.settingDescription}>
+              Display render count badge on highlights. Disabling improves performance by skipping count tracking.
+            </Text>
+          </View>
+
+          {/* Batch Size */}
+          <View style={[styles.settingItem, styles.settingItemSpaced]}>
             <View style={styles.settingHeader}>
               <Text style={styles.settingLabel}>Batch Size</Text>
               <View style={styles.settingValue}>
@@ -950,6 +971,12 @@ const styles = StyleSheet.create({
   },
   settingItem: {
     gap: 8,
+  },
+  settingItemSpaced: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: macOSColors.border.default + "30",
   },
   settingHeader: {
     flexDirection: "row",

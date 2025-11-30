@@ -1,7 +1,7 @@
 {
-  "name": "@react-buoy/highlight-updates",
+  "name": "@react-buoy/benchmark",
   "version": "0.1.0",
-  "description": "Control React DevTools highlight updates feature from your app",
+  "description": "Performance benchmarking system for React Native dev tools",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -20,20 +20,15 @@
     "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
-    "@react-buoy/benchmark": "workspace:*",
     "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {
+    "@react-native-async-storage/async-storage": "*",
     "react": "*",
-    "react-native": "*",
-    "@react-buoy/core": "*"
-  },
-  "peerDependenciesMeta": {
-    "@react-buoy/core": {
-      "optional": true
-    }
+    "react-native": "*"
   },
   "devDependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "@types/react": "^19.1.0",
     "@types/react-native": "^0.73.0",
     "typescript": "~5.8.3"
@@ -50,12 +45,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/LovesWorking/react-native-buoy.git",
-    "directory": "packages/highlight-updates"
+    "directory": "packages/benchmark"
   },
   "bugs": {
     "url": "https://github.com/LovesWorking/react-native-buoy/issues"
   },
-  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/highlight-updates#readme",
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/benchmark#readme",
   "publishConfig": {
     "access": "public",
     "tag": "latest"
