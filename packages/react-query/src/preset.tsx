@@ -84,7 +84,7 @@ export const reactQueryToolPreset = {
   ),
   component: ReactQueryDevToolsModal,
   props: {
-    enableSharedModalDimensions: true,
+    enableSharedModalDimensions: false,
   },
 };
 
@@ -132,7 +132,7 @@ export function createReactQueryTool(options?: {
       enableSharedModalDimensions:
         options?.enableSharedModalDimensions !== undefined
           ? options.enableSharedModalDimensions
-          : true,
+          : false,
     },
   };
 }

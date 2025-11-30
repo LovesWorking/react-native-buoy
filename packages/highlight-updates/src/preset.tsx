@@ -195,7 +195,7 @@ export const highlightUpdatesModalPreset = {
   ),
   component: HighlightUpdatesModal,
   props: {
-    enableSharedModalDimensions: true,
+    enableSharedModalDimensions: false,
   },
 };
 
@@ -249,7 +249,7 @@ export function createHighlightUpdatesModalTool(options?: {
     ),
     component: HighlightUpdatesModal,
     props: {
-      enableSharedModalDimensions: true,
+      enableSharedModalDimensions: false,
     },
   };
 }

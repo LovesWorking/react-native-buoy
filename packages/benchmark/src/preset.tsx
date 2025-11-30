@@ -36,7 +36,7 @@ export const benchmarkPreset = {
   ),
   component: BenchmarkModal,
   props: {
-    enableSharedModalDimensions: true,
+    enableSharedModalDimensions: false,
   },
 };
 
