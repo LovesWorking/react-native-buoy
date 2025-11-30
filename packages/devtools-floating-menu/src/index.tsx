@@ -19,7 +19,7 @@ export {
   DevToolsSettingsModal,
   useDevToolsSettings,
 } from "./floatingMenu/DevToolsSettingsModal";
-export type { DevToolsSettings } from "./floatingMenu/DevToolsSettingsModal";
+export type { DevToolsSettings, GlobalDevToolsSettings } from "./floatingMenu/DevToolsSettingsModal";
 
 // Export AppHost components for advanced use cases
 export {

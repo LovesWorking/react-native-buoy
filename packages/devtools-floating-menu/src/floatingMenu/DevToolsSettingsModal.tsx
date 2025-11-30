@@ -21,6 +21,8 @@ import {
   Info,
   Layers,
   ChevronRightIcon,
+  ChevronDown,
+  SettingsIcon,
   safeGetItem,
   safeSetItem,
 } from "@react-buoy/shared-ui";
@@ -103,8 +105,25 @@ const mergeWithDefaults = (
       },
       options?.allowedFloatingKeys
     ),
+    globalSettings: {
+      enableSharedModalDimensions: false, // Default to false
+      ...(stored.globalSettings ?? {}),
+    },
   };
 };
+
+/**
+ * Global settings that apply to all dev tools.
+ * These settings override individual tool configurations.
+ */
+export interface GlobalDevToolsSettings {
+  /**
+   * When true, all modals share the same dimensions/position.
+   * When false (default), each modal has its own independent persistence.
+   * Priority: Settings UI > Prop override > Default (false)
+   */
+  enableSharedModalDimensions?: boolean;
+}
 
 /**
  * Serialized preferences that power the floating dev tools UI. Values persist across sessions
@@ -117,6 +136,8 @@ export interface DevToolsSettings {
   floatingTools: Record<string, boolean> & {
     environment: boolean; // Special setting for environment indicator
   };
+  /** Global settings that apply to all dev tools */
+  globalSettings?: GlobalDevToolsSettings;
 }
 
 interface DevToolsSettingsModalProps {
@@ -162,6 +183,9 @@ const generateDefaultSettings = (
       ...floatingDefaults,
       environment: false, // Special setting for environment indicator
     },
+    globalSettings: {
+      enableSharedModalDimensions: false, // Default to false - each modal has its own persistence
+    },
   };
 };
 
@@ -194,7 +218,8 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   const [settings, setSettings] = useState<DevToolsSettings>(
     initialSettings || defaultSettings
   );
-  const [activeTab, setActiveTab] = useState<"dial" | "floating">("dial");
+  const [activeTab, setActiveTab] = useState<"dial" | "floating" | "settings">("dial");
+  const [expandedSettings, setExpandedSettings] = useState<Set<string>>(new Set());
   const insets = useSafeAreaInsets();
   const screenHeight = Dimensions.get("window").height;
   const screenWidth = Dimensions.get("window").width;
@@ -270,6 +295,19 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
       floatingTools: {
         ...settings.floatingTools,
         [tool]: !settings.floatingTools[tool],
+      },
+    };
+    saveSettings(newSettings);
+  };
+
+  const toggleGlobalSetting = (
+    setting: keyof NonNullable<DevToolsSettings["globalSettings"]>
+  ) => {
+    const newSettings = {
+      ...settings,
+      globalSettings: {
+        ...settings.globalSettings,
+        [setting]: !settings.globalSettings?.[setting],
       },
     };
     saveSettings(newSettings);
@@ -460,6 +498,132 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
     );
   };
 
+  // Toggle expanded state for a setting card
+  const toggleSettingExpanded = (settingKey: string) => {
+    setExpandedSettings((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(settingKey)) {
+        newSet.delete(settingKey);
+      } else {
+        newSet.add(settingKey);
+      }
+      return newSet;
+    });
+  };
+
+  // Render a global setting toggle card with expandable description
+  const renderGlobalSettingCard = (
+    settingKey: keyof NonNullable<DevToolsSettings["globalSettings"]>,
+    label: string,
+    shortDescription: string,
+    fullDescription: string,
+    recommendation: string
+  ) => {
+    const value = settings.globalSettings?.[settingKey] ?? false;
+    const isExpanded = expandedSettings.has(settingKey);
+    const color = gameUIColors.info;
+
+    return (
+      <View key={settingKey} style={{ marginBottom: 10 }}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => toggleSettingExpanded(settingKey)}
+          style={[
+            styles.expandableCard,
+            isExpanded && {
+              borderColor: color,
+              borderWidth: 2,
+              shadowColor: color,
+              shadowOpacity: 0.8,
+              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 0 },
+              elevation: 10,
+              transform: [{ scale: 1.01 }],
+            },
+          ]}
+        >
+          {/* Header Row */}
+          <View style={styles.expandableCardHeader}>
+            {/* Status dot and label */}
+            <View style={styles.expandableCardStatus}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: value ? gameUIColors.success : gameUIColors.muted },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.expandableCardLabel,
+                  { color: value ? gameUIColors.success : gameUIColors.muted },
+                ]}
+              >
+                {value ? "ENABLED" : "DISABLED"}
+              </Text>
+            </View>
+
+            {/* Title */}
+            <View style={styles.expandableCardTitle}>
+              <Text style={styles.expandableCardTitleText}>{label}</Text>
+              {!isExpanded && (
+                <Text style={styles.expandableCardSubtitle} numberOfLines={1}>
+                  {shortDescription}
+                </Text>
+              )}
+            </View>
+
+            {/* Toggle and Chevron */}
+            <View style={styles.expandableCardActions}>
+              <TouchableOpacity
+                onPress={() => toggleGlobalSetting(settingKey)}
+                activeOpacity={0.8}
+                style={[
+                  styles.pillToggle,
+                  {
+                    backgroundColor: value ? `${gameUIColors.success}33` : "#1b2334",
+                    borderColor: value ? `${gameUIColors.success}88` : "#2a3550",
+                    shadowColor: value ? gameUIColors.success : "transparent",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: value ? 0.4 : 0,
+                    shadowRadius: value ? 8 : 0,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.pillToggleText,
+                    { color: value ? gameUIColors.success : "#8CA2C8" },
+                  ]}
+                >
+                  {value ? "ON" : "OFF"}
+                </Text>
+              </TouchableOpacity>
+              {isExpanded ? (
+                <ChevronDown size={18} color="#7F91B2" />
+              ) : (
+                <ChevronRightIcon size={18} color="#7F91B2" />
+              )}
+            </View>
+          </View>
+
+          {/* Expanded Content */}
+          {isExpanded && (
+            <View style={styles.expandableCardBody}>
+              <View style={styles.expandableCardSection}>
+                <Text style={styles.expandableCardSectionTitle}>DESCRIPTION</Text>
+                <Text style={styles.expandableCardSectionText}>{fullDescription}</Text>
+              </View>
+              <View style={styles.expandableCardSection}>
+                <Text style={styles.expandableCardSectionTitle}>RECOMMENDATION</Text>
+                <Text style={styles.expandableCardSectionText}>{recommendation}</Text>
+              </View>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderContent = () => (
     <View style={styles.container}>
       <ScrollView
@@ -468,7 +632,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
         contentContainerStyle={styles.scrollContainer}
       >
         {/* Show only the active tab's content */}
-        {activeTab === "dial" ? (
+        {activeTab === "dial" && (
           <View style={styles.section}>
             {(() => {
               const enabledCount = Object.values(settings.dialTools).filter(
@@ -484,7 +648,8 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
               });
             })()}
           </View>
-        ) : (
+        )}
+        {activeTab === "floating" && (
           <View style={styles.section}>
             {Object.entries(settings.floatingTools).map(([key, value]) =>
               renderToolCard(key, value, false, () =>
@@ -492,6 +657,17 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
                   key as keyof DevToolsSettings["floatingTools"]
                 )
               )
+            )}
+          </View>
+        )}
+        {activeTab === "settings" && (
+          <View style={styles.section}>
+            {renderGlobalSettingCard(
+              "enableSharedModalDimensions",
+              "SHARED MODAL SIZE",
+              "Sync modal dimensions across all tools",
+              "When enabled, all tool modals will share the same size and position. Resizing one modal will affect all others. When disabled, each tool remembers its own size and position independently.",
+              "Keep OFF for the best experience. This allows you to customize each tool's modal size separately. Enable only if you prefer uniform modal sizes across all dev tools."
             )}
           </View>
         )}
@@ -512,10 +688,11 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
                 tabs={[
                   { key: "dial", label: "DIAL MENU" },
                   { key: "floating", label: "FLOATING" },
+                  { key: "settings", label: "SETTINGS" },
                 ]}
                 activeTab={activeTab}
                 onTabChange={(tab: string) =>
-                  setActiveTab(tab as "dial" | "floating")
+                  setActiveTab(tab as "dial" | "floating" | "settings")
                 }
               />
             </ModalHeader.Content>
@@ -545,6 +722,9 @@ const basicDefaultSettings: DevToolsSettings = {
   dialTools: {},
   floatingTools: {
     environment: false,
+  },
+  globalSettings: {
+    enableSharedModalDimensions: false,
   },
 };
 
@@ -752,5 +932,76 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+
+  // Expandable Settings Card styles
+  expandableCard: {
+    backgroundColor: gameUIColors.panel,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: gameUIColors.border + "40",
+    padding: 12,
+  },
+  expandableCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  expandableCardStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minWidth: 80,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  expandableCardLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  expandableCardTitle: {
+    flex: 1,
+    paddingHorizontal: 4,
+  },
+  expandableCardTitleText: {
+    fontFamily: "monospace",
+    fontSize: 12,
+    fontWeight: "700",
+    color: gameUIColors.primary,
+  },
+  expandableCardSubtitle: {
+    fontSize: 10,
+    color: gameUIColors.muted,
+    marginTop: 2,
+  },
+  expandableCardActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  expandableCardBody: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: gameUIColors.border + "30",
+  },
+  expandableCardSection: {
+    marginBottom: 12,
+  },
+  expandableCardSectionTitle: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: gameUIColors.info,
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  expandableCardSectionText: {
+    fontSize: 12,
+    color: gameUIColors.secondary,
+    lineHeight: 18,
   },
 });

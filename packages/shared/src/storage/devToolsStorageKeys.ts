@@ -44,6 +44,8 @@ export const devToolsStorageKeys = {
       `${devToolsStorageKeys.settings.root()}_preferences` as const,
     wifiEnabled: () =>
       `${devToolsStorageKeys.settings.root()}_wifi_enabled` as const,
+    /** Global settings that apply to all dev tools */
+    global: () => `${devToolsStorageKeys.settings.root()}_global` as const,
   },
 
   /**
