@@ -17,6 +17,7 @@ import {
   RouteMapIcon,
   StackPulseIcon,
   RenderCountIcon,
+  BenchmarkIcon,
   Globe,
   Info,
   Layers,
@@ -421,6 +422,8 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           return <StackPulseIcon size={16} color="#10b981" />;
         case "highlight-updates-modal":
           return <RenderCountIcon size={16} color="#10b981" />;
+        case "benchmark":
+          return <BenchmarkIcon size={16} color="#F59E0B" />;
         default:
           return <Info size={16} color={color} />;
       }
