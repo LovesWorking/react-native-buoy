@@ -21,6 +21,11 @@ export const BenchmarkIcon: FC<BenchmarkIconProps> = ({
   const activeColor = color;
   const activeGlow = glowColor || color;
 
+  // Center the stopwatch in the icon area
+  const centerX = size / 2;
+  const centerY = size / 2 + 1 * scale; // Slightly lower to account for button
+  const clockRadius = 7 * scale;
+
   return (
     <View
       style={{
@@ -36,14 +41,14 @@ export const BenchmarkIcon: FC<BenchmarkIconProps> = ({
         style={
           {
             position: "absolute",
-            width: 14 * scale,
-            height: 14 * scale,
-            borderRadius: 7 * scale,
+            width: clockRadius * 2,
+            height: clockRadius * 2,
+            borderRadius: clockRadius,
             borderWidth: 1.5 * scale,
             borderColor: activeColor,
             backgroundColor: "transparent",
-            left: size / 2 - 7 * scale,
-            top: size / 2 - 5 * scale,
+            left: centerX - clockRadius,
+            top: centerY - clockRadius,
             opacity: 0.9,
           } as ViewStyle
         }
@@ -58,8 +63,8 @@ export const BenchmarkIcon: FC<BenchmarkIconProps> = ({
             height: 10 * scale,
             borderRadius: 5 * scale,
             backgroundColor: activeGlow,
-            left: size / 2 - 5 * scale,
-            top: size / 2 - 3 * scale,
+            left: centerX - 5 * scale,
+            top: centerY - 5 * scale,
             opacity: 0.15,
           } as ViewStyle
         }
@@ -74,14 +79,14 @@ export const BenchmarkIcon: FC<BenchmarkIconProps> = ({
             height: 3 * scale,
             borderRadius: 1 * scale,
             backgroundColor: activeColor,
-            left: size / 2 - 2 * scale,
-            top: size / 2 - 8 * scale,
+            left: centerX - 2 * scale,
+            top: centerY - clockRadius - 3 * scale,
             opacity: 0.9,
           } as ViewStyle
         }
       />
 
-      {/* Stopwatch crown/stem */}
+      {/* Stopwatch crown/stem - connects button to clock */}
       <View
         style={
           {
@@ -89,24 +94,24 @@ export const BenchmarkIcon: FC<BenchmarkIconProps> = ({
             width: 2 * scale,
             height: 2 * scale,
             backgroundColor: activeColor,
-            left: size / 2 - 1 * scale,
-            top: size / 2 - 5.5 * scale,
+            left: centerX - 1 * scale,
+            top: centerY - clockRadius - 0.5 * scale,
             opacity: 0.9,
           } as ViewStyle
         }
       />
 
-      {/* Stopwatch hand - pointing to ~10 o'clock (active measurement) */}
+      {/* Stopwatch hand - pointing to ~10 o'clock position */}
       <View
         style={
           {
             position: "absolute",
             width: 1.5 * scale,
-            height: 4 * scale,
+            height: 5 * scale,
             borderRadius: 1 * scale,
             backgroundColor: activeColor,
-            left: size / 2 - 0.75 * scale,
-            top: size / 2 - 2 * scale,
+            left: centerX - 0.75 * scale,
+            top: centerY - 5 * scale,
             opacity: 0.9,
             transform: [{ rotate: "-45deg" }],
             transformOrigin: "bottom center",
@@ -123,73 +128,8 @@ export const BenchmarkIcon: FC<BenchmarkIconProps> = ({
             height: 2 * scale,
             borderRadius: 1 * scale,
             backgroundColor: activeColor,
-            left: size / 2 - 1 * scale,
-            top: size / 2 - 1 * scale + 2 * scale,
-            opacity: 0.9,
-          } as ViewStyle
-        }
-      />
-
-      {/* Performance bars (bottom-right) - representing metrics */}
-      {/* Bar 1 - short */}
-      <View
-        style={
-          {
-            position: "absolute",
-            width: 2 * scale,
-            height: 4 * scale,
-            borderRadius: 0.5 * scale,
-            backgroundColor: activeGlow,
-            right: size * 0.12,
-            bottom: size * 0.15,
-            opacity: 0.6,
-          } as ViewStyle
-        }
-      />
-
-      {/* Bar 2 - medium */}
-      <View
-        style={
-          {
-            position: "absolute",
-            width: 2 * scale,
-            height: 6 * scale,
-            borderRadius: 0.5 * scale,
-            backgroundColor: activeGlow,
-            right: size * 0.12 + 3 * scale,
-            bottom: size * 0.15,
-            opacity: 0.7,
-          } as ViewStyle
-        }
-      />
-
-      {/* Bar 3 - tall */}
-      <View
-        style={
-          {
-            position: "absolute",
-            width: 2 * scale,
-            height: 8 * scale,
-            borderRadius: 0.5 * scale,
-            backgroundColor: activeColor,
-            right: size * 0.12 + 6 * scale,
-            bottom: size * 0.15,
-            opacity: 0.9,
-          } as ViewStyle
-        }
-      />
-
-      {/* Recording indicator (top-left) - pulsing dot */}
-      <View
-        style={
-          {
-            position: "absolute",
-            width: 4 * scale,
-            height: 4 * scale,
-            borderRadius: 2 * scale,
-            backgroundColor: "#EF4444",
-            left: size * 0.1,
-            top: size * 0.15,
+            left: centerX - 1 * scale,
+            top: centerY - 1 * scale,
             opacity: 0.9,
           } as ViewStyle
         }
