@@ -515,6 +515,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   const renderGlobalSettingCard = (
     settingKey: keyof NonNullable<DevToolsSettings["globalSettings"]>,
     label: string,
+    category: string,
     shortDescription: string,
     fullDescription: string,
     recommendation: string
@@ -544,22 +545,9 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
         >
           {/* Header Row */}
           <View style={styles.expandableCardHeader}>
-            {/* Status dot and label */}
-            <View style={styles.expandableCardStatus}>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: value ? gameUIColors.success : gameUIColors.muted },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.expandableCardLabel,
-                  { color: value ? gameUIColors.success : gameUIColors.muted },
-                ]}
-              >
-                {value ? "ENABLED" : "DISABLED"}
-              </Text>
+            {/* Category badge */}
+            <View style={styles.expandableCardCategory}>
+              <Text style={styles.expandableCardCategoryText}>{category}</Text>
             </View>
 
             {/* Title */}
@@ -665,7 +653,8 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
             {renderGlobalSettingCard(
               "enableSharedModalDimensions",
               "SHARED MODAL SIZE",
-              "Sync modal dimensions across all tools",
+              "MODAL",
+              "Sync dimensions across all tools",
               "When enabled, all tool modals will share the same size and position. Resizing one modal will affect all others. When disabled, each tool remembers its own size and position independently.",
               "Keep OFF for the best experience. This allows you to customize each tool's modal size separately. Enable only if you prefer uniform modal sizes across all dev tools."
             )}
@@ -947,20 +936,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  expandableCardStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    minWidth: 80,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
+  expandableCardCategory: {
+    backgroundColor: gameUIColors.info + "20",
+    borderWidth: 1,
+    borderColor: gameUIColors.info + "40",
     borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  expandableCardLabel: {
+  expandableCardCategoryText: {
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: gameUIColors.info,
     letterSpacing: 0.5,
   },
   expandableCardTitle: {
