@@ -11,6 +11,7 @@
     "reload": "EXPO_IOS_SIMULATOR_DEVICE_NAME=\"iPhone 16 Pro Max\" expo start --ios --port 8801"
   },
   "dependencies": {
+    "@react-buoy/benchmark": "workspace:*",
     "@react-buoy/bottom-sheet": "workspace:*",
     "@react-buoy/core": "workspace:*",
     "@react-buoy/debug-borders": "workspace:*",
