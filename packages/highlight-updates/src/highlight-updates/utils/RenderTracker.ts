@@ -58,16 +58,33 @@ export interface FilterConfig {
 
 type RenderTrackerListener = (renders: TrackedRender[]) => void;
 type StateListener = (state: { isTracking: boolean; isPaused: boolean }) => void;
+type SettingsListener = (settings: RenderTrackerSettings) => void;
 
 // Maximum number of tracked components to prevent memory issues
 const MAX_TRACKED_COMPONENTS = 200;
+
+// Default batch size for highlight rendering
+const DEFAULT_BATCH_SIZE = 150;
+
+export interface RenderTrackerSettings {
+  /**
+   * Maximum number of components to highlight per batch.
+   * Higher values show more highlights but may impact performance.
+   * Range: 10-500, Default: 150
+   */
+  batchSize: number;
+}
 
 class RenderTrackerSingleton {
   private renders: Map<string, TrackedRender> = new Map();
   private listeners: Set<RenderTrackerListener> = new Set();
   private stateListeners: Set<StateListener> = new Set();
+  private settingsListeners: Set<SettingsListener> = new Set();
   private isTracking: boolean = false;
   private isPaused: boolean = false;
+  private settings: RenderTrackerSettings = {
+    batchSize: DEFAULT_BATCH_SIZE,
+  };
   private filters: FilterConfig = {
     includeTestID: new Set(),
     includeNativeID: new Set(),
@@ -535,6 +552,51 @@ class RenderTrackerSingleton {
     };
   }
 
+  /**
+   * Subscribe to settings changes
+   */
+  subscribeToSettings(listener: SettingsListener): () => void {
+    this.settingsListeners.add(listener);
+    // Immediately notify with current settings
+    listener(this.settings);
+    return () => {
+      this.settingsListeners.delete(listener);
+    };
+  }
+
+  /**
+   * Get current settings
+   */
+  getSettings(): RenderTrackerSettings {
+    return { ...this.settings };
+  }
+
+  /**
+   * Update settings
+   */
+  setSettings(newSettings: Partial<RenderTrackerSettings>): void {
+    // Validate batchSize
+    if (newSettings.batchSize !== undefined) {
+      newSettings.batchSize = Math.max(10, Math.min(500, newSettings.batchSize));
+    }
+    this.settings = { ...this.settings, ...newSettings };
+    this.notifySettingsListeners();
+  }
+
+  /**
+   * Get batch size (convenience method)
+   */
+  getBatchSize(): number {
+    return this.settings.batchSize;
+  }
+
+  /**
+   * Set batch size (convenience method)
+   */
+  setBatchSize(size: number): void {
+    this.setSettings({ batchSize: size });
+  }
+
   private notifyListeners(): void {
     const renders = this.getRenders();
     for (const listener of this.listeners) {
@@ -553,6 +615,17 @@ class RenderTrackerSingleton {
         listener(state);
       } catch (error) {
         console.error("[RenderTracker] Error in state listener:", error);
+      }
+    }
+  }
+
+  private notifySettingsListeners(): void {
+    const settings = this.getSettings();
+    for (const listener of this.settingsListeners) {
+      try {
+        listener(settings);
+      } catch (error) {
+        console.error("[RenderTracker] Error in settings listener:", error);
       }
     }
   }

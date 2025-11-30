@@ -10,6 +10,7 @@ export {
   RenderPulseIcon,
   HighlightUpdatesIcon,
 } from "./StackPulseIcon";
+export { RenderCountIcon } from "./RenderCountIcon";
 export { IconBackground } from "./IconBackground";
 
 // Export lucide icons

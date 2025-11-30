@@ -24,7 +24,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { StackPulseIcon } from "@react-buoy/shared-ui";
+import { StackPulseIcon, RenderCountIcon } from "@react-buoy/shared-ui";
 import type { FloatingMenuActions } from "@react-buoy/core";
 import HighlightUpdatesController from "./highlight-updates/utils/HighlightUpdatesController";
 import { HighlightUpdatesModal } from "./highlight-updates/components/HighlightUpdatesModal";
@@ -75,7 +75,7 @@ export const highlightUpdatesPreset = {
   id: "highlight-updates",
   name: "UPDATES",
   description: "Toggle component render highlights",
-  slot: "both" as const,
+  slot: "row" as const,
   icon: HighlightIcon,
   component: EmptyComponent,
   props: {},
@@ -157,7 +157,7 @@ export function createHighlightUpdatesTool(options?: {
     name: options?.name || "UPDATES",
     description:
       options?.description || "Toggle component render highlights",
-    slot: "both" as const,
+    slot: "row" as const,
     icon: CustomHighlightIcon,
     component: EmptyComponent,
     props: {},
@@ -191,7 +191,7 @@ export const highlightUpdatesModalPreset = {
   description: "View component render tracking modal",
   slot: "both" as const,
   icon: ({ size }: { size: number }) => (
-    <StackPulseIcon size={size} color="#10b981" />
+    <RenderCountIcon size={size} color="#10b981" />
   ),
   component: HighlightUpdatesModal,
   props: {
@@ -245,7 +245,7 @@ export function createHighlightUpdatesModalTool(options?: {
       options?.description || "View component render tracking modal",
     slot: "both" as const,
     icon: ({ size }: { size: number }) => (
-      <StackPulseIcon size={size} color={enabledColor} />
+      <RenderCountIcon size={size} color={enabledColor} />
     ),
     component: HighlightUpdatesModal,
     props: {

@@ -17,14 +17,16 @@ import {
   Modal,
   Pressable,
 } from "react-native";
-import { Eye, Filter, Plus, X, Box, Check } from "@react-buoy/shared-ui";
+import { Eye, Filter, Plus, X, Box, Check, Settings } from "@react-buoy/shared-ui";
 import { macOSColors, SectionHeader } from "@react-buoy/shared-ui";
-import type { FilterConfig, FilterPattern, FilterType } from "../utils/RenderTracker";
+import type { FilterConfig, FilterPattern, FilterType, RenderTrackerSettings } from "../utils/RenderTracker";
 import { IdentifierBadge, IDENTIFIER_CONFIG, type IdentifierType } from "./IdentifierBadge";
 
 interface HighlightFilterViewProps {
   filters: FilterConfig;
   onFilterChange: (filters: Partial<FilterConfig>) => void;
+  settings: RenderTrackerSettings;
+  onSettingsChange: (settings: Partial<RenderTrackerSettings>) => void;
   availableProps: {
     viewTypes: string[];
     testIDs: string[];
@@ -200,9 +202,21 @@ function DetectedCategoryBadge({
   );
 }
 
+// Batch size presets for the slider
+const BATCH_SIZE_PRESETS = [
+  { value: 20, label: "20" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+  { value: 150, label: "150" },
+  { value: 250, label: "250" },
+  { value: 500, label: "500" },
+];
+
 export function HighlightFilterView({
   filters,
   onFilterChange,
+  settings,
+  onSettingsChange,
   availableProps,
 }: HighlightFilterViewProps) {
   // UI state for add inputs
@@ -491,7 +505,12 @@ export function HighlightFilterView({
         {/* Items for selected category */}
         <View nativeID="__rn_buoy__detected-items" style={styles.detectedItemsContainer}>
           {selectedItems.length > 0 ? (
-            <View style={styles.detectedItems}>
+            <ScrollView
+              style={styles.detectedItemsScroll}
+              contentContainerStyle={styles.detectedItems}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+            >
               {selectedItems.map((item) => {
                 const itemConfig = getFilterConfig(item.type);
                 return (
@@ -515,7 +534,7 @@ export function HighlightFilterView({
                   </TouchableOpacity>
                 );
               })}
-            </View>
+            </ScrollView>
           ) : (
             <Text style={styles.emptyText}>
               No items detected yet. Start tracking to see components here.
@@ -577,6 +596,49 @@ export function HighlightFilterView({
           </View>
         </Pressable>
       </Modal>
+
+      {/* Settings Section */}
+      <View style={styles.section}>
+        <SectionHeader>
+          <SectionHeader.Icon icon={Settings} color={macOSColors.semantic.debug} size={12} />
+          <SectionHeader.Title>SETTINGS</SectionHeader.Title>
+        </SectionHeader>
+
+        <View style={styles.settingsSection}>
+          <View style={styles.settingItem}>
+            <View style={styles.settingHeader}>
+              <Text style={styles.settingLabel}>Batch Size</Text>
+              <View style={styles.settingValue}>
+                <Text style={styles.settingValueText}>{settings.batchSize}</Text>
+              </View>
+            </View>
+            <Text style={styles.settingDescription}>
+              Maximum components to highlight per render update. Higher values capture more re-renders but may impact performance on complex screens.
+            </Text>
+            <View style={styles.batchSizePresets}>
+              {BATCH_SIZE_PRESETS.map((preset) => (
+                <TouchableOpacity
+                  key={preset.value}
+                  style={[
+                    styles.batchSizePreset,
+                    settings.batchSize === preset.value && styles.batchSizePresetActive,
+                  ]}
+                  onPress={() => onSettingsChange({ batchSize: preset.value })}
+                >
+                  <Text
+                    style={[
+                      styles.batchSizePresetText,
+                      settings.batchSize === preset.value && styles.batchSizePresetTextActive,
+                    ]}
+                  >
+                    {preset.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </View>
 
       {/* How It Works Section */}
       <View style={styles.section}>
@@ -776,6 +838,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 16,
   },
+  detectedItemsScroll: {
+    maxHeight: 200,
+  },
   detectedItems: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -876,6 +941,70 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: macOSColors.text.muted,
     fontWeight: "500",
+  },
+  // Settings styles
+  settingsSection: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  settingItem: {
+    gap: 8,
+  },
+  settingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  settingLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: macOSColors.text.primary,
+  },
+  settingValue: {
+    backgroundColor: macOSColors.semantic.debug + "20",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  settingValueText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: macOSColors.semantic.debug,
+    fontFamily: "monospace",
+  },
+  settingDescription: {
+    fontSize: 11,
+    color: macOSColors.text.secondary,
+    lineHeight: 16,
+  },
+  batchSizePresets: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 4,
+  },
+  batchSizePreset: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    backgroundColor: macOSColors.background.input,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default + "50",
+  },
+  batchSizePresetActive: {
+    backgroundColor: macOSColors.semantic.debug + "20",
+    borderColor: macOSColors.semantic.debug,
+  },
+  batchSizePresetText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: macOSColors.text.secondary,
+    fontFamily: "monospace",
+  },
+  batchSizePresetTextActive: {
+    color: macOSColors.semantic.debug,
+    fontWeight: "700",
   },
 });
 

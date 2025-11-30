@@ -15,8 +15,11 @@ import {
   StorageStackIcon,
   WifiCircuitIcon,
   RouteMapIcon,
+  StackPulseIcon,
+  RenderCountIcon,
   Globe,
   Info,
+  Layers,
   ChevronRightIcon,
   safeGetItem,
   safeSetItem,
@@ -324,8 +327,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           return (
             <ReactQueryIcon
               size={16}
-              color={color}
-              glowColor={color}
+              colorPreset="red"
               noBackground
             />
           );
@@ -333,8 +335,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           return (
             <EnvLaptopIcon
               size={16}
-              color={color}
-              glowColor={color}
+              colorPreset="green"
               noBackground
             />
           );
@@ -342,8 +343,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           return (
             <SentryBugIcon
               size={16}
-              color={color}
-              glowColor={color}
+              colorPreset="red"
               noBackground
             />
           );
@@ -351,8 +351,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           return (
             <StorageStackIcon
               size={16}
-              color={color}
-              glowColor={color}
+              colorPreset="green"
               noBackground
             />
           );
@@ -361,8 +360,7 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           return (
             <WifiCircuitIcon
               size={16}
-              color={color}
-              glowColor={color}
+              colorPreset="green"
               strength={4}
               noBackground
             />
@@ -371,15 +369,20 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           return (
             <RouteMapIcon
               size={16}
-              color={color}
-              glowColor={color}
+              colorPreset="orange"
               noBackground
             />
           );
         case "network":
-          return <Globe size={16} color={color} />;
+          return <Globe size={16} color="#00D4FF" />;
         case "environment":
-          return <Info size={16} color={color} />;
+          return <EnvLaptopIcon size={16} colorPreset="green" noBackground />;
+        case "debug-borders":
+          return <Layers size={16} color="#10b981" />;
+        case "highlight-updates":
+          return <StackPulseIcon size={16} color="#10b981" />;
+        case "highlight-updates-modal":
+          return <RenderCountIcon size={16} color="#10b981" />;
         default:
           return <Info size={16} color={color} />;
       }
@@ -405,16 +408,8 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
           ]}
         >
           <View style={styles.glassCardInner}>
-            {/* Icon in colored circle */}
-            <View
-              style={[
-                styles.iconCircle,
-                {
-                  backgroundColor: `${color}26`,
-                  borderColor: `${color}66`,
-                },
-              ]}
-            >
+            {/* Icon */}
+            <View style={styles.iconContainer}>
               {getToolIcon(keyName)}
             </View>
 
@@ -715,13 +710,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  iconCircle: {
+  iconContainer: {
     width: 28,
     height: 28,
-    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
   },
   toolInfo: {
     flex: 1,

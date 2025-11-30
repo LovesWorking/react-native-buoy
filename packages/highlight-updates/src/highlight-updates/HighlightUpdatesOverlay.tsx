@@ -29,27 +29,30 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
   const cleanupTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Callback to add new highlights
-  const addHighlights = useCallback((newRects: Omit<HighlightRect, "timestamp">[]) => {
-    const now = Date.now();
-    const timestampedRects = newRects.map((rect) => ({
-      ...rect,
-      timestamp: now,
-    }));
+  const addHighlights = useCallback(
+    (newRects: Omit<HighlightRect, "timestamp">[]) => {
+      const now = Date.now();
+      const timestampedRects = newRects.map((rect) => ({
+        ...rect,
+        timestamp: now,
+      }));
 
-    setHighlights((prev) => {
-      // Merge new highlights, replacing any with same id
-      const updated = [...prev];
-      for (const newRect of timestampedRects) {
-        const existingIndex = updated.findIndex((r) => r.id === newRect.id);
-        if (existingIndex >= 0) {
-          updated[existingIndex] = newRect;
-        } else {
-          updated.push(newRect);
+      setHighlights((prev) => {
+        // Merge new highlights, replacing any with same id
+        const updated = [...prev];
+        for (const newRect of timestampedRects) {
+          const existingIndex = updated.findIndex((r) => r.id === newRect.id);
+          if (existingIndex >= 0) {
+            updated[existingIndex] = newRect;
+          } else {
+            updated.push(newRect);
+          }
         }
-      }
-      return updated;
-    });
-  }, []);
+        return updated;
+      });
+    },
+    []
+  );
 
   // Register the callback with the controller
   useEffect(() => {
@@ -97,12 +100,9 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
             },
           ]}
         >
-          {/* Render count badge at top-right corner */}
+          {/* Render count badge - fixed inset from top-right corner */}
           <View
-            style={[
-              styles.badge,
-              { backgroundColor: rect.color },
-            ]}
+            style={[styles.badge, { backgroundColor: rect.color }]}
             nativeID={`__highlight_badge_${rect.id}__`}
           >
             <Text
@@ -137,11 +137,11 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: "absolute",
-    top: -10,
-    right: -10,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    top: 0,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 0,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 4,

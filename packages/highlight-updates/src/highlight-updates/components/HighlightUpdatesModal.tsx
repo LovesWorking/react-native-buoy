@@ -21,8 +21,6 @@ import {
   Power,
   Search,
   Filter,
-  Pause,
-  Play,
   X,
   JsModal,
   ModalHeader,
@@ -34,7 +32,7 @@ import {
 } from "@react-buoy/shared-ui";
 import type { ViewStyle } from "react-native";
 import HighlightUpdatesController from "../utils/HighlightUpdatesController";
-import { RenderTracker, type TrackedRender, type FilterConfig } from "../utils/RenderTracker";
+import { RenderTracker, type TrackedRender, type FilterConfig, type RenderTrackerSettings } from "../utils/RenderTracker";
 import { RenderListItem } from "./RenderListItem";
 import { RenderDetailView } from "./RenderDetailView";
 import { HighlightFilterView } from "./HighlightFilterView";
@@ -70,7 +68,6 @@ export function HighlightUpdatesModal({
 }: HighlightUpdatesModalProps) {
   // Tracking state
   const [isTracking, setIsTracking] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [renders, setRenders] = useState<TrackedRender[]>([]);
   const [stats, setStats] = useState({ totalComponents: 0, totalRenders: 0 });
 
@@ -86,9 +83,13 @@ export function HighlightUpdatesModal({
   // Filter state
   const [filters, setFilters] = useState<FilterConfig>(() => RenderTracker.getFilters());
 
+  // Settings state
+  const [settings, setSettings] = useState<RenderTrackerSettings>(() => RenderTracker.getSettings());
+
   // Persistence refs - prevent saving on initial load
   const hasLoadedTrackingState = useRef(false);
   const hasLoadedFilters = useRef(false);
+  const hasLoadedSettings = useRef(false);
 
   // Load persisted tracking state on mount
   useEffect(() => {
@@ -202,6 +203,48 @@ export function HighlightUpdatesModal({
     saveFilters();
   }, [filters]);
 
+  // Load persisted settings on mount
+  useEffect(() => {
+    if (!visible || hasLoadedSettings.current) return;
+
+    const loadSettings = async () => {
+      try {
+        const storedSettings = await safeGetItem(
+          devToolsStorageKeys.highlightUpdates.settings()
+        );
+        if (storedSettings) {
+          const parsedSettings = JSON.parse(storedSettings);
+          RenderTracker.setSettings(parsedSettings);
+          setSettings(RenderTracker.getSettings());
+        }
+        hasLoadedSettings.current = true;
+      } catch (error) {
+        // Failed to load settings
+        hasLoadedSettings.current = true;
+      }
+    };
+
+    loadSettings();
+  }, [visible]);
+
+  // Save settings when they change
+  useEffect(() => {
+    if (!hasLoadedSettings.current) return;
+
+    const saveSettings = async () => {
+      try {
+        await safeSetItem(
+          devToolsStorageKeys.highlightUpdates.settings(),
+          JSON.stringify(settings)
+        );
+      } catch (error) {
+        // Failed to save settings
+      }
+    };
+
+    saveSettings();
+  }, [settings]);
+
   // Subscribe to RenderTracker updates
   useEffect(() => {
     const unsubscribeRenders = RenderTracker.subscribe(() => {
@@ -211,7 +254,6 @@ export function HighlightUpdatesModal({
 
     const unsubscribeState = RenderTracker.subscribeToState((state) => {
       setIsTracking(state.isTracking);
-      setIsPaused(state.isPaused);
     });
 
     return () => {
@@ -241,10 +283,6 @@ export function HighlightUpdatesModal({
     HighlightUpdatesController.toggle();
   }, []);
 
-  const handleTogglePause = useCallback(() => {
-    RenderTracker.togglePause();
-  }, []);
-
   const handleClear = useCallback(() => {
     HighlightUpdatesController.clearRenderCounts();
   }, []);
@@ -264,6 +302,11 @@ export function HighlightUpdatesModal({
   const handleFilterChange = useCallback((newFilters: Partial<FilterConfig>) => {
     RenderTracker.setFilters(newFilters);
     setFilters(RenderTracker.getFilters());
+  }, []);
+
+  const handleSettingsChange = useCallback((newSettings: Partial<RenderTrackerSettings>) => {
+    RenderTracker.setSettings(newSettings);
+    setSettings(RenderTracker.getSettings());
   }, []);
 
   // Get active filter count (using new pattern arrays)
@@ -401,22 +444,6 @@ export function HighlightUpdatesModal({
             />
           </TouchableOpacity>
 
-          {isTracking && (
-            <TouchableOpacity
-              onPress={handleTogglePause}
-              style={[
-                styles.headerActionButton,
-                isPaused ? styles.pausedButton : styles.playingButton,
-              ]}
-            >
-              {isPaused ? (
-                <Play size={14} color={macOSColors.semantic.warning} />
-              ) : (
-                <Pause size={14} color={macOSColors.semantic.info} />
-              )}
-            </TouchableOpacity>
-          )}
-
           <TouchableOpacity
             onPress={handleToggleTracking}
             style={[
@@ -484,6 +511,8 @@ export function HighlightUpdatesModal({
           <HighlightFilterView
             filters={filters}
             onFilterChange={handleFilterChange}
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
             availableProps={RenderTracker.getAvailableProps()}
           />
         ) : (
@@ -493,15 +522,6 @@ export function HighlightUpdatesModal({
                 <Power size={14} color={macOSColors.semantic.warning} />
                 <Text style={styles.disabledText}>
                   Render tracking is disabled
-                </Text>
-              </View>
-            )}
-
-            {isPaused && isTracking && (
-              <View style={styles.pausedBanner}>
-                <Pause size={14} color={macOSColors.semantic.info} />
-                <Text style={styles.pausedText}>
-                  Tracking paused
                 </Text>
               </View>
             )}
@@ -603,14 +623,6 @@ const styles = StyleSheet.create({
     backgroundColor: macOSColors.semantic.errorBackground,
     borderColor: macOSColors.semantic.error + "40",
   },
-  pausedButton: {
-    backgroundColor: macOSColors.semantic.warningBackground,
-    borderColor: macOSColors.semantic.warning + "40",
-  },
-  playingButton: {
-    backgroundColor: macOSColors.semantic.infoBackground,
-    borderColor: macOSColors.semantic.info + "40",
-  },
   activeFilterButton: {
     backgroundColor: macOSColors.semantic.infoBackground,
     borderColor: macOSColors.semantic.info + "40",
@@ -629,23 +641,6 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: macOSColors.semantic.warning,
-    fontSize: 11,
-    flex: 1,
-  },
-  pausedBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    padding: 10,
-    marginHorizontal: 12,
-    marginTop: 8,
-    backgroundColor: macOSColors.semantic.infoBackground,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: macOSColors.semantic.info + "20",
-  },
-  pausedText: {
-    color: macOSColors.semantic.info,
     fontSize: 11,
     flex: 1,
   },

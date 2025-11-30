@@ -166,6 +166,8 @@ export const devToolsStorageKeys = {
       `${devToolsStorageKeys.highlightUpdates.root()}_is_tracking` as const,
     filters: () =>
       `${devToolsStorageKeys.highlightUpdates.root()}_filters` as const,
+    settings: () =>
+      `${devToolsStorageKeys.highlightUpdates.root()}_settings` as const,
   },
 } as const;
 

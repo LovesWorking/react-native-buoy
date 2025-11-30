@@ -242,16 +242,9 @@ function extractComponentInfo(stateNode: unknown): {
     fiberMemoizedProps?.accessibilityLabel ||
     undefined;
 
-  // Extract componentName from fiber debug info
-  if (fiber?._debugOwner) {
-    const owner = fiber._debugOwner;
-    info.componentName =
-      owner.type?.name ||
-      owner.type?.displayName ||
-      owner.elementType?.name ||
-      owner.elementType?.displayName ||
-      undefined;
-  }
+  // Extract componentName - use getOwningComponentName to get the React component
+  // that rendered this host component
+  info.componentName = getOwningComponentName(fiber) || undefined;
 
   return info;
 }
@@ -432,15 +425,19 @@ function isOurOverlayTag(nativeTag: number | null): boolean {
 const DEV_TOOLS_COMPONENT_NAMES = new Set([
   // React Buoy devtools components
   "JsModalComponent",
+  "JsModal",
   "HighlightUpdatesModal",
   "HighlightFilterView",
   "RenderDetailView",
   "RenderListItem",
+  "RenderListItemInner",
   "TypePicker",
   "PatternInput",
+  "PatternChip",
   "DetectedItemsSection",
   "DetectedCategoryBadge",
   "IdentifierBadge",
+  "CategoryBadge",
   "AppRenderer",
   "AppOverlay",
   "FloatingTools",
@@ -449,6 +446,12 @@ const DEV_TOOLS_COMPONENT_NAMES = new Set([
   "DevToolsVisibilityProvider",
   "AppHostProvider",
   "MinimizedToolsProvider",
+  // Shared UI components used in modals
+  "ModalHeader",
+  "TabSelector",
+  "SectionHeader",
+  "DraggableHeader",
+  "WindowControls",
   // React Native LogBox components (shown on reload/errors)
   "LogBox",
   "LogBoxLog",
@@ -466,6 +469,9 @@ const DEV_TOOLS_COMPONENT_NAMES = new Set([
   "LogBoxButton",
   "LogBoxMessage",
 ]);
+
+// Component name prefixes to check (for dynamically named components)
+const DEV_TOOLS_COMPONENT_PREFIXES = ["JsModal", "HighlightUpdates", "RenderList", "RenderDetail"];
 
 const DEV_TOOLS_NATIVE_IDS = new Set([
   "highlight-updates-overlay",
@@ -503,8 +509,11 @@ function isDevToolsNativeID(nativeID: string | null | undefined): boolean {
 
 /**
  * Get component name from fiber (cached property access pattern)
+ * For host components (RCTView, RCTText), returns the native type.
+ * Use getOwningComponentName to get the React component that rendered it.
  */
 function getComponentName(fiber: any): string | null {
+  if (!fiber) return null;
   // Most common: type.name
   const type = fiber.type;
   if (type) {
@@ -519,6 +528,79 @@ function getComponentName(fiber: any): string | null {
     if (elementType.displayName) return elementType.displayName;
   }
   return null;
+}
+
+// Common React Native internal component names to skip when finding user components
+const INTERNAL_COMPONENT_NAMES = new Set([
+  // React Native core
+  'View', 'Text', 'TextImpl', 'Image', 'ScrollView', 'FlatList', 'SectionList',
+  'TouchableOpacity', 'TouchableHighlight', 'TouchableWithoutFeedback', 'Pressable',
+  'TextInput', 'Switch', 'ActivityIndicator', 'Modal', 'StatusBar', 'KeyboardAvoidingView',
+  // Animated components
+  'AnimatedComponent', 'AnimatedComponentWrapper',
+  // React Navigation / Screens
+  'ScreenContainer', 'ScreenStack', 'Screen', 'ScreenContentWrapper',
+  // SVG components
+  'Svg', 'G', 'Path', 'Rect', 'Circle', 'Line', 'Polygon', 'Polyline', 'Ellipse',
+  'Text as SVGText', 'TSpan', 'TextPath', 'Use', 'Symbol', 'Defs', 'ClipPath',
+  'LinearGradient', 'RadialGradient', 'Stop', 'Mask', 'Pattern', 'Image as SVGImage',
+  // SafeArea
+  'SafeAreaProvider', 'SafeAreaView', 'SafeAreaListener',
+  // Gesture Handler
+  'GestureHandlerRootView', 'GestureDetector',
+  // Reanimated
+  'ReanimatedView', 'ReanimatedText', 'ReanimatedImage', 'ReanimatedScrollView',
+  // Common wrapper names
+  'Fragment', 'Suspense', 'Provider', 'Consumer', 'Context', 'ForwardRef',
+]);
+
+/**
+ * Check if a component name is an internal/wrapper component that should be skipped
+ */
+function isInternalComponent(name: string | null): boolean {
+  if (!name) return true;
+  if (INTERNAL_COMPONENT_NAMES.has(name)) return true;
+  // Skip anonymous components and common patterns
+  if (name === 'Unknown' || name === 'Component') return true;
+  // Skip Animated.* wrappers
+  if (name.startsWith('Animated')) return true;
+  return false;
+}
+
+/**
+ * Get the owning React component name for a host fiber.
+ * Walks up the fiber tree to find the first user-defined component,
+ * skipping React Native internal components.
+ */
+function getOwningComponentName(fiber: any): string | null {
+  if (!fiber) return null;
+
+  // Walk up the fiber tree looking for a user-defined component
+  let current = fiber._debugOwner || fiber.return;
+  let depth = 0;
+  let firstNonHostName: string | null = null;
+
+  while (current && depth < 30) {
+    const name = getComponentName(current);
+
+    // Skip host components (their type is a string like "RCTView")
+    if (name && typeof current.type !== 'string') {
+      // Remember the first non-host component as fallback
+      if (!firstNonHostName) {
+        firstNonHostName = name;
+      }
+      // Return this component if it's not an internal wrapper
+      if (!isInternalComponent(name)) {
+        return name;
+      }
+    }
+
+    current = current.return;
+    depth++;
+  }
+
+  // Fallback to first non-host component found (even if internal)
+  return firstNonHostName;
 }
 
 /**
@@ -562,9 +644,20 @@ function isOurOverlayNode(stateNode: unknown): boolean {
     while (current && depth < 30) {
       // Component name check FIRST (faster, appears earlier in tree)
       const name = getComponentName(current);
-      if (name && DEV_TOOLS_COMPONENT_NAMES.has(name)) {
-        result = true;
-        break;
+      if (name) {
+        // Direct set lookup (O(1))
+        if (DEV_TOOLS_COMPONENT_NAMES.has(name)) {
+          result = true;
+          break;
+        }
+        // Check prefixes for dynamically named components
+        for (const prefix of DEV_TOOLS_COMPONENT_PREFIXES) {
+          if (name.startsWith(prefix)) {
+            result = true;
+            break;
+          }
+        }
+        if (result) break;
       }
 
       // NativeID check (only if component name didn't match)
@@ -579,8 +672,11 @@ function isOurOverlayNode(stateNode: unknown): boolean {
     }
   }
 
-  // Cache result (with size limit to prevent memory leak)
-  if (nativeTag != null) {
+  // Only cache positive results (is devtools = true)
+  // Don't cache false results because the fiber tree parent can change
+  // (e.g., a component might not have the devtools parent on first render
+  // but will have it on subsequent renders)
+  if (result && nativeTag != null) {
     if (devToolsNodeCache.size >= CACHE_MAX_SIZE) {
       // Clear oldest entries (simple strategy - clear half)
       const entries = Array.from(devToolsNodeCache.keys());
@@ -626,6 +722,12 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
     return;
   }
 
+  // Skip processing when paused - don't count renders or show highlights
+  const trackerState = RenderTracker.getState();
+  if (trackerState.isPaused) {
+    return;
+  }
+
   // TEMPORARY: Log only mode - skip all processing and just log extensive info
   if (DEBUG_LOG_ONLY) {
     // First, test our filter on all nodes
@@ -643,7 +745,7 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
     console.log(`\n========== [HighlightUpdates] ==========`);
     console.log(`  Total: ${nodes.size} | FILTERED: ${filtered.length} | PASSED: ${passed.length}`);
 
-    // Only log details for passed nodes (the ones that would render)
+    // Log ALL passed nodes with detailed info
     if (passed.length > 0) {
       console.log(`\n--- PASSED NODES (would render highlights) ---`);
       passed.forEach((node, index) => {
@@ -654,8 +756,15 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
           fiber?.pendingProps?.nativeID ||
           fiber?.memoizedProps?.nativeID ||
           null;
+        const testID =
+          fiber?.pendingProps?.testID ||
+          fiber?.memoizedProps?.testID ||
+          null;
+        // Get the owning React component name (not the native type)
+        const ownerName = getOwningComponentName(fiber);
+        const nativeTag = getNativeTag(n) || getNativeTag(n?.canonical?.publicInstance);
 
-        console.log(`  [${index}] ${viewType}${directNativeID ? ` (nativeID=${directNativeID})` : ''}`);
+        console.log(`  [${index}] ${viewType} | tag=${nativeTag} | owner=${ownerName || 'unknown'}${testID ? ` | testID=${testID}` : ''}${directNativeID ? ` | nativeID=${directNativeID}` : ''}`);
       });
     }
 
@@ -755,7 +864,9 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
   // NOTE: Lock disabled - relying on nativeID filtering instead
 
   // Measure each node and call the highlight callback
-  const measurePromises = nodesToDraw.slice(0, 20).map(
+  // Use batch size from RenderTracker settings (default: 150)
+  const batchSize = RenderTracker.getBatchSize();
+  const measurePromises = nodesToDraw.slice(0, batchSize).map(
     ({ node: stateNode, color, count }) =>
       new Promise<{ rect: HighlightRect | null; stateNode: unknown; color: string; count: number }>((resolve) => {
         const publicInstance = getPublicInstance(stateNode);
