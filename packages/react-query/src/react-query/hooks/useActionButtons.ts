@@ -24,10 +24,17 @@ interface ActionButtonConfig {
 /**
  * Derives the default action button configuration for an inspected query. Encapsulates business
  * rules around when to show refetch, loading, or error simulation actions.
+ *
+ * @param selectedQuery - The query to derive actions for
+ * @param queryClient - The query client for executing actions
+ * @param queryVersion - Optional version number that increments on query state changes.
+ *                       React Query mutates Query objects in place, so this version ensures
+ *                       the useMemo recomputes when state changes.
  */
 export function useActionButtons(
   selectedQuery: Query,
-  queryClient: QueryClient
+  queryClient: QueryClient,
+  queryVersion?: number
 ): ActionButtonConfig[] {
   const actionButtons = useMemo(() => {
     const queryStatus = selectedQuery.state.status;
@@ -60,15 +67,9 @@ export function useActionButtons(
       },
     ];
     return buttons;
-  }, [
-    selectedQuery,
-    queryClient,
-    selectedQuery.queryHash,
-    selectedQuery.state.status,
-    selectedQuery.state.fetchStatus,
-    selectedQuery.state.dataUpdatedAt,
-    selectedQuery.state.errorUpdatedAt,
-    selectedQuery.state.isInvalidated,
-  ]);
+    // queryVersion is the key dependency that ensures this recomputes when query state changes.
+    // React Query mutates Query objects in place, so comparing selectedQuery.state.* values
+    // doesn't work reliably (the "previous" and "current" values read from the same mutated object).
+  }, [selectedQuery, queryClient, queryVersion]);
   return actionButtons;
 }

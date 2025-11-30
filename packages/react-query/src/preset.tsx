@@ -84,7 +84,7 @@ export const reactQueryToolPreset = {
   ),
   component: ReactQueryDevToolsModal,
   props: {
-    enableSharedModalDimensions: true,
+    enableSharedModalDimensions: false,
   },
 };
 
@@ -132,7 +132,7 @@ export function createReactQueryTool(options?: {
       enableSharedModalDimensions:
         options?.enableSharedModalDimensions !== undefined
           ? options.enableSharedModalDimensions
-          : true,
+          : false,
     },
   };
 }
@@ -156,7 +156,7 @@ export const wifiTogglePreset = {
   id: "query-wifi-toggle",
   name: "WIFI",
   description: "Toggle React Query online/offline state",
-  slot: "both" as const,
+  slot: "row" as const,
   icon: WifiIcon,
   component: EmptyComponent,
   props: {},
@@ -223,7 +223,7 @@ export function createWifiToggleTool(options?: {
     name: options?.name || "WIFI",
     description:
       options?.description || "Toggle React Query online/offline state",
-    slot: "both" as const,
+    slot: "row" as const,
     icon: CustomWifiIcon,
     component: EmptyComponent,
     props: {},

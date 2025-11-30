@@ -1,0 +1,58 @@
+{
+  "name": "@react-buoy/benchmark",
+  "version": "0.1.0",
+  "description": "Performance benchmarking system for React Native dev tools",
+  "main": "lib/commonjs/index",
+  "module": "lib/module/index",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.tsx",
+  "source": "src/index.tsx",
+  "files": [
+    "src",
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "bob build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf lib",
+    "test": "pnpm run typecheck",
+    "postinstall": "echo \"Run pnpm build to compile this package\""
+  },
+  "dependencies": {
+    "@react-buoy/shared-ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "@react-native-async-storage/async-storage": "*",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@types/react": "^19.1.0",
+    "@types/react-native": "^0.73.0",
+    "typescript": "~5.8.3"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LovesWorking/react-native-buoy.git",
+    "directory": "packages/benchmark"
+  },
+  "bugs": {
+    "url": "https://github.com/LovesWorking/react-native-buoy/issues"
+  },
+  "homepage": "https://github.com/LovesWorking/react-native-buoy/tree/main/packages/benchmark#readme",
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
+  }
+}

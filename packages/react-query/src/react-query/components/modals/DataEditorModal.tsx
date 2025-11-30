@@ -1,7 +1,7 @@
 import { QueryKey } from "@tanstack/react-query";
 import { JsModal, devToolsStorageKeys } from "@react-buoy/shared-ui";
 import type { ModalMode } from "@react-buoy/shared-ui";
-import { useGetQueryByQueryKey } from "../../hooks/useSelectedQuery";
+import { useGetQueryByQueryKeyWithVersion } from "../../hooks/useSelectedQuery";
 import { ReactQueryModalHeader } from "./ReactQueryModalHeader";
 import { DataEditorMode, DataEditorActionsFooter } from "../DataEditorMode";
 import { useState, useCallback } from "react";
@@ -29,7 +29,7 @@ export function DataEditorModal({
   enableSharedModalDimensions = false,
   onTabChange,
 }: DataEditorModalProps) {
-  const selectedQuery = useGetQueryByQueryKey(selectedQueryKey);
+  const { query: selectedQuery, version: queryVersion } = useGetQueryByQueryKeyWithVersion(selectedQueryKey);
   const [modalMode, setModalMode] = useState<ModalMode>("bottomSheet");
 
   const handleModeChange = useCallback((mode: ModalMode) => {
@@ -53,8 +53,10 @@ export function DataEditorModal({
 
   const footerNode = (
     <DataEditorActionsFooter
+      key={`footer-${queryVersion}`}
       selectedQuery={selectedQuery}
       isFloatingMode={modalMode === "floating"}
+      queryVersion={queryVersion}
     />
   );
 
@@ -80,6 +82,7 @@ export function DataEditorModal({
         selectedQuery={selectedQuery}
         isFloatingMode={modalMode === "floating"}
         disableInternalFooter={true}
+        queryVersion={queryVersion}
       />
     </JsModal>
   );

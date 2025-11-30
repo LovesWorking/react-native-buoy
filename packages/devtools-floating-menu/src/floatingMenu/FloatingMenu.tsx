@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from "react";
+import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import {
   TouchableOpacity,
   StyleSheet,
@@ -177,9 +177,10 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
     // Only open modal if not a toggle-only tool
     if (app.launchMode !== "toggle-only") {
       // Resolve the icon for minimize stack display
+      // IMPORTANT: Use React.createElement for function components to preserve hooks
       const resolvedIcon =
         typeof app.icon === "function"
-          ? app.icon({ slot: "dial", size: 20 })
+          ? React.createElement(app.icon, { slot: "dial", size: 20 })
           : app.icon;
 
       open({

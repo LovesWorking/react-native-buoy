@@ -20,6 +20,7 @@ import {
   useMinimizedTools,
   ModalRestoreState,
 } from "./MinimizedToolsContext";
+import { useDevToolsSettings } from "./DevToolsSettingsModal";
 
 type AppHostContextValue = {
   openApps: AppInstance[];
@@ -307,21 +308,35 @@ const AppRenderer = ({
   onClose,
   onMinimize,
   minimizeTargetPosition,
+  globalEnableSharedModalDimensions,
 }: {
   app: AppInstance;
   zIndex: number;
   onClose: () => void;
   onMinimize: (modalState?: ModalRestoreState) => void;
   minimizeTargetPosition: { x: number; y: number };
+  /** Global setting from DevToolsSettings - overrides individual tool props when defined */
+  globalEnableSharedModalDimensions?: boolean;
 }) => {
   const Comp = app.component as any;
   // All non-minimized apps are visible - supports multiple simultaneous modals
   const isVisible = !app.minimized;
 
+  // Merge props with global settings override
+  // Priority: Global settings (if defined) > Tool prop > Default (false)
+  const mergedProps = {
+    ...(app.props ?? {}),
+    // Only override if globalEnableSharedModalDimensions is explicitly true
+    // (when the user turns it on in settings)
+    ...(globalEnableSharedModalDimensions === true
+      ? { enableSharedModalDimensions: true }
+      : {}),
+  };
+
   if (app.launchMode === "self-modal") {
     return (
       <Comp
-        {...(app.props ?? {})}
+        {...mergedProps}
         visible={isVisible}
         onClose={onClose}
         onRequestClose={onClose}
@@ -339,7 +354,7 @@ const AppRenderer = ({
     return (
       <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex }]}>
         <Comp
-          {...(app.props ?? {})}
+          {...mergedProps}
           onClose={onClose}
           onMinimize={onMinimize}
           minimizeTargetPosition={minimizeTargetPosition}
@@ -361,7 +376,7 @@ const AppRenderer = ({
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <Comp
-            {...(app.props ?? {})}
+            {...mergedProps}
             onClose={onClose}
             onMinimize={onMinimize}
             minimizeTargetPosition={minimizeTargetPosition}
@@ -388,6 +403,7 @@ export const AppOverlay = () => {
     getNextIconPosition,
     minimizedTools,
   } = useMinimizedTools();
+  const { settings } = useDevToolsSettings();
 
   // Sync restored minimized apps to MinimizedToolsContext
   // This handles apps that were restored from persistence with minimized=true
@@ -454,6 +470,7 @@ export const AppOverlay = () => {
             onClose={() => close(app.instanceId)}
             onMinimize={handleMinimize}
             minimizeTargetPosition={minimizeTargetPosition}
+            globalEnableSharedModalDimensions={settings.globalSettings?.enableSharedModalDimensions}
           />
         );
       })}

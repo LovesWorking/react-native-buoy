@@ -44,6 +44,8 @@ export const devToolsStorageKeys = {
       `${devToolsStorageKeys.settings.root()}_preferences` as const,
     wifiEnabled: () =>
       `${devToolsStorageKeys.settings.root()}_wifi_enabled` as const,
+    /** Global settings that apply to all dev tools */
+    global: () => `${devToolsStorageKeys.settings.root()}_global` as const,
   },
 
   /**
@@ -154,6 +156,36 @@ export const devToolsStorageKeys = {
       `${devToolsStorageKeys.routeEvents.root()}_detail_view` as const, // 'current' | 'diff'
     diffViewerMode: () =>
       `${devToolsStorageKeys.routeEvents.root()}_diff_viewer_mode` as const, // 'split' | 'tree'
+  },
+
+  /**
+   * Highlight updates-related storage keys
+   */
+  highlightUpdates: {
+    root: () => `${devToolsStorageKeys.base}_highlight_updates` as const,
+    modal: () => `${devToolsStorageKeys.highlightUpdates.root()}_modal` as const,
+    isTracking: () =>
+      `${devToolsStorageKeys.highlightUpdates.root()}_is_tracking` as const,
+    filters: () =>
+      `${devToolsStorageKeys.highlightUpdates.root()}_filters` as const,
+    settings: () =>
+      `${devToolsStorageKeys.highlightUpdates.root()}_settings` as const,
+  },
+
+  /**
+   * Benchmark-related storage keys
+   */
+  benchmark: {
+    root: () => `${devToolsStorageKeys.base}_benchmark` as const,
+    modal: () => `${devToolsStorageKeys.benchmark.root()}_modal` as const,
+    isRecording: () =>
+      `${devToolsStorageKeys.benchmark.root()}_is_recording` as const,
+    activeTab: () =>
+      `${devToolsStorageKeys.benchmark.root()}_active_tab` as const,
+    settings: () =>
+      `${devToolsStorageKeys.benchmark.root()}_settings` as const,
+    selectedReports: () =>
+      `${devToolsStorageKeys.benchmark.root()}_selected_reports` as const,
   },
 } as const;
 

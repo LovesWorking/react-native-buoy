@@ -15,7 +15,19 @@ interface QueryWithVersion {
  * entry changes. Ideal for detail panes where live updates are required without scanning the
  * entire query cache.
  */
-export function useGetQueryByQueryKey(queryKey?: QueryKey) {
+export function useGetQueryByQueryKey(queryKey?: QueryKey): Query | undefined {
+  const { query } = useGetQueryByQueryKeyWithVersion(queryKey);
+  return query;
+}
+
+/**
+ * Returns a single query instance with a version number that increments on each cache update.
+ * Use the version as a dependency or key to ensure child components re-render when query state changes.
+ *
+ * This is necessary because React Query mutates the Query object in place, so React's
+ * shallow comparison won't detect changes to nested properties like query.state.status.
+ */
+export function useGetQueryByQueryKeyWithVersion(queryKey?: QueryKey): QueryWithVersion {
   const queryClient = useQueryClient();
   const [queryState, setQueryState] = useState<QueryWithVersion>({
     query: undefined,
@@ -71,7 +83,5 @@ export function useGetQueryByQueryKey(queryKey?: QueryKey) {
     return () => unsubscribe();
   }, [queryClient, queryKey]);
 
-  // Return just the query, but because we're updating the queryState object
-  // with a new version, components will re-render when data changes
-  return queryState.query;
+  return queryState;
 }

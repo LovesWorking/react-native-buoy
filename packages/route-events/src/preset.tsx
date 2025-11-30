@@ -36,7 +36,7 @@ export const routeEventsToolPreset = {
   ),
   component: RouteEventsModalWithTabs,
   props: {
-    enableSharedModalDimensions: true,
+    enableSharedModalDimensions: false,
   },
 };
 
@@ -85,7 +85,7 @@ export function createRouteEventsTool(options?: {
       enableSharedModalDimensions:
         options?.enableSharedModalDimensions !== undefined
           ? options.enableSharedModalDimensions
-          : true,
+          : false,
     },
   };
 }

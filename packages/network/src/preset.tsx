@@ -34,7 +34,7 @@ export const networkToolPreset = {
   icon: ({ size }: { size: number }) => <Globe size={size} color="#00D4FF" />,
   component: NetworkModal,
   props: {
-    enableSharedModalDimensions: true,
+    enableSharedModalDimensions: false,
   },
 };
 
@@ -78,7 +78,7 @@ export function createNetworkTool(options?: {
       enableSharedModalDimensions:
         options?.enableSharedModalDimensions !== undefined
           ? options.enableSharedModalDimensions
-          : true,
+          : false,
     },
   };
 }

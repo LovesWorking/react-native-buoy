@@ -1,7 +1,7 @@
 // Query and Mutation hooks
 export { default as useAllQueries } from "./useAllQueries";
 export { default as useAllMutations } from "./useAllMutations";
-export { useGetQueryByQueryKey } from "./useSelectedQuery";
+export { useGetQueryByQueryKey, useGetQueryByQueryKeyWithVersion } from "./useSelectedQuery";
 export { useGetMutationById } from "./useSelectedMutation";
 export { default as useQueryStatusCounts } from "./useQueryStatusCounts";
 export { useStorageQueryCounts } from "./useStorageQueryCounts";
