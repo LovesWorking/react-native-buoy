@@ -11,6 +11,82 @@
 import { getComponentDisplayName } from "./ViewTypeMapper";
 import { PerformanceLogger } from "./PerformanceLogger";
 
+/**
+ * Debug logging levels for render cause detection.
+ * Controls verbosity of console output for debugging "Why Did You Render" feature.
+ *
+ * - "off": No debug logging (default, best for production)
+ * - "minimal": Only log state/hook value changes (e.g., "useState: 3334 → 3335")
+ * - "verbose": Log component info + cause + value changes
+ * - "all": Full fiber dump with everything (native fiber, component fiber, hooks, batch context)
+ */
+export type DebugLogLevel = "off" | "minimal" | "verbose" | "all";
+
+// Render cause types - why did a component render?
+export type RenderCauseType =
+  | "mount" // First render
+  | "props" // Props changed
+  | "state" // State changed (class components)
+  | "hooks" // Hooks changed (useState, useReducer, etc.)
+  | "context" // Context changed (future)
+  | "parent" // Parent component re-rendered
+  | "unknown"; // Could not determine
+
+// Component-level cause - why did the React component re-render?
+export type ComponentCauseType =
+  | "mount" // First render
+  | "props" // Component received different props
+  | "state" // Component's own state changed (useState/useReducer)
+  | "parent" // Parent component re-rendered (no prop/state changes)
+  | "unknown"; // Could not determine
+
+/**
+ * Represents a change in a single hook's state
+ * Used to show meaningful before/after values for debugging
+ */
+export interface HookStateChange {
+  /** Hook index in the linked list (0-based) */
+  index: number;
+  /** Detected hook type */
+  type: 'useState' | 'useReducer' | 'useRef' | 'useMemo' | 'useCallback' | 'useEffect' | 'unknown';
+  /** Previous value (if available) */
+  previousValue?: any;
+  /** Current value */
+  currentValue?: any;
+  /** Human-readable description of the change */
+  description?: string;
+}
+
+export interface RenderCause {
+  type: RenderCauseType;
+  changedKeys?: string[]; // For props: ["onClick", "style"]
+  hookIndices?: number[]; // For hooks: [0, 2] = first and third hook
+  /** Detailed hook state changes with actual values (Phase 3 enhancement) */
+  hookChanges?: HookStateChange[];
+  timestamp: number;
+  // Two-level causation: component-level cause (why React component rendered)
+  componentCause?: ComponentCauseType;
+  componentName?: string; // The React component that owns this native view
+}
+
+/**
+ * A single render event in the history
+ * Captures everything about one render occurrence
+ */
+export interface RenderEvent {
+  id: string; // Unique event ID (nativeTag-timestamp)
+  timestamp: number; // When this render occurred
+  cause: RenderCause; // Why it rendered (two-level causation)
+
+  // Captured state at this render (for diff visualization)
+  // Only populated when enableRenderHistory is true
+  capturedProps?: Record<string, any>;
+  capturedState?: any;
+
+  // Render number at this event (e.g., 5th render)
+  renderNumber: number;
+}
+
 export interface TrackedRender {
   id: string; // nativeTag as string for Map key
   nativeTag: number;
@@ -30,6 +106,12 @@ export interface TrackedRender {
     height: number;
   };
   color: string; // Current highlight color
+  // Render cause tracking
+  lastRenderCause?: RenderCause;
+
+  // Render history (for event stepping and diff visualization)
+  // Only populated when enableRenderHistory setting is true
+  renderHistory?: RenderEvent[];
 }
 
 export type FilterType = "any" | "viewType" | "testID" | "nativeID" | "component" | "accessibilityLabel";
@@ -87,6 +169,66 @@ export interface RenderTrackerSettings {
    * Default: false
    */
   performanceLogging: boolean;
+  /**
+   * Whether to track and display render causes (why components rendered).
+   * Detects props changes, hooks changes, parent re-renders, and first mounts.
+   * Adds ~2-5% performance overhead and stores previous component state in memory.
+   * Requires showRenderCount to be enabled.
+   * Default: false
+   */
+  trackRenderCauses: boolean;
+
+  // === Render History Settings ===
+
+  /**
+   * Whether to enable render history tracking.
+   * When enabled, stores a history of render events per component for
+   * event stepping and diff visualization. Has memory and performance overhead.
+   * Requires trackRenderCauses to be enabled.
+   * Default: false
+   */
+  enableRenderHistory: boolean;
+  /**
+   * Maximum number of render events to store per component.
+   * Older events are discarded when this limit is reached.
+   * Range: 5-50, Default: 20
+   */
+  maxRenderHistoryPerComponent: number;
+  /**
+   * Whether to capture props at each render for diff visualization.
+   * Enabling this allows comparing props between renders but increases
+   * memory usage significantly. Only effective when enableRenderHistory is true.
+   * Default: false
+   */
+  capturePropsOnRender: boolean;
+  /**
+   * Whether to capture state at each render for diff visualization.
+   * Enabling this allows comparing state between renders but increases
+   * memory usage. Only effective when enableRenderHistory is true.
+   * Default: false
+   */
+  captureStateOnRender: boolean;
+
+  // === Debug Settings ===
+
+  /**
+   * Debug logging level for render cause detection.
+   * Controls console output verbosity for "Why Did You Render" debugging.
+   *
+   * - "off": No debug logging (default)
+   * - "minimal": Only state/hook value changes (e.g., "useState: 3334 → 3335")
+   * - "verbose": Component info + cause + value changes
+   * - "all": Full fiber dump with everything
+   *
+   * Default: "off"
+   */
+  debugLogLevel: DebugLogLevel;
+
+  /**
+   * @deprecated Use debugLogLevel instead. Kept for backward compatibility.
+   * When true, equivalent to debugLogLevel: "all"
+   */
+  debugRawFiberLogging: boolean;
 }
 
 class RenderTrackerSingleton {
@@ -100,6 +242,15 @@ class RenderTrackerSingleton {
     batchSize: DEFAULT_BATCH_SIZE,
     showRenderCount: true,
     performanceLogging: false,
+    trackRenderCauses: false,
+    // History settings (opt-in for performance)
+    enableRenderHistory: false,
+    maxRenderHistoryPerComponent: 20,
+    capturePropsOnRender: false,
+    captureStateOnRender: false,
+    // Debug settings
+    debugLogLevel: "off",
+    debugRawFiberLogging: false, // deprecated, use debugLogLevel
   };
 
   // Batch mode: defer notifyListeners until endBatch is called
@@ -136,6 +287,10 @@ class RenderTrackerSingleton {
     };
     color: string;
     count: number;
+    renderCause?: RenderCause;
+    // Optional captured snapshots for history
+    capturedProps?: Record<string, any>;
+    capturedState?: any;
   }): void {
     if (this.isPaused) return;
 
@@ -161,6 +316,15 @@ class RenderTrackerSingleton {
       if (data.componentName && !existing.componentName) {
         existing.componentName = data.componentName;
       }
+      // Update render cause if provided
+      if (data.renderCause) {
+        existing.lastRenderCause = data.renderCause;
+      }
+
+      // Add to render history if enabled
+      if (this.settings.enableRenderHistory && data.renderCause) {
+        this.addRenderEvent(existing, data.renderCause, data.capturedProps, data.capturedState);
+      }
     } else {
       // Add new render
       const newRender: TrackedRender = {
@@ -177,7 +341,14 @@ class RenderTrackerSingleton {
         lastRenderTime: now,
         measurements: data.measurements,
         color: data.color,
+        lastRenderCause: data.renderCause,
       };
+
+      // Initialize render history if enabled
+      if (this.settings.enableRenderHistory && data.renderCause) {
+        newRender.renderHistory = [];
+        this.addRenderEvent(newRender, data.renderCause, data.capturedProps, data.capturedState);
+      }
 
       this.renders.set(id, newRender);
 
@@ -198,6 +369,40 @@ class RenderTrackerSingleton {
       this.batchDirty = true;
     } else {
       this.notifyListeners();
+    }
+  }
+
+  /**
+   * Add a render event to a component's history (circular buffer)
+   */
+  private addRenderEvent(
+    render: TrackedRender,
+    cause: RenderCause,
+    capturedProps?: Record<string, any>,
+    capturedState?: any
+  ): void {
+    // Initialize history array if needed
+    if (!render.renderHistory) {
+      render.renderHistory = [];
+    }
+
+    const event: RenderEvent = {
+      id: `${render.nativeTag}-${cause.timestamp}`,
+      timestamp: cause.timestamp,
+      cause,
+      renderNumber: render.renderCount,
+      // Only include captured data if settings allow and data is provided
+      capturedProps: this.settings.capturePropsOnRender ? capturedProps : undefined,
+      capturedState: this.settings.captureStateOnRender ? capturedState : undefined,
+    };
+
+    render.renderHistory.push(event);
+
+    // Enforce max history size (circular buffer behavior)
+    const maxHistory = Math.max(5, Math.min(50, this.settings.maxRenderHistoryPerComponent));
+    if (render.renderHistory.length > maxHistory) {
+      // Remove oldest events
+      render.renderHistory = render.renderHistory.slice(-maxHistory);
     }
   }
 
@@ -624,6 +829,25 @@ class RenderTrackerSingleton {
     if (newSettings.batchSize !== undefined) {
       newSettings.batchSize = Math.max(10, Math.min(500, newSettings.batchSize));
     }
+
+    // Validate maxRenderHistoryPerComponent
+    if (newSettings.maxRenderHistoryPerComponent !== undefined) {
+      newSettings.maxRenderHistoryPerComponent = Math.max(
+        5,
+        Math.min(50, newSettings.maxRenderHistoryPerComponent)
+      );
+    }
+
+    // If enabling render history, also enable trackRenderCauses
+    if (newSettings.enableRenderHistory && !this.settings.trackRenderCauses) {
+      newSettings.trackRenderCauses = true;
+    }
+
+    // If disabling trackRenderCauses, also disable render history
+    if (newSettings.trackRenderCauses === false && this.settings.enableRenderHistory) {
+      newSettings.enableRenderHistory = false;
+    }
+
     this.settings = { ...this.settings, ...newSettings };
 
     // Sync performance logging with PerformanceLogger
@@ -632,6 +856,53 @@ class RenderTrackerSingleton {
     }
 
     this.notifySettingsListeners();
+  }
+
+  /**
+   * Clear render history for all components
+   */
+  clearAllRenderHistory(): void {
+    for (const render of this.renders.values()) {
+      render.renderHistory = [];
+    }
+    this.notifyListeners();
+  }
+
+  /**
+   * Clear render history for a specific component
+   */
+  clearRenderHistory(id: string): void {
+    const render = this.renders.get(id);
+    if (render) {
+      render.renderHistory = [];
+      this.notifyListeners();
+    }
+  }
+
+  /**
+   * Get render history stats for debugging
+   */
+  getRenderHistoryStats(): {
+    totalEvents: number;
+    componentsWithHistory: number;
+    averageEventsPerComponent: number;
+  } {
+    let totalEvents = 0;
+    let componentsWithHistory = 0;
+
+    for (const render of this.renders.values()) {
+      if (render.renderHistory && render.renderHistory.length > 0) {
+        totalEvents += render.renderHistory.length;
+        componentsWithHistory++;
+      }
+    }
+
+    return {
+      totalEvents,
+      componentsWithHistory,
+      averageEventsPerComponent:
+        componentsWithHistory > 0 ? totalEvents / componentsWithHistory : 0,
+    };
   }
 
   /**

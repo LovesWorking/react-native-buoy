@@ -34,8 +34,12 @@ import {
   enableProfilerLogging,
   disableProfilerLogging,
 } from "./ProfilerInterceptor";
-import { RenderTracker } from "./RenderTracker";
+import { RenderTracker, type RenderCause } from "./RenderTracker";
 import { PerformanceLogger, markEventReceived, type BatchTimer } from "./PerformanceLogger";
+import {
+  detectRenderCause,
+  clearRenderCauseState,
+} from "./RenderCauseDetector";
 
 interface HighlightRect {
   id: number;
@@ -701,9 +705,6 @@ function getColorForRenderCount(count: number): string {
   return COLORS[Math.max(0, index)];
 }
 
-// TEMPORARY: Set to true to disable rendering and only log
-const DEBUG_LOG_ONLY = false;
-
 /**
  * Handle traceUpdates event from DevTools backend
  * This is called with a Set of stateNodes that should be highlighted
@@ -737,55 +738,6 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
   // Start performance timing
   const batchSize = RenderTracker.getBatchSize();
   const perfTimer = PerformanceLogger.startBatch(nodes.size, batchSize);
-
-  // TEMPORARY: Log only mode - skip all processing and just log extensive info
-  if (DEBUG_LOG_ONLY) {
-    // First, test our filter on all nodes
-    const filtered: unknown[] = [];
-    const passed: unknown[] = [];
-
-    for (const node of nodes) {
-      if (isOurOverlayNode(node)) {
-        filtered.push(node);
-      } else {
-        passed.push(node);
-      }
-    }
-
-    console.log(`\n========== [HighlightUpdates] ==========`);
-    console.log(`  Total: ${nodes.size} | FILTERED: ${filtered.length} | PASSED: ${passed.length}`);
-
-    // Log ALL passed nodes with detailed info
-    if (passed.length > 0) {
-      console.log(`\n--- PASSED NODES (would render highlights) ---`);
-      passed.forEach((node, index) => {
-        const n = node as any;
-        const fiber = n?.canonical?.internalInstanceHandle;
-        const viewType = n?.canonical?.viewConfig?.uiViewClassName || "Unknown";
-        const directNativeID =
-          fiber?.pendingProps?.nativeID ||
-          fiber?.memoizedProps?.nativeID ||
-          null;
-        const testID =
-          fiber?.pendingProps?.testID ||
-          fiber?.memoizedProps?.testID ||
-          null;
-        // Get the owning React component name (not the native type)
-        const ownerName = getOwningComponentName(fiber);
-        const nativeTag = getNativeTag(n) || getNativeTag(n?.canonical?.publicInstance);
-
-        console.log(`  [${index}] ${viewType} | tag=${nativeTag} | owner=${ownerName || 'unknown'}${testID ? ` | testID=${testID}` : ''}${directNativeID ? ` | nativeID=${directNativeID}` : ''}`);
-      });
-    }
-
-    // Log a sample filtered node to verify detection
-    if (filtered.length > 0 && passed.length === 0) {
-      console.log(`  ✓ All ${filtered.length} nodes filtered (dev tools)`);
-    }
-
-    console.log(`==========================================\n`);
-    return;
-  }
 
   // NOTE: Lock-based skipping disabled - relying on nativeID filtering instead
   // If nativeID filtering doesn't work, re-enable this:
@@ -946,9 +898,37 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
       // Track renders in RenderTracker (for modal)
       // Use batch mode to avoid O(n²) listener notifications
       RenderTracker.startBatch();
+
+      // Collect all nativeTags in this batch for parent detection (if tracking causes)
+      const settings = RenderTracker.getSettings();
+      const trackCauses = settings.trackRenderCauses && settings.showRenderCount;
+      let batchNativeTags: Set<number> | null = null;
+
+      if (trackCauses) {
+        batchNativeTags = new Set<number>();
+        for (const { rect } of validResults) {
+          if (rect) {
+            batchNativeTags.add(rect.id);
+          }
+        }
+      }
+
       for (const { rect, stateNode, color, count } of validResults) {
         if (rect) {
           const componentInfo = extractComponentInfo(stateNode);
+
+          // Detect render cause if enabled
+          let renderCause: RenderCause | undefined;
+          if (trackCauses && batchNativeTags) {
+            const node = stateNode as any;
+            const fiber = node?.canonical?.internalInstanceHandle;
+            // Use debugLogLevel if set, fall back to debugRawFiberLogging for backward compat
+            const logLevel = settings.debugLogLevel !== "off"
+              ? settings.debugLogLevel
+              : (settings.debugRawFiberLogging ? "all" : "off");
+            renderCause = detectRenderCause(rect.id, fiber, batchNativeTags, logLevel);
+          }
+
           RenderTracker.trackRender({
             nativeTag: rect.id,
             viewType: componentInfo.viewType,
@@ -964,6 +944,7 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
             },
             color,
             count,
+            renderCause,
           });
         }
       }
@@ -1206,6 +1187,7 @@ function disable(): void {
   }
   renderedOverlayTags.clear();
   devToolsNodeCache.clear(); // Clear detection cache
+  clearRenderCauseState(); // Clear render cause state to prevent memory leaks
 
   // Disable our implementation
   unsubscribeFromTraceUpdates();

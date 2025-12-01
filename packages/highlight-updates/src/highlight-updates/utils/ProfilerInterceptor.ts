@@ -106,12 +106,12 @@ function describeNode(node: unknown): object {
 function swizzleHookEmit(): void {
   const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (!hook || typeof hook.emit !== "function") {
-    console.log("[ProfilerInterceptor] hook.emit not available");
+    // Silent - hook not available is expected in some environments
     return;
   }
 
   if (originalHookEmit) {
-    console.log("[ProfilerInterceptor] hook.emit already swizzled");
+    // Already swizzled - no need to log
     return;
   }
 
@@ -143,7 +143,7 @@ function swizzleHookEmit(): void {
     return originalHookEmit!(event, ...args);
   };
 
-  console.log("[ProfilerInterceptor] Swizzled hook.emit");
+  // Swizzled successfully - no need to log in normal operation
 }
 
 /**
@@ -160,12 +160,12 @@ function swizzleAgentEmit(): void {
   const agent = hook?.reactDevtoolsAgent;
 
   if (!agent || typeof agent.emit !== "function") {
-    console.log("[ProfilerInterceptor] agent.emit not available (DevTools may not be connected)");
+    // Silent - agent not available is expected when DevTools not connected
     return;
   }
 
   if (originalAgentEmit) {
-    console.log("[ProfilerInterceptor] agent.emit already swizzled");
+    // Already swizzled - no need to log
     return;
   }
 
@@ -191,13 +191,15 @@ function swizzleAgentEmit(): void {
     return originalAgentEmit!(event, ...args);
   };
 
-  console.log("[ProfilerInterceptor] Swizzled agent.emit");
+  // Swizzled successfully - no need to log in normal operation
 }
 
 /**
- * Log information about available renderer interfaces
+ * Log information about available renderer interfaces.
+ * Only call this manually for debugging - not called during normal operation.
+ * @internal
  */
-function logRendererInterfaces(): void {
+export function logRendererInterfaces(): void {
   const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (!hook?.rendererInterfaces) {
     console.log("[ProfilerInterceptor] No rendererInterfaces available");
@@ -228,9 +230,11 @@ function logRendererInterfaces(): void {
 }
 
 /**
- * Log hook structure for debugging
+ * Log hook structure for debugging.
+ * Only call this manually for debugging - not called during normal operation.
+ * @internal
  */
-function logHookStructure(): void {
+export function logHookStructure(): void {
   const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (!hook) {
     console.log("[ProfilerInterceptor] No hook available");
@@ -269,24 +273,19 @@ function logHookStructure(): void {
 function enableTracingOnAllRenderers(): void {
   const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (!hook?.rendererInterfaces) {
-    console.log("[ProfilerInterceptor] Cannot enable tracing - no rendererInterfaces");
+    // Silent - no rendererInterfaces available
     return;
   }
 
-  let enabledCount = 0;
-  hook.rendererInterfaces.forEach((iface, id) => {
+  hook.rendererInterfaces.forEach((iface) => {
     if (typeof iface.setTraceUpdatesEnabled === "function") {
       try {
         iface.setTraceUpdatesEnabled(true);
-        enabledCount++;
-        console.log(`[ProfilerInterceptor] Enabled tracing on renderer ${id}`);
-      } catch (error) {
-        console.log(`[ProfilerInterceptor] Error enabling tracing on renderer ${id}:`, error);
+      } catch {
+        // Silent - error enabling tracing on this renderer
       }
     }
   });
-
-  console.log(`[ProfilerInterceptor] Enabled tracing on ${enabledCount} renderer(s)`);
 }
 
 /**
@@ -296,13 +295,12 @@ function disableTracingOnAllRenderers(): void {
   const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (!hook?.rendererInterfaces) return;
 
-  hook.rendererInterfaces.forEach((iface, id) => {
+  hook.rendererInterfaces.forEach((iface) => {
     if (typeof iface.setTraceUpdatesEnabled === "function") {
       try {
         iface.setTraceUpdatesEnabled(false);
-        console.log(`[ProfilerInterceptor] Disabled tracing on renderer ${id}`);
-      } catch (error) {
-        console.log(`[ProfilerInterceptor] Error disabling tracing on renderer ${id}:`, error);
+      } catch {
+        // Silent - error disabling tracing on this renderer
       }
     }
   });
@@ -319,25 +317,20 @@ export function setComparisonCallback(callback: ((nodes: Set<unknown>) => void) 
  * Install all profiler interception hooks
  *
  * Call this early in your app initialization to capture all events.
+ * Installation is silent - no console logs in normal operation.
  */
 export function installProfilerInterceptor(): void {
   if (typeof __DEV__ !== "undefined" && !__DEV__) {
-    console.log("[ProfilerInterceptor] Only available in development builds");
+    // Silent in production - nothing to install
     return;
   }
 
   if (isInstalled) {
-    console.log("[ProfilerInterceptor] Already installed");
+    // Already installed - no action needed
     return;
   }
 
-  console.log("[ProfilerInterceptor] Installing...");
-
-  // Log structure first
-  logHookStructure();
-  logRendererInterfaces();
-
-  // Swizzle emit functions to intercept events
+  // Swizzle emit functions to intercept events (silent operation)
   swizzleHookEmit();
   swizzleAgentEmit();
 
@@ -347,7 +340,6 @@ export function installProfilerInterceptor(): void {
   // Note: We don't need hook.sub since we already intercept via swizzled hook.emit
 
   isInstalled = true;
-  console.log("[ProfilerInterceptor] Installation complete");
 }
 
 /**
@@ -375,8 +367,7 @@ export function uninstallProfilerInterceptor(): void {
 
   comparisonCallback = null;
   isInstalled = false;
-
-  console.log("[ProfilerInterceptor] Uninstalled");
+  // Silent uninstall - no logging in normal operation
 }
 
 /**
@@ -398,7 +389,7 @@ export function enableProfilerLogging(): void {
   loggingEnabled = true;
   // Don't enable tracing here - let Chrome DevTools control that
   // enableTracingOnAllRenderers();
-  console.log("[ProfilerInterceptor] Logging ENABLED (waiting for Chrome DevTools profiler)");
+  // Silent enable - no logging needed
 }
 
 /**
@@ -410,7 +401,7 @@ export function disableProfilerLogging(): void {
   loggingEnabled = false;
   // Don't disable tracing - let the profiler continue to work
   // disableTracingOnAllRenderers();
-  console.log("[ProfilerInterceptor] Logging DISABLED (profiler still active)");
+  // Silent disable - no logging needed
 }
 
 /**

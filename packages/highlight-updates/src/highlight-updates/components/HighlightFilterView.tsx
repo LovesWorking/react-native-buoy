@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { Eye, Filter, Plus, X, Box, Check, Settings } from "@react-buoy/shared-ui";
 import { macOSColors, SectionHeader } from "@react-buoy/shared-ui";
-import type { FilterConfig, FilterPattern, FilterType, RenderTrackerSettings } from "../utils/RenderTracker";
+import type { FilterConfig, FilterPattern, FilterType, RenderTrackerSettings, DebugLogLevel } from "../utils/RenderTracker";
 import { IdentifierBadge, IDENTIFIER_CONFIG, type IdentifierType } from "./IdentifierBadge";
 
 interface HighlightFilterViewProps {
@@ -211,6 +211,14 @@ const BATCH_SIZE_PRESETS = [
   { value: 150, label: "150" },
   { value: 250, label: "250" },
   { value: 500, label: "500" },
+];
+
+// Debug log level presets
+const DEBUG_LOG_LEVEL_PRESETS: Array<{ value: DebugLogLevel; label: string; description: string }> = [
+  { value: "off", label: "Off", description: "No debug logging" },
+  { value: "minimal", label: "Minimal", description: "Only hook value changes" },
+  { value: "verbose", label: "Verbose", description: "Component + cause + changes" },
+  { value: "all", label: "All", description: "Full fiber dump" },
 ];
 
 export function HighlightFilterView({
@@ -612,7 +620,13 @@ export function HighlightFilterView({
               <Text style={styles.settingLabel}>Show Render Count</Text>
               <Switch
                 value={settings.showRenderCount}
-                onValueChange={(value) => onSettingsChange({ showRenderCount: value })}
+                onValueChange={(value) => {
+                  onSettingsChange({ showRenderCount: value });
+                  // If disabling render count, also disable cause tracking
+                  if (!value && settings.trackRenderCauses) {
+                    onSettingsChange({ trackRenderCauses: false });
+                  }
+                }}
                 trackColor={{
                   false: macOSColors.background.input,
                   true: macOSColors.semantic.success + "80",
@@ -622,6 +636,157 @@ export function HighlightFilterView({
             </View>
             <Text style={styles.settingDescription}>
               Display render count badge on highlights. Disabling improves performance by skipping count tracking.
+            </Text>
+          </View>
+
+          {/* Track Render Causes Toggle */}
+          <View style={[styles.settingItem, styles.settingItemSpaced]}>
+            <View style={styles.settingHeader}>
+              <Text style={[
+                styles.settingLabel,
+                !settings.showRenderCount && styles.settingLabelDisabled
+              ]}>
+                Track Render Causes
+              </Text>
+              <Switch
+                value={settings.trackRenderCauses}
+                onValueChange={(value) => onSettingsChange({ trackRenderCauses: value })}
+                trackColor={{
+                  false: macOSColors.background.input,
+                  true: macOSColors.semantic.warning + "80",
+                }}
+                thumbColor={settings.trackRenderCauses ? macOSColors.semantic.warning : macOSColors.text.muted}
+                disabled={!settings.showRenderCount}
+              />
+            </View>
+            <Text style={styles.settingDescription}>
+              Detect WHY components render (props, hooks, parent re-render).
+              {!settings.showRenderCount && (
+                <Text style={styles.settingWarning}>
+                  {"\n"}Requires "Show Render Count" to be enabled.
+                </Text>
+              )}
+            </Text>
+            <Text style={styles.settingDescriptionMuted}>
+              Adds ~2-5% performance overhead. Stores previous component state in memory.
+            </Text>
+          </View>
+
+          {/* Enable Render History */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingHeader}>
+              <Text style={[
+                styles.settingLabel,
+                !settings.trackRenderCauses && styles.settingLabelDisabled
+              ]}>
+                Enable Render History
+              </Text>
+              <Switch
+                value={settings.enableRenderHistory}
+                onValueChange={(value) => onSettingsChange({ enableRenderHistory: value })}
+                trackColor={{
+                  false: macOSColors.background.input,
+                  true: macOSColors.semantic.info + "80",
+                }}
+                thumbColor={settings.enableRenderHistory ? macOSColors.semantic.info : macOSColors.text.muted}
+                disabled={!settings.trackRenderCauses}
+              />
+            </View>
+            <Text style={styles.settingDescription}>
+              Store render events for event stepping and diff visualization.
+              {!settings.trackRenderCauses && (
+                <Text style={styles.settingWarning}>
+                  {"\n"}Requires "Track Render Causes" to be enabled.
+                </Text>
+              )}
+            </Text>
+            <Text style={styles.settingDescriptionMuted}>
+              Stores up to {settings.maxRenderHistoryPerComponent} events per component.
+            </Text>
+          </View>
+
+          {/* Capture Props on Render */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingHeader}>
+              <Text style={[
+                styles.settingLabel,
+                !settings.enableRenderHistory && styles.settingLabelDisabled
+              ]}>
+                Capture Props
+              </Text>
+              <Switch
+                value={settings.capturePropsOnRender}
+                onValueChange={(value) => onSettingsChange({ capturePropsOnRender: value })}
+                trackColor={{
+                  false: macOSColors.background.input,
+                  true: "#a855f7" + "80",
+                }}
+                thumbColor={settings.capturePropsOnRender ? "#a855f7" : macOSColors.text.muted}
+                disabled={!settings.enableRenderHistory}
+              />
+            </View>
+            <Text style={styles.settingDescription}>
+              Capture props snapshot at each render for diff visualization.
+              {!settings.enableRenderHistory && (
+                <Text style={styles.settingWarning}>
+                  {"\n"}Requires "Enable Render History" to be enabled.
+                </Text>
+              )}
+            </Text>
+            <Text style={styles.settingDescriptionMuted}>
+              Increases memory usage. Deep clones props at each render.
+            </Text>
+          </View>
+
+          {/* Debug Log Level */}
+          <View style={[styles.settingItem, styles.settingItemSpaced]}>
+            <View style={styles.settingHeader}>
+              <Text style={styles.settingLabel}>
+                Debug Log Level
+              </Text>
+              <View style={styles.settingValue}>
+                <Text style={[
+                  styles.settingValueText,
+                  settings.debugLogLevel !== "off" && { color: macOSColors.semantic.warning }
+                ]}>
+                  {DEBUG_LOG_LEVEL_PRESETS.find(p => p.value === settings.debugLogLevel)?.label || "Off"}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.settingDescription}>
+              Control console logging verbosity for render cause detection.
+            </Text>
+            <View style={styles.batchSizePresets}>
+              {DEBUG_LOG_LEVEL_PRESETS.map((preset) => (
+                <TouchableOpacity
+                  key={preset.value}
+                  style={[
+                    styles.batchSizePreset,
+                    settings.debugLogLevel === preset.value && styles.batchSizePresetActive,
+                    preset.value !== "off" && settings.debugLogLevel === preset.value && {
+                      backgroundColor: macOSColors.semantic.warning + "30",
+                      borderColor: macOSColors.semantic.warning,
+                    },
+                  ]}
+                  onPress={() => onSettingsChange({ debugLogLevel: preset.value })}
+                >
+                  <Text
+                    style={[
+                      styles.batchSizePresetText,
+                      settings.debugLogLevel === preset.value && styles.batchSizePresetTextActive,
+                      preset.value !== "off" && settings.debugLogLevel === preset.value && {
+                        color: macOSColors.semantic.warning,
+                      },
+                    ]}
+                  >
+                    {preset.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.settingDescriptionMuted}>
+              {DEBUG_LOG_LEVEL_PRESETS.find(p => p.value === settings.debugLogLevel)?.description}
+              {settings.debugLogLevel !== "off" && " • Check Metro console for logs"}
             </Text>
           </View>
 
@@ -1004,6 +1169,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: macOSColors.text.secondary,
     lineHeight: 16,
+  },
+  settingDescriptionMuted: {
+    fontSize: 10,
+    color: macOSColors.text.muted,
+    lineHeight: 14,
+    marginTop: 4,
+    fontStyle: "italic",
+  },
+  settingLabelDisabled: {
+    color: macOSColors.text.muted,
+  },
+  settingWarning: {
+    color: macOSColors.semantic.warning,
+    fontWeight: "500",
   },
   batchSizePresets: {
     flexDirection: "row",

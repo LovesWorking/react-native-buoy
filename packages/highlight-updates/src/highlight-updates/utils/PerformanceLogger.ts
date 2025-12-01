@@ -74,13 +74,7 @@ export function markEventReceived(): number {
  */
 export function markOverlayRendered(highlightCount: number, renderTime?: number): void {
   if (lastEventTimestamp > 0 && highlightCount > 0) {
-    const endToEndTime = performance.now() - lastEventTimestamp;
-    if (endToEndTime > 50) { // Only log significant delays
-      console.log(
-        `[HighlightPerf] 🎯 END-TO-END: ${endToEndTime.toFixed(0)}ms from event to ${highlightCount} highlights visible`
-      );
-    }
-    // Reset to avoid double-counting
+    // Reset to avoid double-counting (end-to-end logging removed - silent by default)
     lastEventTimestamp = 0;
   }
 
@@ -149,12 +143,11 @@ class PerformanceLoggerSingleton {
 
     if (enabled && !wasEnabled) {
       this.resetStats();
-      this.startSummaryInterval();
-      console.log("[HighlightPerf] Performance logging ENABLED");
+      // Summary interval removed - no periodic logging
     } else if (!enabled && wasEnabled) {
       this.stopSummaryInterval();
-      console.log("[HighlightPerf] Performance logging DISABLED");
     }
+    // Silent enable/disable - no console logs
   }
 
   /**
@@ -288,8 +281,8 @@ class PerformanceLoggerSingleton {
     // Notify listeners
     this.notifyListeners(metrics);
 
-    // Log individual batch
-    this.logBatch(metrics);
+    // Note: logBatch removed - performance logs now silent by default
+    // Use benchmarkRecorder for performance analysis instead
   }
 
   /**

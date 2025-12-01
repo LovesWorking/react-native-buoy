@@ -52,7 +52,27 @@ export {
 
 // RenderTracker singleton for tracking render history
 export { RenderTracker } from "./highlight-updates/utils/RenderTracker";
-export type { TrackedRender, FilterConfig, RenderTrackerSettings } from "./highlight-updates/utils/RenderTracker";
+export type {
+  TrackedRender,
+  FilterConfig,
+  RenderTrackerSettings,
+  RenderCause,
+  RenderCauseType,
+  ComponentCauseType,
+  RenderEvent,
+} from "./highlight-updates/utils/RenderTracker";
+
+// RenderCauseDetector for detecting why components rendered
+export {
+  detectRenderCause,
+  clearRenderCauseState,
+  removeRenderCauseState,
+  getRenderCauseStats,
+  // Snapshot capture for render history
+  safeCloneForHistory,
+  capturePropsSnapshot,
+  captureStateSnapshot,
+} from "./highlight-updates/utils/RenderCauseDetector";
 
 // PerformanceLogger for performance measurement and debugging
 export { PerformanceLogger } from "./highlight-updates/utils/PerformanceLogger";
@@ -73,6 +93,16 @@ export { HighlightUpdatesModal } from "./highlight-updates/components/HighlightU
 export { RenderListItem } from "./highlight-updates/components/RenderListItem";
 export { RenderDetailView } from "./highlight-updates/components/RenderDetailView";
 export { HighlightFilterView } from "./highlight-updates/components/HighlightFilterView";
+export {
+  RenderCauseBadge,
+  TwoLevelCauseBadge,
+  CAUSE_CONFIG,
+  COMPONENT_CAUSE_CONFIG,
+} from "./highlight-updates/components/RenderCauseBadge";
+export {
+  RenderHistoryViewer,
+  RenderHistoryFooter,
+} from "./highlight-updates/components/RenderHistoryViewer";
 
 // Re-export benchmarking module from @react-buoy/benchmark
 // This provides backward compatibility for code that imports from highlight-updates

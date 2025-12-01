@@ -10,6 +10,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight, macOSColors } from "@react-buoy/shared-ui";
 import type { TrackedRender } from "../utils/RenderTracker";
 import { IdentifierBadge, type IdentifierType } from "./IdentifierBadge";
+import { RenderCauseBadge } from "./RenderCauseBadge";
 
 interface RenderListItemProps {
   render: TrackedRender;
@@ -80,6 +81,18 @@ function RenderListItemInner({ render, onPress }: RenderListItemProps) {
           </View>
         </View>
 
+        {/* Render cause badge (if available) - show two-level causation */}
+        {render.lastRenderCause && (
+          <View style={styles.causeRow}>
+            <RenderCauseBadge
+              cause={render.lastRenderCause}
+              compact
+              showKeys
+              showTwoLevel
+            />
+          </View>
+        )}
+
         {/* Bottom row: primary identifier and timing */}
         <View style={styles.bottomRow}>
           <View style={styles.identifierContainer}>
@@ -112,6 +125,8 @@ export const RenderListItem = React.memo(RenderListItemInner, (prevProps, nextPr
     prevRender.renderCount === nextRender.renderCount &&
     prevRender.color === nextRender.color &&
     prevRender.lastRenderTime === nextRender.lastRenderTime &&
+    prevRender.lastRenderCause?.type === nextRender.lastRenderCause?.type &&
+    prevRender.lastRenderCause?.componentCause === nextRender.lastRenderCause?.componentCause &&
     prevProps.onPress === nextProps.onPress
   );
 });
@@ -142,6 +157,9 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 4,
+  },
+  causeRow: {
     marginBottom: 4,
   },
   viewTypeContainer: {

@@ -44,14 +44,7 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
   useLayoutEffect(() => {
     if (PerformanceLogger.isEnabled() && renderStartTimeRef.current > 0 && highlightCountRef.current > 0) {
       const renderTime = performance.now() - renderStartTimeRef.current;
-      // Only log significant renders (more than 1ms or multiple highlights)
-      if (renderTime > 1 || highlightCountRef.current > 5) {
-        console.log(
-          `[HighlightPerf] Overlay render: ${renderTime.toFixed(1)}ms for ${highlightCountRef.current} highlights`
-        );
-      }
-      // Mark end-to-end timing (from event received to render complete)
-      // Pass renderTime for benchmark recording
+      // Mark end-to-end timing (for benchmark recording only - no console logs)
       markOverlayRendered(highlightCountRef.current, renderTime);
     }
   });

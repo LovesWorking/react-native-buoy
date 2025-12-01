@@ -19,6 +19,7 @@ import {
   X,
   Database,
   GitBranch,
+  EventStepperFooter,
 } from "@react-buoy/shared-ui";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 import { ThemedSplitView } from "./DiffViewer/modes/ThemedSplitView";
@@ -792,79 +793,16 @@ export function StorageEventDetailContent({
       )}
 
       {/* Bottom Navigation - Fixed at bottom */}
-      {totalEvents > 1 && !disableInternalFooter && (
-        <View style={styles.stickyFooter}>
-          <TouchableOpacity
-            onPress={() =>
-              onEventIndexChange(Math.max(0, selectedEventIndex - 1))
-            }
-            disabled={selectedEventIndex === 0}
-            style={[
-              styles.navButton,
-              selectedEventIndex === 0 && styles.navButtonDisabled,
-            ]}
-          >
-            <ChevronLeft
-              size={20}
-              color={
-                selectedEventIndex === 0
-                  ? macOSColors.text.muted
-                  : macOSColors.text.primary
-              }
-            />
-            <Text
-              style={[
-                styles.navButtonText,
-                selectedEventIndex === 0 && styles.navButtonTextDisabled,
-              ]}
-            >
-              Previous
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.eventCounterContainer}>
-            <Text style={styles.eventCounter}>
-              Event {selectedEventIndex + 1} of {totalEvents}
-            </Text>
-            <Text style={styles.eventTimestamp}>
-              {formatRelativeTime(
-                navigationItems[selectedEventIndex]?.timestamp
-              )}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={() =>
-              onEventIndexChange(
-                Math.min(totalEvents - 1, selectedEventIndex + 1)
-              )
-            }
-            disabled={selectedEventIndex === totalEvents - 1}
-            style={[
-              styles.navButton,
-              selectedEventIndex === totalEvents - 1 &&
-                styles.navButtonDisabled,
-            ]}
-          >
-            <Text
-              style={[
-                styles.navButtonText,
-                selectedEventIndex === totalEvents - 1 &&
-                  styles.navButtonTextDisabled,
-              ]}
-            >
-              Next
-            </Text>
-            <ChevronRight
-              size={20}
-              color={
-                selectedEventIndex === totalEvents - 1
-                  ? macOSColors.text.muted
-                  : macOSColors.text.primary
-              }
-            />
-          </TouchableOpacity>
-        </View>
+      {!disableInternalFooter && (
+        <EventStepperFooter
+          currentIndex={selectedEventIndex}
+          totalItems={totalEvents}
+          onPrevious={() => onEventIndexChange(Math.max(0, selectedEventIndex - 1))}
+          onNext={() => onEventIndexChange(Math.min(totalEvents - 1, selectedEventIndex + 1))}
+          itemLabel="Event"
+          subtitle={formatRelativeTime(navigationItems[selectedEventIndex]?.timestamp)}
+          absolute
+        />
       )}
     </>
   );
@@ -885,74 +823,15 @@ export function StorageEventDetailFooter({
   );
   const totalEvents = navigationItems.length;
 
-  if (totalEvents <= 1) return null;
-
   return (
-    <View style={styles.externalFooterBar}>
-      <TouchableOpacity
-        onPress={() => onEventIndexChange(Math.max(0, selectedEventIndex - 1))}
-        disabled={selectedEventIndex === 0}
-        style={[
-          styles.navButton,
-          selectedEventIndex === 0 && styles.navButtonDisabled,
-        ]}
-      >
-        <ChevronLeft
-          size={20}
-          color={
-            selectedEventIndex === 0
-              ? macOSColors.text.muted
-              : macOSColors.text.primary
-          }
-        />
-        <Text
-          style={[
-            styles.navButtonText,
-            selectedEventIndex === 0 && styles.navButtonTextDisabled,
-          ]}
-        >
-          Previous
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.eventCounterContainer}>
-        <Text style={styles.eventCounter}>
-          Event {selectedEventIndex + 1} of {totalEvents}
-        </Text>
-        <Text style={styles.eventTimestamp}>
-          {formatRelativeTime(navigationItems[selectedEventIndex]?.timestamp)}
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        onPress={() =>
-          onEventIndexChange(Math.min(totalEvents - 1, selectedEventIndex + 1))
-        }
-        disabled={selectedEventIndex === totalEvents - 1}
-        style={[
-          styles.navButton,
-          selectedEventIndex === totalEvents - 1 && styles.navButtonDisabled,
-        ]}
-      >
-        <Text
-          style={[
-            styles.navButtonText,
-            selectedEventIndex === totalEvents - 1 &&
-              styles.navButtonTextDisabled,
-          ]}
-        >
-          Next
-        </Text>
-        <ChevronRight
-          size={20}
-          color={
-            selectedEventIndex === totalEvents - 1
-              ? macOSColors.text.muted
-              : macOSColors.text.primary
-          }
-        />
-      </TouchableOpacity>
-    </View>
+    <EventStepperFooter
+      currentIndex={selectedEventIndex}
+      totalItems={totalEvents}
+      onPrevious={() => onEventIndexChange(Math.max(0, selectedEventIndex - 1))}
+      onNext={() => onEventIndexChange(Math.min(totalEvents - 1, selectedEventIndex + 1))}
+      itemLabel="Event"
+      subtitle={formatRelativeTime(navigationItems[selectedEventIndex]?.timestamp)}
+    />
   );
 }
 
@@ -960,41 +839,6 @@ const styles = StyleSheet.create({
   contentOnly: {
     flex: 1,
     backgroundColor: macOSColors.background.base,
-  },
-  stickyFooter: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: macOSColors.background.base,
-    borderTopWidth: 1,
-    borderTopColor: macOSColors.border.default,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  // Same styling as stickyFooter but without absolute positioning.
-  externalFooterBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: macOSColors.background.base,
-    borderTopWidth: 1,
-    borderTopColor: macOSColors.border.default,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
   },
   fullPageSection: {
     flex: 1,
@@ -1079,46 +923,6 @@ const styles = StyleSheet.create({
     color: macOSColors.text.primary,
     fontFamily: "monospace",
     lineHeight: 18,
-  },
-  navButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: macOSColors.background.card,
-    minWidth: 100,
-    justifyContent: "center",
-  },
-  navButtonDisabled: {
-    opacity: 0.3,
-  },
-  navButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: macOSColors.text.primary,
-    fontFamily: "monospace",
-    textTransform: "uppercase",
-  },
-  navButtonTextDisabled: {
-    color: macOSColors.text.muted,
-  },
-  eventCounterContainer: {
-    alignItems: "center",
-  },
-  eventCounter: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: macOSColors.text.primary,
-    fontFamily: "monospace",
-    textTransform: "uppercase",
-  },
-  eventTimestamp: {
-    fontSize: 11,
-    color: macOSColors.text.secondary,
-    fontFamily: "monospace",
-    marginTop: 2,
   },
   // Compare picker styles
   compareBar: {

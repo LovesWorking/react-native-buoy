@@ -13,7 +13,7 @@
  * - Uses refs for values not displayed in UI
  */
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -29,8 +29,9 @@ import {
   safeSetItem,
 } from "@react-buoy/shared-ui";
 import HighlightUpdatesController from "../utils/HighlightUpdatesController";
-import { RenderTracker, type TrackedRender, type FilterConfig, type RenderTrackerSettings } from "../utils/RenderTracker";
-import { RenderDetailView } from "./RenderDetailView";
+import { RenderTracker, type TrackedRender, type FilterConfig, type RenderTrackerSettings, type RenderCauseType, type ComponentCauseType } from "../utils/RenderTracker";
+import { CAUSE_CONFIG, COMPONENT_CAUSE_CONFIG } from "./RenderCauseBadge";
+import { RenderDetailView, RenderHistoryFooter } from "./RenderDetailView";
 import { HighlightFilterView } from "./HighlightFilterView";
 import { IsolatedRenderList } from "./IsolatedRenderList";
 import {
@@ -59,6 +60,186 @@ const DisabledBanner = React.memo(function DisabledBanner() {
   );
 });
 
+/**
+ * Format render data for copying to clipboard
+ * Includes comprehensive data for debugging and comparison
+ */
+function formatRenderDataForClipboard(): string {
+  const renders = RenderTracker.getRenders();
+  const stats = RenderTracker.getStats();
+  const settings = RenderTracker.getSettings();
+
+  const timestamp = new Date().toISOString();
+  const lines: string[] = [];
+
+  lines.push("=".repeat(60));
+  lines.push("RENDER TRACKING DATA EXPORT");
+  lines.push("=".repeat(60));
+  lines.push(`Timestamp: ${timestamp}`);
+  lines.push(`Total Components: ${stats.totalComponents}`);
+  lines.push(`Total Renders: ${stats.totalRenders}`);
+  lines.push("");
+  lines.push("Settings:");
+  lines.push(`  - Show Render Count: ${settings.showRenderCount}`);
+  lines.push(`  - Track Render Causes: ${settings.trackRenderCauses}`);
+  lines.push(`  - Batch Size: ${settings.batchSize}`);
+  lines.push("");
+
+  // Sort by render count (descending)
+  const sortedRenders: TrackedRender[] = [...renders].sort((a, b) => b.renderCount - a.renderCount);
+
+  lines.push("-".repeat(60));
+  lines.push("COMPONENTS BY RENDER COUNT (descending)");
+  lines.push("-".repeat(60));
+  lines.push("");
+
+  sortedRenders.forEach((render: TrackedRender, index: number) => {
+    const causeType = render.lastRenderCause?.type;
+    const componentCauseType = render.lastRenderCause?.componentCause;
+
+    // Format native-level cause
+    const nativeCauseInfo = render.lastRenderCause && causeType
+      ? `${CAUSE_CONFIG[causeType].label}${
+          render.lastRenderCause.changedKeys
+            ? ` [${render.lastRenderCause.changedKeys.join(", ")}]`
+            : ""
+        }${
+          render.lastRenderCause.hookIndices
+            ? ` [Hook ${render.lastRenderCause.hookIndices.join(", ")}]`
+            : ""
+        }`
+      : "N/A";
+
+    // Format component-level cause (TWO-LEVEL CAUSATION)
+    const componentCauseInfo = componentCauseType
+      ? COMPONENT_CAUSE_CONFIG[componentCauseType].label.toUpperCase()
+      : "N/A";
+
+    const componentName = render.lastRenderCause?.componentName || render.componentName;
+
+    lines.push(`${index + 1}. ${render.displayName} (${render.viewType}) - ${render.renderCount} renders`);
+
+    // Two-level causation: Component → Native
+    if (componentCauseType && causeType) {
+      lines.push(`   Why: ${componentName || "Component"} (${componentCauseInfo}) → Native (${nativeCauseInfo})`);
+    } else {
+      lines.push(`   Last Cause: ${nativeCauseInfo}`);
+    }
+
+    if (render.testID) lines.push(`   testID: ${render.testID}`);
+    if (render.nativeID) lines.push(`   nativeID: ${render.nativeID}`);
+    if (componentName) lines.push(`   component: ${componentName}`);
+    if (render.accessibilityLabel) lines.push(`   accessibilityLabel: ${render.accessibilityLabel}`);
+    lines.push(`   nativeTag: ${render.nativeTag}`);
+
+    // Calculate render rate
+    const duration = render.lastRenderTime - render.firstRenderTime;
+    const renderRate = duration > 0 ? (render.renderCount / (duration / 1000)).toFixed(2) : render.renderCount;
+    lines.push(`   Renders/sec: ${renderRate}`);
+
+    lines.push("");
+  });
+
+  // Group by viewType
+  lines.push("-".repeat(60));
+  lines.push("BY VIEW TYPE");
+  lines.push("-".repeat(60));
+
+  const byViewType = new Map<string, { count: number; renders: number }>();
+  renders.forEach((r: TrackedRender) => {
+    const existing = byViewType.get(r.viewType) || { count: 0, renders: 0 };
+    existing.count++;
+    existing.renders += r.renderCount;
+    byViewType.set(r.viewType, existing);
+  });
+
+  const sortedViewTypes = [...byViewType.entries()].sort((a, b) => b[1].renders - a[1].renders);
+  sortedViewTypes.forEach(([viewType, data]) => {
+    lines.push(`${viewType}: ${data.count} components, ${data.renders} total renders`);
+  });
+  lines.push("");
+
+  // Group by component name
+  lines.push("-".repeat(60));
+  lines.push("BY COMPONENT NAME");
+  lines.push("-".repeat(60));
+
+  const byComponent = new Map<string, { count: number; renders: number }>();
+  renders.forEach((r: TrackedRender) => {
+    const name = r.componentName || "(unknown)";
+    const existing = byComponent.get(name) || { count: 0, renders: 0 };
+    existing.count++;
+    existing.renders += r.renderCount;
+    byComponent.set(name, existing);
+  });
+
+  const sortedComponents = [...byComponent.entries()].sort((a, b) => b[1].renders - a[1].renders);
+  sortedComponents.forEach(([component, data]) => {
+    lines.push(`${component}: ${data.count} instances, ${data.renders} total renders`);
+  });
+  lines.push("");
+
+  // Group by render cause (if tracking enabled)
+  if (settings.trackRenderCauses) {
+    lines.push("-".repeat(60));
+    lines.push("BY NATIVE CAUSE (what changed on the native view)");
+    lines.push("-".repeat(60));
+
+    const byCause = new Map<string, number>();
+    renders.forEach((r: TrackedRender) => {
+      const cause = r.lastRenderCause?.type || "unknown";
+      byCause.set(cause, (byCause.get(cause) || 0) + 1);
+    });
+
+    const sortedCauses = [...byCause.entries()].sort((a, b) => b[1] - a[1]);
+    sortedCauses.forEach(([cause, count]) => {
+      const config = CAUSE_CONFIG[cause as RenderCauseType];
+      lines.push(`${config?.label || cause}: ${count} components`);
+    });
+    lines.push("");
+
+    // TWO-LEVEL CAUSATION: Group by component-level cause
+    lines.push("-".repeat(60));
+    lines.push("BY COMPONENT CAUSE (why the React component re-rendered)");
+    lines.push("-".repeat(60));
+
+    const byComponentCause = new Map<string, number>();
+    renders.forEach((r: TrackedRender) => {
+      const cause = r.lastRenderCause?.componentCause || "unknown";
+      byComponentCause.set(cause, (byComponentCause.get(cause) || 0) + 1);
+    });
+
+    const sortedComponentCauses = [...byComponentCause.entries()].sort((a, b) => b[1] - a[1]);
+    sortedComponentCauses.forEach(([cause, count]) => {
+      const config = COMPONENT_CAUSE_CONFIG[cause as ComponentCauseType];
+      lines.push(`${config?.label?.toUpperCase() || cause}: ${count} components`);
+    });
+    lines.push("");
+
+    // Highlight optimization opportunities (PARENT at component level)
+    const parentCausedComponents = renders.filter((r: TrackedRender) =>
+      r.lastRenderCause?.componentCause === "parent"
+    );
+    if (parentCausedComponents.length > 0) {
+      lines.push("-".repeat(60));
+      lines.push("💡 OPTIMIZATION OPPORTUNITIES");
+      lines.push("-".repeat(60));
+      lines.push(`${parentCausedComponents.length} component(s) re-rendered due to parent:`);
+      parentCausedComponents.forEach((r: TrackedRender) => {
+        const name = r.lastRenderCause?.componentName || r.componentName || r.displayName;
+        lines.push(`  - ${name}: Consider wrapping with React.memo()`);
+      });
+      lines.push("");
+    }
+  }
+
+  lines.push("=".repeat(60));
+  lines.push("END OF EXPORT");
+  lines.push("=".repeat(60));
+
+  return lines.join("\n");
+}
+
 export function HighlightUpdatesModal({
   visible,
   onClose,
@@ -83,6 +264,8 @@ export function HighlightUpdatesModal({
   const [searchText, setSearchText] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
+  // Event index for render history navigation
+  const [selectedEventIndex, setSelectedEventIndex] = useState(0);
 
   // ============================================================================
   // FILTER STATE - use ref for filter config, state for display count only
@@ -308,16 +491,24 @@ export function HighlightUpdatesModal({
     setHasRenders(false);
   }, []);
 
+  // Memoize copy data - updates when hasRenders changes
+  const copyData = useMemo(() => {
+    if (!hasRenders) return "";
+    return formatRenderDataForClipboard();
+  }, [hasRenders]);
+
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
   }, []);
 
   const handleRenderPress = useCallback((render: TrackedRender) => {
     setSelectedRender(render);
+    setSelectedEventIndex(0); // Reset event index when selecting a new render
   }, []);
 
   const handleBackFromDetail = useCallback(() => {
     setSelectedRender(null);
+    setSelectedEventIndex(0); // Reset event index when going back
   }, []);
 
   const handleBackFromFilter = useCallback(() => {
@@ -384,6 +575,7 @@ export function HighlightUpdatesModal({
         onFilterToggle={handleFilterToggle}
         onToggleTracking={handleToggleTracking}
         onClear={handleClear}
+        copyData={copyData}
         isTracking={isTracking}
         activeFilterCount={activeFilterCount}
         hasRenders={hasRenders}
@@ -408,6 +600,7 @@ export function HighlightUpdatesModal({
     handleFilterToggle,
     handleToggleTracking,
     handleClear,
+    copyData,
   ]);
 
   // ============================================================================
@@ -419,6 +612,15 @@ export function HighlightUpdatesModal({
     : devToolsStorageKeys.highlightUpdates.modal();
 
   if (!visible) return null;
+
+  // Footer for render history navigation
+  const footerNode = selectedRender ? (
+    <RenderHistoryFooter
+      render={selectedRender}
+      selectedEventIndex={selectedEventIndex}
+      onEventIndexChange={setSelectedEventIndex}
+    />
+  ) : null;
 
   return (
     <JsModal
@@ -434,10 +636,17 @@ export function HighlightUpdatesModal({
       initialMode="bottomSheet"
       enableGlitchEffects={true}
       styles={{}}
+      footer={footerNode}
+      footerHeight={footerNode ? 68 : 0}
     >
       <View nativeID="__rn_buoy__highlight-modal" style={styles.container}>
         {selectedRender ? (
-          <RenderDetailView render={selectedRender} />
+          <RenderDetailView
+            render={selectedRender}
+            disableInternalFooter={true}
+            selectedEventIndex={selectedEventIndex}
+            onEventIndexChange={setSelectedEventIndex}
+          />
         ) : showFilterView ? (
           <HighlightFilterView
             filters={filters}

@@ -25,6 +25,7 @@ import {
   ModalHeader,
   TabSelector,
   macOSColors,
+  CopyButton,
 } from "@react-buoy/shared-ui";
 import { StatsDisplay } from "./StatsDisplay";
 
@@ -49,7 +50,10 @@ const SearchSectionInner = memo(function SearchSection({
   if (!isActive) return null;
 
   return (
-    <View nativeID="__rn_buoy__search-container" style={styles.headerSearchContainer}>
+    <View
+      nativeID="__rn_buoy__search-container"
+      style={styles.headerSearchContainer}
+    >
       <Search size={14} color={macOSColors.text.secondary} />
       <TextInput
         style={styles.headerSearchInput}
@@ -91,6 +95,7 @@ interface HeaderActionsProps {
   onFilterToggle: () => void;
   onToggleTracking: () => void;
   onClear: () => void;
+  copyData: string;
   isTracking: boolean;
   activeFilterCount: number;
   hasRenders: boolean;
@@ -101,6 +106,7 @@ const HeaderActionsInner = memo(function HeaderActions({
   onFilterToggle,
   onToggleTracking,
   onClear,
+  copyData,
   isTracking,
   activeFilterCount,
   hasRenders,
@@ -131,6 +137,22 @@ const HeaderActionsInner = memo(function HeaderActions({
         />
       </TouchableOpacity>
 
+      <CopyButton
+        value={copyData}
+        size={14}
+        buttonStyle={
+          hasRenders
+            ? styles.headerActionButton
+            : styles.headerActionButtonCopyDisabled
+        }
+        disabled={!hasRenders}
+        colors={{
+          idle: hasRenders
+            ? macOSColors.text.secondary
+            : macOSColors.text.disabled,
+        }}
+      />
+
       <TouchableOpacity
         onPress={onToggleTracking}
         style={[
@@ -159,9 +181,7 @@ const HeaderActionsInner = memo(function HeaderActions({
         <Trash2
           size={14}
           color={
-            hasRenders
-              ? macOSColors.text.muted
-              : macOSColors.text.disabled
+            hasRenders ? macOSColors.text.muted : macOSColors.text.disabled
           }
         />
       </TouchableOpacity>
@@ -185,6 +205,7 @@ interface MainListHeaderProps {
   onFilterToggle: () => void;
   onToggleTracking: () => void;
   onClear: () => void;
+  copyData: string;
   isTracking: boolean;
   activeFilterCount: number;
   hasRenders: boolean;
@@ -201,6 +222,7 @@ export const MainListHeader = memo(function MainListHeader({
   onFilterToggle,
   onToggleTracking,
   onClear,
+  copyData,
   isTracking,
   activeFilterCount,
   hasRenders,
@@ -227,6 +249,7 @@ export const MainListHeader = memo(function MainListHeader({
         onFilterToggle={onFilterToggle}
         onToggleTracking={onToggleTracking}
         onClear={onClear}
+        copyData={copyData}
         isTracking={isTracking}
         activeFilterCount={activeFilterCount}
         hasRenders={hasRenders}
@@ -323,6 +346,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerActionButtonDisabled: {
+    opacity: 0.55,
+  },
+  headerActionButtonCopyDisabled: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: macOSColors.background.hover,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    alignItems: "center",
+    justifyContent: "center",
     opacity: 0.55,
   },
   startButton: {

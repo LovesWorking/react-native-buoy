@@ -53,7 +53,7 @@ All installed tools automatically appear in your floating menu. No config needed
 > 💡 **Pro Tip**: Install all tools at once:
 >
 > ```bash
-> npm i @react-buoy/{core,env,network,storage,react-query,route-events,debug-borders}
+> npm i @react-buoy/{core,env,network,storage,react-query,route-events,debug-borders,highlight-updates}
 > ```
 
 ---
@@ -80,14 +80,15 @@ All installed tools automatically appear in your floating menu. No config needed
 
 Install any combination to customize your dev menu:
 
-| Tool               | Package                     | What It Does                   | Key Features                                  |
-| ------------------ | --------------------------- | ------------------------------ | --------------------------------------------- |
-| 🌍 **ENV**         | `@react-buoy/env`           | Environment variable inspector | Validation, search, type checking, warnings   |
-| 📡 **Network**     | `@react-buoy/network`       | API request monitor            | Timeline view, filtering, performance metrics |
-| 💾 **Storage**     | `@react-buoy/storage`       | AsyncStorage/MMKV browser      | View/edit/delete, bulk ops, validation        |
-| ⚡ **React Query** | `@react-buoy/react-query`   | TanStack Query devtools        | Cache inspector, offline toggle, refetch      |
-| 🧭 **Routes**      | `@react-buoy/route-events`  | Route & navigation tracker     | Sitemap, stack view, event timeline           |
-| 🎨 **Borders**     | `@react-buoy/debug-borders` | Visual layout debugger         | Colored component boundaries                  |
+| Tool               | Package                         | What It Does                   | Key Features                                       |
+| ------------------ | ------------------------------- | ------------------------------ | -------------------------------------------------- |
+| 🌍 **ENV**         | `@react-buoy/env`               | Environment variable inspector | Validation, search, type checking, warnings        |
+| 📡 **Network**     | `@react-buoy/network`           | API request monitor            | Timeline view, filtering, performance metrics      |
+| 💾 **Storage**     | `@react-buoy/storage`           | AsyncStorage/MMKV browser      | View/edit/delete, bulk ops, validation             |
+| ⚡ **React Query** | `@react-buoy/react-query`       | TanStack Query devtools        | Cache inspector, offline toggle, refetch           |
+| 🧭 **Routes**      | `@react-buoy/route-events`      | Route & navigation tracker     | Sitemap, stack view, event timeline                |
+| 🎨 **Borders**     | `@react-buoy/debug-borders`     | Visual layout debugger         | Colored component boundaries                       |
+| 🔄 **Highlights**  | `@react-buoy/highlight-updates` | Render highlight tracker       | Visual re-render detection, render counts, history |
 
 **Installation Pattern**: All packages follow the same simple pattern:
 
@@ -152,6 +153,17 @@ npm install @react-buoy/{tool-name}
 <summary>Show preview</summary>
 
 ![Debug Borders](https://github.com/user-attachments/assets/945fdb5d-2546-442d-98e7-ef73231abbba)
+
+</details>
+
+### Highlight Updates
+
+<details>
+<summary>Show preview</summary>
+
+<!-- TODO: Add screenshot -->
+
+_Screenshot coming soon_
 
 </details>
 
@@ -606,6 +618,37 @@ function App() {
 
 </details>
 
+<details>
+<summary><strong>🔄 Highlight Updates (@react-buoy/highlight-updates)</strong></summary>
+
+### What It Does
+
+Visual component re-render tracker that highlights components when they render. Helps identify unnecessary re-renders and performance bottlenecks.
+
+### Install
+
+```bash
+npm install @react-buoy/highlight-updates
+```
+
+### Features
+
+- 🔄 **Visual Render Detection** - See components flash when they re-render
+- 🔢 **Render Counts** - See exact render counts on each component to identify problematic re-renders
+- 📊 **Render History** - Track which components render and how often
+- 🎛️ **Filter Controls** - Filter by component type or render frequency
+- 🎭 **Toggle Mode** - Quick tap to enable/disable highlights
+- 📋 **Modal View** - Detailed render list with timing information
+- ⚡ Zero performance impact when disabled
+
+### Usage
+
+**Zero Config (Recommended)**: Just install and it auto-appears as an "UPDATES" button in the floating menu.
+
+````
+
+</details>
+
 ---
 
 ## 🏗️ Advanced Configuration
@@ -638,7 +681,7 @@ const customTools = [
   apps={customTools}  // Overrides auto-discovery for these IDs
   environment="production"
 />
-```
+````
 
 ### Complete Manual Setup (No Auto-Discovery)
 
@@ -758,6 +801,7 @@ Keep tools running in the background without cluttering your screen:
 4. **Dismiss** - Swipe down on the minimized indicator to close the tool completely
 
 **Why minimize?**
+
 - 👁️ Reduces visual clutter while debugging
 - ⚡ Keeps tools running (e.g., network monitor keeps capturing)
 - 🔄 Quick restore without reloading tool state
