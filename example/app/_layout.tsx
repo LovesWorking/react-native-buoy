@@ -73,6 +73,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClientRef.current!}>
+      <Slot />
       <FloatingDevTools
         requiredEnvVars={requiredEnvVars}
         requiredStorageKeys={storageRequiredKeys}
@@ -80,7 +81,6 @@ export default function RootLayout() {
         environment={environment}
         userRole={userRole}
       />
-      <Slot />
     </QueryClientProvider>
   );
 }
