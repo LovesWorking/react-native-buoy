@@ -52,6 +52,7 @@ interface HighlightRect {
 }
 
 type HighlightCallback = (rects: HighlightRect[]) => void;
+type BadgePressCallback = (nativeTag: number) => void;
 
 interface PublicInstance {
   measure: (
@@ -105,8 +106,13 @@ let globalEnabled = false;
 let initialized = false;
 let hook: ReactDevToolsGlobalHook | null = null;
 let highlightCallback: HighlightCallback | null = null;
+let badgePressCallback: BadgePressCallback | null = null;
 let traceUpdatesUnsubscribe: (() => void) | null = null;
 let isProcessing = false;
+
+// Freeze frame state
+let isFrozen = false;
+const freezeListeners = new Set<(frozen: boolean) => void>();
 
 const stateListeners = new Set<(enabled: boolean) => void>();
 
@@ -752,9 +758,13 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
 
   // Process nodes: track render counts and assign colors
   // Filter out our own overlay nodes to prevent infinite loop
+  // Also apply user-defined filters to both overlay AND tracking
   const nodesToDraw: Array<{ node: unknown; color: string; count: number }> = [];
 
   let skippedOverlayCount = 0;
+  let skippedByFilterCount = 0;
+  const hasActiveFilters = RenderTracker.hasActiveFilters();
+
   for (const stateNode of nodes) {
     if (stateNode && typeof stateNode === "object") {
       // Skip our own overlay nodes (identified by nativeID)
@@ -768,6 +778,16 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
       const nativeTag = getNativeTag(stateNode) || getNativeTag(publicInstance);
 
       if (nativeTag == null) {
+        continue;
+      }
+
+      // Extract component info for filtering
+      const componentInfo = extractComponentInfo(stateNode);
+
+      // Apply user-defined filters - skip components that don't pass filters
+      // This affects BOTH the overlay highlights AND the render list
+      if (hasActiveFilters && !RenderTracker.passesFilters(componentInfo)) {
+        skippedByFilterCount++;
         continue;
       }
 
@@ -798,8 +818,8 @@ function handleTraceUpdates(nodes: Set<unknown>): void {
     }
   }
 
-  // Mark filtering phase complete
-  perfTimer.markFilteringComplete(skippedOverlayCount, nodesToDraw.length);
+  // Mark filtering phase complete (includes both overlay nodes and user-filtered nodes)
+  perfTimer.markFilteringComplete(skippedOverlayCount + skippedByFilterCount, nodesToDraw.length);
 
   // Only log if there are real updates (not just overlay re-renders)
   if (nodesToDraw.length === 0) {
@@ -1057,6 +1077,68 @@ function setHighlightCallback(callback: HighlightCallback | null): void {
   debugLog(`Highlight callback ${callback ? "set" : "cleared"}`);
 }
 
+/**
+ * Set the callback for when a badge is pressed.
+ * This is used to navigate to the detail view when a user taps a render count badge.
+ */
+function setBadgePressCallback(callback: BadgePressCallback | null): void {
+  badgePressCallback = callback;
+  debugLog(`Badge press callback ${callback ? "set" : "cleared"}`);
+}
+
+/**
+ * Get the current badge press callback.
+ * Used by the overlay to check if badge presses should be handled.
+ */
+function getBadgePressCallback(): BadgePressCallback | null {
+  return badgePressCallback;
+}
+
+/**
+ * Handle a badge press event.
+ * Calls the registered callback with the nativeTag of the component.
+ */
+function handleBadgePress(nativeTag: number): void {
+  if (badgePressCallback) {
+    badgePressCallback(nativeTag);
+  }
+}
+
+// Spotlight highlight state - for showing which component is being viewed in detail
+type SpotlightCallback = (nativeTag: number | null) => void;
+let spotlightCallback: SpotlightCallback | null = null;
+let currentSpotlightTag: number | null = null;
+
+/**
+ * Set the callback for spotlight highlighting.
+ * Used by the overlay to show a special highlight for the component being viewed.
+ */
+function setSpotlightCallback(callback: SpotlightCallback | null): void {
+  spotlightCallback = callback;
+  // If there's an existing spotlight, notify the new callback
+  if (callback && currentSpotlightTag !== null) {
+    callback(currentSpotlightTag);
+  }
+}
+
+/**
+ * Set a spotlight highlight on a specific component.
+ * This is used when viewing a component's detail to show which one it is.
+ */
+function setSpotlight(nativeTag: number | null): void {
+  currentSpotlightTag = nativeTag;
+  if (spotlightCallback) {
+    spotlightCallback(nativeTag);
+  }
+}
+
+/**
+ * Get the current spotlight nativeTag.
+ */
+function getSpotlight(): number | null {
+  return currentSpotlightTag;
+}
+
 function notifyStateListeners(): void {
   stateListeners.forEach((listener) => {
     try {
@@ -1234,6 +1316,86 @@ function isInitialized(): boolean {
   return initialized;
 }
 
+// ============================================================================
+// FREEZE FRAME MODE
+// ============================================================================
+
+/**
+ * Notify all freeze state listeners of a change
+ */
+function notifyFreezeListeners(): void {
+  freezeListeners.forEach((listener) => {
+    try {
+      listener(isFrozen);
+    } catch (error) {
+      console.error("[HighlightUpdates] Error in freeze listener:", error);
+    }
+  });
+}
+
+/**
+ * Subscribe to freeze state changes
+ */
+function subscribeToFreeze(listener: (frozen: boolean) => void): () => void {
+  freezeListeners.add(listener);
+  listener(isFrozen);
+  return () => {
+    freezeListeners.delete(listener);
+  };
+}
+
+/**
+ * Freeze highlights - prevents highlights from fading away.
+ * New renders are still captured but old highlights don't clear.
+ */
+function freeze(): void {
+  if (typeof __DEV__ !== "undefined" && !__DEV__) return;
+
+  if (isFrozen) return;
+
+  isFrozen = true;
+  debugLog("Freeze mode enabled");
+  notifyFreezeListeners();
+}
+
+/**
+ * Unfreeze highlights - resumes normal cleanup behavior.
+ * Clears all current highlights when unfreezing.
+ */
+function unfreeze(): void {
+  if (typeof __DEV__ !== "undefined" && !__DEV__) return;
+
+  if (!isFrozen) return;
+
+  isFrozen = false;
+  debugLog("Freeze mode disabled");
+
+  // Clear all current highlights when unfreezing
+  if (highlightCallback) {
+    highlightCallback([]);
+  }
+
+  notifyFreezeListeners();
+}
+
+/**
+ * Toggle freeze state
+ */
+function toggleFreeze(): void {
+  if (isFrozen) {
+    unfreeze();
+  } else {
+    freeze();
+  }
+}
+
+/**
+ * Check if freeze mode is active
+ */
+function getFrozen(): boolean {
+  return isFrozen;
+}
+
 function destroy(): void {
   if (!initialized) return;
 
@@ -1242,6 +1404,10 @@ function destroy(): void {
   // Uninstall profiler interceptor
   uninstallProfilerInterceptor();
   setComparisonCallback(null);
+
+  // Reset freeze state
+  isFrozen = false;
+  freezeListeners.clear();
 
   globalEnabled = false;
   hook = null;
@@ -1267,6 +1433,20 @@ interface HighlightUpdatesControllerAPI {
   isInitialized: () => boolean;
   setHighlightCallback: typeof setHighlightCallback;
   clearRenderCounts: typeof clearRenderCounts;
+  // Freeze frame mode
+  freeze: typeof freeze;
+  unfreeze: typeof unfreeze;
+  toggleFreeze: typeof toggleFreeze;
+  getFrozen: typeof getFrozen;
+  subscribeToFreeze: typeof subscribeToFreeze;
+  // Badge press callback for "Click Overlay Badge → Jump to Detail"
+  setBadgePressCallback: typeof setBadgePressCallback;
+  getBadgePressCallback: typeof getBadgePressCallback;
+  handleBadgePress: typeof handleBadgePress;
+  // Spotlight highlight for detail view
+  setSpotlightCallback: typeof setSpotlightCallback;
+  setSpotlight: typeof setSpotlight;
+  getSpotlight: typeof getSpotlight;
 }
 
 const HighlightUpdatesController: HighlightUpdatesControllerAPI = {
@@ -1281,6 +1461,20 @@ const HighlightUpdatesController: HighlightUpdatesControllerAPI = {
   isInitialized,
   setHighlightCallback,
   clearRenderCounts,
+  // Freeze frame mode
+  freeze,
+  unfreeze,
+  toggleFreeze,
+  getFrozen,
+  subscribeToFreeze,
+  // Badge press callback for "Click Overlay Badge → Jump to Detail"
+  setBadgePressCallback,
+  getBadgePressCallback,
+  handleBadgePress,
+  // Spotlight highlight for detail view
+  setSpotlightCallback,
+  setSpotlight,
+  getSpotlight,
 };
 
 export default HighlightUpdatesController;

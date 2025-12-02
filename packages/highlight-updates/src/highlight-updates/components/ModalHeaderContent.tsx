@@ -22,6 +22,7 @@ import {
   Search,
   Filter,
   X,
+  Pause,
   ModalHeader,
   TabSelector,
   macOSColors,
@@ -94,9 +95,11 @@ interface HeaderActionsProps {
   onSearchToggle: () => void;
   onFilterToggle: () => void;
   onToggleTracking: () => void;
+  onToggleFreeze: () => void;
   onClear: () => void;
   copyData: string;
   isTracking: boolean;
+  isFrozen: boolean;
   activeFilterCount: number;
   hasRenders: boolean;
 }
@@ -105,9 +108,11 @@ const HeaderActionsInner = memo(function HeaderActions({
   onSearchToggle,
   onFilterToggle,
   onToggleTracking,
+  onToggleFreeze,
   onClear,
   copyData,
   isTracking,
+  isFrozen,
   activeFilterCount,
   hasRenders,
 }: HeaderActionsProps) {
@@ -152,6 +157,28 @@ const HeaderActionsInner = memo(function HeaderActions({
             : macOSColors.text.disabled,
         }}
       />
+
+      {/* Freeze Frame Mode button */}
+      <TouchableOpacity
+        onPress={onToggleFreeze}
+        style={[
+          styles.headerActionButton,
+          isFrozen && styles.freezeButton,
+          !isTracking && styles.headerActionButtonDisabled,
+        ]}
+        disabled={!isTracking}
+      >
+        <Pause
+          size={14}
+          color={
+            !isTracking
+              ? macOSColors.text.disabled
+              : isFrozen
+                ? macOSColors.semantic.info
+                : macOSColors.text.muted
+          }
+        />
+      </TouchableOpacity>
 
       <TouchableOpacity
         onPress={onToggleTracking}
@@ -204,9 +231,11 @@ interface MainListHeaderProps {
   onSearchClose: () => void;
   onFilterToggle: () => void;
   onToggleTracking: () => void;
+  onToggleFreeze: () => void;
   onClear: () => void;
   copyData: string;
   isTracking: boolean;
+  isFrozen: boolean;
   activeFilterCount: number;
   hasRenders: boolean;
   searchInputRef: React.RefObject<TextInput | null>;
@@ -221,9 +250,11 @@ export const MainListHeader = memo(function MainListHeader({
   onSearchClose,
   onFilterToggle,
   onToggleTracking,
+  onToggleFreeze,
   onClear,
   copyData,
   isTracking,
+  isFrozen,
   activeFilterCount,
   hasRenders,
   searchInputRef,
@@ -248,9 +279,11 @@ export const MainListHeader = memo(function MainListHeader({
         onSearchToggle={onSearchToggle}
         onFilterToggle={onFilterToggle}
         onToggleTracking={onToggleTracking}
+        onToggleFreeze={onToggleFreeze}
         onClear={onClear}
         copyData={copyData}
         isTracking={isTracking}
+        isFrozen={isFrozen}
         activeFilterCount={activeFilterCount}
         hasRenders={hasRenders}
       />
@@ -368,6 +401,10 @@ const styles = StyleSheet.create({
     borderColor: macOSColors.semantic.error + "40",
   },
   activeFilterButton: {
+    backgroundColor: macOSColors.semantic.infoBackground,
+    borderColor: macOSColors.semantic.info + "40",
+  },
+  freezeButton: {
     backgroundColor: macOSColors.semantic.infoBackground,
     borderColor: macOSColors.semantic.info + "40",
   },

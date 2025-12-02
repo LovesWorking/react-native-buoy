@@ -16,9 +16,11 @@ import {
   macOSColors,
   CopyButton,
   formatRelativeTime,
+  PlusIcon,
+  MinusIcon,
 } from "@react-buoy/shared-ui";
 import { TreeDiffViewer } from "@react-buoy/shared-ui/dataViewer";
-import type { TrackedRender } from "../utils/RenderTracker";
+import type { TrackedRender, FilterType, FilterPattern } from "../utils/RenderTracker";
 import { CAUSE_CONFIG, COMPONENT_CAUSE_CONFIG } from "./RenderCauseBadge";
 
 /**
@@ -65,6 +67,8 @@ interface RenderDetailViewProps {
   selectedEventIndex?: number;
   /** Callback when event index changes in history view */
   onEventIndexChange?: (index: number) => void;
+  /** Callback to add a filter pattern (include or exclude) */
+  onAddFilter?: (pattern: FilterPattern, mode: "include" | "exclude") => void;
 }
 
 // Re-export footer for backward compatibility
@@ -75,6 +79,7 @@ export function RenderDetailView({
   disableInternalFooter = false,
   selectedEventIndex: externalIndex,
   onEventIndexChange: externalOnChange,
+  onAddFilter,
 }: RenderDetailViewProps) {
   // Internal state for event index when not controlled externally
   const [internalIndex, setInternalIndex] = useState(0);
@@ -154,6 +159,11 @@ export function RenderDetailView({
 
         {/* Details Section: Identifiers + Stats */}
         <DetailsSection render={render} rendersPerSec={rendersPerSec} />
+
+        {/* Quick Actions: Add to filters */}
+        {onAddFilter && (
+          <QuickActionsSection render={render} onAddFilter={onAddFilter} />
+        )}
       </ScrollView>
 
       {/* History Row: Compact inline navigation (sticky at bottom) */}
@@ -401,6 +411,108 @@ function HistoryRow({
       </View>
 
       <Text style={styles.historyTime}>{relativeTime}</Text>
+    </View>
+  );
+}
+
+/**
+ * QuickActionsSection - Quick filter actions for the component
+ * Shows all available filter options from most specific to most general
+ */
+function QuickActionsSection({
+  render,
+  onAddFilter,
+}: {
+  render: TrackedRender;
+  onAddFilter: (pattern: FilterPattern, mode: "include" | "exclude") => void;
+}) {
+  // Build list of available filter options (most specific to most general)
+  const filterOptions = useMemo(() => {
+    const options: { type: FilterType; value: string; label: string }[] = [];
+
+    // Most specific first
+    if (render.nativeID) {
+      options.push({ type: "nativeID", value: render.nativeID, label: "nativeID" });
+    }
+    if (render.testID) {
+      options.push({ type: "testID", value: render.testID, label: "testID" });
+    }
+    if (render.accessibilityLabel) {
+      options.push({ type: "accessibilityLabel", value: render.accessibilityLabel, label: "a11y" });
+    }
+    if (render.componentName) {
+      options.push({ type: "component", value: render.componentName, label: "component" });
+    }
+    // Most general last (always available)
+    options.push({ type: "viewType", value: render.viewType, label: "viewType" });
+
+    return options;
+  }, [render]);
+
+  return (
+    <View style={styles.quickActionsSection}>
+      <Text style={styles.quickActionsTitle}>Quick Filters</Text>
+      <View style={styles.filterOptionsList}>
+        {filterOptions.map((option) => (
+          <FilterOptionRow
+            key={option.type}
+            type={option.type}
+            label={option.label}
+            value={option.value}
+            onAddFilter={onAddFilter}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/**
+ * FilterOptionRow - A single filter option with include/exclude buttons
+ */
+function FilterOptionRow({
+  type,
+  label,
+  value,
+  onAddFilter,
+}: {
+  type: FilterType;
+  label: string;
+  value: string;
+  onAddFilter: (pattern: FilterPattern, mode: "include" | "exclude") => void;
+}) {
+  const handleInclude = useCallback(() => {
+    onAddFilter({ type, value }, "include");
+  }, [type, value, onAddFilter]);
+
+  const handleExclude = useCallback(() => {
+    onAddFilter({ type, value }, "exclude");
+  }, [type, value, onAddFilter]);
+
+  return (
+    <View style={styles.filterOptionRow}>
+      <View style={styles.filterOptionInfo}>
+        <Text style={styles.filterOptionLabel}>{label}</Text>
+        <Text style={styles.filterOptionValue} numberOfLines={1}>{value}</Text>
+      </View>
+      <View style={styles.filterOptionButtons}>
+        <TouchableOpacity
+          style={styles.filterOptionButton}
+          onPress={handleInclude}
+          activeOpacity={0.7}
+          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+        >
+          <PlusIcon size={12} color={macOSColors.semantic.success} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.filterOptionButton}
+          onPress={handleExclude}
+          activeOpacity={0.7}
+          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+        >
+          <MinusIcon size={12} color={macOSColors.semantic.error} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -664,6 +776,69 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: macOSColors.text.primary,
     fontFamily: "monospace",
+  },
+
+  // Quick Actions Section
+  quickActionsSection: {
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
+    padding: 12,
+    gap: 8,
+  },
+  quickActionsTitle: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: macOSColors.text.muted,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  filterOptionsList: {
+    gap: 6,
+  },
+  filterOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  filterOptionInfo: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginRight: 8,
+  },
+  filterOptionLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: macOSColors.text.muted,
+    minWidth: 70,
+  },
+  filterOptionValue: {
+    fontSize: 11,
+    color: macOSColors.text.primary,
+    fontFamily: "monospace",
+    flex: 1,
+  },
+  filterOptionButtons: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  filterOptionButton: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: macOSColors.background.card,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: macOSColors.border.default,
   },
 });
 

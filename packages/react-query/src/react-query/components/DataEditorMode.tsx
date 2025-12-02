@@ -7,7 +7,6 @@ import ActionButton from "./query-browser/ActionButton";
 import { getQueryStatusLabel } from "../utils/getQueryStatusLabel";
 import { useActionButtons } from "../hooks/useActionButtons";
 import { macOSColors } from "@react-buoy/shared-ui";
-import { useEffect, useRef, useState } from "react";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
 
 interface ActionButtonConfig {
@@ -65,6 +64,7 @@ export function DataEditorMode({
           <DataExplorer
             visible={!!selectedQuery.state.data}
             selectedQuery={selectedQuery}
+            queryVersion={queryVersion}
           />
           <DataEmptyState
             visible={!selectedQuery.state.data}
@@ -168,33 +168,12 @@ export function DataEditorActionsFooter({
 function DataExplorer({
   visible,
   selectedQuery,
+  queryVersion = 0,
 }: {
   visible: boolean;
   selectedQuery: Query;
+  queryVersion?: number;
 }) {
-  // Track data version to force re-render when data changes
-  // This increments when query.state.data reference changes (immutable updates from setQueryData)
-  const [dataVersion, setDataVersion] = useState(0);
-  const prevDataRef = useRef(selectedQuery.state.data);
-  const prevKeysRef = useRef<string>("");
-
-  // ⚠️ CRITICAL: Do NOT add dataVersion to the dependency array!
-  // Adding dataVersion would cause infinite loops since we're setting it inside the effect
-  useEffect(() => {
-    const currentData = selectedQuery.state.data;
-    const currentKeys = currentData
-      ? JSON.stringify(Object.keys(currentData))
-      : "";
-    const prevKeys = prevKeysRef.current;
-
-    // Check both reference change and structural change
-    if (prevDataRef.current !== currentData || prevKeys !== currentKeys) {
-      setDataVersion((v) => v + 1);
-      prevDataRef.current = currentData;
-      prevKeysRef.current = currentKeys;
-    }
-  }, [selectedQuery.state.data]); // ⚠️ DO NOT add dataVersion here!
-
   if (!visible) return null;
 
   return (
@@ -202,14 +181,12 @@ function DataExplorer({
       <Text style={styles.dataHeader}>Data Editor</Text>
       <View style={styles.dataContent}>
         <Explorer
-          // Don't use key - it causes the component to unmount/remount and lose state
-          // Instead pass dataVersion as a prop to trigger re-renders
           editable={true}
           label="Data"
           value={selectedQuery.state.data}
           defaultExpanded={["Data"]}
           activeQuery={selectedQuery}
-          dataVersion={dataVersion}
+          dataVersion={queryVersion}
         />
       </View>
     </View>

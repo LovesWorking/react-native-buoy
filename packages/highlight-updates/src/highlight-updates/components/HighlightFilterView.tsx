@@ -18,7 +18,7 @@ import {
   Pressable,
   Switch,
 } from "react-native";
-import { Eye, Filter, Plus, X, Box, Check, Settings } from "@react-buoy/shared-ui";
+import { Eye, Filter, Plus, X, Box, Check, Settings, Hash } from "@react-buoy/shared-ui";
 import { macOSColors, SectionHeader } from "@react-buoy/shared-ui";
 import type { FilterConfig, FilterPattern, FilterType, RenderTrackerSettings, DebugLogLevel } from "../utils/RenderTracker";
 import { IdentifierBadge, IDENTIFIER_CONFIG, type IdentifierType } from "./IdentifierBadge";
@@ -438,6 +438,80 @@ export function HighlightFilterView({
               <Text style={[styles.addButtonText, { color: macOSColors.semantic.info }]}>
                 Add exclude pattern
               </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Render Count Range Section */}
+      <View style={styles.section}>
+        <SectionHeader>
+          <SectionHeader.Icon icon={Hash} color={macOSColors.semantic.warning} size={12} />
+          <SectionHeader.Title>RENDER COUNT RANGE</SectionHeader.Title>
+          {(filters.minRenderCount !== undefined || filters.maxRenderCount !== undefined) && (
+            <SectionHeader.Badge
+              count={1}
+              color={macOSColors.semantic.warning}
+            />
+          )}
+        </SectionHeader>
+
+        <Text style={styles.sectionDescription}>
+          Show only components with render count in a specific range.
+        </Text>
+
+        <View nativeID="__rn_buoy__render-count-range" style={styles.renderCountRangeContainer}>
+          <View style={styles.renderCountInputRow}>
+            <View style={styles.renderCountInputGroup}>
+              <Text style={styles.renderCountLabel}>Min</Text>
+              <TextInput
+                value={filters.minRenderCount !== undefined ? String(filters.minRenderCount) : ""}
+                onChangeText={(text) => {
+                  const num = parseInt(text, 10);
+                  if (text === "" || text === undefined) {
+                    onFilterChange({ minRenderCount: undefined });
+                  } else if (!isNaN(num) && num >= 0) {
+                    onFilterChange({ minRenderCount: num });
+                  }
+                }}
+                placeholder="0"
+                placeholderTextColor={macOSColors.text.muted}
+                style={styles.renderCountInput}
+                keyboardType="number-pad"
+                returnKeyType="done"
+              />
+            </View>
+
+            <Text style={styles.renderCountSeparator}>to</Text>
+
+            <View style={styles.renderCountInputGroup}>
+              <Text style={styles.renderCountLabel}>Max</Text>
+              <TextInput
+                value={filters.maxRenderCount !== undefined ? String(filters.maxRenderCount) : ""}
+                onChangeText={(text) => {
+                  const num = parseInt(text, 10);
+                  if (text === "" || text === undefined) {
+                    onFilterChange({ maxRenderCount: undefined });
+                  } else if (!isNaN(num) && num >= 0) {
+                    onFilterChange({ maxRenderCount: num });
+                  }
+                }}
+                placeholder="∞"
+                placeholderTextColor={macOSColors.text.muted}
+                style={styles.renderCountInput}
+                keyboardType="number-pad"
+                returnKeyType="done"
+              />
+            </View>
+          </View>
+
+          {(filters.minRenderCount !== undefined || filters.maxRenderCount !== undefined) && (
+            <TouchableOpacity
+              style={styles.clearRangeButton}
+              onPress={() => onFilterChange({ minRenderCount: undefined, maxRenderCount: undefined })}
+            >
+              <X size={12} color={macOSColors.semantic.warning} />
+              <Text style={styles.clearRangeButtonText}>Clear Range</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -1211,6 +1285,65 @@ const styles = StyleSheet.create({
   batchSizePresetTextActive: {
     color: macOSColors.semantic.debug,
     fontWeight: "700",
+  },
+  // Render count range styles
+  renderCountRangeContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  renderCountInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  renderCountInputGroup: {
+    flex: 1,
+    gap: 4,
+  },
+  renderCountLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: macOSColors.text.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  renderCountInput: {
+    backgroundColor: macOSColors.background.input,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: macOSColors.border.input,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontWeight: "600",
+    color: macOSColors.text.primary,
+    fontFamily: "monospace",
+    textAlign: "center",
+  },
+  renderCountSeparator: {
+    fontSize: 12,
+    color: macOSColors.text.muted,
+    marginTop: 18,
+  },
+  clearRangeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: macOSColors.semantic.warning + "15",
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.warning + "40",
+    gap: 6,
+    alignSelf: "center",
+  },
+  clearRangeButtonText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: macOSColors.semantic.warning,
   },
 });
 

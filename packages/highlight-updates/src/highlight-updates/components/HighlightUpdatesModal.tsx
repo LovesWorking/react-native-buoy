@@ -29,7 +29,7 @@ import {
   safeSetItem,
 } from "@react-buoy/shared-ui";
 import HighlightUpdatesController from "../utils/HighlightUpdatesController";
-import { RenderTracker, type TrackedRender, type FilterConfig, type RenderTrackerSettings, type RenderCauseType, type ComponentCauseType } from "../utils/RenderTracker";
+import { RenderTracker, type TrackedRender, type FilterConfig, type RenderTrackerSettings, type RenderCauseType, type ComponentCauseType, type FilterPattern } from "../utils/RenderTracker";
 import { CAUSE_CONFIG, COMPONENT_CAUSE_CONFIG } from "./RenderCauseBadge";
 import { RenderDetailView, RenderHistoryFooter } from "./RenderDetailView";
 import { HighlightFilterView } from "./HighlightFilterView";
@@ -46,6 +46,17 @@ interface HighlightUpdatesModalProps {
   onBack?: () => void;
   onMinimize?: (modalState: any) => void;
   enableSharedModalDimensions?: boolean;
+  /**
+   * Initial nativeTag to navigate to when modal opens.
+   * Used by "Click Overlay Badge → Jump to Detail" feature.
+   * When set, the modal will automatically show the detail view for this component.
+   */
+  initialNativeTag?: number | null;
+  /**
+   * Callback when the modal finishes handling the initial nativeTag.
+   * This allows the parent to clear the navigation state.
+   */
+  onInitialNativeTagHandled?: () => void;
 }
 
 // Disabled banner - memoized since props rarely change
@@ -246,11 +257,14 @@ export function HighlightUpdatesModal({
   onBack,
   onMinimize,
   enableSharedModalDimensions = false,
+  initialNativeTag,
+  onInitialNativeTagHandled,
 }: HighlightUpdatesModalProps) {
   // ============================================================================
   // TRACKING STATE - subscribed via isolated component
   // ============================================================================
   const [isTracking, setIsTracking] = useState(false);
+  const [isFrozen, setIsFrozen] = useState(() => HighlightUpdatesController.getFrozen());
 
   // Track if there are renders for header clear button state
   const [hasRenders, setHasRenders] = useState(() => RenderTracker.getStats().totalComponents > 0);
@@ -466,6 +480,17 @@ export function HighlightUpdatesModal({
     };
   }, []);
 
+  // Subscribe to freeze state changes
+  useEffect(() => {
+    const unsubscribeFreeze = HighlightUpdatesController.subscribeToFreeze((frozen) => {
+      setIsFrozen(frozen);
+    });
+
+    return () => {
+      unsubscribeFreeze();
+    };
+  }, []);
+
   // Focus search input when activated
   useEffect(() => {
     if (isSearchActive) {
@@ -474,6 +499,35 @@ export function HighlightUpdatesModal({
       });
     }
   }, [isSearchActive]);
+
+  // Clear spotlight when modal is closed
+  useEffect(() => {
+    if (!visible) {
+      HighlightUpdatesController.setSpotlight(null);
+    }
+  }, [visible]);
+
+  // ============================================================================
+  // DEEP LINK NAVIGATION - "Click Overlay Badge → Jump to Detail"
+  // ============================================================================
+
+  // Handle initial navigation when a badge is tapped
+  useEffect(() => {
+    if (visible && initialNativeTag != null) {
+      // Look up the render by nativeTag
+      const render = RenderTracker.getRender(String(initialNativeTag));
+      if (render) {
+        // Navigate to detail view for this component
+        setSelectedRender(render);
+        setSelectedEventIndex(0);
+        setShowFilterView(false);
+        // Set spotlight to show which component is being viewed
+        HighlightUpdatesController.setSpotlight(render.nativeTag);
+      }
+      // Notify parent that we've handled the navigation
+      onInitialNativeTagHandled?.();
+    }
+  }, [visible, initialNativeTag, onInitialNativeTagHandled]);
 
   // ============================================================================
   // CALLBACKS - stable references for child components
@@ -484,6 +538,10 @@ export function HighlightUpdatesModal({
       HighlightUpdatesController.initialize();
     }
     HighlightUpdatesController.toggle();
+  }, []);
+
+  const handleToggleFreeze = useCallback(() => {
+    HighlightUpdatesController.toggleFreeze();
   }, []);
 
   const handleClear = useCallback(() => {
@@ -504,11 +562,15 @@ export function HighlightUpdatesModal({
   const handleRenderPress = useCallback((render: TrackedRender) => {
     setSelectedRender(render);
     setSelectedEventIndex(0); // Reset event index when selecting a new render
+    // Set spotlight to show which component is being viewed
+    HighlightUpdatesController.setSpotlight(render.nativeTag);
   }, []);
 
   const handleBackFromDetail = useCallback(() => {
     setSelectedRender(null);
     setSelectedEventIndex(0); // Reset event index when going back
+    // Clear the spotlight
+    HighlightUpdatesController.setSpotlight(null);
   }, []);
 
   const handleBackFromFilter = useCallback(() => {
@@ -534,6 +596,39 @@ export function HighlightUpdatesModal({
     setFilters(updatedFilters);
     setActiveFilterCount(updatedFilters.includePatterns.length + updatedFilters.excludePatterns.length);
   }, []);
+
+  // Handler for adding a filter from the detail view (quick actions)
+  const handleAddFilter = useCallback((pattern: FilterPattern, mode: "include" | "exclude") => {
+    const currentFilters = RenderTracker.getFilters();
+    const newFilters: Partial<FilterConfig> = {};
+
+    if (mode === "include") {
+      // Check if pattern already exists
+      const exists = currentFilters.includePatterns.some(
+        p => p.type === pattern.type && p.value === pattern.value
+      );
+      if (!exists) {
+        newFilters.includePatterns = [...currentFilters.includePatterns, pattern];
+      }
+    } else {
+      // Check if pattern already exists
+      const exists = currentFilters.excludePatterns.some(
+        p => p.type === pattern.type && p.value === pattern.value
+      );
+      if (!exists) {
+        newFilters.excludePatterns = [...currentFilters.excludePatterns, pattern];
+      }
+    }
+
+    if (Object.keys(newFilters).length > 0) {
+      handleFilterChange(newFilters);
+      // Go back to the list view after adding filter
+      setSelectedRender(null);
+      setSelectedEventIndex(0);
+      // Clear the spotlight
+      HighlightUpdatesController.setSpotlight(null);
+    }
+  }, [handleFilterChange]);
 
   const handleSettingsChange = useCallback((newSettings: Partial<RenderTrackerSettings>) => {
     RenderTracker.setSettings(newSettings);
@@ -574,9 +669,11 @@ export function HighlightUpdatesModal({
         onSearchClose={handleSearchClose}
         onFilterToggle={handleFilterToggle}
         onToggleTracking={handleToggleTracking}
+        onToggleFreeze={handleToggleFreeze}
         onClear={handleClear}
         copyData={copyData}
         isTracking={isTracking}
+        isFrozen={isFrozen}
         activeFilterCount={activeFilterCount}
         hasRenders={hasRenders}
         searchInputRef={searchInputRef}
@@ -589,6 +686,7 @@ export function HighlightUpdatesModal({
     isSearchActive,
     searchText,
     isTracking,
+    isFrozen,
     activeFilterCount,
     hasRenders,
     activeTab,
@@ -599,6 +697,7 @@ export function HighlightUpdatesModal({
     handleSearchClose,
     handleFilterToggle,
     handleToggleTracking,
+    handleToggleFreeze,
     handleClear,
     copyData,
   ]);
@@ -646,6 +745,7 @@ export function HighlightUpdatesModal({
             disableInternalFooter={true}
             selectedEventIndex={selectedEventIndex}
             onEventIndexChange={setSelectedEventIndex}
+            onAddFilter={handleAddFilter}
           />
         ) : showFilterView ? (
           <HighlightFilterView

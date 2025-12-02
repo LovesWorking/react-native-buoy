@@ -23,7 +23,7 @@
  * ```
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { StackPulseIcon, RenderCountIcon } from "@react-buoy/shared-ui";
 import type { FloatingMenuActions } from "@react-buoy/core";
 import HighlightUpdatesController from "./highlight-updates/utils/HighlightUpdatesController";
@@ -59,6 +59,51 @@ function HighlightIcon({ size }: { size: number }) {
  */
 function EmptyComponent() {
   return null;
+}
+
+/**
+ * Wrapper component for the modal that handles badge press navigation.
+ * Registers a callback with the controller to receive badge press events
+ * and passes the target nativeTag to the modal for deep linking.
+ */
+function HighlightUpdatesModalWithBadgeNavigation(props: {
+  visible: boolean;
+  onClose: () => void;
+  onBack?: () => void;
+  onMinimize?: (modalState: any) => void;
+  enableSharedModalDimensions?: boolean;
+}) {
+  const [targetNativeTag, setTargetNativeTag] = useState<number | null>(null);
+
+  // Register badge press callback when modal is visible
+  useEffect(() => {
+    if (props.visible) {
+      // Register callback to handle badge presses
+      HighlightUpdatesController.setBadgePressCallback((nativeTag) => {
+        setTargetNativeTag(nativeTag);
+      });
+    }
+
+    return () => {
+      // Clear callback when modal is closed or unmounted
+      if (!props.visible) {
+        HighlightUpdatesController.setBadgePressCallback(null);
+      }
+    };
+  }, [props.visible]);
+
+  // Clear the target after it's been handled
+  const handleInitialNativeTagHandled = useCallback(() => {
+    setTargetNativeTag(null);
+  }, []);
+
+  return (
+    <HighlightUpdatesModal
+      {...props}
+      initialNativeTag={targetNativeTag}
+      onInitialNativeTagHandled={handleInitialNativeTagHandled}
+    />
+  );
 }
 
 /**
@@ -182,6 +227,7 @@ export function createHighlightUpdatesTool(options?: {
  * - Clear button to reset render counts
  * - Search bar in navbar (expandable)
  * - Filter by viewType, testID, nativeID, componentName
+ * - Tap overlay badge to jump to component detail view
  *
  * Use this preset when you want detailed render tracking and filtering.
  */
@@ -193,7 +239,7 @@ export const highlightUpdatesModalPreset = {
   icon: ({ size }: { size: number }) => (
     <RenderCountIcon size={size} color="#10b981" />
   ),
-  component: HighlightUpdatesModal,
+  component: HighlightUpdatesModalWithBadgeNavigation,
   props: {
     enableSharedModalDimensions: false,
   },
@@ -247,7 +293,7 @@ export function createHighlightUpdatesModalTool(options?: {
     icon: ({ size }: { size: number }) => (
       <RenderCountIcon size={size} color={enabledColor} />
     ),
-    component: HighlightUpdatesModal,
+    component: HighlightUpdatesModalWithBadgeNavigation,
     props: {
       enableSharedModalDimensions: false,
     },

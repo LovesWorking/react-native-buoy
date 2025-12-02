@@ -6,10 +6,20 @@
  * native DebuggingOverlay component for better compatibility.
  */
 
-import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useLayoutEffect,
+} from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import HighlightUpdatesController from "./utils/HighlightUpdatesController";
-import { PerformanceLogger, markOverlayRendered } from "./utils/PerformanceLogger";
+import {
+  PerformanceLogger,
+  markOverlayRendered,
+} from "./utils/PerformanceLogger";
+import { RenderTracker } from "./utils/RenderTracker";
 
 // Declare performance API available in React Native's JavaScript environment
 declare const performance: { now: () => number };
@@ -28,11 +38,29 @@ interface HighlightRect {
 // How long highlights stay visible (ms)
 const HIGHLIGHT_DURATION = 1000;
 
-export function HighlightUpdatesOverlay(): React.ReactElement | null {
+interface HighlightUpdatesOverlayProps {
+  /**
+   * Callback when a badge is pressed.
+   * Receives the nativeTag (id) of the component whose badge was tapped.
+   */
+  onBadgePress?: (nativeTag: number) => void;
+}
+
+export function HighlightUpdatesOverlay({
+  onBadgePress,
+}: HighlightUpdatesOverlayProps = {}): React.ReactElement | null {
   const [highlights, setHighlights] = useState<HighlightRect[]>([]);
+  const [isFrozen, setIsFrozen] = useState(() =>
+    HighlightUpdatesController.getFrozen()
+  );
+  const [spotlightTag, setSpotlightTag] = useState<number | null>(null);
   const cleanupTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const renderStartTimeRef = useRef<number>(0);
   const highlightCountRef = useRef<number>(0);
+  const frozenRef = useRef(isFrozen);
+
+  // Keep ref in sync with state for use in interval callback
+  frozenRef.current = isFrozen;
 
   // Track render start time
   if (PerformanceLogger.isEnabled()) {
@@ -42,12 +70,56 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
 
   // Measure render completion time using useLayoutEffect (runs after DOM mutations)
   useLayoutEffect(() => {
-    if (PerformanceLogger.isEnabled() && renderStartTimeRef.current > 0 && highlightCountRef.current > 0) {
+    if (
+      PerformanceLogger.isEnabled() &&
+      renderStartTimeRef.current > 0 &&
+      highlightCountRef.current > 0
+    ) {
       const renderTime = performance.now() - renderStartTimeRef.current;
       // Mark end-to-end timing (for benchmark recording only - no console logs)
       markOverlayRendered(highlightCountRef.current, renderTime);
     }
   });
+
+  // Subscribe to freeze state changes
+  useEffect(() => {
+    const unsubscribe = HighlightUpdatesController.subscribeToFreeze(
+      (frozen) => {
+        setIsFrozen(frozen);
+      }
+    );
+    return unsubscribe;
+  }, []);
+
+  // Subscribe to filter changes - refresh frozen highlights when filters change
+  useEffect(() => {
+    const unsubscribe = RenderTracker.subscribeToFilters(() => {
+      // When filters change, filter out highlights that no longer match
+      setHighlights((prev) => {
+        return prev.filter((highlight) => {
+          // Look up the render by nativeTag
+          const render = RenderTracker.getRender(String(highlight.id));
+          if (!render) {
+            // If render not found, keep the highlight (it might be from a different source)
+            return true;
+          }
+          // Check if the render should still be shown based on new filters
+          return RenderTracker.shouldShowRender(render);
+        });
+      });
+    });
+    return unsubscribe;
+  }, []);
+
+  // Subscribe to spotlight changes - show which component is being viewed in detail
+  useEffect(() => {
+    HighlightUpdatesController.setSpotlightCallback((tag) => {
+      setSpotlightTag(tag);
+    });
+    return () => {
+      HighlightUpdatesController.setSpotlightCallback(null);
+    };
+  }, []);
 
   // Callback to add new highlights
   const addHighlights = useCallback(
@@ -80,7 +152,13 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
     HighlightUpdatesController.setHighlightCallback(addHighlights);
 
     // Cleanup timer to remove old highlights
+    // When frozen, skip cleanup to keep highlights visible indefinitely
     cleanupTimerRef.current = setInterval(() => {
+      // Check frozen state via ref (doesn't cause re-subscription)
+      if (frozenRef.current) {
+        return; // Skip cleanup when frozen
+      }
+
       const now = Date.now();
       setHighlights((prev) =>
         prev.filter((rect) => now - rect.timestamp < HIGHLIGHT_DURATION)
@@ -95,20 +173,68 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
     };
   }, [addHighlights]);
 
-  if (highlights.length === 0) {
+  // Check if badge press handling is enabled (via props or controller)
+  const hasBadgePressHandler =
+    onBadgePress || HighlightUpdatesController.getBadgePressCallback();
+
+  // Handle badge press - navigate to detail view for this component
+  const handleBadgePress = useCallback(
+    (nativeTag: number) => {
+      // First try the prop callback
+      if (onBadgePress) {
+        onBadgePress(nativeTag);
+      } else {
+        // Fall back to controller callback
+        HighlightUpdatesController.handleBadgePress(nativeTag);
+      }
+    },
+    [onBadgePress]
+  );
+
+  // Get spotlight render info if we have a spotlight active
+  const spotlightRender = spotlightTag
+    ? RenderTracker.getRender(String(spotlightTag))
+    : null;
+
+  // Render nothing if no highlights and no spotlight
+  if (highlights.length === 0 && !spotlightRender?.measurements) {
     return null;
   }
 
   return (
     <View
       style={styles.overlay}
-      pointerEvents="none"
+      pointerEvents="box-none"
       nativeID="highlight-updates-overlay"
     >
+      {/* Spotlight highlight - shows which component is being viewed in detail */}
+      {spotlightRender?.measurements && (
+        <View
+          pointerEvents="none"
+          nativeID="__spotlight_highlight__"
+          style={[
+            styles.spotlightHighlight,
+            {
+              left: spotlightRender.measurements.x,
+              top: spotlightRender.measurements.y,
+              width: spotlightRender.measurements.width,
+              height: spotlightRender.measurements.height,
+            },
+          ]}
+        >
+          <View style={styles.spotlightLabel}>
+            <Text style={styles.spotlightLabelText}>
+              {spotlightRender.componentName || spotlightRender.displayName || spotlightRender.viewType}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Regular highlights */}
       {highlights.map((rect) => (
         <View
           key={`highlight-${rect.id}`}
-          pointerEvents="none"
+          pointerEvents="box-none"
           nativeID={`__highlight_rect_${rect.id}__`}
           style={[
             styles.highlight,
@@ -122,19 +248,35 @@ export function HighlightUpdatesOverlay(): React.ReactElement | null {
           ]}
         >
           {/* Render count badge - only show when counting is enabled (count > 0) */}
-          {rect.count > 0 && (
-            <View
-              style={[styles.badge, { backgroundColor: rect.color }]}
-              nativeID={`__highlight_badge_${rect.id}__`}
-            >
-              <Text
-                style={styles.badgeText}
-                nativeID={`__highlight_text_${rect.id}__`}
+          {rect.count > 0 &&
+            (hasBadgePressHandler ? (
+              <TouchableOpacity
+                onPress={() => handleBadgePress(rect.id)}
+                style={[styles.badge, { backgroundColor: rect.color }]}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                {rect.count}
-              </Text>
-            </View>
-          )}
+                <Text
+                  style={styles.badgeText}
+                  nativeID={`__highlight_text_${rect.id}__`}
+                >
+                  {rect.count}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View
+                style={[styles.badge, { backgroundColor: rect.color }]}
+                nativeID={`__highlight_badge_${rect.id}__`}
+                pointerEvents="none"
+              >
+                <Text
+                  style={styles.badgeText}
+                  nativeID={`__highlight_text_${rect.id}__`}
+                >
+                  {rect.count}
+                </Text>
+              </View>
+            ))}
         </View>
       ))}
     </View>
@@ -162,16 +304,37 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     right: 0,
-    minWidth: 18,
-    height: 18,
+    height: 14,
     borderRadius: 0,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
   },
   badgeText: {
     color: "#000",
-    fontSize: 11,
+    fontSize: 9,
+    fontWeight: "bold",
+  },
+  // Spotlight highlight styles
+  spotlightHighlight: {
+    position: "absolute",
+    borderWidth: 3,
+    borderStyle: "dashed",
+    borderColor: "#3b82f6",
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+  },
+  spotlightLabel: {
+    position: "absolute",
+    bottom: -20,
+    left: 0,
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
+  },
+  spotlightLabelText: {
+    color: "#fff",
+    fontSize: 10,
     fontWeight: "bold",
   },
 });

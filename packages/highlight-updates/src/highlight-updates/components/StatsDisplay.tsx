@@ -29,31 +29,16 @@ function StatsDisplayInner() {
   }, []);
 
   return (
-    <View nativeID="__rn_buoy__stats-row" style={styles.headerChipRow}>
-      <View style={styles.headerChip}>
-        <Activity size={12} color={macOSColors.semantic.info} />
-        <Text
-          style={[
-            styles.headerChipValue,
-            { color: macOSColors.semantic.info },
-          ]}
-        >
-          {stats.totalComponents}
-        </Text>
-        <Text style={styles.headerChipLabel}>components</Text>
-      </View>
-
-      <View style={styles.headerChip}>
-        <Text
-          style={[
-            styles.headerChipValue,
-            { color: macOSColors.semantic.warning },
-          ]}
-        >
-          {stats.totalRenders}
-        </Text>
-        <Text style={styles.headerChipLabel}>renders</Text>
-      </View>
+    <View nativeID="__rn_buoy__stats-row" style={styles.headerChip}>
+      <Activity size={12} color={macOSColors.semantic.info} />
+      <Text
+        style={[
+          styles.headerChipValue,
+          { color: macOSColors.semantic.info },
+        ]}
+      >
+        {stats.totalComponents}
+      </Text>
     </View>
   );
 }
@@ -61,17 +46,12 @@ function StatsDisplayInner() {
 export const StatsDisplay = memo(StatsDisplayInner);
 
 const styles = StyleSheet.create({
-  headerChipRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
   headerChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     backgroundColor: macOSColors.background.hover,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 12,
     borderWidth: 1,
@@ -81,11 +61,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     fontFamily: "monospace",
-  },
-  headerChipLabel: {
-    fontSize: 10,
-    color: macOSColors.text.muted,
-    fontWeight: "500",
   },
 });
 

@@ -137,11 +137,16 @@ export interface FilterConfig {
   // New unified pattern lists
   includePatterns: FilterPattern[];
   excludePatterns: FilterPattern[];
+
+  // Render count range filter
+  minRenderCount?: number;
+  maxRenderCount?: number;
 }
 
 type RenderTrackerListener = (renders: TrackedRender[]) => void;
 type StateListener = (state: { isTracking: boolean; isPaused: boolean }) => void;
 type SettingsListener = (settings: RenderTrackerSettings) => void;
+type FilterListener = (filters: FilterConfig) => void;
 
 // Maximum number of tracked components to prevent memory issues
 const MAX_TRACKED_COMPONENTS = 200;
@@ -236,6 +241,7 @@ class RenderTrackerSingleton {
   private listeners: Set<RenderTrackerListener> = new Set();
   private stateListeners: Set<StateListener> = new Set();
   private settingsListeners: Set<SettingsListener> = new Set();
+  private filterListeners: Set<FilterListener> = new Set();
   private isTracking: boolean = false;
   private isPaused: boolean = false;
   private settings: RenderTrackerSettings = {
@@ -435,6 +441,169 @@ class RenderTrackerSingleton {
   }
 
   /**
+   * Check if a component passes all active filters.
+   * Used by both the modal list and the overlay to filter components.
+   *
+   * @param info Component info to check (can be TrackedRender or extracted component info)
+   * @returns true if the component passes all filters, false if it should be hidden
+   */
+  passesFilters(info: {
+    viewType: string;
+    displayName?: string;
+    testID?: string;
+    nativeID?: string;
+    accessibilityLabel?: string;
+    componentName?: string;
+  }): boolean {
+    // Check new unified include patterns (if any are set, must match at least one)
+    if (this.filters.includePatterns.length > 0) {
+      const matchesInclude = this.matchesAnyPatternForInfo(info, this.filters.includePatterns);
+      if (!matchesInclude) return false;
+    }
+
+    // Check new unified exclude patterns
+    if (this.filters.excludePatterns.length > 0) {
+      const matchesExclude = this.matchesAnyPatternForInfo(info, this.filters.excludePatterns);
+      if (matchesExclude) return false;
+    }
+
+    // Legacy filter support (for backwards compatibility)
+    // Include filters: if any are set, component must match at least one
+    if (this.filters.includeViewType.size > 0) {
+      const viewType = info.viewType || '';
+      const displayName = info.displayName || '';
+      if (!this.matchesPattern(viewType, this.filters.includeViewType) &&
+          !this.matchesPattern(displayName, this.filters.includeViewType)) {
+        return false;
+      }
+    }
+    if (this.filters.includeTestID.size > 0) {
+      if (!info.testID || !this.matchesPattern(info.testID, this.filters.includeTestID)) {
+        return false;
+      }
+    }
+    if (this.filters.includeNativeID.size > 0) {
+      if (!info.nativeID || !this.matchesPattern(info.nativeID, this.filters.includeNativeID)) {
+        return false;
+      }
+    }
+    if (this.filters.includeComponent.size > 0) {
+      if (!info.componentName || !this.matchesPattern(info.componentName, this.filters.includeComponent)) {
+        return false;
+      }
+    }
+
+    // Exclude filters: if component matches any, it should be hidden
+    if (this.filters.excludeViewType.size > 0) {
+      const viewType = info.viewType || '';
+      const displayName = info.displayName || '';
+      if (this.matchesPattern(viewType, this.filters.excludeViewType) ||
+          this.matchesPattern(displayName, this.filters.excludeViewType)) {
+        return false;
+      }
+    }
+    if (this.filters.excludeTestID.size > 0) {
+      if (info.testID && this.matchesPattern(info.testID, this.filters.excludeTestID)) {
+        return false;
+      }
+    }
+    if (this.filters.excludeNativeID.size > 0) {
+      if (info.nativeID && this.matchesPattern(info.nativeID, this.filters.excludeNativeID)) {
+        return false;
+      }
+    }
+    if (this.filters.excludeComponent.size > 0) {
+      if (info.componentName && this.matchesPattern(info.componentName, this.filters.excludeComponent)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if component info matches any of the given patterns
+   */
+  private matchesAnyPatternForInfo(
+    info: {
+      viewType: string;
+      displayName?: string;
+      testID?: string;
+      nativeID?: string;
+      accessibilityLabel?: string;
+      componentName?: string;
+    },
+    patterns: FilterPattern[]
+  ): boolean {
+    for (const pattern of patterns) {
+      const lowerValue = pattern.value.toLowerCase();
+
+      switch (pattern.type) {
+        case "any":
+          // Match against all fields
+          if (
+            info.viewType.toLowerCase().includes(lowerValue) ||
+            info.displayName?.toLowerCase().includes(lowerValue) ||
+            info.testID?.toLowerCase().includes(lowerValue) ||
+            info.nativeID?.toLowerCase().includes(lowerValue) ||
+            info.componentName?.toLowerCase().includes(lowerValue) ||
+            info.accessibilityLabel?.toLowerCase().includes(lowerValue)
+          ) {
+            return true;
+          }
+          break;
+        case "viewType":
+          if (info.viewType.toLowerCase().includes(lowerValue) ||
+              info.displayName?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "testID":
+          if (info.testID?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "nativeID":
+          if (info.nativeID?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "component":
+          if (info.componentName?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+        case "accessibilityLabel":
+          if (info.accessibilityLabel?.toLowerCase().includes(lowerValue)) {
+            return true;
+          }
+          break;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Check if any filters are currently active
+   */
+  hasActiveFilters(): boolean {
+    return (
+      this.filters.includePatterns.length > 0 ||
+      this.filters.excludePatterns.length > 0 ||
+      this.filters.includeViewType.size > 0 ||
+      this.filters.includeTestID.size > 0 ||
+      this.filters.includeNativeID.size > 0 ||
+      this.filters.includeComponent.size > 0 ||
+      this.filters.excludeViewType.size > 0 ||
+      this.filters.excludeTestID.size > 0 ||
+      this.filters.excludeNativeID.size > 0 ||
+      this.filters.excludeComponent.size > 0 ||
+      this.filters.minRenderCount !== undefined ||
+      this.filters.maxRenderCount !== undefined
+    );
+  }
+
+  /**
    * Get filtered renders based on current filter config
    */
   getFilteredRenders(searchText: string = ""): TrackedRender[] {
@@ -456,114 +625,19 @@ class RenderTrackerSingleton {
       });
     }
 
-    // Apply new unified include patterns (if any are set, must match at least one)
-    if (this.filters.includePatterns.length > 0) {
-      renders = renders.filter((r) => this.matchesAnyPattern(r, this.filters.includePatterns));
-    }
+    // Apply filters using the shared passesFilters method
+    renders = renders.filter((r) => this.passesFilters(r));
 
-    // Apply new unified exclude patterns
-    if (this.filters.excludePatterns.length > 0) {
-      renders = renders.filter((r) => !this.matchesAnyPattern(r, this.filters.excludePatterns));
+    // Apply render count range filter
+    if (this.filters.minRenderCount !== undefined) {
+      renders = renders.filter((r) => r.renderCount >= this.filters.minRenderCount!);
     }
-
-    // Legacy filter support (for backwards compatibility)
-    if (this.filters.includeViewType.size > 0) {
-      renders = renders.filter((r) =>
-        this.matchesPattern(r.viewType, this.filters.includeViewType)
-      );
-    }
-    if (this.filters.includeTestID.size > 0) {
-      renders = renders.filter(
-        (r) => r.testID && this.matchesPattern(r.testID, this.filters.includeTestID)
-      );
-    }
-    if (this.filters.includeNativeID.size > 0) {
-      renders = renders.filter(
-        (r) => r.nativeID && this.matchesPattern(r.nativeID, this.filters.includeNativeID)
-      );
-    }
-    if (this.filters.includeComponent.size > 0) {
-      renders = renders.filter(
-        (r) =>
-          r.componentName && this.matchesPattern(r.componentName, this.filters.includeComponent)
-      );
-    }
-    if (this.filters.excludeViewType.size > 0) {
-      renders = renders.filter(
-        (r) => !this.matchesPattern(r.viewType, this.filters.excludeViewType)
-      );
-    }
-    if (this.filters.excludeTestID.size > 0) {
-      renders = renders.filter(
-        (r) => !r.testID || !this.matchesPattern(r.testID, this.filters.excludeTestID)
-      );
-    }
-    if (this.filters.excludeNativeID.size > 0) {
-      renders = renders.filter(
-        (r) => !r.nativeID || !this.matchesPattern(r.nativeID, this.filters.excludeNativeID)
-      );
-    }
-    if (this.filters.excludeComponent.size > 0) {
-      renders = renders.filter(
-        (r) =>
-          !r.componentName || !this.matchesPattern(r.componentName, this.filters.excludeComponent)
-      );
+    if (this.filters.maxRenderCount !== undefined) {
+      renders = renders.filter((r) => r.renderCount <= this.filters.maxRenderCount!);
     }
 
     // Sort by last render time (most recent first)
     return renders.sort((a, b) => b.lastRenderTime - a.lastRenderTime);
-  }
-
-  /**
-   * Check if a render matches any of the given patterns
-   */
-  private matchesAnyPattern(render: TrackedRender, patterns: FilterPattern[]): boolean {
-    for (const pattern of patterns) {
-      const lowerValue = pattern.value.toLowerCase();
-
-      switch (pattern.type) {
-        case "any":
-          // Match against all fields
-          if (
-            render.viewType.toLowerCase().includes(lowerValue) ||
-            render.displayName.toLowerCase().includes(lowerValue) ||
-            render.testID?.toLowerCase().includes(lowerValue) ||
-            render.nativeID?.toLowerCase().includes(lowerValue) ||
-            render.componentName?.toLowerCase().includes(lowerValue) ||
-            render.accessibilityLabel?.toLowerCase().includes(lowerValue)
-          ) {
-            return true;
-          }
-          break;
-        case "viewType":
-          if (render.viewType.toLowerCase().includes(lowerValue) ||
-              render.displayName.toLowerCase().includes(lowerValue)) {
-            return true;
-          }
-          break;
-        case "testID":
-          if (render.testID?.toLowerCase().includes(lowerValue)) {
-            return true;
-          }
-          break;
-        case "nativeID":
-          if (render.nativeID?.toLowerCase().includes(lowerValue)) {
-            return true;
-          }
-          break;
-        case "component":
-          if (render.componentName?.toLowerCase().includes(lowerValue)) {
-            return true;
-          }
-          break;
-        case "accessibilityLabel":
-          if (render.accessibilityLabel?.toLowerCase().includes(lowerValue)) {
-            return true;
-          }
-          break;
-      }
-    }
-    return false;
   }
 
   /**
@@ -668,6 +742,7 @@ class RenderTrackerSingleton {
   setFilters(filters: Partial<FilterConfig>): void {
     this.filters = { ...this.filters, ...filters };
     this.notifyListeners();
+    this.notifyFilterListeners();
   }
 
   /**
@@ -727,6 +802,8 @@ class RenderTrackerSingleton {
       excludeComponent: new Set(),
       includePatterns: [],
       excludePatterns: [],
+      minRenderCount: undefined,
+      maxRenderCount: undefined,
     };
     this.notifyListeners();
   }
@@ -812,6 +889,66 @@ class RenderTrackerSingleton {
     return () => {
       this.settingsListeners.delete(listener);
     };
+  }
+
+  /**
+   * Subscribe to filter changes
+   */
+  subscribeToFilters(listener: FilterListener): () => void {
+    this.filterListeners.add(listener);
+    // Immediately notify with current filters
+    listener(this.filters);
+    return () => {
+      this.filterListeners.delete(listener);
+    };
+  }
+
+  /**
+   * Check if a render should be visible based on current filters
+   * Used by the overlay to filter frozen highlights
+   */
+  shouldShowRender(render: TrackedRender): boolean {
+    const filters = this.filters;
+
+    // Check new pattern-based filters first
+    if (filters.includePatterns.length > 0) {
+      if (!this.matchesAnyPatternForInfo(render, filters.includePatterns)) {
+        return false;
+      }
+    }
+
+    if (filters.excludePatterns.length > 0) {
+      if (this.matchesAnyPatternForInfo(render, filters.excludePatterns)) {
+        return false;
+      }
+    }
+
+    // Legacy set-based filters
+    const hasLegacyIncludeFilters =
+      filters.includeViewType.size > 0 ||
+      filters.includeTestID.size > 0 ||
+      filters.includeNativeID.size > 0 ||
+      filters.includeComponent.size > 0;
+
+    if (hasLegacyIncludeFilters) {
+      const matchesInclude =
+        (filters.includeViewType.size > 0 && filters.includeViewType.has(render.viewType)) ||
+        (filters.includeTestID.size > 0 && render.testID && filters.includeTestID.has(render.testID)) ||
+        (filters.includeNativeID.size > 0 && render.nativeID && filters.includeNativeID.has(render.nativeID)) ||
+        (filters.includeComponent.size > 0 && render.componentName && filters.includeComponent.has(render.componentName));
+
+      if (!matchesInclude) {
+        return false;
+      }
+    }
+
+    // Check exclude filters
+    if (filters.excludeViewType.has(render.viewType)) return false;
+    if (render.testID && filters.excludeTestID.has(render.testID)) return false;
+    if (render.nativeID && filters.excludeNativeID.has(render.nativeID)) return false;
+    if (render.componentName && filters.excludeComponent.has(render.componentName)) return false;
+
+    return true;
   }
 
   /**
@@ -948,6 +1085,17 @@ class RenderTrackerSingleton {
         listener(settings);
       } catch (error) {
         console.error("[RenderTracker] Error in settings listener:", error);
+      }
+    }
+  }
+
+  private notifyFilterListeners(): void {
+    const filters = this.getFilters();
+    for (const listener of this.filterListeners) {
+      try {
+        listener(filters);
+      } catch (error) {
+        console.error("[RenderTracker] Error in filter listener:", error);
       }
     }
   }
