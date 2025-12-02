@@ -117,7 +117,8 @@
     "react-native": "*",
     "expo-clipboard": "*",
     "@react-native-clipboard/clipboard": "*",
-    "react-native-safe-area-context": "*"
+    "react-native-safe-area-context": "*",
+    "expo-file-system": "*"
   },
   "peerDependenciesMeta": {
     "expo-clipboard": {
@@ -127,6 +128,9 @@
       "optional": true
     },
     "react-native-safe-area-context": {
+      "optional": true
+    },
+    "expo-file-system": {
       "optional": true
     }
   },

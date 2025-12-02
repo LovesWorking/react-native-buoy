@@ -26,6 +26,12 @@ import {
   SettingsIcon,
   safeGetItem,
   safeSetItem,
+  getStorageBackendType,
+  persistentStorage,
+  Database,
+  Trash2,
+  CheckCircle2,
+  AlertTriangle,
 } from "@react-buoy/shared-ui";
 import { JsModal, type ModalMode, devToolsStorageKeys } from "@react-buoy/shared-ui";
 import { gameUIColors } from "@react-buoy/shared-ui";
@@ -221,6 +227,9 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   );
   const [activeTab, setActiveTab] = useState<"dial" | "floating" | "settings">("dial");
   const [expandedSettings, setExpandedSettings] = useState<Set<string>>(new Set());
+  const [storageBackend, setStorageBackend] = useState<"filesystem" | "asyncstorage" | "memory" | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+  const [clearSuccess, setClearSuccess] = useState(false);
   const insets = useSafeAreaInsets();
   const screenHeight = Dimensions.get("window").height;
   const screenWidth = Dimensions.get("window").width;
@@ -249,6 +258,11 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  // Load storage backend type
+  useEffect(() => {
+    getStorageBackendType().then(setStorageBackend);
+  }, []);
 
   const saveSettings = async (newSettings: DevToolsSettings) => {
     try {
@@ -312,6 +326,24 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
       },
     };
     saveSettings(newSettings);
+  };
+
+  const handleClearStorage = async () => {
+    setIsClearing(true);
+    setClearSuccess(false);
+    try {
+      await persistentStorage.clear();
+      setClearSuccess(true);
+      // Reset settings to defaults after clearing
+      setSettings(defaultSettings);
+      settingsBus.emit(defaultSettings);
+      // Reset success state after 2 seconds
+      setTimeout(() => setClearSuccess(false), 2000);
+    } catch (error) {
+      console.error("Failed to clear storage:", error);
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   // Modal is fixed to bottom sheet mode
@@ -653,6 +685,86 @@ export const DevToolsSettingsModal: FC<DevToolsSettingsModalProps> = ({
         )}
         {activeTab === "settings" && (
           <View style={styles.section}>
+            {/* Storage Status Card */}
+            <View style={styles.storageStatusCard}>
+              <View style={styles.storageStatusHeader}>
+                <View style={styles.storageStatusIcon}>
+                  <Database size={18} color={
+                    storageBackend === "filesystem" ? gameUIColors.success :
+                    storageBackend === "asyncstorage" ? gameUIColors.warning :
+                    gameUIColors.error
+                  } />
+                </View>
+                <View style={styles.storageStatusInfo}>
+                  <Text style={styles.storageStatusLabel}>STORAGE TYPE</Text>
+                  <View style={styles.storageStatusBadgeContainer}>
+                    <View style={[
+                      styles.storageStatusBadge,
+                      {
+                        backgroundColor: storageBackend === "filesystem" ? gameUIColors.success + "20" :
+                          storageBackend === "asyncstorage" ? gameUIColors.warning + "20" :
+                          gameUIColors.error + "20",
+                        borderColor: storageBackend === "filesystem" ? gameUIColors.success + "60" :
+                          storageBackend === "asyncstorage" ? gameUIColors.warning + "60" :
+                          gameUIColors.error + "60",
+                      }
+                    ]}>
+                      <Text style={[
+                        styles.storageStatusBadgeText,
+                        {
+                          color: storageBackend === "filesystem" ? gameUIColors.success :
+                            storageBackend === "asyncstorage" ? gameUIColors.warning :
+                            gameUIColors.error,
+                        }
+                      ]}>
+                        {storageBackend === "filesystem" ? "FILE SYSTEM" :
+                         storageBackend === "asyncstorage" ? "ASYNC STORAGE" :
+                         storageBackend === "memory" ? "MEMORY" : "LOADING..."}
+                      </Text>
+                    </View>
+                    {storageBackend === "filesystem" && (
+                      <CheckCircle2 size={14} color={gameUIColors.success} />
+                    )}
+                    {storageBackend === "asyncstorage" && (
+                      <AlertTriangle size={14} color={gameUIColors.warning} />
+                    )}
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.storageStatusDescription}>
+                {storageBackend === "filesystem"
+                  ? "Settings persist independently and survive AsyncStorage.clear() calls during logout."
+                  : storageBackend === "asyncstorage"
+                  ? "Settings may be lost if AsyncStorage is cleared. Install expo-file-system for persistent storage."
+                  : storageBackend === "memory"
+                  ? "Settings are stored in memory only and will be lost on app restart."
+                  : "Checking storage backend..."}
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.clearStorageButton,
+                  isClearing && styles.clearStorageButtonDisabled,
+                  clearSuccess && styles.clearStorageButtonSuccess,
+                ]}
+                onPress={handleClearStorage}
+                disabled={isClearing}
+                activeOpacity={0.7}
+              >
+                {clearSuccess ? (
+                  <CheckCircle2 size={14} color={gameUIColors.success} />
+                ) : (
+                  <Trash2 size={14} color={isClearing ? gameUIColors.muted : gameUIColors.error} />
+                )}
+                <Text style={[
+                  styles.clearStorageButtonText,
+                  clearSuccess && { color: gameUIColors.success },
+                  isClearing && { color: gameUIColors.muted },
+                ]}>
+                  {clearSuccess ? "CLEARED" : isClearing ? "CLEARING..." : "CLEAR ALL SETTINGS"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             {renderGlobalSettingCard(
               "enableSharedModalDimensions",
               "SHARED MODAL SIZE",
@@ -993,5 +1105,86 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: gameUIColors.secondary,
     lineHeight: 18,
+  },
+
+  // Storage Status Card styles
+  storageStatusCard: {
+    backgroundColor: gameUIColors.panel,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: gameUIColors.border + "40",
+    padding: 12,
+    marginBottom: 10,
+  },
+  storageStatusHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  storageStatusIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: gameUIColors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  storageStatusInfo: {
+    flex: 1,
+  },
+  storageStatusLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: gameUIColors.muted,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  storageStatusBadgeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  storageStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  storageStatusBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  storageStatusDescription: {
+    fontSize: 11,
+    color: gameUIColors.muted,
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  clearStorageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    backgroundColor: gameUIColors.error + "15",
+    borderWidth: 1,
+    borderColor: gameUIColors.error + "40",
+  },
+  clearStorageButtonDisabled: {
+    opacity: 0.5,
+  },
+  clearStorageButtonSuccess: {
+    backgroundColor: gameUIColors.success + "15",
+    borderColor: gameUIColors.success + "40",
+  },
+  clearStorageButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: gameUIColors.error,
+    letterSpacing: 0.5,
   },
 });

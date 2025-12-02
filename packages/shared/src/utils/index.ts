@@ -7,6 +7,12 @@ export {
   isPersistentStorageAvailable,
   useSafeAsyncStorage,
 } from "./safeAsyncStorage";
+export {
+  persistentStorage,
+  isUsingPersistentStorage,
+  getStorageBackendType,
+  type DevToolsStorage,
+} from "./persistentStorage";
 export { safeStringify } from "./safeStringify";
 export {
   getValueType,

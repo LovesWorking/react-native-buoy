@@ -8,12 +8,16 @@ export {
   parseDisplayValue,
   // Safe area utilities
   getSafeAreaInsets,
-  // Async storage utilities
+  // Async storage utilities (legacy - wraps persistentStorage)
   safeGetItem,
   safeSetItem,
   safeRemoveItem,
   isPersistentStorageAvailable,
   useSafeAsyncStorage,
+  // Persistent storage utilities (new)
+  persistentStorage,
+  isUsingPersistentStorage,
+  getStorageBackendType,
   // String utilities
   safeStringify,
   // Type helper utilities (excluding isPlainObject due to conflict)
