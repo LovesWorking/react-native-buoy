@@ -13,6 +13,7 @@ import type {
   FloatingMenuActions,
   FloatingMenuState,
 } from "./types";
+import type { DefaultFloatingConfig, DefaultDialConfig } from "./defaultConfig";
 import { DialDevTools } from "./dial/DialDevTools";
 import type { Environment } from "@react-buoy/shared-ui";
 import {
@@ -45,6 +46,10 @@ export interface FloatingMenuProps {
   environment?: Environment;
   /** Optional role that determines which user status badge is rendered. */
   userRole?: UserRole;
+  /** Default tools to enable in the floating bubble when no user settings exist. */
+  defaultFloatingTools?: DefaultFloatingConfig;
+  /** Default tools to enable in the dial menu when no user settings exist (max 6). */
+  defaultDialTools?: DefaultDialConfig;
 }
 
 /**

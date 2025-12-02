@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, ReactNode } from "react";
+import React, { useMemo, useCallback, ReactNode, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { AppHostProvider } from "./AppHost";
 import { FloatingMenu, type FloatingMenuProps } from "./FloatingMenu";
@@ -11,6 +11,12 @@ import type { InstalledApp } from "./types";
 import { DevToolsVisibilityProvider } from "./DevToolsVisibilityContext";
 import { HintsProvider } from "@react-buoy/shared-ui";
 import { MinimizedToolsProvider } from "./MinimizedToolsContext";
+import {
+  type DefaultFloatingConfig,
+  type DefaultDialConfig,
+  validateDialConfig,
+} from "./defaultConfig";
+import { DefaultConfigProvider } from "./DefaultConfigContext";
 
 /**
  * Environment variable configuration
@@ -128,6 +134,39 @@ export interface FloatingDevToolsProps extends Omit<FloatingMenuProps, "apps"> {
    * ```
    */
   disableHints?: boolean;
+
+  /**
+   * Default tools to enable in the floating bubble row when no user settings exist.
+   * Teams can use this to pre-configure which tools appear by default.
+   * User settings (once saved) will override these defaults.
+   *
+   * Type-safe: Only valid tool IDs are allowed with full autocomplete support.
+   *
+   * @example
+   * ```tsx
+   * <FloatingDevTools
+   *   defaultFloatingTools={['env', 'environment', 'network', 'query-wifi-toggle']}
+   * />
+   * ```
+   */
+  defaultFloatingTools?: DefaultFloatingConfig;
+
+  /**
+   * Default tools to enable in the dial menu when no user settings exist.
+   * Teams can use this to pre-configure which tools appear by default.
+   * User settings (once saved) will override these defaults.
+   *
+   * Type-safe: Only valid tool IDs are allowed with full autocomplete support.
+   * Maximum 6 tools allowed - validation will throw a helpful error if exceeded.
+   *
+   * @example
+   * ```tsx
+   * <FloatingDevTools
+   *   defaultDialTools={['env', 'network', 'storage', 'query', 'route-events', 'debug-borders']}
+   * />
+   * ```
+   */
+  defaultDialTools?: DefaultDialConfig;
 }
 
 /**
@@ -140,6 +179,19 @@ export interface FloatingDevToolsProps extends Omit<FloatingMenuProps, "apps"> {
  * ```tsx
  * <FloatingDevTools environment="local" userRole="admin" />
  * // All installed dev tools automatically appear!
+ * ```
+ *
+ * **With Team Default Configuration (Type-Safe!):**
+ * ```tsx
+ * // Set which tools are enabled by default for your team
+ * <FloatingDevTools
+ *   // Floating bubble: ENV badge + WiFi toggle
+ *   defaultFloatingTools={['env', 'environment', 'query-wifi-toggle']}
+ *   // Dial menu: your team's 6 favorite tools (max 6!)
+ *   defaultDialTools={['env', 'network', 'storage', 'query', 'route-events', 'debug-borders']}
+ *   environment="local"
+ *   userRole="admin"
+ * />
  * ```
  *
  * **With Validation (Super Simple!):**
@@ -177,8 +229,17 @@ export const FloatingDevTools = ({
   requiredStorageKeys,
   children,
   disableHints = false,
+  defaultFloatingTools,
+  defaultDialTools,
   ...props
 }: FloatingDevToolsProps) => {
+  // Validate dial tools configuration on mount (development-time check)
+  useEffect(() => {
+    if (defaultDialTools) {
+      validateDialConfig(defaultDialTools);
+    }
+  }, [defaultDialTools]);
+
   // Build config overrides if requiredEnvVars or requiredStorageKeys are provided
   const configOverrides = useMemo(() => {
     const overrides: InstalledApp[] = [];
@@ -266,22 +327,27 @@ export const FloatingDevTools = ({
   );
 
   return (
-    <HintsProvider disableHints={disableHints}>
-      <View style={styles.container} pointerEvents="box-none">
-        <DevToolsVisibilityProvider>
-          <AppHostProvider>
-            <MinimizedToolsProvider getToolIcon={getToolIcon}>
-              <FloatingMenu {...props} apps={finalApps} />
-              <AppOverlay />
-              {/* MinimizedToolsStack is now integrated into FloatingTools */}
-            </MinimizedToolsProvider>
-          </AppHostProvider>
-          {children}
-          {DebugBordersOverlay && <DebugBordersOverlay />}
-          {HighlightUpdatesOverlay && <HighlightUpdatesOverlay />}
-        </DevToolsVisibilityProvider>
-      </View>
-    </HintsProvider>
+    <DefaultConfigProvider
+      defaultFloatingTools={defaultFloatingTools}
+      defaultDialTools={defaultDialTools}
+    >
+      <HintsProvider disableHints={disableHints}>
+        <View style={styles.container} pointerEvents="box-none">
+          <DevToolsVisibilityProvider>
+            <AppHostProvider>
+              <MinimizedToolsProvider getToolIcon={getToolIcon}>
+                <FloatingMenu {...props} apps={finalApps} />
+                <AppOverlay />
+                {/* MinimizedToolsStack is now integrated into FloatingTools */}
+              </MinimizedToolsProvider>
+            </AppHostProvider>
+            {children}
+            {DebugBordersOverlay && <DebugBordersOverlay />}
+            {HighlightUpdatesOverlay && <HighlightUpdatesOverlay />}
+          </DevToolsVisibilityProvider>
+        </View>
+      </HintsProvider>
+    </DefaultConfigProvider>
   );
 };
 

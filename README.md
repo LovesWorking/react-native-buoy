@@ -781,15 +781,41 @@ React Buoy remembers:
 - Which tools are open
 - Tool positions (if dragged)
 - Minimized vs expanded state
+- Modal sizes and positions
 - User preferences
 
-**Storage Key**: `@apphost_open_apps`
+### Storage Backends
+
+React Buoy uses a **smart storage system** that automatically picks the best available option:
+
+| Backend | Persists Through Logout? | Requires | When Used |
+|---------|-------------------------|----------|-----------|
+| 📁 **File System** | ✅ Yes | `expo-file-system` | Dev builds, RN CLI |
+| 💾 **AsyncStorage** | ❌ No (cleared on logout) | `@react-native-async-storage/async-storage` | Expo Go fallback |
+| 🧠 **Memory** | ❌ No (lost on restart) | Nothing | Last resort |
+
+**Why does this matter?**
+
+If your app clears `AsyncStorage` during logout (common pattern), your devtools settings would normally be wiped too. With `expo-file-system` installed, settings persist independently—surviving logout flows, `AsyncStorage.clear()` calls, and more.
+
+**To enable persistent storage:**
+
+```bash
+# Expo projects
+npx expo install expo-file-system
+
+# RN CLI projects
+npm install expo expo-file-system
+```
+
+You can check which storage backend is active in **Settings → Storage Type** in the devtools menu.
 
 This means your debugging session survives:
 
 - ✅ Hot reloads
 - ✅ App restarts
 - ✅ Crash recovery
+- ✅ Logout flows (with file system storage)
 
 ### Minimize Feature
 

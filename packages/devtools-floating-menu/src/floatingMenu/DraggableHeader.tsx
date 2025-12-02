@@ -64,20 +64,25 @@ export const DraggableHeader = memo(function DraggableHeader({
         },
 
         onPanResponderRelease: () => {
-          const currentX = Number(JSON.stringify(position.x));
-          const currentY = Number(JSON.stringify(position.y));
-          if (dragDistanceRef.current <= 5 && !isDraggingRef.current) {
-            position.setOffset({ x: 0, y: 0 });
-            position.setValue({ x: currentX, y: currentY });
+          // Check if this was a tap (minimal movement) before doing anything else
+          const wasTap = dragDistanceRef.current <= 5 && !isDraggingRef.current;
+
+          if (wasTap) {
+            // For taps, just call the tap handler immediately - no position manipulation needed
             onTap?.();
+            isDraggingRef.current = false;
             return;
           }
-          const maxX = containerBounds.width - elementSize.width + maxOverflowX;
-          const clampedX = Math.max(minPosition.x, Math.min(currentX, maxX));
-          const clampedY = Math.max(minPosition.y, Math.min(currentY, containerBounds.height - elementSize.height));
-          position.setValue({ x: clampedX, y: clampedY });
-          onDragEnd?.({ x: clampedX, y: clampedY });
-          isDraggingRef.current = false;
+
+          // For drags, get the final position and clamp it
+          position.stopAnimation(({ x: currentX, y: currentY }) => {
+            const maxX = containerBounds.width - elementSize.width + maxOverflowX;
+            const clampedX = Math.max(minPosition.x, Math.min(currentX, maxX));
+            const clampedY = Math.max(minPosition.y, Math.min(currentY, containerBounds.height - elementSize.height));
+            position.setValue({ x: clampedX, y: clampedY });
+            onDragEnd?.({ x: clampedX, y: clampedY });
+            isDraggingRef.current = false;
+          });
         },
 
         onPanResponderTerminate: () => {

@@ -27,6 +27,10 @@ function logOnce(message: string, error?: unknown) {
 /**
  * Attempt to require the expo-router store from known locations.
  * Returns null (with a logged error in dev) when expo-router is not available.
+ *
+ * Note: The store uses getters that read from an internal storeRef.
+ * The storeRef gets populated when Expo Router's useStore() hook runs.
+ * So we cache the store reference but its property values update over time.
  */
 export function getExpoRouterStore(): ExpoRouterStore | null {
   if (cachedStore) {
@@ -41,6 +45,9 @@ export function getExpoRouterStore(): ExpoRouterStore | null {
         cachedStoreSource = "build";
         importError = null;
         hasLoggedMissingStore = false;
+        if (__DEV__) {
+          console.log("[expoRouterStore] Loaded store from build path");
+        }
         return true;
       }
     } catch (error: any) {
@@ -57,6 +64,9 @@ export function getExpoRouterStore(): ExpoRouterStore | null {
         cachedStoreSource = "src";
         importError = null;
         hasLoggedMissingStore = false;
+        if (__DEV__) {
+          console.log("[expoRouterStore] Loaded store from src path");
+        }
         return true;
       }
     } catch (error: any) {
