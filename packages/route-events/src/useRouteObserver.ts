@@ -3,9 +3,6 @@
  *
  * Uses public Expo Router hooks to track route changes and emits them
  * to the global RouteObserver singleton.
- *
- * IMPORTANT: This hook must be called from a component that is inside
- * the Expo Router navigation tree (a child of Stack, Tabs, or Slot).
  */
 
 import { useEffect, useRef } from "react";
