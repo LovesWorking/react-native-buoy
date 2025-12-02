@@ -313,6 +313,18 @@ export const FloatingDevTools = ({
     }
   }, []);
 
+  // Check if route-events is installed and auto-render the RouteTracker
+  // This enables automatic route tracking without requiring users to add <RouteTracker /> manually
+  const RouteTracker = useMemo(() => {
+    try {
+      // @ts-ignore - Dynamic import that may not exist
+      const { RouteTracker: Tracker } = require("@react-buoy/route-events");
+      return Tracker;
+    } catch {
+      return null;
+    }
+  }, []);
+
   // Get tool icon helper for the MinimizedToolsProvider
   const getToolIcon = useCallback(
     (id: string): ReactNode => {
@@ -344,6 +356,7 @@ export const FloatingDevTools = ({
             {children}
             {DebugBordersOverlay && <DebugBordersOverlay />}
             {HighlightUpdatesOverlay && <HighlightUpdatesOverlay />}
+            {RouteTracker && <RouteTracker />}
           </DevToolsVisibilityProvider>
         </View>
       </HintsProvider>
