@@ -5,6 +5,9 @@ export type { RouteEventsModalWithTabsProps } from "./components/RouteEventsModa
 // Export preset configuration (easiest way to add to FloatingDevTools!)
 export { routeEventsToolPreset, createRouteEventsTool } from "./preset";
 
+// Export RouteTracker component - place inside your navigation tree for route tracking
+export { RouteTracker } from "./RouteTracker";
+
 // Export individual components for advanced usage
 export { RoutesSitemap } from "./components/RoutesSitemap";
 export type { RoutesSitemapProps } from "./components/RoutesSitemap";
