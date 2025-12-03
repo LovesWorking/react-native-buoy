@@ -6,7 +6,6 @@ import {
   StyleSheet,
   FlatList,
   Alert,
-  TextInput,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -29,6 +28,7 @@ import {
   Search,
   X,
   AlertCircle,
+  SearchBar,
 } from "@react-buoy/shared-ui";
 import { RequiredStorageKey } from "../types";
 import { StorageBrowserMode } from "./StorageBrowserMode";
@@ -118,7 +118,6 @@ export function StorageModalWithTabs({
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
-  const searchInputRef = useRef<TextInput>(null);
   const hasLoadedStorageFilters = useRef(false);
 
   // Event Listener state
@@ -272,13 +271,18 @@ export function StorageModalWithTabs({
     saveFilters();
   }, [ignoredPatterns]);
 
-  // Event listener setup
+  // Sync isListening state with actual listener state on mount
   useEffect(() => {
     if (!visible) return;
 
-    // Check if already listening
+    // Check if already listening and sync state
     const listening = checkIsListening();
     setIsListening(listening);
+  }, [visible]);
+
+  // Event listener setup - only collect events when isListening is true
+  useEffect(() => {
+    if (!visible || !isListening) return;
 
     // Set up AsyncStorage event listener
     const unsubscribeAsync = addListener((event: AsyncStorageEvent) => {
@@ -307,7 +311,7 @@ export function StorageModalWithTabs({
       unsubscribeAsync();
       unsubscribeMMKV();
     };
-  }, [visible]);
+  }, [visible, isListening]);
 
   const handleToggleListening = useCallback(async () => {
     if (isListening) {
@@ -386,15 +390,6 @@ export function StorageModalWithTabs({
   const handleAddStoragePattern = useCallback((pattern: string) => {
     setStorageIgnoredPatterns((prev) => new Set([...prev, pattern]));
   }, []);
-
-  // Auto-focus search input when activated
-  useEffect(() => {
-    if (isSearchActive) {
-      requestAnimationFrame(() => {
-        searchInputRef.current?.focus();
-      });
-    }
-  }, [isSearchActive]);
 
   const handlePurgeStorage = useCallback(async () => {
     Alert.alert(
@@ -775,33 +770,20 @@ export function StorageModalWithTabs({
             {onBack && <ModalHeader.Navigation onBack={onBack} />}
             <ModalHeader.Content title="">
               {isSearchActive ? (
-                <View style={styles.headerSearchContainer}>
-                  <Search size={14} color={macOSColors.text.secondary} />
-                  <TextInput
-                    ref={searchInputRef}
-                    style={styles.headerSearchInput}
-                    placeholder="Search storage keys..."
-                    placeholderTextColor={macOSColors.text.muted}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    onSubmitEditing={() => setIsSearchActive(false)}
-                    onBlur={() => setIsSearchActive(false)}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="search"
-                  />
-                  {searchQuery.length > 0 ? (
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSearchQuery("");
-                        setIsSearchActive(false);
-                      }}
-                      style={styles.headerSearchClear}
-                    >
-                      <X size={14} color={macOSColors.text.secondary} />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  onClear={() => {
+                    setSearchQuery("");
+                    setIsSearchActive(false);
+                  }}
+                  placeholder="Search storage keys..."
+                  autoFocus={true}
+                  onSubmitEditing={() => setIsSearchActive(false)}
+                  returnKeyType="search"
+                  suggestions={allStorageKeys}
+                  containerStyle={styles.headerSearchContainer}
+                />
               ) : (
                 <TabSelector
                   tabs={[
@@ -910,27 +892,7 @@ export function StorageModalWithTabs({
 
 const styles = StyleSheet.create({
   headerSearchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: macOSColors.background.input,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    maxHeight: 32,
-  },
-  headerSearchInput: {
-    flex: 1,
-    color: macOSColors.text.primary,
-    fontSize: 13,
-    marginLeft: 6,
-    paddingVertical: 2,
-  },
-  headerSearchClear: {
-    marginLeft: 6,
-    padding: 4,
   },
 
   iconButton: {
