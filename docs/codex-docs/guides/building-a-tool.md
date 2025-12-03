@@ -93,11 +93,57 @@ If you need custom defaults, merge them into the `availableApps` array passed to
 - Use `useAppHost().open()` to launch programmatically (e.g., deep link).
 - Reload the app and confirm persistence reopens the tool if it was active.
 
+## Common Pitfalls
+
+### Icon Must Be a Simple Arrow Function (Not a Hook-Based Component)
+
+When the App Host restores a tool on reload, it calls `appDef.icon({ slot, size })` as a plain function to resolve the icon. If your icon uses React hooks (`useState`, `useEffect`), this will fail silently because hooks can only be called inside a React component render context.
+
+**Wrong - Uses hooks, breaks persistence:**
+```tsx
+function MyIcon({ size }: { size: number }) {
+  const [active, setActive] = useState(false); // Hooks break restoration!
+  useEffect(() => { /* ... */ }, []);
+  return <SomeIcon size={size} color={active ? 'green' : 'gray'} />;
+}
+
+const myToolPreset = {
+  id: 'my-tool',
+  icon: MyIcon, // This breaks modal persistence on reload
+  // ...
+};
+```
+
+**Correct - Simple arrow function returning JSX:**
+```tsx
+const myToolPreset = {
+  id: 'my-tool',
+  icon: ({ size }: { size: number }) => <SomeIcon size={size} color="#10b981" />,
+  // ...
+};
+```
+
+If you need dynamic icon state (e.g., toggle color), use hooks in the icon for the **toggle-only** preset (which doesn't persist), but use a simple static icon for **modal** presets that need persistence.
+
+### State Persistence
+
+For tools that need to persist their internal state (tracking enabled, filters, etc.) across reloads:
+
+1. Add storage keys to `devToolsStorageKeys` in `@react-buoy/shared-ui`
+2. Use `safeGetItem`/`safeSetItem` (not direct AsyncStorage import) for graceful fallback
+3. Use `hasLoaded` refs to prevent saving on initial load
+4. Load state in a `useEffect` when `visible` becomes true
+5. Save state in separate `useEffect` hooks that depend on the state values
+
+See `StorageModalWithTabs.tsx` or `HighlightUpdatesModal.tsx` for reference implementations.
+
 ## Checklist
 
 - [ ] Tool component gracefully handles `visible` and `onClose` (if `self-modal`).
 - [ ] `id` is unique and stable across releases.
 - [ ] Icons render in 16px square or smaller for the row.
+- [ ] **Icon is a simple arrow function, NOT a component with hooks** (for modal persistence).
 - [ ] Added to `availableApps` for settings personalization.
+- [ ] State persistence uses `safeGetItem`/`safeSetItem` from shared-ui.
 
 See the [`InstalledApp` type](../reference/FloatingMenu.md) for every property you can set.

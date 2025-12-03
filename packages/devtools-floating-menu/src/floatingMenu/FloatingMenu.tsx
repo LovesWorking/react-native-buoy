@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from "react";
+import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import {
   TouchableOpacity,
   StyleSheet,
@@ -13,6 +13,7 @@ import type {
   FloatingMenuActions,
   FloatingMenuState,
 } from "./types";
+import type { DefaultFloatingConfig, DefaultDialConfig } from "./defaultConfig";
 import { DialDevTools } from "./dial/DialDevTools";
 import type { Environment } from "@react-buoy/shared-ui";
 import {
@@ -45,6 +46,10 @@ export interface FloatingMenuProps {
   environment?: Environment;
   /** Optional role that determines which user status badge is rendered. */
   userRole?: UserRole;
+  /** Default tools to enable in the floating bubble when no user settings exist. */
+  defaultFloatingTools?: DefaultFloatingConfig;
+  /** Default tools to enable in the dial menu when no user settings exist (max 6). */
+  defaultDialTools?: DefaultDialConfig;
 }
 
 /**
@@ -177,9 +182,10 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
     // Only open modal if not a toggle-only tool
     if (app.launchMode !== "toggle-only") {
       // Resolve the icon for minimize stack display
+      // IMPORTANT: Use React.createElement for function components to preserve hooks
       const resolvedIcon =
         typeof app.icon === "function"
-          ? app.icon({ slot: "dial", size: 20 })
+          ? React.createElement(app.icon, { slot: "dial", size: 20 })
           : app.icon;
 
       open({

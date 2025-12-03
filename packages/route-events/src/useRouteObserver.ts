@@ -2,7 +2,7 @@
  * useRouteObserver - React hook for observing route changes
  *
  * Uses public Expo Router hooks to track route changes and emits them
- * to the global RouteObserver singleton
+ * to the global RouteObserver singleton.
  */
 
 import { useEffect, useRef } from "react";

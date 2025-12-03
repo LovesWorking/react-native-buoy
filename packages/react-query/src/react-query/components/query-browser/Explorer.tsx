@@ -186,79 +186,72 @@ const ClearArrayButton = memo(
   }
 );
 ClearArrayButton.displayName = "ClearArrayButton";
-// Memoized ToggleValueButton with pre-computed styles [[memory:4875251]]
-const ToggleValueButton = memo(
-  ({
-    dataPath,
-    activeQuery,
-    value,
-    itemsDeletable,
-  }: {
-    dataPath: string[];
-    activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
-    value: JsonValue;
-    itemsDeletable?: boolean;
-  }) => {
-    const queryClient = useQueryClient();
+// ToggleValueButton - not memoized because parent Explorer passes new dataPath array each render
+// which defeats memo anyway, and we need reliable re-renders when value changes
+function ToggleValueButton({
+  dataPath,
+  activeQuery,
+  value,
+  itemsDeletable,
+}: {
+  dataPath: string[];
+  activeQuery: Query<unknown, Error, unknown, QueryKey> | undefined;
+  value: JsonValue;
+  itemsDeletable?: boolean;
+}) {
+  const queryClient = useQueryClient();
 
-    const handleClick = useCallback(() => {
-      if (!activeQuery) return;
-      const oldData = activeQuery.state.data as unknown as JsonValue;
-      const currentValue = typeof value === "boolean" ? value : false;
-      const newData = updateNestedDataByPath(oldData, dataPath, !currentValue);
-      queryClient.setQueryData(activeQuery.queryKey, newData);
-    }, [queryClient, activeQuery, dataPath, value]);
+  const handleClick = useCallback(() => {
+    if (!activeQuery) return;
+    const oldData = activeQuery.state.data as unknown as JsonValue;
+    const currentValue = typeof value === "boolean" ? value : false;
+    const newData = updateNestedDataByPath(oldData, dataPath, !currentValue);
+    queryClient.setQueryData(activeQuery.queryKey, newData);
+  }, [queryClient, activeQuery, dataPath, value]);
 
-    const handleDelete = useCallback(() => {
-      if (!activeQuery) return;
-      deleteItem({
-        queryClient,
-        activeQuery: activeQuery,
-        dataPath: dataPath,
-      });
-    }, [queryClient, activeQuery, dataPath]);
+  const handleDelete = useCallback(() => {
+    if (!activeQuery) return;
+    deleteItem({
+      queryClient,
+      activeQuery: activeQuery,
+      dataPath: dataPath,
+    });
+  }, [queryClient, activeQuery, dataPath]);
 
-    if (!activeQuery) return null;
+  if (!activeQuery) return null;
 
-    // Pre-compute styles based on value state [[memory:4875251]]
-    const iconStyle = value ? styles.toggleIconTrue : styles.toggleIconFalse;
-    const badgeStyle = value ? styles.toggleBadgeTrue : styles.toggleBadgeFalse;
-    const textStyle = value ? styles.toggleTextTrue : styles.toggleTextFalse;
+  // Pre-compute styles based on value state
+  const badgeStyle = value ? styles.toggleBadgeTrue : styles.toggleBadgeFalse;
+  const textStyle = value ? styles.toggleTextTrue : styles.toggleTextFalse;
 
-    return (
-      <TouchableOpacity
-        sentry-label="ignore devtools explorer toggle button"
-        style={styles.modernToggleButton}
-        onPress={handleClick}
-        hitSlop={HIT_SLOP_OPTIMIZED}
-        activeOpacity={0.8}
-      >
-        <View style={[styles.toggleBadge, badgeStyle]}>
-          <Text style={[styles.toggleBadgeText, textStyle]}>
-            {value ? "TRUE" : "FALSE"}
-          </Text>
-        </View>
-        {itemsDeletable && (
-          <TouchableOpacity
-            sentry-label="ignore devtools explorer delete button in toggle"
-            onPress={handleDelete}
-            style={styles.deleteButtonInToggle}
-            accessibilityLabel="Delete item"
-            hitSlop={HIT_SLOP_OPTIMIZED}
-            activeOpacity={0.7}
-          >
-            <Trash
-              size={14}
-              strokeWidth={2}
-              color={gameUIColors.error + "CC"}
-            />
-          </TouchableOpacity>
-        )}
-      </TouchableOpacity>
-    );
-  }
-);
-ToggleValueButton.displayName = "ToggleValueButton";
+  return (
+    <TouchableOpacity
+      sentry-label="ignore devtools explorer toggle button"
+      style={styles.modernToggleButton}
+      onPress={handleClick}
+      hitSlop={HIT_SLOP_OPTIMIZED}
+      activeOpacity={0.8}
+    >
+      <View style={[styles.toggleBadge, badgeStyle]}>
+        <Text style={[styles.toggleBadgeText, textStyle]}>
+          {value ? "TRUE" : "FALSE"}
+        </Text>
+      </View>
+      {itemsDeletable && (
+        <TouchableOpacity
+          sentry-label="ignore devtools explorer delete button in toggle"
+          onPress={handleDelete}
+          style={styles.deleteButtonInToggle}
+          accessibilityLabel="Delete item"
+          hitSlop={HIT_SLOP_OPTIMIZED}
+          activeOpacity={0.7}
+        >
+          <Trash size={14} strokeWidth={2} color={gameUIColors.error + "CC"} />
+        </TouchableOpacity>
+      )}
+    </TouchableOpacity>
+  );
+}
 type Props = {
   editable?: boolean;
   label: string;

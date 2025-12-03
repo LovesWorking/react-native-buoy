@@ -260,6 +260,7 @@ interface ExpandedToolbarProps {
   onCollapse: () => void;
   progress: Animated.Value; // 0 = collapsed (toolbar hidden), 1 = expanded (toolbar visible)
   width: number;
+  isExpanded: boolean; // Whether the toolbar is currently expanded (controls icon mounting)
 }
 
 function ExpandedToolbar({
@@ -268,6 +269,7 @@ function ExpandedToolbar({
   onCollapse,
   progress,
   width,
+  isExpanded,
 }: ExpandedToolbarProps) {
   // Calculate toolbar height based on number of tools
   // Layout from top to bottom: tool icons, then collapse button at bottom
@@ -298,8 +300,8 @@ function ExpandedToolbar({
     >
       {/* Inner container to keep content positioned from top */}
       <View style={[styles.toolbarInner, { height: toolbarHeight }]}>
-        {/* Tool Icons - in reverse order so newest appears at top */}
-        {[...tools].reverse().map((tool, index) => (
+        {/* Tool Icons - only render when expanded to prevent animations when collapsed */}
+        {isExpanded && [...tools].reverse().map((tool, index) => (
           <GlitchToolButton
             key={tool.instanceId}
             tool={tool}
@@ -437,6 +439,7 @@ export function MinimizedToolsStack({
           onCollapse={handleCollapse}
           progress={progress}
           width={width}
+          isExpanded={isExpanded}
         />
       </View>
 

@@ -269,6 +269,12 @@ export function NavigationStack({ style }: NavigationStackProps) {
                     {item.pathname}
                   </Text>
 
+                  {/* Copy Route Button */}
+                  <InlineCopyButton
+                    value={item.pathname}
+                    buttonStyle={styles.copyRouteButton}
+                  />
+
                   {/* Status Badge */}
                   {item.isFocused ? (
                     <View style={styles.focusedBadge}>
@@ -530,6 +536,11 @@ const styles = StyleSheet.create({
     color: macOSColors.text.primary,
     fontFamily: "monospace",
     flex: 1,
+  },
+
+  copyRouteButton: {
+    padding: 4,
+    marginLeft: 4,
   },
 
   focusedBadge: {

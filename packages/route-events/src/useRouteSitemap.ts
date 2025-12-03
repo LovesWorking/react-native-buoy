@@ -216,11 +216,35 @@ export function useRouteSitemap(
   }, []);
 
   // When the route tree isn't available yet (e.g., Expo Router still mounting),
-  // poll briefly until it becomes ready.
+  // poll until it becomes ready. Use a more aggressive retry since the store
+  // is a singleton that gets populated asynchronously.
   useEffect(() => {
-    if (routeNode) return;
-    const timeout = setTimeout(refresh, 250);
-    return () => clearTimeout(timeout);
+    if (routeNode) {
+      return;
+    }
+
+    let retryCount = 0;
+    const maxRetries = 100; // 10 seconds max
+    let hasLoggedWaiting = false;
+
+    const poll = () => {
+      retryCount++;
+
+      // Log once when we start waiting
+      if (__DEV__ && !hasLoggedWaiting && retryCount > 5) {
+        console.log("[useRouteSitemap] Waiting for route tree...");
+        hasLoggedWaiting = true;
+      }
+
+      refresh();
+
+      if (retryCount < maxRetries) {
+        timeoutRef = setTimeout(poll, 100);
+      }
+    };
+
+    let timeoutRef = setTimeout(poll, 100);
+    return () => clearTimeout(timeoutRef);
   }, [routeNode, refresh]);
 
   // Optional auto-refresh hook for callers that want periodic updates

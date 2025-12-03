@@ -30,7 +30,6 @@ import {
   routeObserver as defaultRouteObserver,
   type RouteChangeEvent,
 } from "../RouteObserver";
-import { useRouteObserver } from "../useRouteObserver";
 import {
   RouteEventDetailContent,
   RouteEventDetailFooter,
@@ -66,9 +65,9 @@ export function RouteEventsModalWithTabs({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("events");
 
-  // Automatically start route tracking when modal is visible
-  // This eliminates the need for users to manually call useRouteObserver in their app
-  useRouteObserver();
+  // NOTE: Route tracking requires <RouteTracker /> to be placed inside the navigation tree.
+  // The useRouteObserver hook uses expo-router hooks that only work inside Stack/Tabs/Slot.
+  // See the RouteTracker component export for easy setup.
 
   // Event Listener state
   const [events, setEvents] = useState<RouteChangeEvent[]>([]);

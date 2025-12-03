@@ -38,7 +38,7 @@ export const storageToolPreset = {
   component: StorageModalWithTabs,
   props: {
     requiredStorageKeys: [] as RequiredStorageKey[],
-    enableSharedModalDimensions: true,
+    enableSharedModalDimensions: false,
   },
 };
 
@@ -98,7 +98,7 @@ export function createStorageTool(options?: {
       enableSharedModalDimensions:
         options?.enableSharedModalDimensions !== undefined
           ? options.enableSharedModalDimensions
-          : true,
+          : false,
     },
   };
 }

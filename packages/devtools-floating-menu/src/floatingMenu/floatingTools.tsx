@@ -609,17 +609,21 @@ export function FloatingTools({
       animatedPosition.y as Animated.Value & { __getValue(): number }
     ).__getValue();
 
-    if (isHidden) {
+    // Check if the menu is visually off-screen (more than half hidden to the right)
+    // This handles edge cases where isHidden state might be out of sync with actual position
+    const isVisuallyOffScreen = currentX > screenWidth - bubbleSize.width / 2;
+
+    if (isHidden || isVisuallyOffScreen) {
       // Show the bubble - restore to saved position or default visible position
       let targetX: number;
       let targetY: number;
 
-      if (savedPositionRef.current) {
-        // Restore to the saved position
+      if (savedPositionRef.current && savedPositionRef.current.x < screenWidth - bubbleSize.width / 2) {
+        // Restore to the saved position only if it's a valid visible position
         targetX = savedPositionRef.current.x;
         targetY = savedPositionRef.current.y;
       } else {
-        // Default visible position if no saved position
+        // Default visible position if no saved position or saved position is off-screen
         targetX = screenWidth - bubbleSize.width - 20;
         targetY = currentY;
       }

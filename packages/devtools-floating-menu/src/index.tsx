@@ -12,6 +12,23 @@ export {
   autoDiscoverPresetsWithCustom,
 } from "./floatingMenu/autoDiscoverPresets";
 
+// Export default configuration types and utilities
+export {
+  createDefaultConfig,
+  validateDialConfig,
+  isFloatingToolId,
+  isDialToolId,
+  MAX_DIAL_TOOLS,
+} from "./floatingMenu/defaultConfig";
+export type {
+  BuiltInToolId,
+  FloatingToolId,
+  FloatingOnlyToolId,
+  DialToolId,
+  DefaultFloatingConfig,
+  DefaultDialConfig,
+} from "./floatingMenu/defaultConfig";
+
 // Export FloatingMenu and its types
 export { FloatingMenu } from "./floatingMenu/FloatingMenu";
 export * from "./floatingMenu/types";
@@ -19,7 +36,7 @@ export {
   DevToolsSettingsModal,
   useDevToolsSettings,
 } from "./floatingMenu/DevToolsSettingsModal";
-export type { DevToolsSettings } from "./floatingMenu/DevToolsSettingsModal";
+export type { DevToolsSettings, GlobalDevToolsSettings } from "./floatingMenu/DevToolsSettingsModal";
 
 // Export AppHost components for advanced use cases
 export {

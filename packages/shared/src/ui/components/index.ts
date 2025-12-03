@@ -55,3 +55,5 @@ export type {
   DynamicFilterConfig,
 } from "./DynamicFilterView";
 export { WindowControls } from "./WindowControls";
+export { EventStepperFooter } from "./EventStepperFooter";
+export type { EventStepperFooterProps } from "./EventStepperFooter";
