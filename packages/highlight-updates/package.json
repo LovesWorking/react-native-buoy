@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/highlight-updates",
-  "version": "1.5.22",
+  "version": "1.5.23",
   "description": "Control React DevTools highlight updates feature from your app",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
