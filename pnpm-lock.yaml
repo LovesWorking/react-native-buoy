@@ -390,9 +390,6 @@ importers:
 
   packages/highlight-updates:
     dependencies:
-      '@react-buoy/benchmark':
-        specifier: workspace:*
-        version: link:../benchmark
       '@react-buoy/core':
         specifier: '*'
         version: 1.5.20(@react-native-clipboard/clipboard@1.16.3(react-native@0.81.4(@babel/core@7.28.5)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.82.1(@babel/core@7.28.5))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(expo-clipboard@7.1.5(expo@54.0.22)(react-native@0.81.4(@babel/core@7.28.5)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.82.1(@babel/core@7.28.5))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.2(react-native@0.81.4(@babel/core@7.28.5)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.82.1(@babel/core@7.28.5))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@react-native-community/cli@20.0.0(typescript@5.8.3))(@react-native/metro-config@0.82.1(@babel/core@7.28.5))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -9886,7 +9883,9 @@ snapshots:
       metro-runtime: 0.83.3
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
     optional: true
 
   '@react-native/normalize-colors@0.81.4': {}
