@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/benchmark",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Performance benchmarking system for React Native dev tools",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",

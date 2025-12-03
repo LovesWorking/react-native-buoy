@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/react-query",
-  "version": "1.5.21",
+  "version": "1.5.22",
   "description": "react-query package",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
