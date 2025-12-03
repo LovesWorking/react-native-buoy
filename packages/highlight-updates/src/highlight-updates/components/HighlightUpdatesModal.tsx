@@ -31,7 +31,8 @@ import {
 import HighlightUpdatesController from "../utils/HighlightUpdatesController";
 import { RenderTracker, type TrackedRender, type FilterConfig, type RenderTrackerSettings, type RenderCauseType, type ComponentCauseType, type FilterPattern } from "../utils/RenderTracker";
 import { CAUSE_CONFIG, COMPONENT_CAUSE_CONFIG } from "./RenderCauseBadge";
-import { RenderDetailView, RenderHistoryFooter } from "./RenderDetailView";
+import { RenderDetailView } from "./RenderDetailView";
+import { EventStepperFooter } from "@react-buoy/shared-ui";
 import { HighlightFilterView } from "./HighlightFilterView";
 import { IsolatedRenderList } from "./IsolatedRenderList";
 import {
@@ -273,13 +274,15 @@ export function HighlightUpdatesModal({
   // UI STATE - kept in parent for view switching
   // ============================================================================
   const [selectedRender, setSelectedRender] = useState<TrackedRender | null>(null);
+  const [selectedRenderIndex, setSelectedRenderIndex] = useState<number>(0);
   const [showFilterView, setShowFilterView] = useState(false);
-  const [activeTab, setActiveTab] = useState<"filters">("filters");
+  const [filterViewActiveTab, setFilterViewActiveTab] = useState<"filters" | "settings">("filters");
   const [searchText, setSearchText] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
-  // Event index for render history navigation
-  const [selectedEventIndex, setSelectedEventIndex] = useState(0);
+
+  // Track the renders list for navigation
+  const rendersListRef = useRef<TrackedRender[]>([]);
 
   // ============================================================================
   // FILTER STATE - use ref for filter config, state for display count only
@@ -519,7 +522,7 @@ export function HighlightUpdatesModal({
       if (render) {
         // Navigate to detail view for this component
         setSelectedRender(render);
-        setSelectedEventIndex(0);
+        setSelectedRenderIndex(0);
         setShowFilterView(false);
         // Set spotlight to show which component is being viewed
         HighlightUpdatesController.setSpotlight(render.nativeTag);
@@ -559,19 +562,50 @@ export function HighlightUpdatesModal({
     setSearchText(text);
   }, []);
 
-  const handleRenderPress = useCallback((render: TrackedRender) => {
+  const handleRenderPress = useCallback((render: TrackedRender, index: number, allRenders: TrackedRender[]) => {
     setSelectedRender(render);
-    setSelectedEventIndex(0); // Reset event index when selecting a new render
+    setSelectedRenderIndex(index);
+    rendersListRef.current = allRenders;
     // Set spotlight to show which component is being viewed
     HighlightUpdatesController.setSpotlight(render.nativeTag);
   }, []);
 
+  const handleRendersChange = useCallback((renders: TrackedRender[]) => {
+    rendersListRef.current = renders;
+  }, []);
+
   const handleBackFromDetail = useCallback(() => {
     setSelectedRender(null);
-    setSelectedEventIndex(0); // Reset event index when going back
+    setSelectedRenderIndex(0);
     // Clear the spotlight
     HighlightUpdatesController.setSpotlight(null);
   }, []);
+
+  const handlePreviousRender = useCallback(() => {
+    const renders = rendersListRef.current;
+    if (selectedRenderIndex > 0) {
+      const newIndex = selectedRenderIndex - 1;
+      const newRender = renders[newIndex];
+      if (newRender) {
+        setSelectedRender(newRender);
+        setSelectedRenderIndex(newIndex);
+        HighlightUpdatesController.setSpotlight(newRender.nativeTag);
+      }
+    }
+  }, [selectedRenderIndex]);
+
+  const handleNextRender = useCallback(() => {
+    const renders = rendersListRef.current;
+    if (selectedRenderIndex < renders.length - 1) {
+      const newIndex = selectedRenderIndex + 1;
+      const newRender = renders[newIndex];
+      if (newRender) {
+        setSelectedRender(newRender);
+        setSelectedRenderIndex(newIndex);
+        HighlightUpdatesController.setSpotlight(newRender.nativeTag);
+      }
+    }
+  }, [selectedRenderIndex]);
 
   const handleBackFromFilter = useCallback(() => {
     setShowFilterView(false);
@@ -624,7 +658,7 @@ export function HighlightUpdatesModal({
       handleFilterChange(newFilters);
       // Go back to the list view after adding filter
       setSelectedRender(null);
-      setSelectedEventIndex(0);
+      setSelectedRenderIndex(0);
       // Clear the spotlight
       HighlightUpdatesController.setSpotlight(null);
     }
@@ -649,8 +683,9 @@ export function HighlightUpdatesModal({
       return (
         <FilterViewHeader
           onBack={handleBackFromFilter}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
+          activeTab={filterViewActiveTab}
+          onTabChange={setFilterViewActiveTab}
+          activeFilterCount={activeFilterCount}
         />
       );
     }
@@ -689,7 +724,7 @@ export function HighlightUpdatesModal({
     isFrozen,
     activeFilterCount,
     hasRenders,
-    activeTab,
+    filterViewActiveTab,
     handleBackFromFilter,
     handleBackFromDetail,
     handleSearch,
@@ -712,12 +747,16 @@ export function HighlightUpdatesModal({
 
   if (!visible) return null;
 
-  // Footer for render history navigation
+  // Footer for navigating through the renders list
+  const totalRenders = rendersListRef.current.length;
   const footerNode = selectedRender ? (
-    <RenderHistoryFooter
-      render={selectedRender}
-      selectedEventIndex={selectedEventIndex}
-      onEventIndexChange={setSelectedEventIndex}
+    <EventStepperFooter
+      currentIndex={selectedRenderIndex}
+      totalItems={totalRenders}
+      onPrevious={handlePreviousRender}
+      onNext={handleNextRender}
+      itemLabel="Component"
+      subtitle={selectedRender.componentName || selectedRender.displayName || selectedRender.viewType}
     />
   ) : null;
 
@@ -743,8 +782,6 @@ export function HighlightUpdatesModal({
           <RenderDetailView
             render={selectedRender}
             disableInternalFooter={true}
-            selectedEventIndex={selectedEventIndex}
-            onEventIndexChange={setSelectedEventIndex}
             onAddFilter={handleAddFilter}
           />
         ) : showFilterView ? (
@@ -754,6 +791,7 @@ export function HighlightUpdatesModal({
             settings={settings}
             onSettingsChange={handleSettingsChange}
             availableProps={RenderTracker.getAvailableProps()}
+            activeTab={filterViewActiveTab}
           />
         ) : (
           <>
@@ -764,6 +802,7 @@ export function HighlightUpdatesModal({
               filters={filters}
               onSelectRender={handleRenderPress}
               onStatsChange={handleStatsChange}
+              onRendersChange={handleRendersChange}
               isTracking={isTracking}
             />
           </>

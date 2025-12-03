@@ -497,6 +497,7 @@ function DiffView({
 
 /**
  * External footer component for modal integration
+ * Uses renderHistory for events (only available when history tracking is enabled)
  */
 export function RenderHistoryFooter({
   render,
@@ -507,6 +508,7 @@ export function RenderHistoryFooter({
   selectedEventIndex?: number;
   onEventIndexChange?: (index: number) => void;
 }) {
+  // Get events from render history (sorted by timestamp)
   const events = useMemo(() => {
     if (!render.renderHistory || render.renderHistory.length === 0) {
       return [];
@@ -524,6 +526,11 @@ export function RenderHistoryFooter({
   const goToNext = useCallback(() => {
     onEventIndexChange(Math.min(totalEvents - 1, selectedEventIndex + 1));
   }, [selectedEventIndex, totalEvents, onEventIndexChange]);
+
+  // Don't render if no history events (history tracking might be disabled)
+  if (totalEvents <= 1) {
+    return null;
+  }
 
   return (
     <EventStepperFooter

@@ -18,10 +18,31 @@ import {
   Pressable,
   Switch,
 } from "react-native";
-import { Eye, Filter, Plus, X, Box, Check, Settings, Hash } from "@react-buoy/shared-ui";
+import {
+  Eye,
+  Filter,
+  Plus,
+  X,
+  Box,
+  Check,
+  Settings,
+  Hash,
+} from "@react-buoy/shared-ui";
 import { macOSColors, SectionHeader } from "@react-buoy/shared-ui";
-import type { FilterConfig, FilterPattern, FilterType, RenderTrackerSettings, DebugLogLevel } from "../utils/RenderTracker";
-import { IdentifierBadge, IDENTIFIER_CONFIG, type IdentifierType } from "./IdentifierBadge";
+import type {
+  FilterConfig,
+  FilterPattern,
+  FilterType,
+  RenderTrackerSettings,
+  DebugLogLevel,
+} from "../utils/RenderTracker";
+import {
+  IdentifierBadge,
+  IDENTIFIER_CONFIG,
+  type IdentifierType,
+} from "./IdentifierBadge";
+
+type FilterViewTab = "filters" | "settings";
 
 interface HighlightFilterViewProps {
   filters: FilterConfig;
@@ -35,13 +56,22 @@ interface HighlightFilterViewProps {
     componentNames: string[];
     accessibilityLabels: string[];
   };
+  activeTab: FilterViewTab;
 }
 
 // Use shared identifier config (FilterType is a subset of IdentifierType)
-const getFilterConfig = (type: FilterType) => IDENTIFIER_CONFIG[type as IdentifierType];
+const getFilterConfig = (type: FilterType) =>
+  IDENTIFIER_CONFIG[type as IdentifierType];
 
 // Filter types available for selection (all identifier types)
-const FILTER_TYPES: FilterType[] = ["any", "viewType", "testID", "nativeID", "component", "accessibilityLabel"];
+const FILTER_TYPES: FilterType[] = [
+  "any",
+  "viewType",
+  "testID",
+  "nativeID",
+  "component",
+  "accessibilityLabel",
+];
 
 // Type picker component
 function TypePicker({
@@ -60,7 +90,13 @@ function TypePicker({
           return (
             <TouchableOpacity
               key={type}
-              style={[styles.typeOption, { backgroundColor: config.color + "15", borderColor: config.color + "40" }]}
+              style={[
+                styles.typeOption,
+                {
+                  backgroundColor: config.color + "15",
+                  borderColor: config.color + "40",
+                },
+              ]}
               onPress={() => onSelect(type)}
             >
               <IconComponent size={14} color={config.color} />
@@ -98,8 +134,16 @@ function PatternInput({
   };
 
   return (
-    <View nativeID="__rn_buoy__pattern-input" style={styles.patternInputContainer}>
-      <IdentifierBadge type={type as IdentifierType} value="" badgeOnly compact />
+    <View
+      nativeID="__rn_buoy__pattern-input"
+      style={styles.patternInputContainer}
+    >
+      <IdentifierBadge
+        type={type as IdentifierType}
+        value=""
+        badgeOnly
+        compact
+      />
       <TextInput
         value={value}
         onChangeText={setValue}
@@ -115,9 +159,14 @@ function PatternInput({
       {value.trim() && (
         <TouchableOpacity
           onPress={handleSubmit}
-          style={[styles.addPatternButton, { backgroundColor: config.color + "20" }]}
+          style={[
+            styles.addPatternButton,
+            { backgroundColor: config.color + "20" },
+          ]}
         >
-          <Text style={[styles.addPatternButtonText, { color: config.color }]}>Add</Text>
+          <Text style={[styles.addPatternButtonText, { color: config.color }]}>
+            Add
+          </Text>
         </TouchableOpacity>
       )}
       <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
@@ -142,7 +191,12 @@ function PatternChip({
       onPress={onRemove}
       activeOpacity={0.7}
     >
-      <View style={[styles.patternChipBadge, { backgroundColor: config.color + "20" }]}>
+      <View
+        style={[
+          styles.patternChipBadge,
+          { backgroundColor: config.color + "20" },
+        ]}
+      >
         <Text style={[styles.patternChipBadgeText, { color: config.color }]}>
           {config.shortLabel}
         </Text>
@@ -159,7 +213,12 @@ function PatternChip({
 type DetectedCategory = FilterType | "all";
 
 // Config for "all" category
-const ALL_CATEGORY_CONFIG = { label: "All", shortLabel: "All", color: macOSColors.text.secondary, icon: Box };
+const ALL_CATEGORY_CONFIG = {
+  label: "All",
+  shortLabel: "All",
+  color: macOSColors.text.secondary,
+  icon: Box,
+};
 
 // Category badge for horizontal scroll - always colored
 function DetectedCategoryBadge({
@@ -174,9 +233,8 @@ function DetectedCategoryBadge({
   onPress: () => void;
 }) {
   // "all" has its own config
-  const config = filterType === "all"
-    ? ALL_CATEGORY_CONFIG
-    : getFilterConfig(filterType);
+  const config =
+    filterType === "all" ? ALL_CATEGORY_CONFIG : getFilterConfig(filterType);
 
   return (
     <TouchableOpacity
@@ -186,7 +244,7 @@ function DetectedCategoryBadge({
           backgroundColor: config.color + "15",
           borderColor: isSelected ? config.color : config.color + "40",
           borderWidth: isSelected ? 2 : 1,
-        }
+        },
       ]}
       onPress={onPress}
     >
@@ -194,7 +252,12 @@ function DetectedCategoryBadge({
       <Text style={[styles.categoryBadgeText, { color: config.color }]}>
         {config.label}
       </Text>
-      <View style={[styles.categoryBadgeCountBubble, { backgroundColor: config.color + "25" }]}>
+      <View
+        style={[
+          styles.categoryBadgeCountBubble,
+          { backgroundColor: config.color + "25" },
+        ]}
+      >
         <Text style={[styles.categoryBadgeCount, { color: config.color }]}>
           {count}
         </Text>
@@ -214,10 +277,22 @@ const BATCH_SIZE_PRESETS = [
 ];
 
 // Debug log level presets
-const DEBUG_LOG_LEVEL_PRESETS: Array<{ value: DebugLogLevel; label: string; description: string }> = [
+const DEBUG_LOG_LEVEL_PRESETS: Array<{
+  value: DebugLogLevel;
+  label: string;
+  description: string;
+}> = [
   { value: "off", label: "Off", description: "No debug logging" },
-  { value: "minimal", label: "Minimal", description: "Only hook value changes" },
-  { value: "verbose", label: "Verbose", description: "Component + cause + changes" },
+  {
+    value: "minimal",
+    label: "Minimal",
+    description: "Only hook value changes",
+  },
+  {
+    value: "verbose",
+    label: "Verbose",
+    description: "Component + cause + changes",
+  },
   { value: "all", label: "All", description: "Full fiber dump" },
 ];
 
@@ -227,78 +302,140 @@ export function HighlightFilterView({
   settings,
   onSettingsChange,
   availableProps,
+  activeTab,
 }: HighlightFilterViewProps) {
+
   // UI state for add inputs
   const [showIncludeTypePicker, setShowIncludeTypePicker] = useState(false);
   const [showExcludeTypePicker, setShowExcludeTypePicker] = useState(false);
-  const [includeInputType, setIncludeInputType] = useState<FilterType | null>(null);
-  const [excludeInputType, setExcludeInputType] = useState<FilterType | null>(null);
+  const [includeInputType, setIncludeInputType] = useState<FilterType | null>(
+    null
+  );
+  const [excludeInputType, setExcludeInputType] = useState<FilterType | null>(
+    null
+  );
 
   // State for selected detected category (default to "all")
-  const [selectedCategory, setSelectedCategory] = useState<DetectedCategory>("all");
+  const [selectedCategory, setSelectedCategory] =
+    useState<DetectedCategory>("all");
 
   // State for action popup when tapping detected item
-  const [actionPopupItem, setActionPopupItem] = useState<{ type: FilterType; value: string } | null>(null);
+  const [actionPopupItem, setActionPopupItem] = useState<{
+    type: FilterType;
+    value: string;
+  } | null>(null);
 
   // Get items for selected category with their filter type
-  const getItemsForCategory = (category: DetectedCategory): Array<{ value: string; type: FilterType }> => {
+  const getItemsForCategory = (
+    category: DetectedCategory
+  ): Array<{ value: string; type: FilterType }> => {
     switch (category) {
       case "viewType":
-        return availableProps.viewTypes.map(v => ({ value: v, type: "viewType" as FilterType }));
+        return availableProps.viewTypes.map((v) => ({
+          value: v,
+          type: "viewType" as FilterType,
+        }));
       case "testID":
-        return availableProps.testIDs.map(v => ({ value: v, type: "testID" as FilterType }));
+        return availableProps.testIDs.map((v) => ({
+          value: v,
+          type: "testID" as FilterType,
+        }));
       case "nativeID":
-        return availableProps.nativeIDs.map(v => ({ value: v, type: "nativeID" as FilterType }));
+        return availableProps.nativeIDs.map((v) => ({
+          value: v,
+          type: "nativeID" as FilterType,
+        }));
       case "component":
-        return availableProps.componentNames.map(v => ({ value: v, type: "component" as FilterType }));
+        return availableProps.componentNames.map((v) => ({
+          value: v,
+          type: "component" as FilterType,
+        }));
       case "accessibilityLabel":
-        return availableProps.accessibilityLabels.map(v => ({ value: v, type: "accessibilityLabel" as FilterType }));
+        return availableProps.accessibilityLabels.map((v) => ({
+          value: v,
+          type: "accessibilityLabel" as FilterType,
+        }));
       case "all":
       default:
         // Combine all items with their types
         return [
-          ...availableProps.viewTypes.map(v => ({ value: v, type: "viewType" as FilterType })),
-          ...availableProps.testIDs.map(v => ({ value: v, type: "testID" as FilterType })),
-          ...availableProps.nativeIDs.map(v => ({ value: v, type: "nativeID" as FilterType })),
-          ...availableProps.componentNames.map(v => ({ value: v, type: "component" as FilterType })),
-          ...availableProps.accessibilityLabels.map(v => ({ value: v, type: "accessibilityLabel" as FilterType })),
+          ...availableProps.viewTypes.map((v) => ({
+            value: v,
+            type: "viewType" as FilterType,
+          })),
+          ...availableProps.testIDs.map((v) => ({
+            value: v,
+            type: "testID" as FilterType,
+          })),
+          ...availableProps.nativeIDs.map((v) => ({
+            value: v,
+            type: "nativeID" as FilterType,
+          })),
+          ...availableProps.componentNames.map((v) => ({
+            value: v,
+            type: "component" as FilterType,
+          })),
+          ...availableProps.accessibilityLabels.map((v) => ({
+            value: v,
+            type: "accessibilityLabel" as FilterType,
+          })),
         ];
     }
   };
 
   const selectedItems = getItemsForCategory(selectedCategory);
-  const totalItemCount = availableProps.viewTypes.length + availableProps.testIDs.length + availableProps.nativeIDs.length + availableProps.componentNames.length + availableProps.accessibilityLabels.length;
+  const totalItemCount =
+    availableProps.viewTypes.length +
+    availableProps.testIDs.length +
+    availableProps.nativeIDs.length +
+    availableProps.componentNames.length +
+    availableProps.accessibilityLabels.length;
 
   // Add include pattern
-  const handleAddIncludePattern = useCallback((type: FilterType, value: string) => {
-    const newPatterns = [...filters.includePatterns, { type, value }];
-    onFilterChange({ includePatterns: newPatterns });
-    setIncludeInputType(null);
-  }, [filters.includePatterns, onFilterChange]);
+  const handleAddIncludePattern = useCallback(
+    (type: FilterType, value: string) => {
+      const newPatterns = [...filters.includePatterns, { type, value }];
+      onFilterChange({ includePatterns: newPatterns });
+      setIncludeInputType(null);
+    },
+    [filters.includePatterns, onFilterChange]
+  );
 
   // Add exclude pattern
-  const handleAddExcludePattern = useCallback((type: FilterType, value: string) => {
-    const newPatterns = [...filters.excludePatterns, { type, value }];
-    onFilterChange({ excludePatterns: newPatterns });
-    setExcludeInputType(null);
-  }, [filters.excludePatterns, onFilterChange]);
+  const handleAddExcludePattern = useCallback(
+    (type: FilterType, value: string) => {
+      const newPatterns = [...filters.excludePatterns, { type, value }];
+      onFilterChange({ excludePatterns: newPatterns });
+      setExcludeInputType(null);
+    },
+    [filters.excludePatterns, onFilterChange]
+  );
 
   // Remove include pattern
-  const handleRemoveIncludePattern = useCallback((index: number) => {
-    const newPatterns = filters.includePatterns.filter((_, i) => i !== index);
-    onFilterChange({ includePatterns: newPatterns });
-  }, [filters.includePatterns, onFilterChange]);
+  const handleRemoveIncludePattern = useCallback(
+    (index: number) => {
+      const newPatterns = filters.includePatterns.filter((_, i) => i !== index);
+      onFilterChange({ includePatterns: newPatterns });
+    },
+    [filters.includePatterns, onFilterChange]
+  );
 
   // Remove exclude pattern
-  const handleRemoveExcludePattern = useCallback((index: number) => {
-    const newPatterns = filters.excludePatterns.filter((_, i) => i !== index);
-    onFilterChange({ excludePatterns: newPatterns });
-  }, [filters.excludePatterns, onFilterChange]);
+  const handleRemoveExcludePattern = useCallback(
+    (index: number) => {
+      const newPatterns = filters.excludePatterns.filter((_, i) => i !== index);
+      onFilterChange({ excludePatterns: newPatterns });
+    },
+    [filters.excludePatterns, onFilterChange]
+  );
 
   // Show action popup for detected item
-  const handleDetectedItemPress = useCallback((type: FilterType, value: string) => {
-    setActionPopupItem({ type, value });
-  }, []);
+  const handleDetectedItemPress = useCallback(
+    (type: FilterType, value: string) => {
+      setActionPopupItem({ type, value });
+    },
+    []
+  );
 
   // Add to include from popup
   const handlePopupInclude = useCallback(() => {
@@ -317,16 +454,23 @@ export function HighlightFilterView({
   }, [actionPopupItem, handleAddExcludePattern]);
 
   return (
-    <ScrollView
-      nativeID="__rn_buoy__filter-view"
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Include Only Section */}
+    <View style={styles.container}>
+      <ScrollView
+        nativeID="__rn_buoy__filter-view"
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {activeTab === "filters" ? (
+          <>
+            {/* Include Only Section */}
       <View style={styles.section}>
         <SectionHeader>
-          <SectionHeader.Icon icon={Eye} color={macOSColors.semantic.success} size={12} />
+          <SectionHeader.Icon
+            icon={Eye}
+            color={macOSColors.semantic.success}
+            size={12}
+          />
           <SectionHeader.Title>INCLUDE ONLY</SectionHeader.Title>
           {filters.includePatterns.length > 0 && (
             <SectionHeader.Badge
@@ -337,7 +481,8 @@ export function HighlightFilterView({
         </SectionHeader>
 
         <Text style={styles.sectionDescription}>
-          Show only components matching these patterns. If any are set, components must match at least one.
+          Show only components matching these patterns. If any are set,
+          components must match at least one.
         </Text>
 
         {/* Active include patterns */}
@@ -366,16 +511,26 @@ export function HighlightFilterView({
           ) : includeInputType ? (
             <PatternInput
               type={includeInputType}
-              onSubmit={(value) => handleAddIncludePattern(includeInputType, value)}
+              onSubmit={(value) =>
+                handleAddIncludePattern(includeInputType, value)
+              }
               onCancel={() => setIncludeInputType(null)}
             />
           ) : (
             <TouchableOpacity
-              style={[styles.addButton, { borderColor: macOSColors.semantic.success + "40" }]}
+              style={[
+                styles.addButton,
+                { borderColor: macOSColors.semantic.success + "40" },
+              ]}
               onPress={() => setShowIncludeTypePicker(true)}
             >
               <Plus size={14} color={macOSColors.semantic.success} />
-              <Text style={[styles.addButtonText, { color: macOSColors.semantic.success }]}>
+              <Text
+                style={[
+                  styles.addButtonText,
+                  { color: macOSColors.semantic.success },
+                ]}
+              >
                 Add include pattern
               </Text>
             </TouchableOpacity>
@@ -386,7 +541,11 @@ export function HighlightFilterView({
       {/* Exclude Section */}
       <View style={styles.section}>
         <SectionHeader>
-          <SectionHeader.Icon icon={Filter} color={macOSColors.semantic.info} size={12} />
+          <SectionHeader.Icon
+            icon={Filter}
+            color={macOSColors.semantic.info}
+            size={12}
+          />
           <SectionHeader.Title>EXCLUDE</SectionHeader.Title>
           {filters.excludePatterns.length > 0 && (
             <SectionHeader.Badge
@@ -426,16 +585,26 @@ export function HighlightFilterView({
           ) : excludeInputType ? (
             <PatternInput
               type={excludeInputType}
-              onSubmit={(value) => handleAddExcludePattern(excludeInputType, value)}
+              onSubmit={(value) =>
+                handleAddExcludePattern(excludeInputType, value)
+              }
               onCancel={() => setExcludeInputType(null)}
             />
           ) : (
             <TouchableOpacity
-              style={[styles.addButton, { borderColor: macOSColors.semantic.info + "40" }]}
+              style={[
+                styles.addButton,
+                { borderColor: macOSColors.semantic.info + "40" },
+              ]}
               onPress={() => setShowExcludeTypePicker(true)}
             >
               <Plus size={14} color={macOSColors.semantic.info} />
-              <Text style={[styles.addButtonText, { color: macOSColors.semantic.info }]}>
+              <Text
+                style={[
+                  styles.addButtonText,
+                  { color: macOSColors.semantic.info },
+                ]}
+              >
                 Add exclude pattern
               </Text>
             </TouchableOpacity>
@@ -446,9 +615,14 @@ export function HighlightFilterView({
       {/* Render Count Range Section */}
       <View style={styles.section}>
         <SectionHeader>
-          <SectionHeader.Icon icon={Hash} color={macOSColors.semantic.warning} size={12} />
+          <SectionHeader.Icon
+            icon={Hash}
+            color={macOSColors.semantic.warning}
+            size={12}
+          />
           <SectionHeader.Title>RENDER COUNT RANGE</SectionHeader.Title>
-          {(filters.minRenderCount !== undefined || filters.maxRenderCount !== undefined) && (
+          {(filters.minRenderCount !== undefined ||
+            filters.maxRenderCount !== undefined) && (
             <SectionHeader.Badge
               count={1}
               color={macOSColors.semantic.warning}
@@ -460,12 +634,19 @@ export function HighlightFilterView({
           Show only components with render count in a specific range.
         </Text>
 
-        <View nativeID="__rn_buoy__render-count-range" style={styles.renderCountRangeContainer}>
+        <View
+          nativeID="__rn_buoy__render-count-range"
+          style={styles.renderCountRangeContainer}
+        >
           <View style={styles.renderCountInputRow}>
             <View style={styles.renderCountInputGroup}>
               <Text style={styles.renderCountLabel}>Min</Text>
               <TextInput
-                value={filters.minRenderCount !== undefined ? String(filters.minRenderCount) : ""}
+                value={
+                  filters.minRenderCount !== undefined
+                    ? String(filters.minRenderCount)
+                    : ""
+                }
                 onChangeText={(text) => {
                   const num = parseInt(text, 10);
                   if (text === "" || text === undefined) {
@@ -487,7 +668,11 @@ export function HighlightFilterView({
             <View style={styles.renderCountInputGroup}>
               <Text style={styles.renderCountLabel}>Max</Text>
               <TextInput
-                value={filters.maxRenderCount !== undefined ? String(filters.maxRenderCount) : ""}
+                value={
+                  filters.maxRenderCount !== undefined
+                    ? String(filters.maxRenderCount)
+                    : ""
+                }
                 onChangeText={(text) => {
                   const num = parseInt(text, 10);
                   if (text === "" || text === undefined) {
@@ -505,10 +690,16 @@ export function HighlightFilterView({
             </View>
           </View>
 
-          {(filters.minRenderCount !== undefined || filters.maxRenderCount !== undefined) && (
+          {(filters.minRenderCount !== undefined ||
+            filters.maxRenderCount !== undefined) && (
             <TouchableOpacity
               style={styles.clearRangeButton}
-              onPress={() => onFilterChange({ minRenderCount: undefined, maxRenderCount: undefined })}
+              onPress={() =>
+                onFilterChange({
+                  minRenderCount: undefined,
+                  maxRenderCount: undefined,
+                })
+              }
             >
               <X size={12} color={macOSColors.semantic.warning} />
               <Text style={styles.clearRangeButtonText}>Clear Range</Text>
@@ -520,7 +711,11 @@ export function HighlightFilterView({
       {/* Detected Items Section */}
       <View style={styles.section}>
         <SectionHeader>
-          <SectionHeader.Icon icon={Box} color={macOSColors.text.secondary} size={12} />
+          <SectionHeader.Icon
+            icon={Box}
+            color={macOSColors.text.secondary}
+            size={12}
+          />
           <SectionHeader.Title>DETECTED ITEMS</SectionHeader.Title>
         </SectionHeader>
 
@@ -586,7 +781,10 @@ export function HighlightFilterView({
         </ScrollView>
 
         {/* Items for selected category */}
-        <View nativeID="__rn_buoy__detected-items" style={styles.detectedItemsContainer}>
+        <View
+          nativeID="__rn_buoy__detected-items"
+          style={styles.detectedItemsContainer}
+        >
           {selectedItems.length > 0 ? (
             <ScrollView
               style={styles.detectedItemsScroll}
@@ -599,8 +797,13 @@ export function HighlightFilterView({
                 return (
                   <TouchableOpacity
                     key={`${item.type}-${item.value}`}
-                    style={[styles.detectedItem, { borderColor: itemConfig.color + "40" }]}
-                    onPress={() => handleDetectedItemPress(item.type, item.value)}
+                    style={[
+                      styles.detectedItem,
+                      { borderColor: itemConfig.color + "40" },
+                    ]}
+                    onPress={() =>
+                      handleDetectedItemPress(item.type, item.value)
+                    }
                   >
                     {selectedCategory === "all" ? (
                       <IdentifierBadge
@@ -650,20 +853,36 @@ export function HighlightFilterView({
                 </View>
                 <View style={styles.actionPopupButtons}>
                   <TouchableOpacity
-                    style={[styles.actionPopupButton, styles.actionPopupInclude]}
+                    style={[
+                      styles.actionPopupButton,
+                      styles.actionPopupInclude,
+                    ]}
                     onPress={handlePopupInclude}
                   >
                     <Eye size={16} color={macOSColors.semantic.success} />
-                    <Text style={[styles.actionPopupButtonText, { color: macOSColors.semantic.success }]}>
+                    <Text
+                      style={[
+                        styles.actionPopupButtonText,
+                        { color: macOSColors.semantic.success },
+                      ]}
+                    >
                       Include Only
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionPopupButton, styles.actionPopupExclude]}
+                    style={[
+                      styles.actionPopupButton,
+                      styles.actionPopupExclude,
+                    ]}
                     onPress={handlePopupExclude}
                   >
                     <Filter size={16} color={macOSColors.semantic.info} />
-                    <Text style={[styles.actionPopupButtonText, { color: macOSColors.semantic.info }]}>
+                    <Text
+                      style={[
+                        styles.actionPopupButtonText,
+                        { color: macOSColors.semantic.info },
+                      ]}
+                    >
                       Exclude
                     </Text>
                   </TouchableOpacity>
@@ -680,14 +899,45 @@ export function HighlightFilterView({
         </Pressable>
       </Modal>
 
-      {/* Settings Section */}
-      <View style={styles.section}>
-        <SectionHeader>
-          <SectionHeader.Icon icon={Settings} color={macOSColors.semantic.debug} size={12} />
-          <SectionHeader.Title>SETTINGS</SectionHeader.Title>
-        </SectionHeader>
+            {/* How It Works Section */}
+            <View style={styles.section}>
+              <SectionHeader>
+                <SectionHeader.Icon
+                  icon={Filter}
+                  color={macOSColors.text.muted}
+                  size={12}
+                />
+                <SectionHeader.Title>HOW FILTERS WORK</SectionHeader.Title>
+              </SectionHeader>
 
-        <View style={styles.settingsSection}>
+              <View style={styles.howItWorks}>
+                <Text style={styles.howItWorksText}>
+                  <Text style={styles.howItWorksBold}>Any:</Text> Matches against all
+                  fields{"\n"}
+                  <Text style={styles.howItWorksBold}>ViewType:</Text> Native
+                  component class (RCTView, RCTText){"\n"}
+                  <Text style={styles.howItWorksBold}>testID:</Text> Component testID
+                  prop{"\n"}
+                  <Text style={styles.howItWorksBold}>Component:</Text> React
+                  component name from fiber
+                </Text>
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Settings Section */}
+            <View style={styles.section}>
+              <SectionHeader>
+                <SectionHeader.Icon
+                  icon={Settings}
+                  color={macOSColors.semantic.debug}
+                  size={12}
+                />
+                <SectionHeader.Title>SETTINGS</SectionHeader.Title>
+              </SectionHeader>
+
+              <View style={styles.settingsSection}>
           {/* Show Render Count Toggle */}
           <View style={styles.settingItem}>
             <View style={styles.settingHeader}>
@@ -705,31 +955,44 @@ export function HighlightFilterView({
                   false: macOSColors.background.input,
                   true: macOSColors.semantic.success + "80",
                 }}
-                thumbColor={settings.showRenderCount ? macOSColors.semantic.success : macOSColors.text.muted}
+                thumbColor={
+                  settings.showRenderCount
+                    ? macOSColors.semantic.success
+                    : macOSColors.text.muted
+                }
               />
             </View>
             <Text style={styles.settingDescription}>
-              Display render count badge on highlights. Disabling improves performance by skipping count tracking.
+              Display render count badge on highlights. Disabling improves
+              performance by skipping count tracking.
             </Text>
           </View>
 
           {/* Track Render Causes Toggle */}
           <View style={[styles.settingItem, styles.settingItemSpaced]}>
             <View style={styles.settingHeader}>
-              <Text style={[
-                styles.settingLabel,
-                !settings.showRenderCount && styles.settingLabelDisabled
-              ]}>
+              <Text
+                style={[
+                  styles.settingLabel,
+                  !settings.showRenderCount && styles.settingLabelDisabled,
+                ]}
+              >
                 Track Render Causes
               </Text>
               <Switch
                 value={settings.trackRenderCauses}
-                onValueChange={(value) => onSettingsChange({ trackRenderCauses: value })}
+                onValueChange={(value) =>
+                  onSettingsChange({ trackRenderCauses: value })
+                }
                 trackColor={{
                   false: macOSColors.background.input,
                   true: macOSColors.semantic.warning + "80",
                 }}
-                thumbColor={settings.trackRenderCauses ? macOSColors.semantic.warning : macOSColors.text.muted}
+                thumbColor={
+                  settings.trackRenderCauses
+                    ? macOSColors.semantic.warning
+                    : macOSColors.text.muted
+                }
                 disabled={!settings.showRenderCount}
               />
             </View>
@@ -741,89 +1004,24 @@ export function HighlightFilterView({
                 </Text>
               )}
             </Text>
-            <Text style={styles.settingDescriptionMuted}>
-              Adds ~2-5% performance overhead. Stores previous component state in memory.
-            </Text>
-          </View>
-
-          {/* Enable Render History */}
-          <View style={styles.settingItem}>
-            <View style={styles.settingHeader}>
-              <Text style={[
-                styles.settingLabel,
-                !settings.trackRenderCauses && styles.settingLabelDisabled
-              ]}>
-                Enable Render History
-              </Text>
-              <Switch
-                value={settings.enableRenderHistory}
-                onValueChange={(value) => onSettingsChange({ enableRenderHistory: value })}
-                trackColor={{
-                  false: macOSColors.background.input,
-                  true: macOSColors.semantic.info + "80",
-                }}
-                thumbColor={settings.enableRenderHistory ? macOSColors.semantic.info : macOSColors.text.muted}
-                disabled={!settings.trackRenderCauses}
-              />
-            </View>
-            <Text style={styles.settingDescription}>
-              Store render events for event stepping and diff visualization.
-              {!settings.trackRenderCauses && (
-                <Text style={styles.settingWarning}>
-                  {"\n"}Requires "Track Render Causes" to be enabled.
-                </Text>
-              )}
-            </Text>
-            <Text style={styles.settingDescriptionMuted}>
-              Stores up to {settings.maxRenderHistoryPerComponent} events per component.
-            </Text>
-          </View>
-
-          {/* Capture Props on Render */}
-          <View style={styles.settingItem}>
-            <View style={styles.settingHeader}>
-              <Text style={[
-                styles.settingLabel,
-                !settings.enableRenderHistory && styles.settingLabelDisabled
-              ]}>
-                Capture Props
-              </Text>
-              <Switch
-                value={settings.capturePropsOnRender}
-                onValueChange={(value) => onSettingsChange({ capturePropsOnRender: value })}
-                trackColor={{
-                  false: macOSColors.background.input,
-                  true: "#a855f7" + "80",
-                }}
-                thumbColor={settings.capturePropsOnRender ? "#a855f7" : macOSColors.text.muted}
-                disabled={!settings.enableRenderHistory}
-              />
-            </View>
-            <Text style={styles.settingDescription}>
-              Capture props snapshot at each render for diff visualization.
-              {!settings.enableRenderHistory && (
-                <Text style={styles.settingWarning}>
-                  {"\n"}Requires "Enable Render History" to be enabled.
-                </Text>
-              )}
-            </Text>
-            <Text style={styles.settingDescriptionMuted}>
-              Increases memory usage. Deep clones props at each render.
-            </Text>
           </View>
 
           {/* Debug Log Level */}
           <View style={[styles.settingItem, styles.settingItemSpaced]}>
             <View style={styles.settingHeader}>
-              <Text style={styles.settingLabel}>
-                Debug Log Level
-              </Text>
+              <Text style={styles.settingLabel}>Debug Log Level</Text>
               <View style={styles.settingValue}>
-                <Text style={[
-                  styles.settingValueText,
-                  settings.debugLogLevel !== "off" && { color: macOSColors.semantic.warning }
-                ]}>
-                  {DEBUG_LOG_LEVEL_PRESETS.find(p => p.value === settings.debugLogLevel)?.label || "Off"}
+                <Text
+                  style={[
+                    styles.settingValueText,
+                    settings.debugLogLevel !== "off" && {
+                      color: macOSColors.semantic.warning,
+                    },
+                  ]}
+                >
+                  {DEBUG_LOG_LEVEL_PRESETS.find(
+                    (p) => p.value === settings.debugLogLevel
+                  )?.label || "Off"}
                 </Text>
               </View>
             </View>
@@ -836,21 +1034,27 @@ export function HighlightFilterView({
                   key={preset.value}
                   style={[
                     styles.batchSizePreset,
-                    settings.debugLogLevel === preset.value && styles.batchSizePresetActive,
-                    preset.value !== "off" && settings.debugLogLevel === preset.value && {
-                      backgroundColor: macOSColors.semantic.warning + "30",
-                      borderColor: macOSColors.semantic.warning,
-                    },
+                    settings.debugLogLevel === preset.value &&
+                      styles.batchSizePresetActive,
+                    preset.value !== "off" &&
+                      settings.debugLogLevel === preset.value && {
+                        backgroundColor: macOSColors.semantic.warning + "30",
+                        borderColor: macOSColors.semantic.warning,
+                      },
                   ]}
-                  onPress={() => onSettingsChange({ debugLogLevel: preset.value })}
+                  onPress={() =>
+                    onSettingsChange({ debugLogLevel: preset.value })
+                  }
                 >
                   <Text
                     style={[
                       styles.batchSizePresetText,
-                      settings.debugLogLevel === preset.value && styles.batchSizePresetTextActive,
-                      preset.value !== "off" && settings.debugLogLevel === preset.value && {
-                        color: macOSColors.semantic.warning,
-                      },
+                      settings.debugLogLevel === preset.value &&
+                        styles.batchSizePresetTextActive,
+                      preset.value !== "off" &&
+                        settings.debugLogLevel === preset.value && {
+                          color: macOSColors.semantic.warning,
+                        },
                     ]}
                   >
                     {preset.label}
@@ -859,8 +1063,13 @@ export function HighlightFilterView({
               ))}
             </View>
             <Text style={styles.settingDescriptionMuted}>
-              {DEBUG_LOG_LEVEL_PRESETS.find(p => p.value === settings.debugLogLevel)?.description}
-              {settings.debugLogLevel !== "off" && " • Check Metro console for logs"}
+              {
+                DEBUG_LOG_LEVEL_PRESETS.find(
+                  (p) => p.value === settings.debugLogLevel
+                )?.description
+              }
+              {settings.debugLogLevel !== "off" &&
+                " • Check Metro console for logs"}
             </Text>
           </View>
 
@@ -869,11 +1078,15 @@ export function HighlightFilterView({
             <View style={styles.settingHeader}>
               <Text style={styles.settingLabel}>Batch Size</Text>
               <View style={styles.settingValue}>
-                <Text style={styles.settingValueText}>{settings.batchSize}</Text>
+                <Text style={styles.settingValueText}>
+                  {settings.batchSize}
+                </Text>
               </View>
             </View>
             <Text style={styles.settingDescription}>
-              Maximum components to highlight per render update. Higher values capture more re-renders but may impact performance on complex screens.
+              Maximum components to highlight per render update. Higher values
+              capture more re-renders but may impact performance on complex
+              screens.
             </Text>
             <View style={styles.batchSizePresets}>
               {BATCH_SIZE_PRESETS.map((preset) => (
@@ -881,14 +1094,16 @@ export function HighlightFilterView({
                   key={preset.value}
                   style={[
                     styles.batchSizePreset,
-                    settings.batchSize === preset.value && styles.batchSizePresetActive,
+                    settings.batchSize === preset.value &&
+                      styles.batchSizePresetActive,
                   ]}
                   onPress={() => onSettingsChange({ batchSize: preset.value })}
                 >
                   <Text
                     style={[
                       styles.batchSizePresetText,
-                      settings.batchSize === preset.value && styles.batchSizePresetTextActive,
+                      settings.batchSize === preset.value &&
+                        styles.batchSizePresetTextActive,
                     ]}
                   >
                     {preset.label}
@@ -896,27 +1111,13 @@ export function HighlightFilterView({
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
-        </View>
-      </View>
-
-      {/* How It Works Section */}
-      <View style={styles.section}>
-        <SectionHeader>
-          <SectionHeader.Icon icon={Filter} color={macOSColors.text.muted} size={12} />
-          <SectionHeader.Title>HOW FILTERS WORK</SectionHeader.Title>
-        </SectionHeader>
-
-        <View style={styles.howItWorks}>
-          <Text style={styles.howItWorksText}>
-            <Text style={styles.howItWorksBold}>Any:</Text> Matches against all fields{"\n"}
-            <Text style={styles.howItWorksBold}>ViewType:</Text> Native component class (RCTView, RCTText){"\n"}
-            <Text style={styles.howItWorksBold}>testID:</Text> Component testID prop{"\n"}
-            <Text style={styles.howItWorksBold}>Component:</Text> React component name from fiber
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
+              </View>
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -925,9 +1126,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: macOSColors.background.base,
   },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
-    paddingTop: 16,
     paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 32,
   },
   section: {

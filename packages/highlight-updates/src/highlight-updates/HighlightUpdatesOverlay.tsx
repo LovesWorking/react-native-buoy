@@ -14,6 +14,7 @@ import React, {
   useLayoutEffect,
 } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { macOSColors } from "@react-buoy/shared-ui";
 import HighlightUpdatesController from "./utils/HighlightUpdatesController";
 import {
   PerformanceLogger,
@@ -209,25 +210,42 @@ export function HighlightUpdatesOverlay({
     >
       {/* Spotlight highlight - shows which component is being viewed in detail */}
       {spotlightRender?.measurements && (
-        <View
-          pointerEvents="none"
-          nativeID="__spotlight_highlight__"
-          style={[
-            styles.spotlightHighlight,
-            {
-              left: spotlightRender.measurements.x,
-              top: spotlightRender.measurements.y,
-              width: spotlightRender.measurements.width,
-              height: spotlightRender.measurements.height,
-            },
-          ]}
-        >
-          <View style={styles.spotlightLabel}>
+        <>
+          <View
+            pointerEvents="none"
+            nativeID="__spotlight_highlight__"
+            style={[
+              styles.spotlightHighlight,
+              {
+                // Offset by border width so border renders outside the component bounds
+                left: spotlightRender.measurements.x - 3,
+                top: spotlightRender.measurements.y - 3,
+                width: spotlightRender.measurements.width + 6,
+                height: spotlightRender.measurements.height + 6,
+              },
+            ]}
+          />
+          {/* Label rendered separately so it can grow independently of highlight box size */}
+          <View
+            pointerEvents="none"
+            style={[
+              styles.spotlightLabel,
+              {
+                left: spotlightRender.measurements.x,
+                top:
+                  spotlightRender.measurements.y +
+                  spotlightRender.measurements.height +
+                  4,
+              },
+            ]}
+          >
             <Text style={styles.spotlightLabelText}>
-              {spotlightRender.componentName || spotlightRender.displayName || spotlightRender.viewType}
+              {spotlightRender.componentName ||
+                spotlightRender.displayName ||
+                spotlightRender.viewType}
             </Text>
           </View>
-        </View>
+        </>
       )}
 
       {/* Regular highlights */}
@@ -318,24 +336,25 @@ const styles = StyleSheet.create({
   // Spotlight highlight styles
   spotlightHighlight: {
     position: "absolute",
-    borderWidth: 3,
+    borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#3b82f6",
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
+    borderColor: macOSColors.semantic.info,
+    backgroundColor: "transparent",
   },
   spotlightLabel: {
     position: "absolute",
-    bottom: -20,
-    left: 0,
-    backgroundColor: "#3b82f6",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 2,
+    backgroundColor: macOSColors.background.card,
+    borderWidth: 1,
+    borderColor: macOSColors.semantic.info,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
   },
   spotlightLabelText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
+    color: macOSColors.semantic.info,
+    fontSize: 11,
+    fontWeight: "600",
+    fontFamily: "monospace",
   },
 });
 

@@ -18,8 +18,9 @@ import { Activity, macOSColors } from "@react-buoy/shared-ui";
 interface IsolatedRenderListProps {
   searchText: string;
   filters: FilterConfig;
-  onSelectRender: (render: TrackedRender) => void;
+  onSelectRender: (render: TrackedRender, index: number, allRenders: TrackedRender[]) => void;
   onStatsChange: (stats: { totalComponents: number; totalRenders: number }) => void;
+  onRendersChange?: (renders: TrackedRender[]) => void;
   isTracking: boolean;
 }
 
@@ -32,6 +33,7 @@ function IsolatedRenderListInner({
   filters,
   onSelectRender,
   onStatsChange,
+  onRendersChange,
   isTracking,
 }: IsolatedRenderListProps) {
   // Initialize with current data to avoid flash of empty state
@@ -43,28 +45,36 @@ function IsolatedRenderListInner({
   // Subscribe to RenderTracker updates - ONLY this component re-renders
   useEffect(() => {
     const unsubscribe = RenderTracker.subscribe(() => {
-      setRenders(RenderTracker.getFilteredRenders(searchText));
+      const newRenders = RenderTracker.getFilteredRenders(searchText);
+      setRenders(newRenders);
       // Notify parent of stats via callback (parent uses ref, no re-render)
       onStatsChange(RenderTracker.getStats());
+      // Notify parent of renders list for navigation
+      onRendersChange?.(newRenders);
     });
 
     return unsubscribe;
-  }, [searchText, onStatsChange]);
+  }, [searchText, onStatsChange, onRendersChange]);
 
   // Update filtered renders when search or filters change
   useEffect(() => {
-    setRenders(RenderTracker.getFilteredRenders(searchText));
-  }, [searchText, filters]);
+    const newRenders = RenderTracker.getFilteredRenders(searchText);
+    setRenders(newRenders);
+    onRendersChange?.(newRenders);
+  }, [searchText, filters, onRendersChange]);
 
   // Stable keyExtractor - moved outside to avoid recreation
   const keyExtractor = useCallback((item: TrackedRender) => item.id, []);
 
   // Stable renderItem - uses stable onSelectRender callback
   const renderItem = useCallback(
-    ({ item }: { item: TrackedRender }) => (
-      <RenderListItem render={item} onPress={onSelectRender} />
+    ({ item, index }: { item: TrackedRender; index: number }) => (
+      <RenderListItem
+        render={item}
+        onPress={() => onSelectRender(item, index, renders)}
+      />
     ),
-    [onSelectRender]
+    [onSelectRender, renders]
   );
 
   // Show empty state when no renders

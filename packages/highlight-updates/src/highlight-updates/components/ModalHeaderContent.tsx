@@ -295,18 +295,28 @@ export const MainListHeader = memo(function MainListHeader({
 // Filter View Header
 // ============================================================================
 
+type FilterViewTab = "filters" | "settings";
+
 interface FilterViewHeaderProps {
   onBack: () => void;
-  activeTab: "filters";
-  onTabChange: (tab: "filters") => void;
+  activeTab: FilterViewTab;
+  onTabChange: (tab: FilterViewTab) => void;
+  activeFilterCount?: number;
 }
 
 export const FilterViewHeader = memo(function FilterViewHeader({
   onBack,
   activeTab,
   onTabChange,
+  activeFilterCount = 0,
 }: FilterViewHeaderProps) {
-  const tabs = [{ key: "filters" as const, label: "Filters" }];
+  const tabs = [
+    {
+      key: "filters" as const,
+      label: `Filters${activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}`,
+    },
+    { key: "settings" as const, label: "Settings" },
+  ];
 
   return (
     <ModalHeader>
@@ -315,7 +325,7 @@ export const FilterViewHeader = memo(function FilterViewHeader({
         <TabSelector
           tabs={tabs}
           activeTab={activeTab}
-          onTabChange={(tab) => onTabChange(tab as "filters")}
+          onTabChange={(tab) => onTabChange(tab as FilterViewTab)}
         />
       </ModalHeader.Content>
       <ModalHeader.Actions>{/* Empty for right padding */}</ModalHeader.Actions>

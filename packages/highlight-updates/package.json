@@ -1,6 +1,6 @@
 {
   "name": "@react-buoy/highlight-updates",
-  "version": "0.1.1",
+  "version": "1.5.21",
   "description": "Control React DevTools highlight updates feature from your app",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -20,7 +20,6 @@
     "postinstall": "echo \"Run pnpm build to compile this package\""
   },
   "dependencies": {
-    "@react-buoy/benchmark": "workspace:*",
     "@react-buoy/shared-ui": "workspace:*"
   },
   "peerDependencies": {

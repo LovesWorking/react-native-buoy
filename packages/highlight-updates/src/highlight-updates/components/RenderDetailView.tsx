@@ -18,6 +18,7 @@ import {
   formatRelativeTime,
   PlusIcon,
   MinusIcon,
+  EventStepperFooter,
 } from "@react-buoy/shared-ui";
 import { TreeDiffViewer } from "@react-buoy/shared-ui/dataViewer";
 import type { TrackedRender, FilterType, FilterPattern } from "../utils/RenderTracker";
@@ -71,8 +72,6 @@ interface RenderDetailViewProps {
   onAddFilter?: (pattern: FilterPattern, mode: "include" | "exclude") => void;
 }
 
-// Re-export footer for backward compatibility
-export { RenderHistoryFooter } from "./RenderHistoryViewer";
 
 export function RenderDetailView({
   render,
@@ -128,6 +127,9 @@ export function RenderDetailView({
     ? (render.renderCount / (renderDuration / 1000)).toFixed(1)
     : render.renderCount.toString();
 
+  // Determine if we should show footer (either history or filters)
+  const showHistoryFooter = !disableInternalFooter && totalEvents > 1;
+
   return (
     <View style={styles.container}>
       {/* Header: Component name + native type + copy button */}
@@ -146,7 +148,10 @@ export function RenderDetailView({
       {/* Scrollable content area */}
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          showHistoryFooter && { paddingBottom: 100 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Answer Card: THE answer to "why did this render?" */}
@@ -166,14 +171,17 @@ export function RenderDetailView({
         )}
       </ScrollView>
 
-      {/* History Row: Compact inline navigation (sticky at bottom) */}
-      {totalEvents > 0 && !disableInternalFooter && (
-        <HistoryRow
+      {/* History Footer: Navigation for render history - fixed at bottom */}
+      {showHistoryFooter && (
+        <EventStepperFooter
           currentIndex={selectedEventIndex}
-          totalEvents={totalEvents}
-          timestamp={currentEvent?.timestamp}
+          totalItems={totalEvents}
           onPrevious={goToPrevious}
           onNext={goToNext}
+          itemLabel="Render"
+          subtitle={currentEvent?.timestamp ? formatRelativeTime(new Date(currentEvent.timestamp)) : undefined}
+          applySafeAreaInset={false}
+          absolute
         />
       )}
     </View>
@@ -355,69 +363,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * HistoryRow - Compact inline navigation for render history
- */
-function HistoryRow({
-  currentIndex,
-  totalEvents,
-  timestamp,
-  onPrevious,
-  onNext,
-}: {
-  currentIndex: number;
-  totalEvents: number;
-  timestamp?: number;
-  onPrevious: () => void;
-  onNext: () => void;
-}) {
-  const canGoPrevious = currentIndex > 0;
-  const canGoNext = currentIndex < totalEvents - 1;
-  const relativeTime = timestamp
-    ? formatRelativeTime(new Date(timestamp))
-    : "now";
-
-  return (
-    <View style={styles.historyRow}>
-      <Text style={styles.historyLabel}>History</Text>
-
-      <View style={styles.historyNav}>
-        <TouchableOpacity
-          style={[styles.historyNavButton, !canGoPrevious && styles.historyNavButtonDisabled]}
-          onPress={onPrevious}
-          disabled={!canGoPrevious}
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Text style={[styles.historyNavButtonText, !canGoPrevious && styles.historyNavButtonTextDisabled]}>
-            ◀
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.historyIndex}>
-          {currentIndex + 1}/{totalEvents}
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.historyNavButton, !canGoNext && styles.historyNavButtonDisabled]}
-          onPress={onNext}
-          disabled={!canGoNext}
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Text style={[styles.historyNavButtonText, !canGoNext && styles.historyNavButtonTextDisabled]}>
-            ▶
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.historyTime}>{relativeTime}</Text>
-    </View>
-  );
-}
-
-/**
  * QuickActionsSection - Quick filter actions for the component
- * Shows all available filter options from most specific to most general
+ * Users select a filter option, then use action buttons to include/exclude
  */
 function QuickActionsSection({
   render,
@@ -426,6 +373,8 @@ function QuickActionsSection({
   render: TrackedRender;
   onAddFilter: (pattern: FilterPattern, mode: "include" | "exclude") => void;
 }) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
   // Build list of available filter options (most specific to most general)
   const filterOptions = useMemo(() => {
     const options: { type: FilterType; value: string; label: string }[] = [];
@@ -449,71 +398,100 @@ function QuickActionsSection({
     return options;
   }, [render]);
 
+  const selectedOption = selectedIndex !== null ? filterOptions[selectedIndex] : null;
+
+  const handleSelectOption = useCallback((index: number) => {
+    setSelectedIndex(prev => prev === index ? null : index);
+  }, []);
+
+  const handleInclude = useCallback(() => {
+    if (selectedOption) {
+      onAddFilter({ type: selectedOption.type, value: selectedOption.value }, "include");
+      setSelectedIndex(null);
+    }
+  }, [selectedOption, onAddFilter]);
+
+  const handleExclude = useCallback(() => {
+    if (selectedOption) {
+      onAddFilter({ type: selectedOption.type, value: selectedOption.value }, "exclude");
+      setSelectedIndex(null);
+    }
+  }, [selectedOption, onAddFilter]);
+
   return (
     <View style={styles.quickActionsSection}>
       <Text style={styles.quickActionsTitle}>Quick Filters</Text>
       <View style={styles.filterOptionsList}>
-        {filterOptions.map((option) => (
-          <FilterOptionRow
+        {filterOptions.map((option, index) => (
+          <FilterOptionCard
             key={option.type}
-            type={option.type}
             label={option.label}
             value={option.value}
-            onAddFilter={onAddFilter}
+            isSelected={selectedIndex === index}
+            onSelect={() => handleSelectOption(index)}
           />
         ))}
+      </View>
+
+      {/* Action buttons */}
+      <View style={styles.filterActionButtons}>
+        <TouchableOpacity
+          style={[styles.filterActionButton, styles.filterActionButtonInclude, !selectedOption && styles.filterActionButtonDisabled]}
+          onPress={handleInclude}
+          disabled={!selectedOption}
+          activeOpacity={0.7}
+        >
+          <PlusIcon size={14} color={selectedOption ? macOSColors.semantic.success : macOSColors.text.muted} />
+          <Text style={[styles.filterActionButtonText, { color: selectedOption ? macOSColors.semantic.success : macOSColors.text.muted }]}>
+            Only Show This
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterActionButton, styles.filterActionButtonExclude, !selectedOption && styles.filterActionButtonDisabled]}
+          onPress={handleExclude}
+          disabled={!selectedOption}
+          activeOpacity={0.7}
+        >
+          <MinusIcon size={14} color={selectedOption ? macOSColors.semantic.error : macOSColors.text.muted} />
+          <Text style={[styles.filterActionButtonText, { color: selectedOption ? macOSColors.semantic.error : macOSColors.text.muted }]}>
+            Hide This
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 /**
- * FilterOptionRow - A single filter option with include/exclude buttons
+ * FilterOptionCard - A selectable filter option card
  */
-function FilterOptionRow({
-  type,
+function FilterOptionCard({
   label,
   value,
-  onAddFilter,
+  isSelected,
+  onSelect,
 }: {
-  type: FilterType;
   label: string;
   value: string;
-  onAddFilter: (pattern: FilterPattern, mode: "include" | "exclude") => void;
+  isSelected: boolean;
+  onSelect: () => void;
 }) {
-  const handleInclude = useCallback(() => {
-    onAddFilter({ type, value }, "include");
-  }, [type, value, onAddFilter]);
-
-  const handleExclude = useCallback(() => {
-    onAddFilter({ type, value }, "exclude");
-  }, [type, value, onAddFilter]);
-
   return (
-    <View style={styles.filterOptionRow}>
-      <View style={styles.filterOptionInfo}>
-        <Text style={styles.filterOptionLabel}>{label}</Text>
-        <Text style={styles.filterOptionValue} numberOfLines={1}>{value}</Text>
-      </View>
-      <View style={styles.filterOptionButtons}>
-        <TouchableOpacity
-          style={styles.filterOptionButton}
-          onPress={handleInclude}
-          activeOpacity={0.7}
-          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-        >
-          <PlusIcon size={12} color={macOSColors.semantic.success} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.filterOptionButton}
-          onPress={handleExclude}
-          activeOpacity={0.7}
-          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-        >
-          <MinusIcon size={12} color={macOSColors.semantic.error} />
-        </TouchableOpacity>
-      </View>
-    </View>
+    <TouchableOpacity
+      style={[
+        styles.filterOptionCard,
+        isSelected && styles.filterOptionCardSelected,
+      ]}
+      onPress={onSelect}
+      activeOpacity={0.7}
+    >
+      <Text style={[styles.filterOptionLabel, isSelected && styles.filterOptionLabelSelected]}>
+        {label}
+      </Text>
+      <Text style={[styles.filterOptionValue, isSelected && styles.filterOptionValueSelected]} numberOfLines={1}>
+        {value}
+      </Text>
+    </TouchableOpacity>
   );
 }
 
@@ -621,59 +599,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: macOSColors.text.primary,
     fontFamily: "monospace",
-  },
-
-  // History Row
-  historyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderTopWidth: 1,
-    borderTopColor: macOSColors.border.default + "60",
-  },
-  historyLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: macOSColors.text.secondary,
-  },
-  historyNav: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  historyNavButton: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: macOSColors.background.card,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: macOSColors.border.default,
-  },
-  historyNavButtonDisabled: {
-    opacity: 0.4,
-  },
-  historyNavButtonText: {
-    fontSize: 12,
-    color: macOSColors.text.primary,
-  },
-  historyNavButtonTextDisabled: {
-    color: macOSColors.text.muted,
-  },
-  historyIndex: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: macOSColors.text.primary,
-    fontFamily: "monospace",
-    minWidth: 40,
-    textAlign: "center",
-  },
-  historyTime: {
-    fontSize: 12,
-    color: macOSColors.text.muted,
   },
 
   // Details Section
@@ -785,7 +710,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: macOSColors.border.default,
     padding: 12,
-    gap: 8,
+    gap: 10,
   },
   quickActionsTitle: {
     fontSize: 10,
@@ -793,26 +718,25 @@ const styles = StyleSheet.create({
     color: macOSColors.text.muted,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   filterOptionsList: {
     gap: 6,
   },
-  filterOptionRow: {
+  filterOptionCard: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     backgroundColor: macOSColors.background.input,
     borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "transparent",
+    gap: 10,
   },
-  filterOptionInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginRight: 8,
+  filterOptionCardSelected: {
+    borderColor: macOSColors.semantic.info,
+    backgroundColor: macOSColors.semantic.infoBackground,
   },
   filterOptionLabel: {
     fontSize: 10,
@@ -820,25 +744,49 @@ const styles = StyleSheet.create({
     color: macOSColors.text.muted,
     minWidth: 70,
   },
+  filterOptionLabelSelected: {
+    color: macOSColors.semantic.info,
+  },
   filterOptionValue: {
-    fontSize: 11,
+    fontSize: 12,
     color: macOSColors.text.primary,
     fontFamily: "monospace",
     flex: 1,
   },
-  filterOptionButtons: {
-    flexDirection: "row",
-    gap: 6,
+  filterOptionValueSelected: {
+    color: macOSColors.text.primary,
   },
-  filterOptionButton: {
-    width: 28,
-    height: 28,
+  filterActionButtons: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  filterActionButton: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: macOSColors.background.card,
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     borderRadius: 6,
     borderWidth: 1,
+  },
+  filterActionButtonInclude: {
+    backgroundColor: macOSColors.semantic.successBackground,
+    borderColor: macOSColors.semantic.success + "40",
+  },
+  filterActionButtonExclude: {
+    backgroundColor: macOSColors.semantic.errorBackground,
+    borderColor: macOSColors.semantic.error + "40",
+  },
+  filterActionButtonDisabled: {
+    backgroundColor: macOSColors.background.input,
     borderColor: macOSColors.border.default,
+    opacity: 0.5,
+  },
+  filterActionButtonText: {
+    fontSize: 11,
+    fontWeight: "600",
   },
 });
 

@@ -5,9 +5,6 @@
  * Tracks timing metrics across the render detection pipeline to identify bottlenecks
  * and measure optimization improvements.
  *
- * This logger integrates with the benchmarking system - when a benchmark session
- * is active, batch metrics are automatically forwarded to the BenchmarkRecorder.
- *
  * Usage:
  *   PerformanceLogger.setEnabled(true);  // Enable logging
  *   const batch = PerformanceLogger.startBatch(nodesReceived);
@@ -16,17 +13,9 @@
  *   batch.markTrackingComplete();
  *   batch.markCallbackComplete();
  *   batch.finish();  // Logs the complete metrics
- *
- * For benchmark recording:
- *   import { benchmarkRecorder } from '../../benchmarking';
- *   benchmarkRecorder.startSession({ name: 'MyBenchmark' });
- *   // ... perform operations (batches are auto-forwarded) ...
- *   const report = benchmarkRecorder.stopSession();
  */
 
 "use strict";
-
-import { benchmarkRecorder } from "@react-buoy/benchmark";
 
 // Declare performance API available in React Native's JavaScript environment
 declare const performance: { now: () => number };
@@ -78,10 +67,6 @@ export function markOverlayRendered(highlightCount: number, renderTime?: number)
     lastEventTimestamp = 0;
   }
 
-  // Forward overlay render metrics to benchmark recorder if session is active
-  if (renderTime !== undefined && benchmarkRecorder.isRecording()) {
-    benchmarkRecorder.recordOverlayRender(highlightCount, renderTime);
-  }
 }
 
 export interface BatchTimer {
@@ -273,16 +258,8 @@ class PerformanceLoggerSingleton {
       this.recentBatches.shift();
     }
 
-    // Forward to benchmark recorder if a session is active
-    if (benchmarkRecorder.isRecording()) {
-      benchmarkRecorder.recordBatch(metrics);
-    }
-
     // Notify listeners
     this.notifyListeners(metrics);
-
-    // Note: logBatch removed - performance logs now silent by default
-    // Use benchmarkRecorder for performance analysis instead
   }
 
   /**

@@ -103,27 +103,3 @@ export {
   RenderHistoryViewer,
   RenderHistoryFooter,
 } from "./highlight-updates/components/RenderHistoryViewer";
-
-// Re-export benchmarking module from @react-buoy/benchmark
-// This provides backward compatibility for code that imports from highlight-updates
-export {
-  // Classes
-  BenchmarkRecorder,
-  benchmarkRecorder,
-  BenchmarkStorage,
-  BenchmarkComparator,
-  // Storage adapters
-  createAsyncStorageAdapter,
-  createMemoryStorageAdapter,
-} from "@react-buoy/benchmark";
-
-// Re-export benchmarking types
-export type {
-  BenchmarkReport,
-  BenchmarkComparison,
-  BenchmarkSessionOptions,
-  BenchmarkMetadata,
-  AggregatedStats,
-  OverlayRenderMetrics,
-  BatchMetrics as BenchmarkBatchMetrics,
-} from "@react-buoy/benchmark";
