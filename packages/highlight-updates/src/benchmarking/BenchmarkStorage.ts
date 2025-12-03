@@ -213,7 +213,6 @@ export class BenchmarkStorage {
 export function createAsyncStorageAdapter(): StorageAdapter | null {
   try {
     // Dynamic import to avoid hard dependency on AsyncStorage
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const AsyncStorage = require("@react-native-async-storage/async-storage").default;
     return {
       getItem: (key: string) => AsyncStorage.getItem(key),
