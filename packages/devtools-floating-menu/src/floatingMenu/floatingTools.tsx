@@ -30,6 +30,7 @@ import { calculateTargetPosition } from "./dial/onboardingConstants";
 import { MinimizedToolsStack } from "./MinimizedToolsStack";
 import { useMinimizedTools, MinimizedTool } from "./MinimizedToolsContext";
 import { useAppHost } from "./AppHost";
+import { EnvironmentSelectorInline, type Environment } from "@react-buoy/shared-ui";
 
 // Using Views to render grip dots; no react-native-svg dependency
 
@@ -396,6 +397,14 @@ export type FloatingToolsProps = {
   pushToSide?: boolean;
   /** When true, centers the bubble on screen (for onboarding) */
   centerOnboarding?: boolean;
+  /** Current environment for the environment selector */
+  environment?: Environment;
+  /** Available environments for switching */
+  availableEnvironments?: Environment[];
+  /** Callback when environment is selected */
+  onEnvironmentSwitch?: (env: Environment) => void;
+  /** Whether environment selector should be shown */
+  showEnvironmentSelector?: boolean;
 };
 
 /**
@@ -432,6 +441,10 @@ export function FloatingTools({
   pushToSide = false,
   centerOnboarding = false,
   children,
+  environment,
+  availableEnvironments,
+  onEnvironmentSwitch,
+  showEnvironmentSelector = false,
 }: FloatingToolsProps) {
   // Animated position and drag state
   const animatedPosition = useRef(new Animated.ValueXY()).current;
@@ -731,7 +744,7 @@ export function FloatingTools({
     borderBottomWidth: isDragging ? 2 : 1,
     borderTopWidth: hasMinimizedTools ? 0 : (isDragging ? 2 : 1),
     borderColor: isDragging ? gameUIColors.info : gameUIColors.muted + "66",
-    overflow: "hidden",
+    overflow: "visible",
     elevation: 8,
     shadowColor: isDragging ? gameUIColors.info + "99" : "#000",
     shadowOffset: { width: 0, height: isDragging ? 6 : 4 },
@@ -799,6 +812,7 @@ export function FloatingTools({
           </View>
         )}
 
+
         {/* Main floating tools bubble */}
         <View
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -826,7 +840,20 @@ export function FloatingTools({
             <GripVerticalIcon size={12} color={gameUIColors.secondary + "CC"} />
           </DraggableHeader>
           <FloatingToolsContext.Provider value={{ isDragging }}>
-            <View style={contentStyle}>{actions}</View>
+            <View style={contentStyle}>
+              {/* Environment selector in the row - expands upward */}
+              {showEnvironmentSelector &&
+                environment &&
+                availableEnvironments &&
+                onEnvironmentSwitch && (
+                  <EnvironmentSelectorInline
+                    currentEnvironment={environment}
+                    availableEnvironments={availableEnvironments}
+                    onSelect={onEnvironmentSwitch}
+                  />
+                )}
+              {actions}
+            </View>
           </FloatingToolsContext.Provider>
         </View>
       </View>

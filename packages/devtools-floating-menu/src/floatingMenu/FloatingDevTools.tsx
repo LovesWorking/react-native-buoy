@@ -167,6 +167,41 @@ export interface FloatingDevToolsProps extends Omit<FloatingMenuProps, "apps"> {
    * ```
    */
   defaultDialTools?: DefaultDialConfig;
+
+  /**
+   * List of environments available for switching.
+   * When provided along with onEnvironmentSwitch, the environment badge becomes
+   * interactive and allows users to switch between environments.
+   *
+   * @example
+   * ```tsx
+   * <FloatingDevTools
+   *   environment="dev"
+   *   availableEnvironments={['dev', 'qa', 'staging', 'prod']}
+   *   onEnvironmentSwitch={(env) => {
+   *     // Handle environment switch - update your app's environment
+   *     setCurrentEnvironment(env);
+   *   }}
+   * />
+   * ```
+   */
+  availableEnvironments?: import("@react-buoy/shared-ui").Environment[];
+
+  /**
+   * Callback fired when the user selects an environment from the switcher.
+   * The app is responsible for actually switching environments and updating
+   * the `environment` prop - we just notify you of the user's selection.
+   *
+   * @example
+   * ```tsx
+   * onEnvironmentSwitch={(env) => {
+   *   // Your logic here - e.g., update API base URL, clear caches, etc.
+   *   console.log(`User wants to switch to ${env}`);
+   *   setCurrentEnvironment(env);
+   * }}
+   * ```
+   */
+  onEnvironmentSwitch?: (environment: import("@react-buoy/shared-ui").Environment) => void;
 }
 
 /**

@@ -57,3 +57,26 @@ export type {
 export { WindowControls } from "./WindowControls";
 export { EventStepperFooter } from "./EventStepperFooter";
 export type { EventStepperFooterProps } from "./EventStepperFooter";
+export { ExpandablePopover } from "./ExpandablePopover";
+export type { ExpandablePopoverProps } from "./ExpandablePopover";
+
+// EventHistoryViewer components
+export {
+  EventHistoryViewer,
+  ViewToggleCards,
+  DiffModeTabs,
+  CompareBar,
+  EventPickerModal,
+} from "./EventHistoryViewer";
+export type {
+  ViewMode,
+  DiffModeTab,
+  EventDisplayInfo,
+  IconComponent,
+  ViewToggleCardsProps,
+  CompareBarProps,
+  DiffModeTabsProps,
+  EventPickerItem,
+  EventPickerModalProps,
+  EventHistoryViewerProps,
+} from "./EventHistoryViewer";

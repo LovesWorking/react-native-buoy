@@ -249,8 +249,8 @@ class RenderTrackerSingleton {
     showRenderCount: true,
     performanceLogging: false,
     trackRenderCauses: false,
-    // History settings (opt-in for performance)
-    enableRenderHistory: false,
+    // History settings (always enabled)
+    enableRenderHistory: true,
     maxRenderHistoryPerComponent: 20,
     capturePropsOnRender: false,
     captureStateOnRender: false,
