@@ -1,6 +1,7 @@
 import { Slot } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useRef, useState, useCallback } from "react";
+import { Alert } from "react-native";
 import { FloatingDevTools } from "@react-buoy/core";
 import type { Environment, UserRole } from "@react-buoy/env";
 import type { EnvVarConfig, StorageKeyConfig } from "@react-buoy/core";
@@ -12,7 +13,41 @@ export default function RootLayout() {
   }
 
   const userRole: UserRole = "admin";
-  const environment: Environment = "local";
+  const [environment, setEnvironment] = useState<Environment>("local");
+
+  // Available environments for the switcher
+  const availableEnvironments: Environment[] = [
+    "local",
+    "dev",
+    "qa",
+    "staging",
+    "prod",
+  ];
+
+  // Handler for environment switch
+  const handleEnvironmentSwitch = useCallback((newEnv: Environment) => {
+    Alert.alert(
+      "Switch Environment",
+      `Switch to ${newEnv.toUpperCase()}?\n\nIn a real app, this would update your API configuration, clear caches, etc.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Switch",
+          onPress: () => {
+            setEnvironment(newEnv);
+            // In a real app, you might also:
+            // - Update API base URL
+            // - Clear query caches
+            // - Update feature flags
+            // - Etc.
+          },
+        },
+      ]
+    );
+  }, []);
 
   const requiredEnvVars: EnvVarConfig[] = [
     // Valid variables
@@ -80,6 +115,8 @@ export default function RootLayout() {
         actions={{}}
         environment={environment}
         userRole={userRole}
+        availableEnvironments={availableEnvironments}
+        onEnvironmentSwitch={handleEnvironmentSwitch}
       />
     </QueryClientProvider>
   );
