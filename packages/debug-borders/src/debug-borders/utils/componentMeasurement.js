@@ -117,22 +117,29 @@ function measureInstance(instance) {
   });
 }
 
+// Import component info extraction
+const { extractComponentInfo } = require("./componentInfo");
+
 /**
- * Measures multiple instances in parallel
+ * Measures multiple instances in parallel and extracts component info
  *
  * @param {Array<{instance: any, fiber: Fiber, depth: number}>} instances
- * @returns {Promise<Array<{x: number, y: number, width: number, height: number, depth: number}>>}
+ * @returns {Promise<Array<{x: number, y: number, width: number, height: number, depth: number, componentInfo: Object}>>}
  */
 async function measureInstances(instances) {
   // Measure all instances in parallel
   const measurements = await Promise.all(
-    instances.map(async ({ instance, depth }) => {
+    instances.map(async ({ instance, fiber, depth }) => {
       const rect = await measureInstance(instance);
 
       if (rect) {
+        // Extract component info for labels
+        const componentInfo = extractComponentInfo(fiber, instance);
+
         return {
           ...rect,
           depth: depth,
+          componentInfo: componentInfo,
         };
       }
 

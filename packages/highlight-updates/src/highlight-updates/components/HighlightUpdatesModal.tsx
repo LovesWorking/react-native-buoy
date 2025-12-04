@@ -39,7 +39,9 @@ import {
   MainListHeader,
   FilterViewHeader,
   DetailViewHeader,
+  type DetailViewTab,
 } from "./ModalHeaderContent";
+import { RenderHistoryViewer } from "./RenderHistoryViewer";
 
 interface HighlightUpdatesModalProps {
   visible: boolean;
@@ -277,6 +279,7 @@ export function HighlightUpdatesModal({
   const [selectedRenderIndex, setSelectedRenderIndex] = useState<number>(0);
   const [showFilterView, setShowFilterView] = useState(false);
   const [filterViewActiveTab, setFilterViewActiveTab] = useState<"filters" | "settings">("filters");
+  const [detailViewActiveTab, setDetailViewActiveTab] = useState<DetailViewTab>("details");
   const [searchText, setSearchText] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
@@ -565,6 +568,7 @@ export function HighlightUpdatesModal({
   const handleRenderPress = useCallback((render: TrackedRender, index: number, allRenders: TrackedRender[]) => {
     setSelectedRender(render);
     setSelectedRenderIndex(index);
+    setDetailViewActiveTab("details"); // Reset to details tab when selecting a new render
     rendersListRef.current = allRenders;
     // Set spotlight to show which component is being viewed
     HighlightUpdatesController.setSpotlight(render.nativeTag);
@@ -691,7 +695,14 @@ export function HighlightUpdatesModal({
     }
 
     if (selectedRender) {
-      return <DetailViewHeader onBack={handleBackFromDetail} />;
+      return (
+        <DetailViewHeader
+          onBack={handleBackFromDetail}
+          activeTab={detailViewActiveTab}
+          onTabChange={setDetailViewActiveTab}
+          hasHistory={(selectedRender.renderHistory?.length ?? 0) > 0}
+        />
+      );
     }
 
     return (
@@ -725,6 +736,7 @@ export function HighlightUpdatesModal({
     activeFilterCount,
     hasRenders,
     filterViewActiveTab,
+    detailViewActiveTab,
     handleBackFromFilter,
     handleBackFromDetail,
     handleSearch,
@@ -748,8 +760,9 @@ export function HighlightUpdatesModal({
   if (!visible) return null;
 
   // Footer for navigating through the renders list
+  // Only show component navigation footer on details tab; history tab uses its own event stepper
   const totalRenders = rendersListRef.current.length;
-  const footerNode = selectedRender ? (
+  const footerNode = selectedRender && detailViewActiveTab === "details" ? (
     <EventStepperFooter
       currentIndex={selectedRenderIndex}
       totalItems={totalRenders}
@@ -779,11 +792,18 @@ export function HighlightUpdatesModal({
     >
       <View nativeID="__rn_buoy__highlight-modal" style={styles.container}>
         {selectedRender ? (
-          <RenderDetailView
-            render={selectedRender}
-            disableInternalFooter={true}
-            onAddFilter={handleAddFilter}
-          />
+          detailViewActiveTab === "details" ? (
+            <RenderDetailView
+              render={selectedRender}
+              disableInternalFooter={true}
+              onAddFilter={handleAddFilter}
+            />
+          ) : (
+            <RenderHistoryViewer
+              render={selectedRender}
+              disableInternalFooter={false}
+            />
+          )
         ) : showFilterView ? (
           <HighlightFilterView
             filters={filters}

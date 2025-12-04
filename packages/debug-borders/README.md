@@ -1,22 +1,21 @@
 # @react-buoy/debug-borders
 
-A visual layout debugging tool that adds colored borders around all React Native components to help you visualize component structure and nesting depth. Works with Expo, React Native CLI, and supports both the new architecture (Fabric) and legacy architecture.
+A visual layout debugging tool for React Native that highlights components with colored borders and labels. Features three display modes, smart filtering to show only meaningful components, and tap-to-inspect functionality. Works with Expo, React Native CLI, and supports both the new architecture (Fabric) and legacy architecture.
 
 ## Features
 
-- **Colored Borders**: Each nesting level gets a unique, vibrant color for easy identification
+- **Three Display Modes**: Cycle through Off → Borders → Labels with a single tap
+- **Smart Filtering**: Only shows borders/labels for components with `testID` or `accessibilityLabel`
+- **Tap-to-Inspect**: Tap any label to see detailed component information in a modal
+- **Color-Coded Labels**: Labels match border colors based on identifier type (testID = green, accessibilityLabel = pink)
+- **Label Stacking**: Overlapping labels automatically stack upward like a menu
+- **Hidden Screen Detection**: Automatically hides borders on inactive screens in stack navigators
+- **DevTools Aware**: Hides borders when DevTools modals are open
 - **Real-Time Updates**: Automatically tracks layout changes (updates every 2 seconds)
-- **Zero Configuration**: Works out of the box with the preset
+- **Touch-Through**: Borders don't interfere with touch interactions
 - **Performance Optimized**: Minimal impact (~30ms to measure 400+ components)
-- **Touch-Through**: Borders don't interfere with touch interactions (`pointerEvents="none"`)
-- **Fiber Tree Traversal**: Uses React internals to find all components efficiently
-- **Simple Toggle**: Easy on/off controls via modal interface
 
 ## Installation
-
-This package is part of the React Buoy monorepo and is automatically available to other packages and the example app.
-
-For external projects:
 
 ```bash
 npm install @react-buoy/debug-borders
@@ -28,11 +27,7 @@ yarn add @react-buoy/debug-borders
 
 ## Quick Start
 
-### Simplest Setup - Zero Config!
-
-**Import the preset and add it to your tools array. Done!**
-
-```typescript
+```tsx
 import { debugBordersToolPreset, DebugBordersStandaloneOverlay } from '@react-buoy/debug-borders';
 import { FloatingDevTools } from '@react-buoy/core';
 
@@ -49,10 +44,10 @@ function App() {
         environment="local"
         userRole="admin"
       />
-      
+
       {/* IMPORTANT: Render overlay at root level */}
       <DebugBordersStandaloneOverlay />
-      
+
       {/* Your app content */}
       <YourAppContent />
     </>
@@ -60,21 +55,65 @@ function App() {
 }
 ```
 
-**Done!** The preset automatically:
-- ✅ Adds BORDERS tool to your floating menu
-- ✅ Toggles borders on/off when you tap the icon
-- ✅ No modal needed - direct toggle!
-- ✅ Updates borders in real-time
+**Done!** Tap the BORDERS icon in the floating menu to cycle through modes.
 
-**⚠️ Important:** The `DebugBordersStandaloneOverlay` component MUST be rendered at the root level of your app (outside all modals and navigation containers) for borders to appear on top of everything.
+## Display Modes
 
-## Usage
+The tool cycles through three modes when you tap the icon:
+
+| Mode | Icon Color | Description |
+|------|------------|-------------|
+| **Off** | Gray | No borders displayed |
+| **Borders** | Green | Rainbow-colored borders for all components (depth-based colors) |
+| **Labels** | Cyan | Borders + labels only for components with `testID` or `accessibilityLabel` |
+
+### Labels Mode Features
+
+In Labels mode, the tool provides focused debugging:
+
+- **Only shows components with identifiers** - Components with `testID` or `accessibilityLabel` get borders and labels
+- **Color-coded by identifier type**:
+  - 🟢 Green = `testID`
+  - 🩷 Pink = `accessibilityLabel`
+- **Labels positioned above boxes** - Easy to read without obscuring content
+- **Automatic stacking** - Overlapping labels stack upward like a menu
+- **Tap to inspect** - Tap any label to see full component details
+
+## Tap-to-Inspect Modal
+
+Tap any label in Labels mode to open a detailed inspection modal showing:
+
+### Identifiers
+- `testID` (green)
+- `accessibilityLabel` (pink)
+- `nativeID` (amber)
+- `key`
+
+### Component Info
+- Component Name (the React component that rendered this)
+- Parent Component
+- Display Name (friendly name like "View", "Text")
+- Native View Type (e.g., "RCTView", "RCTText")
+- Fiber Tag
+
+### Position & Size
+- X, Y coordinates
+- Width, Height
+- Depth in component tree
+
+### Accessibility
+- Role
+- Hint
+- State (displayed with interactive DataViewer)
+
+### Styles
+- Full computed styles (displayed with interactive DataViewer)
+
+## Usage Examples
 
 ### Basic Usage with Preset
 
-The simplest way to use debug borders - just tap the icon to toggle!
-
-```typescript
+```tsx
 import { debugBordersToolPreset, DebugBordersStandaloneOverlay } from '@react-buoy/debug-borders';
 
 // Add to your FloatingDevTools apps array
@@ -83,60 +122,52 @@ const installedApps = [debugBordersToolPreset];
 // Render overlay at root level
 <DebugBordersStandaloneOverlay />
 
-// That's it! Tap the BORDERS icon to toggle borders on/off
+// Tap the BORDERS icon to cycle: Off → Borders → Labels → Off
 ```
 
 ### Custom Configuration
 
-Customize the tool appearance:
-
-```typescript
+```tsx
 import { createDebugBordersTool, DebugBordersStandaloneOverlay } from '@react-buoy/debug-borders';
 
 const customBordersTool = createDebugBordersTool({
   name: "LAYOUT",
   description: "Layout visualizer",
-  color: "#ec4899", // Pink icon
+  offColor: "#9ca3af",      // Gray when off
+  bordersColor: "#ec4899",  // Pink in borders mode
+  labelsColor: "#8b5cf6",   // Purple in labels mode
   id: "custom-borders",
 });
 
 const installedApps = [customBordersTool];
-
-// Still need to render overlay at root
-<DebugBordersStandaloneOverlay />
-
-// Tap the icon to toggle borders
 ```
 
 ### Programmatic Control
 
-Control borders programmatically without the modal:
-
-```typescript
+```tsx
 import { DebugBordersManager, DebugBordersStandaloneOverlay } from '@react-buoy/debug-borders';
 
-// Enable borders
-DebugBordersManager.enable();
+// Get current mode
+const mode = DebugBordersManager.getMode(); // "off" | "borders" | "labels"
 
-// Disable borders
-DebugBordersManager.disable();
+// Set specific mode
+DebugBordersManager.setMode("borders");
+DebugBordersManager.setMode("labels");
+DebugBordersManager.setMode("off");
 
-// Toggle on/off
-DebugBordersManager.toggle();
+// Cycle to next mode
+DebugBordersManager.cycle(); // off → borders → labels → off
 
-// Check status
-const isEnabled = DebugBordersManager.isEnabled();
+// Check if labels should be shown
+const showLabels = DebugBordersManager.showLabels(); // true when mode is "labels"
 
-// Subscribe to state changes
-const unsubscribe = DebugBordersManager.subscribe((enabled) => {
-  console.log('Borders enabled:', enabled);
+// Subscribe to mode changes
+const unsubscribe = DebugBordersManager.subscribe((mode) => {
+  console.log('Mode changed to:', mode);
 });
 
 // Clean up
 unsubscribe();
-
-// Still need to render overlay
-<DebugBordersStandaloneOverlay />
 ```
 
 ## API Reference
@@ -145,9 +176,9 @@ unsubscribe();
 
 #### `debugBordersToolPreset`
 
-Pre-configured tool for FloatingDevTools with zero configuration needed. Tap the icon to toggle borders on/off.
+Pre-configured tool for FloatingDevTools. Shows only in the floating menu (not the dial).
 
-```typescript
+```tsx
 import { debugBordersToolPreset } from '@react-buoy/debug-borders';
 
 const installedApps = [debugBordersToolPreset];
@@ -161,43 +192,25 @@ Create a custom debug borders tool configuration.
 
 **Options:**
 - `name?: string` - Tool name (default: "BORDERS")
-- `description?: string` - Tool description (default: "Visual layout debugger - tap to toggle")
-- `color?: string` - Icon color (default: "#a78bfa" - purple)
+- `description?: string` - Tool description
+- `offColor?: string` - Icon color when off (default: "#6b7280" gray)
+- `bordersColor?: string` - Icon color in borders mode (default: "#10b981" green)
+- `labelsColor?: string` - Icon color in labels mode (default: "#06b6d4" cyan)
 - `id?: string` - Custom tool ID (default: "debug-borders")
-
-**Example:**
-```typescript
-const customTool = createDebugBordersTool({
-  name: "LAYOUT",
-  color: "#10b981",
-});
-```
 
 ### Components
 
 #### `<DebugBordersStandaloneOverlay />`
 
-The main overlay component that renders colored borders. **Must be rendered at root level.**
+The main overlay component that renders borders and labels. **Must be rendered at root level.**
 
-```typescript
+```tsx
 import { DebugBordersStandaloneOverlay } from '@react-buoy/debug-borders';
 
 <DebugBordersStandaloneOverlay />
 ```
 
-**Props:** None (controlled via `DebugBordersManager`)
-
 **Note:** This component must be rendered at the root level of your app, outside all modals and navigation containers, for borders to appear on top of everything.
-
-#### `<DebugBordersModal />` [DEPRECATED]
-
-Modal component with toggle controls. **Note:** The preset now uses direct toggle without a modal. This component is kept for backwards compatibility but not recommended for new code.
-
-```typescript
-import { DebugBordersModal } from '@react-buoy/debug-borders';
-
-// Not needed with the preset - it toggles directly!
-```
 
 ### Manager API
 
@@ -206,127 +219,93 @@ import { DebugBordersModal } from '@react-buoy/debug-borders';
 Global state manager for controlling debug borders.
 
 **Methods:**
-- `enable()` - Enable debug borders
-- `disable()` - Disable debug borders
-- `toggle()` - Toggle borders on/off
-- `isEnabled(): boolean` - Check if borders are enabled
-- `setEnabled(enabled: boolean)` - Set enabled state
-- `subscribe(callback: (enabled: boolean) => void): () => void` - Subscribe to state changes
-
-**Example:**
-```typescript
-import { DebugBordersManager } from '@react-buoy/debug-borders';
-
-// Enable borders
-DebugBordersManager.enable();
-
-// Subscribe to changes
-const unsubscribe = DebugBordersManager.subscribe((enabled) => {
-  console.log('Borders:', enabled ? 'ON' : 'OFF');
-});
-
-// Clean up
-unsubscribe();
-```
+- `getMode(): "off" | "borders" | "labels"` - Get current display mode
+- `setMode(mode)` - Set display mode
+- `cycle()` - Cycle to next mode (off → borders → labels → off)
+- `showLabels(): boolean` - Check if labels should be shown (mode === "labels")
+- `subscribe(callback: (mode) => void): () => void` - Subscribe to mode changes
 
 ## How It Works
 
-This implementation uses the same proven approach as React Native's built-in dev tools:
+### Smart Filtering
 
-1. **Access Fiber Tree** - Uses `__REACT_DEVTOOLS_GLOBAL_HOOK__` to access React internals
-2. **Find Components** - Traverses the fiber tree to find all host components (View, Text, etc.)
-3. **Measure Positions** - Uses component measurement APIs (`measure()` callback)
-4. **Generate Colors** - Assigns colors based on nesting depth using the golden angle (137.5°)
-5. **Render Borders** - Draws colored borders as absolutely-positioned views
-6. **Update Loop** - Refreshes every 2 seconds when enabled
+The tool intelligently filters what it displays:
+
+1. **Hidden Screen Detection** - Skips components in inactive screens (React Navigation stack)
+2. **SVG Filtering** - Excludes SVG elements (RNSVG* components)
+3. **DevTools Filtering** - Excludes FloatingDevTools, modals, and other dev tool components
+4. **Identifier Filtering** (Labels mode) - Only shows components with `testID` or `accessibilityLabel`
+
+### Label Positioning
+
+Labels are positioned above their component boxes and automatically stack when they would overlap:
+
+```
+┌─────────────────────────────────────┐
+│ [submitButton]                      │  ← Labels stack upward
+│ [formContainer]                     │
+├─────────────────────────────────────┤
+│                                     │
+│        Component Content            │
+│                                     │
+└─────────────────────────────────────┘
+```
 
 ### Color Scheme
 
-Colors are assigned based on component nesting depth using the golden angle for maximum distinctiveness:
+**Borders Mode** - Colors based on nesting depth using golden angle (137.5°):
+| Depth | Color |
+|-------|-------|
+| 0 | Red-Orange |
+| 1 | Green |
+| 2 | Blue |
+| 3+ | Continues with golden angle |
 
-| Depth | Color Type | Visual |
-|-------|------------|---------|
-| 0 (root) | Red-Orange | Outer components |
-| 1 | Green | First level children |
-| 2 | Blue | Second level |
-| 3 | Magenta | Third level |
-| 4 | Yellow | Fourth level |
-| 5+ | Continues with golden angle distribution | Deep nesting |
-
-## Architecture
-
-### Simple Toggle Design
-
-The debug borders tool uses a direct toggle approach - no modal needed!
-
-1. **Icon Press** → Directly toggles borders on/off via `DebugBordersManager.toggle()`
-2. **Overlay Component** (`DebugBordersStandaloneOverlay`)
-   - Lives at app root level
-   - Renders the actual colored borders
-   - Uses `pointerEvents="none"` to not interfere with touches
-   - Subscribes to `DebugBordersManager` for state updates
-
-### State Management
-
-- `DebugBordersManager` holds global enabled/disabled state
-- Uses subscribe/unsubscribe pattern for React components
-- Overlay subscribes to the manager for real-time updates
-- Direct toggle via `DebugBordersManager.toggle()` when icon is tapped
-- Persistent across component remounts
+**Labels Mode** - Colors based on identifier type:
+| Identifier | Color |
+|------------|-------|
+| testID | Green (#10b981) |
+| accessibilityLabel | Pink (#ec4899) |
+| componentName | Purple (#a855f7) |
+| nativeID | Amber (#f59e0b) |
+| viewType (fallback) | Gray (#6b7280) |
 
 ## Performance
 
 - **Measurement Time:** ~30ms for 400+ components
-- **Update Frequency:** Every 2 seconds (configurable in source)
+- **Update Frequency:** Every 2 seconds when enabled
 - **Memory Impact:** Minimal (only stores rectangle data)
-- **Runtime Impact:** Zero when disabled, minimal when enabled
+- **Runtime Impact:** Zero when disabled
+- **Label Positioning:** O(n²) worst case, optimized with early exits
 
 ## Compatibility
 
-- ✅ React Native >= 0.70.0
-- ✅ Fabric (New Architecture)
-- ✅ Paper (Legacy Architecture)
-- ✅ Expo
-- ✅ React Native CLI
+- React Native >= 0.70.0
+- Fabric (New Architecture)
+- Paper (Legacy Architecture)
+- Expo
+- React Native CLI
 
 ## Troubleshooting
 
 ### Borders not showing?
 
-1. Make sure `DebugBordersStandaloneOverlay` is rendered at root level (outside modals/navigation)
-2. Check that borders are enabled by tapping the icon again (it toggles on/off)
-3. Check console for any errors - you should see "[DebugBorders] Debug borders enabled"
+1. Make sure `DebugBordersStandaloneOverlay` is rendered at root level
+2. Tap the icon to cycle modes - you may be in "off" mode
+3. In Labels mode, borders only show for components with `testID` or `accessibilityLabel`
 4. Verify you're in development mode (`__DEV__` is true)
 
-### Performance issues?
+### Labels overlapping content?
 
-1. The tool is optimized but scanning 1000+ components may take longer
-2. Update frequency is 2 seconds by default (modify in source if needed)
-3. Disable borders when not actively debugging
+Labels are positioned above component boxes. If they still overlap, they automatically stack upward. Very dense UIs may have many stacked labels.
 
-### Components not tracked?
+### Can't tap labels?
 
-The tool tracks all host components (View, Text, Image, etc.). Custom components are tracked through their host component children.
+Make sure you're in Labels mode (cyan icon). In Borders mode, labels aren't shown and tapping doesn't work.
 
-## Development
+### Modal not scrolling?
 
-### Building
-
-```bash
-pnpm build
-```
-
-### Type Checking
-
-```bash
-pnpm typecheck
-```
-
-### Clean Build
-
-```bash
-pnpm clean
-```
+The inspection modal uses the standard JsModal component. Swipe up to expand it or drag the handle to resize.
 
 ## Structure
 
@@ -334,25 +313,21 @@ pnpm clean
 debug-borders/
 ├── src/
 │   ├── index.tsx              # Main exports
-│   ├── preset.tsx             # Preset configuration with direct toggle
+│   ├── preset.tsx             # Preset configuration
 │   └── debug-borders/
 │       ├── components/
-│       │   ├── DebugBordersModal.tsx           # [Deprecated] Control modal
-│       │   └── DebugBordersStandaloneOverlay.tsx # Border overlay
-│       ├── utils/
-│       │   ├── DebugBordersManager.js          # State manager
-│       │   ├── fiberTreeTraversal.js           # Fiber tree traversal
-│       │   ├── componentMeasurement.js         # Component measurements
-│       │   └── colorGeneration.js              # Color generation
-│       ├── types.ts           # TypeScript types
-│       └── index.ts           # Feature exports
+│       │   └── DebugBordersStandaloneOverlay.tsx
+│       └── utils/
+│           ├── DebugBordersManager.js    # State manager (3 modes)
+│           ├── fiberTreeTraversal.js     # Fiber traversal + filtering
+│           ├── componentMeasurement.js   # Component measurements
+│           ├── componentInfo.js          # Label extraction
+│           ├── labelPositioning.js       # Overlap resolution
+│           ├── ViewTypeMapper.ts         # Native → friendly names
+│           └── colorGeneration.js        # Color generation
 ├── package.json
 └── README.md
 ```
-
-## Credits
-
-Inspired by React Native's built-in Element Inspector and the debug borders feature from Chrome DevTools.
 
 ## License
 

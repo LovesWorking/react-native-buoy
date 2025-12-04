@@ -1006,6 +1006,44 @@ export function HighlightFilterView({
             </Text>
           </View>
 
+          {/* Enable Render History Toggle */}
+          <View style={[styles.settingItem, styles.settingItemSpaced]}>
+            <View style={styles.settingHeader}>
+              <Text
+                style={[
+                  styles.settingLabel,
+                  !settings.trackRenderCauses && styles.settingLabelDisabled,
+                ]}
+              >
+                Enable Render History
+              </Text>
+              <Switch
+                value={settings.enableRenderHistory}
+                onValueChange={(value) =>
+                  onSettingsChange({ enableRenderHistory: value })
+                }
+                trackColor={{
+                  false: macOSColors.background.input,
+                  true: macOSColors.semantic.info + "80",
+                }}
+                thumbColor={
+                  settings.enableRenderHistory
+                    ? macOSColors.semantic.info
+                    : macOSColors.text.muted
+                }
+                disabled={!settings.trackRenderCauses}
+              />
+            </View>
+            <Text style={styles.settingDescription}>
+              Store render events for each component to view in the History tab.
+              {!settings.trackRenderCauses && (
+                <Text style={styles.settingWarning}>
+                  {"\n"}Requires "Track Render Causes" to be enabled.
+                </Text>
+              )}
+            </Text>
+          </View>
+
           {/* Debug Log Level */}
           <View style={[styles.settingItem, styles.settingItemSpaced]}>
             <View style={styles.settingHeader}>

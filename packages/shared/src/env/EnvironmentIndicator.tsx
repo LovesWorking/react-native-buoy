@@ -1,17 +1,23 @@
-import { LayoutChangeEvent, Text, View } from "react-native";
+import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import {
   FlaskConical,
   TestTube2,
   Bug,
   Zap,
+  ChevronDown,
   type LucideIcon,
 } from "../icons";
 import { gameUIColors } from "../ui/gameUI/constants/gameUIColors";
 
 import { Environment } from "../types/types";
-interface EnvironmentIndicatorProps {
+
+export interface EnvironmentIndicatorProps {
   environment: Environment;
   onLayout?: (event: LayoutChangeEvent) => void;
+  /** When true, the badge becomes pressable and shows a dropdown indicator */
+  interactive?: boolean;
+  /** Called when the badge is pressed (only when interactive is true) */
+  onPress?: () => void;
 }
 
 interface EnvironmentConfig {
@@ -71,10 +77,12 @@ function getEnvironmentConfig(environment: Environment): EnvironmentConfig {
 export function EnvironmentIndicator({
   environment,
   onLayout,
+  interactive = false,
+  onPress,
 }: EnvironmentIndicatorProps) {
   const envConfig = getEnvironmentConfig(environment);
 
-  return (
+  const content = (
     <View
       onLayout={onLayout}
       style={{
@@ -82,6 +90,7 @@ export function EnvironmentIndicator({
         alignItems: "center",
         paddingVertical: 6,
         paddingLeft: 8,
+        paddingRight: interactive ? 4 : 8,
         flexShrink: 0,
       }}
     >
@@ -110,6 +119,30 @@ export function EnvironmentIndicator({
       >
         {envConfig.label}
       </Text>
+      {interactive && (
+        <ChevronDown
+          size={12}
+          color={gameUIColors.muted}
+          style={{ marginLeft: 2 }}
+        />
+      )}
     </View>
   );
+
+  if (interactive && onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => ({
+          opacity: pressed ? 0.7 : 1,
+        })}
+        accessibilityRole="button"
+        accessibilityLabel={`Current environment: ${envConfig.label}. Tap to switch environment.`}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return content;
 }

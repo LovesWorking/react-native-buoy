@@ -14,23 +14,42 @@
  * Debug Borders Manager
  *
  * Singleton manager for controlling debug borders state globally.
- * This allows imperative control (enable/disable/toggle) from anywhere in the app.
+ * Supports three modes:
+ * - "off" - No borders shown
+ * - "borders" - Borders only (no labels)
+ * - "labels" - Borders with component labels
+ *
+ * This allows imperative control from anywhere in the app.
  */
 
-let globalEnabled = false;
+/**
+ * Display mode for debug borders
+ * @typedef {"off" | "borders" | "labels"} DisplayMode
+ */
+
+/** @type {DisplayMode} */
+let globalMode = "off";
+
+/** @type {Set<Function>} */
 const listeners = new Set();
 
 /**
- * Registers a listener that will be called when the enabled state changes
+ * Mode cycle order for toggle()
+ * @type {DisplayMode[]}
+ */
+const MODE_CYCLE = ["off", "borders", "labels"];
+
+/**
+ * Registers a listener that will be called when the mode changes
  *
- * @param {Function} listener - Callback function (enabled: boolean) => void
+ * @param {Function} listener - Callback function (mode: DisplayMode) => void
  * @returns {Function} - Unsubscribe function
  */
 function subscribe(listener) {
   listeners.add(listener);
 
   // Immediately call with current state
-  listener(globalEnabled);
+  listener(globalMode);
 
   return () => {
     listeners.delete(listener);
@@ -43,7 +62,7 @@ function subscribe(listener) {
 function notifyListeners() {
   listeners.forEach((listener) => {
     try {
-      listener(globalEnabled);
+      listener(globalMode);
     } catch (error) {
       console.error("[DebugBorders] Error in listener:", error);
     }
@@ -51,51 +70,79 @@ function notifyListeners() {
 }
 
 /**
- * Enables debug borders globally
+ * Sets the display mode
+ *
+ * @param {DisplayMode} mode - The mode to set
+ */
+function setMode(mode) {
+  if (globalMode === mode) {
+    return;
+  }
+
+  globalMode = mode;
+  notifyListeners();
+}
+
+/**
+ * Gets the current display mode
+ *
+ * @returns {DisplayMode}
+ */
+function getMode() {
+  return globalMode;
+}
+
+/**
+ * Cycles through display modes: off -> borders -> labels -> off
+ */
+function cycle() {
+  const currentIndex = MODE_CYCLE.indexOf(globalMode);
+  const nextIndex = (currentIndex + 1) % MODE_CYCLE.length;
+  setMode(MODE_CYCLE[nextIndex]);
+}
+
+/**
+ * Enables debug borders (borders mode)
  */
 function enable() {
-  if (globalEnabled) {
-    return;
-  }
-
-  globalEnabled = true;
-  notifyListeners();
+  setMode("borders");
 }
 
 /**
- * Disables debug borders globally
+ * Disables debug borders (off mode)
  */
 function disable() {
-  if (!globalEnabled) {
-    return;
-  }
-
-  globalEnabled = false;
-  notifyListeners();
+  setMode("off");
 }
 
 /**
- * Toggles debug borders on/off
+ * Toggles between off and borders mode (legacy behavior)
+ * For cycling through all modes, use cycle() instead
  */
 function toggle() {
-  if (globalEnabled) {
-    disable();
-  } else {
-    enable();
-  }
+  cycle();
 }
 
 /**
- * Gets the current enabled state
+ * Gets whether borders are currently enabled (any mode except "off")
  *
  * @returns {boolean}
  */
 function isEnabled() {
-  return globalEnabled;
+  return globalMode !== "off";
 }
 
 /**
- * Sets the enabled state
+ * Gets whether labels should be shown
+ *
+ * @returns {boolean}
+ */
+function showLabels() {
+  return globalMode === "labels";
+}
+
+/**
+ * Sets the enabled state (legacy API)
  *
  * @param {boolean} enabled
  */
@@ -112,6 +159,11 @@ module.exports = {
   enable,
   disable,
   toggle,
+  cycle,
   isEnabled,
+  showLabels,
   setEnabled,
+  getMode,
+  setMode,
+  MODE_CYCLE,
 };

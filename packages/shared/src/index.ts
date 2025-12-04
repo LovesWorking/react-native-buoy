@@ -67,6 +67,13 @@ export { dialColors } from "./ui/gameUI/constants/gameUIColors";
 export type { GameUIColorKey } from "./ui/gameUI/constants/gameUIColors";
 //EnvironmentIndicator
 export { EnvironmentIndicator } from "./env/EnvironmentIndicator";
+export type { EnvironmentIndicatorProps } from "./env/EnvironmentIndicator";
+// EnvironmentSelector
+export { EnvironmentSelector } from "./env/EnvironmentSelector";
+export type { EnvironmentSelectorProps } from "./env/EnvironmentSelector";
+// EnvironmentSelectorInline
+export { EnvironmentSelectorInline } from "./env/EnvironmentSelectorInline";
+export type { EnvironmentSelectorInlineProps } from "./env/EnvironmentSelectorInline";
 export type { Environment } from "./types/types";
 
 // Context exports

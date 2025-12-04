@@ -87,8 +87,9 @@ Install any combination to customize your dev menu:
 | 💾 **Storage**     | `@react-buoy/storage`           | AsyncStorage/MMKV browser      | View/edit/delete, bulk ops, validation             |
 | ⚡ **React Query** | `@react-buoy/react-query`       | TanStack Query devtools        | Cache inspector, offline toggle, refetch           |
 | 🧭 **Routes**      | `@react-buoy/route-events`      | Route & navigation tracker     | Sitemap, stack view, event timeline                |
-| 🎨 **Borders**     | `@react-buoy/debug-borders`     | Visual layout debugger         | Colored component boundaries                       |
+| 🎨 **Borders**     | `@react-buoy/debug-borders`     | Visual layout debugger         | 3 modes, tap-to-inspect labels, smart filtering    |
 | 🔄 **Highlights**  | `@react-buoy/highlight-updates` | Render highlight tracker       | Visual re-render detection, render counts, history |
+| 🔀 **Env Switch**  | `@react-buoy/core`              | Environment switcher           | Switch between dev/qa/staging/prod environments    |
 
 **Installation Pattern**: All packages follow the same simple pattern:
 
@@ -580,7 +581,7 @@ export default function RootLayout() {
 
 ### What It Does
 
-Visual debugging tool that adds colored borders around all React Native components to identify layout issues and component boundaries.
+Visual debugging tool with three modes: borders only, borders with labels, or off. Labels mode shows only components with `testID` or `accessibilityLabel`, and you can tap any label to inspect the component.
 
 ### Install
 
@@ -590,30 +591,24 @@ npm install @react-buoy/debug-borders
 
 ### Features
 
-- 🎨 Colored borders around all components
-- 🎯 Instant layout debugging
-- 🔍 Component nesting visualization
-- 🎭 **Direct Toggle** - Tap icon to enable/disable
-- 💚 **Visual Feedback** - Icon changes color (gray → green)
+- 🔄 **Three Modes** - Tap to cycle: Off → Borders → Labels
+- 🏷️ **Smart Labels** - Only shows components with testID or accessibilityLabel
+- 👆 **Tap-to-Inspect** - Tap any label to see component details (styles, props, position)
+- 🎨 **Color-Coded** - Green = testID, Pink = accessibilityLabel
+- 📚 **Label Stacking** - Overlapping labels stack upward like a menu
+- 🙈 **Smart Filtering** - Hides inactive screens, SVGs, and devtools components
 - ⚡ Zero performance impact when disabled
 
 ### Usage
 
-**Zero Config (Recommended)**: Just install and it auto-appears as a "BORDERS" button in the floating menu.
+**Zero Config**: Install and it appears as "BORDERS" in the floating menu. Tap to cycle modes.
 
-**Standalone (without FloatingDevTools)**:
+**Standalone**:
 
 ```tsx
 import { DebugBordersStandaloneOverlay } from "@react-buoy/debug-borders";
 
-function App() {
-  return (
-    <>
-      {/* Your app */}
-      <DebugBordersStandaloneOverlay />
-    </>
-  );
-}
+<DebugBordersStandaloneOverlay />
 ```
 
 </details>
@@ -645,7 +640,36 @@ npm install @react-buoy/highlight-updates
 
 **Zero Config (Recommended)**: Just install and it auto-appears as an "UPDATES" button in the floating menu.
 
-````
+</details>
+
+<details>
+<summary><strong>🔀 Environment Switcher (@react-buoy/core)</strong></summary>
+
+### What It Does
+
+Switch between environments (dev, qa, staging, prod) directly from the floating menu. Built into core—no extra package needed.
+
+### Setup
+
+```tsx
+const [environment, setEnvironment] = useState<Environment>("dev");
+
+<FloatingDevTools
+  environment={environment}
+  availableEnvironments={["dev", "qa", "staging", "prod"]}
+  onEnvironmentSwitch={(env) => {
+    // Your logic: update API URLs, clear caches, etc.
+    setEnvironment(env);
+  }}
+/>
+```
+
+### Features
+
+- 🎯 **Inline Badge** - Shows current environment in the floating row
+- 📂 **Animated Dropdown** - Tap to expand and select environment
+- ✅ **Visual Feedback** - Checkmark shows current selection
+- 🎨 **Color-Coded** - Each environment has a distinct color
 
 </details>
 

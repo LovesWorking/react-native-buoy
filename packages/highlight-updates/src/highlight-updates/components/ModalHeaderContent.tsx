@@ -337,17 +337,37 @@ export const FilterViewHeader = memo(function FilterViewHeader({
 // Detail View Header
 // ============================================================================
 
+export type DetailViewTab = "details" | "history";
+
 interface DetailViewHeaderProps {
   onBack: () => void;
+  activeTab: DetailViewTab;
+  onTabChange: (tab: DetailViewTab) => void;
+  hasHistory?: boolean;
 }
 
 export const DetailViewHeader = memo(function DetailViewHeader({
   onBack,
+  activeTab,
+  onTabChange,
+  hasHistory = true,
 }: DetailViewHeaderProps) {
+  const tabs = [
+    { key: "details" as const, label: "Details" },
+    { key: "history" as const, label: "History", disabled: !hasHistory },
+  ];
+
   return (
     <ModalHeader>
       <ModalHeader.Navigation onBack={onBack} />
-      <ModalHeader.Content title="Render Details" centered />
+      <ModalHeader.Content title="" noMargin>
+        <TabSelector
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(tab) => onTabChange(tab as DetailViewTab)}
+        />
+      </ModalHeader.Content>
+      <ModalHeader.Actions>{/* Empty for right padding */}</ModalHeader.Actions>
     </ModalHeader>
   );
 });

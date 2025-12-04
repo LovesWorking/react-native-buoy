@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from "react";
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   TouchableOpacity,
   StyleSheet,
@@ -50,6 +50,16 @@ export interface FloatingMenuProps {
   defaultFloatingTools?: DefaultFloatingConfig;
   /** Default tools to enable in the dial menu when no user settings exist (max 6). */
   defaultDialTools?: DefaultDialConfig;
+  /**
+   * List of environments available for switching.
+   * When provided along with onEnvironmentSwitch, the environment badge becomes interactive.
+   */
+  availableEnvironments?: Environment[];
+  /**
+   * Callback fired when the user selects an environment from the switcher.
+   * The app is responsible for actually switching environments and updating the `environment` prop.
+   */
+  onEnvironmentSwitch?: (environment: Environment) => void;
 }
 
 /**
@@ -69,6 +79,8 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   hidden,
   environment,
   userRole,
+  availableEnvironments,
+  onEnvironmentSwitch,
 }) => {
   const [internalHidden, setInternalHidden] = useState(false);
   const [showDial, setShowDial] = useState(false);
@@ -78,6 +90,11 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
   const [, forceUpdate] = useState(0); // Used to force re-render when toggle states change
   const onboardingDismissedRef = useRef(false); // Track if onboarding was dismissed
   const hintsDisabled = useHintsDisabled();
+
+  // Determine if environment selector should be shown
+  const showEnvironmentSelector = Boolean(
+    availableEnvironments?.length && onEnvironmentSwitch
+  );
 
   const { isAnyOpen, open, registerApps } = useAppHost();
   const wasAppOpenRef = useRef(isAnyOpen);
@@ -264,9 +281,18 @@ export const FloatingMenu: FC<FloatingMenuProps> = ({
           enablePositionPersistence={shouldEnablePositionPersistence}
           pushToSide={shouldPushToSide}
           centerOnboarding={isOnboarding}
+          environment={environment}
+          availableEnvironments={availableEnvironments}
+          onEnvironmentSwitch={onEnvironmentSwitch}
+          showEnvironmentSelector={
+            showEnvironmentSelector &&
+            devToolsSettings?.floatingTools?.environment
+          }
         >
-          {/* Environment badge (if enabled in settings) */}
-          {devToolsSettings?.floatingTools?.environment && environment ? (
+          {/* Environment badge (if enabled in settings and no selector) */}
+          {devToolsSettings?.floatingTools?.environment &&
+          environment &&
+          !showEnvironmentSelector ? (
             <EnvironmentIndicator environment={environment} />
           ) : null}
 

@@ -2,7 +2,10 @@
  * Pre-configured debug borders tool for FloatingDevTools
  *
  * This preset provides a zero-config way to add visual layout debugging to your dev tools.
- * Just import and add it to your apps array! Tap the icon to toggle borders on/off.
+ * Just import and add it to your apps array! Tap the icon to cycle through modes:
+ * - Off (gray icon)
+ * - Borders only (green icon)
+ * - Borders + Labels (cyan icon)
  *
  * @example
  * ```tsx
@@ -15,27 +18,47 @@
  * ```
  */
 
+import React, { useState, useEffect } from "react";
 import { Layers } from "@react-buoy/shared-ui";
-import type { FloatingMenuActions } from "@react-buoy/core";
 
 const DebugBordersManager = require("./debug-borders/utils/DebugBordersManager");
 
-// Get the toggle state manager if available (for notifying FloatingMenu of state changes)
-let toggleManager: { notify: () => void } | null = null;
-try {
-  const coreModule = require("@react-buoy/core");
-  toggleManager = coreModule.toggleStateManager;
-} catch (e) {
-  // Manager not available, will fall back to actions.notifyToggleChange
-}
+type DisplayMode = "off" | "borders" | "labels";
 
 /**
- * Icon component that changes color based on enabled state
- * Uses a simple function that checks state synchronously (no hooks)
+ * Mode colors for the icon
+ * - off: gray (disabled)
+ * - borders: green (enabled, borders only)
+ * - labels: cyan (enabled, with labels)
+ */
+const MODE_COLORS: Record<DisplayMode, string> = {
+  off: "#6b7280",      // Gray
+  borders: "#10b981",  // Green
+  labels: "#06b6d4",   // Cyan
+};
+
+/**
+ * Icon component that changes color based on display mode.
+ *
+ * ⚠️ IMPORTANT - DO NOT MODIFY THIS COMPONENT ⚠️
+ * This component MUST use useState and useEffect hooks to subscribe to the manager.
+ * It is rendered as a JSX component (<IconComponent />) in FloatingMenu and DialIcon,
+ * which allows hooks to work properly.
+ *
+ * If you remove the hooks or change this to read getMode() directly,
+ * the icon color will NOT update when the toggle is pressed.
  */
 function BordersIcon({ size }: { size: number }) {
-  const enabled = DebugBordersManager.isEnabled();
-  return <Layers size={size} color={enabled ? "#10b981" : "#6b7280"} />;
+  const [mode, setMode] = useState<DisplayMode>(() => DebugBordersManager.getMode());
+
+  useEffect(() => {
+    const unsubscribe = DebugBordersManager.subscribe((newMode: DisplayMode) => {
+      setMode(newMode);
+    });
+    return unsubscribe;
+  }, []);
+
+  return <Layers size={size} color={MODE_COLORS[mode]} />;
 }
 
 /**
@@ -47,29 +70,27 @@ function EmptyComponent() {
 
 /**
  * Pre-configured debug borders tool for FloatingDevTools.
- * Tap the icon to toggle borders on/off - no modal needed!
+ * Tap the icon to cycle through modes: Off → Borders → Labels → Off
  *
  * Features:
  * - Visual layout debugging with colored borders
+ * - Optional component labels showing testID, nativeID, component name, etc.
  * - Automatic component tracking
  * - Real-time updates every 2 seconds
- * - Simple direct toggle (no modal)
- * - Icon changes color: gray when off, green when on
+ * - Icon changes color: gray (off), green (borders), cyan (labels)
  */
 export const debugBordersToolPreset = {
   id: "debug-borders",
   name: "BORDERS",
-  description: "Visual layout debugger - tap to toggle",
-  slot: "both" as const,
+  description: "Visual layout debugger - tap to cycle modes",
+  slot: "menu" as const,
   icon: BordersIcon,
   component: EmptyComponent,
   props: {},
   launchMode: "toggle-only" as const,
-  onPress: (actions?: FloatingMenuActions) => {
-    DebugBordersManager.toggle();
-    // Notify FloatingMenu to re-render and update icon (use both mechanisms for reliability)
-    toggleManager?.notify();
-    actions?.notifyToggleChange?.();
+  onPress: () => {
+    DebugBordersManager.cycle();
+    // Icon updates automatically via subscription in BordersIcon component
   },
 };
 
@@ -83,8 +104,9 @@ export const debugBordersToolPreset = {
  *
  * const myBordersTool = createDebugBordersTool({
  *   name: "LAYOUT",
- *   enabledColor: "#ec4899",
- *   disabledColor: "#9ca3af",
+ *   offColor: "#9ca3af",
+ *   bordersColor: "#ec4899",
+ *   labelsColor: "#8b5cf6",
  * });
  * ```
  */
@@ -93,38 +115,54 @@ export function createDebugBordersTool(options?: {
   name?: string;
   /** Tool description */
   description?: string;
-  /** Icon color when enabled (default: "#10b981" - green) */
-  enabledColor?: string;
-  /** Icon color when disabled (default: "#6b7280" - gray) */
-  disabledColor?: string;
+  /** Icon color when off (default: "#6b7280" - gray) */
+  offColor?: string;
+  /** Icon color in borders mode (default: "#10b981" - green) */
+  bordersColor?: string;
+  /** Icon color in labels mode (default: "#06b6d4" - cyan) */
+  labelsColor?: string;
   /** Custom tool ID (default: "debug-borders") */
   id?: string;
 }) {
-  const enabledColor = options?.enabledColor || "#10b981";
-  const disabledColor = options?.disabledColor || "#6b7280";
+  const colors: Record<DisplayMode, string> = {
+    off: options?.offColor || "#6b7280",
+    borders: options?.bordersColor || "#10b981",
+    labels: options?.labelsColor || "#06b6d4",
+  };
 
+  /**
+   * Custom icon component with hooks - rendered as JSX component.
+   *
+   * ⚠️ IMPORTANT - DO NOT MODIFY THIS COMPONENT ⚠️
+   * This component MUST use useState and useEffect hooks to subscribe to the manager.
+   * See the comment on BordersIcon above for full explanation.
+   */
   const CustomBordersIcon = ({ size }: { size: number }) => {
-    const enabled = DebugBordersManager.isEnabled();
-    return (
-      <Layers size={size} color={enabled ? enabledColor : disabledColor} />
-    );
+    const [mode, setMode] = useState<DisplayMode>(() => DebugBordersManager.getMode());
+
+    useEffect(() => {
+      const unsubscribe = DebugBordersManager.subscribe((newMode: DisplayMode) => {
+        setMode(newMode);
+      });
+      return unsubscribe;
+    }, []);
+
+    return <Layers size={size} color={colors[mode]} />;
   };
 
   return {
     id: options?.id || "debug-borders",
     name: options?.name || "BORDERS",
     description:
-      options?.description || "Visual layout debugger - tap to toggle",
-    slot: "both" as const,
+      options?.description || "Visual layout debugger - tap to cycle modes",
+    slot: "menu" as const,
     icon: CustomBordersIcon,
     component: EmptyComponent,
     props: {},
     launchMode: "toggle-only" as const,
-    onPress: (actions?: FloatingMenuActions) => {
-      DebugBordersManager.toggle();
-      // Notify FloatingMenu to re-render and update icon (use both mechanisms for reliability)
-      toggleManager?.notify();
-      actions?.notifyToggleChange?.();
+    onPress: () => {
+      DebugBordersManager.cycle();
+      // Icon updates automatically via subscription
     },
   };
 }
