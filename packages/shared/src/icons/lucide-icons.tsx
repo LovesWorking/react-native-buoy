@@ -1707,6 +1707,82 @@ export const Zap = ({
   </Svg>
 );
 
+export const Square = ({
+  size = 24,
+  color = "currentColor",
+  strokeWidth = 2,
+  ...props
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" {...props}>
+    <Rect
+      x={3}
+      y={3}
+      width={18}
+      height={18}
+      rx={2}
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+  </Svg>
+);
+
+export const CheckSquare = ({
+  size = 24,
+  color = "currentColor",
+  strokeWidth = 2,
+  ...props
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" {...props}>
+    <Rect
+      x={3}
+      y={3}
+      width={18}
+      height={18}
+      rx={2}
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Line
+      x1={9}
+      y1={12}
+      x2={11}
+      y2={14}
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+    <Line
+      x1={11}
+      y1={14}
+      x2={15}
+      y2={10}
+      stroke={color}
+      strokeWidth={strokeWidth}
+    />
+  </Svg>
+);
+
+export const SquareDashed = ({
+  size = 24,
+  color = "currentColor",
+  strokeWidth = 2,
+  ...props
+}: IconProps) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" {...props}>
+    {/* Top edge segments */}
+    <Line x1={5} y1={3} x2={9} y2={3} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={15} y1={3} x2={19} y2={3} stroke={color} strokeWidth={strokeWidth} />
+    {/* Bottom edge segments */}
+    <Line x1={5} y1={21} x2={9} y2={21} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={15} y1={21} x2={19} y2={21} stroke={color} strokeWidth={strokeWidth} />
+    {/* Left edge segments */}
+    <Line x1={3} y1={5} x2={3} y2={9} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={3} y1={15} x2={3} y2={19} stroke={color} strokeWidth={strokeWidth} />
+    {/* Right edge segments */}
+    <Line x1={21} y1={5} x2={21} y2={9} stroke={color} strokeWidth={strokeWidth} />
+    <Line x1={21} y1={15} x2={21} y2={19} stroke={color} strokeWidth={strokeWidth} />
+  </Svg>
+);
+
 export const Box = ({
   size = 24,
   color = "currentColor",
@@ -1919,6 +1995,9 @@ export const Trash2Icon = Trash2; // Uses optimized version
 export const XIcon = X; // Uses optimized version
 export const XCircleIcon = XCircle; // Uses optimized version
 export const ZapIcon = Zap; // Uses optimized version
+export const SquareIcon = Square; // Uses optimized version
+export const CheckSquareIcon = CheckSquare; // Uses optimized version
+export const SquareDashedIcon = SquareDashed; // Uses optimized version
 
 // Re-export complex icons that don't have optimized versions
 export const Bug = OriginalIcons.BugIcon;

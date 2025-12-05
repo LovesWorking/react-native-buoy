@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { StorageKeyInfo } from "../types";
-import { macOSColors, CompactRow, TypeBadge, HardDrive } from "@react-buoy/shared-ui";
+import { macOSColors, CompactRow, TypeBadge, HardDrive, Square, CheckSquare } from "@react-buoy/shared-ui";
 import { getStorageTypeLabel } from "../utils/storageQueryUtils";
 import { getValueTypeLabel } from "../utils/valueType";
 import { DataViewer } from "@react-buoy/shared-ui/dataViewer";
@@ -28,6 +28,12 @@ interface StorageKeyRowProps {
   storageKey: StorageKeyInfo;
   isExpanded?: boolean;
   onPress?: (storageKey: StorageKeyInfo) => void;
+  /** Whether selection mode is active */
+  isSelectMode?: boolean;
+  /** Whether this item is selected */
+  isSelected?: boolean;
+  /** Callback when selection changes */
+  onSelectionChange?: (storageKey: StorageKeyInfo, selected: boolean) => void;
 }
 
 const getStatusConfig = (status: StorageKeyInfo["status"]) => {
@@ -77,6 +83,9 @@ export function StorageKeyRow({
   storageKey,
   isExpanded,
   onPress,
+  isSelectMode = false,
+  isSelected = false,
+  onSelectionChange,
 }: StorageKeyRowProps) {
   const config = getStatusConfig(storageKey.status);
   const hasValue = storageKey.value !== undefined && storageKey.value !== null;
@@ -229,20 +238,45 @@ export function StorageKeyRow({
     </View>
   );
 
+  // Handle checkbox press in select mode
+  const handleCheckboxPress = () => {
+    onSelectionChange?.(storageKey, !isSelected);
+  };
+
+  // Create checkbox element for select mode
+  const selectionCheckbox = isSelectMode ? (
+    <TouchableOpacity
+      onPress={handleCheckboxPress}
+      style={styles.checkboxContainer}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    >
+      {isSelected ? (
+        <CheckSquare size={18} color={macOSColors.semantic.info} />
+      ) : (
+        <Square size={18} color={macOSColors.text.muted} />
+      )}
+    </TouchableOpacity>
+  ) : null;
+
   return (
-    <CompactRow
-      statusDotColor={config.color}
-      statusLabel={config.label}
-      statusSublabel={config.sublabel}
-      primaryText={primaryText}
-      secondaryText={hasValue ? getValueTypeLabel(storageKey.value) : undefined}
-      expandedContent={expandedContent}
-      isExpanded={isExpanded}
-      expandedGlowColor={config.color}
-      customBadge={storageBadge}
-      showChevron={true}
-      onPress={onPress ? () => onPress(storageKey) : undefined}
-    />
+    <View style={[styles.rowContainer, isSelected && styles.rowContainerSelected]}>
+      {selectionCheckbox}
+      <View style={styles.compactRowWrapper}>
+        <CompactRow
+          statusDotColor={config.color}
+          statusLabel={config.label}
+          statusSublabel={config.sublabel}
+          primaryText={primaryText}
+          secondaryText={hasValue ? getValueTypeLabel(storageKey.value) : undefined}
+          expandedContent={expandedContent}
+          isExpanded={isExpanded}
+          expandedGlowColor={config.color}
+          customBadge={storageBadge}
+          showChevron={!isSelectMode}
+          onPress={isSelectMode ? handleCheckboxPress : (onPress ? () => onPress(storageKey) : undefined)}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -327,5 +361,22 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "monospace",
     letterSpacing: 0.3,
+  },
+  rowContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  rowContainerSelected: {
+    backgroundColor: macOSColors.semantic.info + "08",
+    borderRadius: 8,
+  },
+  checkboxContainer: {
+    paddingLeft: 4,
+    paddingRight: 8,
+    paddingTop: 10,
+    alignSelf: "flex-start",
+  },
+  compactRowWrapper: {
+    flex: 1,
   },
 });

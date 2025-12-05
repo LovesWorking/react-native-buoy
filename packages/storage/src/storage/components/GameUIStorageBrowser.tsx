@@ -3,7 +3,6 @@ import {
   useCallback,
   useState,
   useEffect,
-  useRef,
   MutableRefObject,
 } from "react";
 import {
@@ -30,6 +29,7 @@ import { MMKVInstanceSelector } from "./MMKVInstanceSelector";
 import { MMKVInstanceInfoPanel } from "./MMKVInstanceInfoPanel";
 import { isMMKVAvailable } from "../utils/mmkvAvailability";
 import { StorageActionButtons } from "./StorageActionButtons";
+import { SelectionActionBar } from "./SelectionActionBar";
 
 // Conditionally import MMKV listener
 let addMMKVListener: any;
@@ -86,6 +86,10 @@ export function GameUIStorageBrowser({
     string | null
   >(null);
 
+  // Selection mode state
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedKeyIds, setSelectedKeyIds] = useState<Set<string>>(new Set());
+
   // Get all MMKV instances
   const { instances: mmkvInstances } = useMMKVInstances(false);
 
@@ -138,6 +142,48 @@ export function GameUIStorageBrowser({
     refreshAsync();
     refreshMMKV();
   }, [refreshAsync, refreshMMKV]);
+
+  // Generate unique identifier for a storage key
+  const getKeyIdentifier = useCallback((storageKey: StorageKeyInfo): string => {
+    return storageKey.instanceId
+      ? `${storageKey.storageType}-${storageKey.instanceId}-${storageKey.key}`
+      : `${storageKey.storageType}-${storageKey.key}`;
+  }, []);
+
+  // Toggle select mode
+  const handleToggleSelectMode = useCallback(() => {
+    setIsSelectMode((prev) => {
+      if (prev) {
+        // When exiting select mode, clear selection
+        setSelectedKeyIds(new Set());
+      }
+      return !prev;
+    });
+  }, []);
+
+  // Handle selection change for a single key
+  const handleSelectionChange = useCallback(
+    (storageKey: StorageKeyInfo, selected: boolean) => {
+      const keyId = getKeyIdentifier(storageKey);
+      setSelectedKeyIds((prev) => {
+        const newSet = new Set(prev);
+        if (selected) {
+          newSet.add(keyId);
+        } else {
+          newSet.delete(keyId);
+        }
+        return newSet;
+      });
+    },
+    [getKeyIdentifier]
+  );
+
+  // Clear selection and exit select mode after deletion
+  const handleDeleteComplete = useCallback(() => {
+    setSelectedKeyIds(new Set());
+    setIsSelectMode(false);
+    refresh();
+  }, [refresh]);
 
   // Memoized export data for copy functionality
   const copyExportData = useMemo(() => {
@@ -462,6 +508,22 @@ export function GameUIStorageBrowser({
     return storageStats;
   }, [filteredKeys]);
 
+  // Get selected keys as StorageKeyInfo objects
+  const selectedKeysInfo = useMemo(() => {
+    return filteredKeys.filter((key) => selectedKeyIds.has(getKeyIdentifier(key)));
+  }, [filteredKeys, selectedKeyIds, getKeyIdentifier]);
+
+  // Select all visible keys
+  const handleSelectAll = useCallback(() => {
+    const allIds = new Set(filteredKeys.map(getKeyIdentifier));
+    setSelectedKeyIds(allIds);
+  }, [filteredKeys, getKeyIdentifier]);
+
+  // Clear all selections
+  const handleClearSelection = useCallback(() => {
+    setSelectedKeyIds(new Set());
+  }, []);
+
   // Calculate health percentage
   const healthPercentage =
     stats.requiredCount > 0
@@ -666,13 +728,32 @@ export function GameUIStorageBrowser({
               mmkvInstances={mmkvInstances.map(inst => ({ id: inst.id, instance: inst.instance }))}
               activeStorageType={activeStorageType}
               onClearComplete={refresh}
+              isSelectMode={isSelectMode}
+              onToggleSelectMode={handleToggleSelectMode}
+              selectedCount={selectedKeyIds.size}
             />
           </View>
+
+          {/* Selection Action Bar - Only show in select mode with selections */}
+          {isSelectMode && (
+            <SelectionActionBar
+              selectedKeys={selectedKeysInfo}
+              mmkvInstances={mmkvInstances.map(inst => ({ id: inst.id, instance: inst.instance }))}
+              onDeleteComplete={handleDeleteComplete}
+              onSelectAll={handleSelectAll}
+              onClearSelection={handleClearSelection}
+              totalVisibleKeys={filteredKeys.length}
+            />
+          )}
+
           <StorageKeySection
             title=""
             count={-1}
             keys={filteredKeys}
             emptyMessage=""
+            isSelectMode={isSelectMode}
+            selectedKeys={selectedKeyIds}
+            onSelectionChange={handleSelectionChange}
           />
         </View>
       ) : (
