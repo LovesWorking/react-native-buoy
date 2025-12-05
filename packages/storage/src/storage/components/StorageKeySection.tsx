@@ -10,6 +10,12 @@ interface StorageKeySectionProps {
   keys: StorageKeyInfo[];
   emptyMessage: string;
   headerColor?: string;
+  /** Whether selection mode is active */
+  isSelectMode?: boolean;
+  /** Set of selected key identifiers (storageType-instanceId-key) */
+  selectedKeys?: Set<string>;
+  /** Callback when selection changes */
+  onSelectionChange?: (storageKey: StorageKeyInfo, selected: boolean) => void;
 }
 
 /**
@@ -26,11 +32,21 @@ export function StorageKeySection({
   keys,
   emptyMessage,
   headerColor,
+  isSelectMode = false,
+  selectedKeys = new Set(),
+  onSelectionChange,
 }: StorageKeySectionProps) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
   const handleKeyPress = useCallback((storageKey: StorageKeyInfo) => {
     setExpandedKey(prev => prev === storageKey.key ? null : storageKey.key);
+  }, []);
+
+  // Generate unique identifier for a storage key
+  const getKeyIdentifier = useCallback((storageKey: StorageKeyInfo): string => {
+    return storageKey.instanceId
+      ? `${storageKey.storageType}-${storageKey.instanceId}-${storageKey.key}`
+      : `${storageKey.storageType}-${storageKey.key}`;
   }, []);
 
   if (keys.length === 0 && title === "Required Keys") {
@@ -62,16 +78,17 @@ export function StorageKeySection({
       <View style={styles.sectionContent}>
         {keys.map((storageKey) => {
           // Create unique key by combining storage type, instance ID (if present), and key name
-          const uniqueKey = storageKey.instanceId
-            ? `${storageKey.storageType}-${storageKey.instanceId}-${storageKey.key}`
-            : `${storageKey.storageType}-${storageKey.key}`;
+          const uniqueKey = getKeyIdentifier(storageKey);
 
           return (
             <StorageKeyRow
               key={uniqueKey}
               storageKey={storageKey}
-              isExpanded={expandedKey === storageKey.key}
+              isExpanded={!isSelectMode && expandedKey === storageKey.key}
               onPress={handleKeyPress}
+              isSelectMode={isSelectMode}
+              isSelected={selectedKeys.has(uniqueKey)}
+              onSelectionChange={onSelectionChange}
             />
           );
         })}

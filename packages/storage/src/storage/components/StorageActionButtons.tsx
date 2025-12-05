@@ -1,5 +1,5 @@
-import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { Trash2, CopyButton } from "@react-buoy/shared-ui";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { Trash2, CopyButton, SquareDashed, X } from "@react-buoy/shared-ui";
 import { macOSColors } from "@react-buoy/shared-ui";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -11,6 +11,12 @@ interface StorageActionButtonsProps {
   mmkvInstances?: Array<{ id: string; instance: any }>;
   activeStorageType?: "all" | "async" | "mmkv" | "secure";
   onClearComplete?: () => void;
+  /** Whether selection mode is active */
+  isSelectMode?: boolean;
+  /** Callback to toggle selection mode */
+  onToggleSelectMode?: () => void;
+  /** Number of selected items */
+  selectedCount?: number;
 }
 
 export function StorageActionButtons({
@@ -18,6 +24,9 @@ export function StorageActionButtons({
   mmkvInstances = [],
   activeStorageType = "all",
   onClearComplete,
+  isSelectMode = false,
+  onToggleSelectMode,
+  selectedCount = 0,
 }: StorageActionButtonsProps) {
 
   const handleClearAsyncStorage = () => {
@@ -123,41 +132,65 @@ export function StorageActionButtons({
 
   return (
     <View style={styles.container}>
+      {/* Select Mode Toggle Button */}
+      {onToggleSelectMode && (
+        <TouchableOpacity
+          onPress={onToggleSelectMode}
+          style={[
+            styles.actionButton,
+            isSelectMode && styles.actionButtonActive,
+          ]}
+        >
+          {isSelectMode ? (
+            <View style={styles.selectModeActiveContainer}>
+              <X size={14} color={macOSColors.semantic.info} />
+              {selectedCount > 0 && (
+                <Text style={styles.selectedCountText}>{selectedCount}</Text>
+              )}
+            </View>
+          ) : (
+            <SquareDashed size={16} color={macOSColors.text.secondary} />
+          )}
+        </TouchableOpacity>
+      )}
+
       {/* Copy Button - Uses shared CopyButton for consistent hint behavior */}
-      <CopyButton
-        value={copyValue}
-        size={16}
-        buttonStyle={styles.actionButton}
-        colors={{
-          idle: macOSColors.text.secondary,
-          success: macOSColors.semantic.success,
-          error: macOSColors.semantic.error,
-        }}
-      />
+      {!isSelectMode && (
+        <CopyButton
+          value={copyValue}
+          size={16}
+          buttonStyle={styles.actionButton}
+          colors={{
+            idle: macOSColors.text.secondary,
+            success: macOSColors.semantic.success,
+            error: macOSColors.semantic.error,
+          }}
+        />
+      )}
 
       {/* Clear All - Only show when viewing "all" storage types */}
-      {showClearAll && (
+      {!isSelectMode && showClearAll && (
         <TouchableOpacity onPress={handleClearAll} style={styles.actionButton}>
           <Trash2 size={16} color={macOSColors.semantic.error} />
         </TouchableOpacity>
       )}
 
       {/* Clear AsyncStorage - Only show when filtered to async */}
-      {showClearAsync && (
+      {!isSelectMode && showClearAsync && (
         <TouchableOpacity onPress={handleClearAsyncStorage} style={styles.actionButton}>
           <Trash2 size={16} color={macOSColors.semantic.error} />
         </TouchableOpacity>
       )}
 
       {/* Clear All MMKV - Only show when filtered to mmkv and multiple instances */}
-      {showClearAllMMKV && (
+      {!isSelectMode && showClearAllMMKV && (
         <TouchableOpacity onPress={handleClearAllMMKV} style={styles.actionButton}>
           <Trash2 size={16} color={macOSColors.semantic.error} />
         </TouchableOpacity>
       )}
 
       {/* Clear Individual MMKV - Only show when filtered to mmkv and single instance */}
-      {showClearMMKVIndividual && mmkvInstances.length === 1 && (
+      {!isSelectMode && showClearMMKVIndividual && mmkvInstances.length === 1 && (
         <TouchableOpacity
           onPress={() => handleClearMMKV(mmkvInstances[0].id, mmkvInstances[0].id)}
           style={styles.actionButton}
@@ -184,5 +217,20 @@ const styles = StyleSheet.create({
     backgroundColor: macOSColors.background.input,
     borderWidth: 1,
     borderColor: macOSColors.border.default,
+  },
+  actionButtonActive: {
+    backgroundColor: macOSColors.semantic.info + "20",
+    borderColor: macOSColors.semantic.info + "40",
+  },
+  selectModeActiveContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  selectedCountText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: macOSColors.semantic.info,
+    fontFamily: "monospace",
   },
 });
