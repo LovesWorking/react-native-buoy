@@ -386,8 +386,6 @@ export function BenchmarkModal({
     );
   };
 
-  if (!visible) return null;
-
   const persistenceKey = enableSharedModalDimensions
     ? devToolsStorageKeys.modal.root()
     : devToolsStorageKeys.benchmark.modal();
@@ -414,6 +412,9 @@ export function BenchmarkModal({
 
   // Determine back handler
   const showBackButton = viewMode !== "list" || selectionMode || onBack;
+
+  // Early return AFTER all hooks to avoid "Rendered fewer hooks than expected" error
+  if (!visible) return null;
 
   return (
     <JsModal
