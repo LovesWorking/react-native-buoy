@@ -1,36 +1,65 @@
 {
+  "$schema": "https://raw.githubusercontent.com/TanStack/tanstack.com/main/tanstack-docs-config.schema.json",
+  "docSearch": {
+    "appId": "",
+    "apiKey": "",
+    "indexName": "react-buoy"
+  },
   "sections": [
     {
       "label": "Getting Started",
       "children": [
-        { "label": "Overview", "to": "overview" },
-        { "label": "Installation", "to": "installation" },
-        { "label": "Quick Start", "to": "quick-start" }
+        {
+          "label": "Overview",
+          "to": "overview"
+        },
+        {
+          "label": "Quick Start",
+          "to": "quick-start"
+        },
+        {
+          "label": "Installation",
+          "to": "installation"
+        }
       ]
     },
     {
-      "label": "Tools",
+      "label": "Core Concepts",
       "children": [
-        { "label": "Environment Inspector", "to": "tools/env" },
-        { "label": "Network Monitor", "to": "tools/network" },
-        { "label": "Storage Explorer", "to": "tools/storage" },
-        { "label": "React Query DevTools", "to": "tools/react-query" },
-        { "label": "Route Events", "to": "tools/route-events" },
-        { "label": "Debug Borders", "to": "tools/debug-borders" },
-        { "label": "Highlight Updates", "to": "tools/highlight-updates" }
-      ],
-      "collapsible": true,
-      "defaultCollapsed": false
+        {
+          "label": "FloatingDevTools",
+          "to": "floating-devtools"
+        },
+        {
+          "label": "Custom Tools",
+          "to": "custom-tools"
+        },
+        {
+          "label": "Environment & Roles",
+          "to": "environment-roles"
+        }
+      ]
     },
     {
-      "label": "Guides",
+      "label": "Available Tools",
       "children": [
-        { "label": "Custom Tools", "to": "guides/custom-tools" },
-        { "label": "Production Usage", "to": "guides/production" },
-        { "label": "Configuration", "to": "guides/configuration" }
-      ],
-      "collapsible": true,
-      "defaultCollapsed": true
+        {
+          "label": "Environment Inspector",
+          "to": "tools/env"
+        },
+        {
+          "label": "Network Monitor",
+          "to": "tools/network"
+        },
+        {
+          "label": "Storage Explorer",
+          "to": "tools/storage"
+        },
+        {
+          "label": "React Query DevTools",
+          "to": "tools/react-query"
+        }
+      ]
     }
   ]
 }

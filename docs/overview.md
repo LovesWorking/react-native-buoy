@@ -1,31 +1,33 @@
 ---
 title: Overview
+id: overview
 ---
 
-BUOY is currently in alpha and its API is subject to change.
+React Buoy is a **zero-config mobile dev tools framework** that gives your entire team instant access to powerful debugging tools.
 
-## What is BUOY?
+## What is React Buoy?
 
-BUOY is a zero-config mobile dev tools library for React Native. It provides a floating menu that gives your entire team instant access to powerful debugging tools—in dev, staging, AND production.
+React Buoy provides a single floating menu that gives you access to various debugging tools—in dev, staging, AND production. No configuration, no complexity. Just install packages and they automatically appear.
+
+> [!IMPORTANT]
+> React Buoy is currently in **alpha** and its API is subject to change.
 
 ## Key Features
 
-- **Zero Configuration** - Install packages and they automatically appear in the floating menu. No manual setup, no wiring, no configuration files.
-- **Built for React Native** - Designed specifically for React Native applications with mobile-first UI and gesture support.
-- **Team-Friendly** - Same tools everywhere—dev, staging, production. Onboard new developers in minutes with consistent debugging experience.
-- **Fully Extensible** - Drop in any React component as a custom tool. Build team-specific debugging utilities that integrate seamlessly.
+- **Zero Configuration** – Install packages, they auto-appear. No manual setup required.
+- **Always-Visible Context** – See your environment (dev/staging/prod) and role at a glance.
+- **Persistent State** – Tools remember their position and state through app reloads.
+- **Team-Friendly** – Same tools everywhere. Onboard new developers in minutes.
+- **Fully Extensible** – Drop in any React component as a custom tool.
 
 ## Available Tools
 
-| Tool | Package | Description |
-|------|---------|-------------|
-| Environment Inspector | `@react-buoy/env` | Validate and inspect environment variables |
-| Network Monitor | `@react-buoy/network` | Real-time API request monitoring |
-| Storage Explorer | `@react-buoy/storage` | Browse AsyncStorage/MMKV data |
-| React Query DevTools | `@react-buoy/react-query` | TanStack Query cache inspector |
-| Route Events | `@react-buoy/route-events` | Navigation tracking and visualization |
-| Debug Borders | `@react-buoy/debug-borders` | Visual layout debugging |
-| Highlight Updates | `@react-buoy/highlight-updates` | Re-render detection |
+| Tool | Package | What It Does |
+|------|---------|--------------|
+| ENV | `@react-buoy/env` | Environment variable inspector |
+| Network | `@react-buoy/network` | API request monitor |
+| Storage | `@react-buoy/storage` | AsyncStorage/MMKV browser |
+| React Query | `@react-buoy/react-query` | TanStack Query devtools |
 
 ## Quick Example
 
@@ -42,4 +44,8 @@ function App() {
 }
 ```
 
-That's it! All installed `@react-buoy/*` packages automatically appear in the floating menu.
+## Next Steps
+
+- [Quick Start](./quick-start) - Get up and running in 2 minutes
+- [Installation](./installation) - Detailed installation guide
+- [FloatingDevTools](./floating-devtools) - Core component documentation
