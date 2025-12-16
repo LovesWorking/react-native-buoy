@@ -1,7 +1,7 @@
-# React Buoy Devtools
+# BUOY Devtools
 
 > **⚠️ ACTIVE DEVELOPMENT**
-> This project is under active development. If you encounter any issues, please [open an issue on GitHub](https://github.com/LovesWorking/rn-buoy/issues).
+> This project is under active development. If you encounter any issues, please [open an issue on GitHub](https://github.com/Buoy-gg/buoy/issues).
 > Feature requests and suggestions are also highly encouraged! I love to hear what you need!
 >
 > ⭐ **Please star this repo!** We ship updates frequently, and starring helps you stay notified of new features and improvements.
@@ -18,7 +18,7 @@
 
 A single floating menu gives your entire team instant access to powerful debugging tools—in dev, staging, AND production. No configuration, no complexity. Just install packages and they automatically appear.
 
-![React Buoy Demo](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
+![BUOY Demo](https://github.com/user-attachments/assets/a732d6a3-9963-49e3-b0f1-0d974a0a74d7)
 
 ---
 
@@ -295,7 +295,7 @@ export default function App() {
 
 ## 🔧 How It Works
 
-React Buoy uses **automatic package discovery**. When you render `<FloatingDevTools />`, it:
+BUOY uses **automatic package discovery**. When you render `<FloatingDevTools />`, it:
 
 1. **Checks** which `@react-buoy/*` packages are installed
 2. **Loads** only the installed packages (lazy + safe)
@@ -800,7 +800,7 @@ Quickly find what you need in large payloads:
 <details>
 <summary><strong>State Persistence & Minimize Feature</strong></summary>
 
-React Buoy remembers:
+BUOY remembers:
 
 - Which tools are open
 - Tool positions (if dragged)
@@ -810,7 +810,7 @@ React Buoy remembers:
 
 ### Storage Backends
 
-React Buoy uses a **smart storage system** that automatically picks the best available option:
+BUOY uses a **smart storage system** that automatically picks the best available option:
 
 | Backend | Persists Through Logout? | Requires | When Used |
 |---------|-------------------------|----------|-----------|
@@ -864,7 +864,7 @@ Keep tools running in the background without cluttering your screen:
 <details>
 <summary><strong>Production Usage</strong></summary>
 
-React Buoy is **production-safe** with proper access controls:
+BUOY is **production-safe** with proper access controls:
 
 ```tsx
 import { FloatingDevTools } from "@react-buoy/core";
@@ -894,7 +894,7 @@ function App() {
 
 ---
 
-## 🆚 Why React Buoy?
+## 🆚 Why BUOY?
 
 ### vs. Reactotron
 
@@ -937,7 +937,7 @@ All from one floating menu that follows you through every screen.
 
 ## 📝 License
 
-MIT © React Buoy Team
+MIT © Buoy Tools
 
 ---
 

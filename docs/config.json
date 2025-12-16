@@ -1,0 +1,36 @@
+{
+  "sections": [
+    {
+      "label": "Getting Started",
+      "children": [
+        { "label": "Overview", "to": "overview" },
+        { "label": "Installation", "to": "installation" },
+        { "label": "Quick Start", "to": "quick-start" }
+      ]
+    },
+    {
+      "label": "Tools",
+      "children": [
+        { "label": "Environment Inspector", "to": "tools/env" },
+        { "label": "Network Monitor", "to": "tools/network" },
+        { "label": "Storage Explorer", "to": "tools/storage" },
+        { "label": "React Query DevTools", "to": "tools/react-query" },
+        { "label": "Route Events", "to": "tools/route-events" },
+        { "label": "Debug Borders", "to": "tools/debug-borders" },
+        { "label": "Highlight Updates", "to": "tools/highlight-updates" }
+      ],
+      "collapsible": true,
+      "defaultCollapsed": false
+    },
+    {
+      "label": "Guides",
+      "children": [
+        { "label": "Custom Tools", "to": "guides/custom-tools" },
+        { "label": "Production Usage", "to": "guides/production" },
+        { "label": "Configuration", "to": "guides/configuration" }
+      ],
+      "collapsible": true,
+      "defaultCollapsed": true
+    }
+  ]
+}
