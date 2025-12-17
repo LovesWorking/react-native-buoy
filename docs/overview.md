@@ -3,49 +3,59 @@ title: Overview
 id: overview
 ---
 
-React Buoy is a **zero-config mobile dev tools framework** that gives your entire team instant access to powerful debugging tools.
+Buoy is a floating dev tools menu for React Native. It speeds up developers, QA, and product teams by up to **200x** on tasks like regression testing, bug reproduction, and environment validation.
 
-## What is React Buoy?
+One floating button. Every tool your team needs. Works in dev, staging, and production.
 
-React Buoy provides a single floating menu that gives you access to various debugging tools—in dev, staging, AND production. No configuration, no complexity. Just install packages and they automatically appear.
+## Who It's For
 
-> [!IMPORTANT]
-> React Buoy is currently in **alpha** and its API is subject to change.
+- **Developers** — Debug faster. See every network request, storage value, and environment variable without leaving your app.
+- **QA** — Reproduce bugs instantly. Validate state, inspect storage, and verify configs on any build.
+- **Product** — Watch user flows, check feature flags, and verify the right environment is active.
 
-## Key Features
+## What You Get
 
-- **Zero Configuration** – Install packages, they auto-appear. No manual setup required.
-- **Always-Visible Context** – See your environment (dev/staging/prod) and role at a glance.
-- **Persistent State** – Tools remember their position and state through app reloads.
-- **Team-Friendly** – Same tools everywhere. Onboard new developers in minutes.
-- **Fully Extensible** – Drop in any React component as a custom tool.
+| Tool | What It Does |
+|------|--------------|
+| **Network** | See every API call — request, response, timing, errors |
+| **Storage** | Browse and edit AsyncStorage & MMKV in real-time |
+| **Environment** | Validate env vars with type checking and required field validation |
+| **Debug Borders** | Tap any element to see its testID, accessibility label, and styles |
+| **Route Events** | Track navigation changes and browse your route structure |
+| **React Query** | Inspect query cache, trigger refetches, simulate offline mode |
+| **Render Highlighter** | Spot unnecessary re-renders as they happen |
 
-## Available Tools
+## Why Buoy
 
-| Tool | Package | What It Does |
-|------|---------|--------------|
-| ENV | `@react-buoy/env` | Environment variable inspector |
-| Network | `@react-buoy/network` | API request monitor |
-| Storage | `@react-buoy/storage` | AsyncStorage/MMKV browser |
-| React Query | `@react-buoy/react-query` | TanStack Query devtools |
+- **Zero config** — Install a package, it appears in the menu. No wiring.
+- **Works everywhere** — Dev, staging, production. Same tools for everyone.
+- **Modular** — Only install what you need. Each tool is a separate package.
+- **Team-friendly** — Onboard new devs in minutes with consistent debugging.
 
-## Quick Example
+## Quick Start
 
 ```tsx
 import { FloatingDevTools } from "@react-buoy/core";
 
-function App() {
+export default function App() {
   return (
     <>
-      {/* Your app content */}
-      <FloatingDevTools environment="local" userRole="admin" />
+      <YourApp />
+      <FloatingDevTools environment="local" />
     </>
   );
 }
 ```
 
+Install any tool package and it automatically appears in the menu. No configuration needed.
+
+## Build Your Own Tools
+
+Need something specific to your app? Drop in any React component as a custom tool. Build internal debugging utilities, feature flag toggles, or team-specific inspectors that integrate seamlessly with the floating menu.
+
 ## Next Steps
 
-- [Quick Start](./quick-start) - Get up and running in 2 minutes
-- [Installation](./installation) - Detailed installation guide
-- [FloatingDevTools](./floating-devtools) - Core component documentation
+- [Installation](./installation) — Add Buoy to your project
+- [Quick Start](./quick-start) — Full setup in 2 minutes
+- [Custom Tools](./custom-tools) — Build your own debugging tools
+- [Tools Reference](./tools/network) — Detailed docs for each tool
