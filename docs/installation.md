@@ -3,70 +3,30 @@ title: Installation
 id: installation
 ---
 
-Complete installation guide for React Buoy and its tool packages.
+Get Buoy running in your React Native app in minutes.
 
 ## Requirements
 
-- React Native 0.70+
-- React 18+
+<!-- ::Requirements -->
 
-## Core Package
+## Quick Start
 
-The core package provides the `FloatingDevTools` component:
+Install the core package and any tools you need:
 
-```bash
-npm install @react-buoy/core
-```
+<!-- ::Quick-Install -->
 
-## Available Tool Packages
+## Available Packages
 
-Install any of these packages to add tools to your floating menu:
+Each package adds a new tool to your floating menu. Install only what you need.
 
-### Environment Inspector
-
-```bash
-npm install @react-buoy/env
-```
-
-View and validate environment variables.
-
-### Network Monitor
-
-```bash
-npm install @react-buoy/network
-```
-
-Monitor API requests and responses.
-
-### Storage Explorer
-
-```bash
-npm install @react-buoy/storage
-```
-
-Browse AsyncStorage or MMKV data.
-
-### React Query DevTools
-
-```bash
-npm install @react-buoy/react-query
-```
-
-TanStack Query debugging tools.
-
-## All-in-One Installation
-
-Install all packages at once:
-
-```bash
-npm install @react-buoy/core @react-buoy/env @react-buoy/network @react-buoy/storage
-```
+<!-- ::Tool-Packages -->
 
 ## TypeScript Support
 
-All packages include TypeScript definitions. No additional `@types` packages needed.
+All packages include TypeScript definitions out of the box. No additional `@types` packages needed.
 
 ## Next Steps
 
-- [Quick Start](./quick-start) - Basic setup guide
-- [FloatingDevTools](./floating-devtools) - Configuration options
+- [Quick Start](./quick-start) — Basic setup guide
+- [FloatingDevTools](./floating-devtools) — Configuration options
+- [Custom Tools](./custom-tools) — Build your own debugging tools

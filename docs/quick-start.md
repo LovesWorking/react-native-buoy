@@ -3,21 +3,15 @@ title: Quick Start
 id: quick-start
 ---
 
-Get React Buoy running in your React Native app in under 2 minutes.
+From zero to debugging in under 2 minutes.
 
-## Installation
+## 1. Install the core
 
-```bash
-npm install @react-buoy/core
-# or
-yarn add @react-buoy/core
-# or
-pnpm add @react-buoy/core
-```
+<!-- ::pm npm="npm install @react-buoy/core" yarn="yarn add @react-buoy/core" pnpm="pnpm add @react-buoy/core" bun="bun add @react-buoy/core" -->
 
-## Basic Setup
+## 2. Add to your app
 
-Add the `FloatingDevTools` component to your app's root:
+Drop `FloatingDevTools` at the root of your app:
 
 ```tsx
 import { FloatingDevTools } from "@react-buoy/core";
@@ -25,45 +19,62 @@ import { FloatingDevTools } from "@react-buoy/core";
 export default function App() {
   return (
     <>
-      {/* Your existing app content */}
       <YourApp />
-
-      {/* Add this at the end */}
-      <FloatingDevTools
-        environment="local"
-        userRole="admin"
-      />
+      <FloatingDevTools environment="local" />
     </>
   );
 }
 ```
 
-That's it! You should now see a floating button in the corner of your app.
+A floating button appears in the corner of your app. Tap it to open the menu.
 
-## Adding Your First Tool
+## 3. Add tools
 
-Install the environment inspector tool:
+Install any tool package — it automatically appears in the menu. No wiring, no config.
 
-```bash
-npm install @react-buoy/env
-```
+<!-- ::pm npm="npm install @react-buoy/network" yarn="yarn add @react-buoy/network" pnpm="pnpm add @react-buoy/network" bun="bun add @react-buoy/network" -->
 
-The tool will automatically appear in your floating menu. No additional configuration needed!
+That's it. Open the menu, tap Network, and you're watching every API call in real-time.
 
-## Environment-Based Display
+## Available tools
 
-Control when the devtools are visible:
+<!-- ::tools-table -->
+
+Install what you need. Skip what you don't.
+
+## Control who sees devtools
+
+Only show devtools to specific users — admins, QA, internal team members, or whoever your business needs:
 
 ```tsx
-<FloatingDevTools
-  environment={__DEV__ ? "local" : "production"}
-  userRole="admin"
-  // Only show in development by default
-/>
+import { FloatingDevTools } from "@react-buoy/core";
+
+export default function App() {
+  const { user } = useAuth();
+
+  // Only render for internal users, admins, or QA
+  const showDevTools =
+    user?.role === "admin" ||
+    user?.role === "qa" ||
+    user?.email?.endsWith("@yourcompany.com");
+
+  return (
+    <>
+      <YourApp />
+      {showDevTools && (
+        <FloatingDevTools
+          environment={__DEV__ ? "local" : "production"}
+          userRole={user?.role}
+        />
+      )}
+    </>
+  );
+}
 ```
 
-## Next Steps
+Or keep it available for everyone — your QA and support teams will thank you.
 
-- [Installation](./installation) - Complete installation guide with all options
-- [FloatingDevTools](./floating-devtools) - Full API reference
-- [Custom Tools](./custom-tools) - Build your own debugging tools
+## What's next
+
+- [FloatingDevTools](./floating-devtools) — Core component reference
+- [Custom Tools](./custom-tools) — Build your own debugging tools

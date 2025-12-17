@@ -115,5 +115,5 @@ const AuthDebugger = () => {
 
 ## Next Steps
 
-- [FloatingDevTools](./floating-devtools) - Core component reference
-- [Environment & Roles](./environment-roles) - Environment configuration
+- [FloatingDevTools](./floating-devtools) — Core component reference
+- [Quick Start](./quick-start) — Full setup walkthrough

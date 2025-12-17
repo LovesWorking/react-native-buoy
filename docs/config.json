@@ -33,10 +33,6 @@
         {
           "label": "Custom Tools",
           "to": "custom-tools"
-        },
-        {
-          "label": "Environment & Roles",
-          "to": "environment-roles"
         }
       ]
     },

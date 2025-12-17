@@ -3,7 +3,7 @@ title: FloatingDevTools
 id: floating-devtools
 ---
 
-The `FloatingDevTools` component is the core of React Buoy. It renders a draggable floating button that opens a menu containing all your debugging tools.
+The `FloatingDevTools` component is the entry point for React Buoy. It renders a draggable floating button that opens a menu containing all your installed debugging tools.
 
 ## Basic Usage
 
@@ -14,88 +14,56 @@ function App() {
   return (
     <>
       <YourApp />
-      <FloatingDevTools environment="local" userRole="admin" />
+      <FloatingDevTools environment="qa" />
     </>
   );
 }
 ```
 
-## Props
+That's it. Any Buoy tool packages you've installed will automatically appear in the menu.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `environment` | `string` | `"local"` | Current environment (e.g., "local", "staging", "production") |
-| `userRole` | `string` | `undefined` | Current user's role for display |
-| `customTools` | `CustomTool[]` | `[]` | Array of custom tool components |
-| `position` | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"` | Initial button position |
-| `disabled` | `boolean` | `false` | Disable the devtools entirely |
+## Environment Badge
 
-## Environment Display
-
-The environment badge is always visible on the floating button, helping your team quickly identify which environment they're using:
+The floating button displays your current environment, helping your team instantly know where they are:
 
 ```tsx
-<FloatingDevTools
-  environment={
-    __DEV__ ? "local" :
-    process.env.EXPO_PUBLIC_ENV === "staging" ? "staging" :
-    "production"
-  }
-/>
+<FloatingDevTools environment="qa" />
 ```
 
-## Position
+Common values: `"local"`, `"dev"`, `"staging"`, `"qa"`, `"production"`
 
-Set the initial corner for the floating button:
+## How Tools Auto-Register
 
-```tsx
-<FloatingDevTools
-  environment="local"
-  position="top-right"
-/>
+When you install a Buoy tool package (like `@react-buoy/network` or `@react-buoy/storage`), it automatically registers itself with the floating menu. No imports, no configuration, no wiring.
+
+```bash
+npm install @react-buoy/network
 ```
 
-The button can be dragged to any position and will remember its location between app sessions.
-
-## Disabling in Production
-
-You can conditionally disable the devtools:
-
-```tsx
-<FloatingDevTools
-  environment="production"
-  disabled={!__DEV__}
-/>
-```
-
-Or simply don't render the component:
-
-```tsx
-{__DEV__ && <FloatingDevTools environment="local" />}
-```
+The Network tool now appears in your menu. That's the magic of Buoy.
 
 ## Custom Tools
 
-Add your own tools to the menu:
+Need something specific to your app? Add your own tools:
 
 ```tsx
 import { FloatingDevTools } from "@react-buoy/core";
 
-const MyDebugTool = () => (
+const FeatureFlagTool = () => (
   <View>
-    <Text>My custom debugging tool</Text>
+    <Text>Toggle feature flags here</Text>
   </View>
 );
 
 function App() {
   return (
     <FloatingDevTools
-      environment="local"
+      environment="qa"
       customTools={[
         {
-          name: "Debug",
-          component: MyDebugTool,
-          icon: "🔧",
+          name: "Flags",
+          component: FeatureFlagTool,
+          icon: "🚩",
         },
       ]}
     />
@@ -103,9 +71,13 @@ function App() {
 }
 ```
 
-See [Custom Tools](./custom-tools) for more details.
+See [Custom Tools](./custom-tools) for more details on building your own debugging tools.
+
+## Draggable Button
+
+The floating button can be dragged anywhere on screen. It remembers its position between sessions, so it stays where your team likes it.
 
 ## Next Steps
 
-- [Custom Tools](./custom-tools) - Create your own debugging tools
-- [Environment & Roles](./environment-roles) - Advanced configuration
+- [Custom Tools](./custom-tools) — Build team-specific debugging tools
+- [Quick Start](./quick-start) — Full setup walkthrough
