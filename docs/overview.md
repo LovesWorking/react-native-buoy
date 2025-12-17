@@ -3,7 +3,7 @@ title: Overview
 id: overview
 ---
 
-Buoy is a floating dev tools menu for React Native. It speeds up developers, QA, and product teams by up to **200x** on tasks like regression testing, bug reproduction, and environment validation.
+Buoy is a floating dev tools menu for React Native. It turns **hours into seconds** for developers, QA, and product teams on tasks like regression testing, bug reproduction, and environment validation.
 
 One floating button. Every tool your team needs. Works in dev, staging, and production.
 
@@ -24,7 +24,7 @@ Test things that were previously untestable.
 - **Trigger any state** — Loading states, error states, empty states, edge cases. No more "I can't test that on mobile." Now you can.
 - **Edit data live** — User needs zero points to test a failed redemption? Change it in seconds. No more waiting an hour for database changes or asking a dev to update your account.
 - **Validate everything** — Storage validators flag missing keys, wrong types, and invalid values instantly. Catch misconfigs before users do.
-- **Real regression testing** — Test the app AND the API. Stale data, race conditions, permission edge cases. Our QA went from 1+ hour per scenario to seconds. That's 200x faster.
+- **Real regression testing** — Test the app AND the API. Stale data, race conditions, permission edge cases. What used to take an hour now takes seconds.
 
 ### Customer Support
 
