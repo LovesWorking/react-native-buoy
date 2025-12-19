@@ -3,114 +3,42 @@ title: Storage Explorer
 id: tools-storage
 ---
 
-The Storage Explorer tool lets you view and manage AsyncStorage data in your React Native app.
+Browse, edit, and manage all your app's persisted data. See every key-value pair across all storage backends in real-time.
+
+## Supported Backends
+
+<!-- ::storage-backends-grid -->
+
+> **Multi-instance MMKV support** — If you use multiple MMKV instances, they're all detected automatically. Switch between instances and see key counts per instance.
+
+---
 
 ## Installation
 
-```bash
-npm install @react-buoy/storage
-```
+<!-- ::PM npm="npm install @react-buoy/storage" yarn="yarn add @react-buoy/storage" pnpm="pnpm add @react-buoy/storage" bun="bun add @react-buoy/storage" -->
 
-## Features
+That's it. The Storage Explorer auto-detects installed backends and appears in your FloatingDevTools menu.
 
-- View all stored key-value pairs
-- Edit values in real-time
-- Delete individual keys
-- Clear all storage
-- Search/filter keys
+---
 
-## Usage
+## What You Can Do
 
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-import "@react-buoy/storage"; // Import to enable storage inspection
+<!-- ::storage-actions-grid -->
 
-function App() {
-  return (
-    <>
-      <YourApp />
-      <FloatingDevTools environment="local" />
-    </>
-  );
-}
-```
+---
 
-## Supported Storage Backends
+## Smart Features
 
-The tool automatically detects and supports:
+**JSON formatting** — Values that are valid JSON are automatically pretty-printed for readability.
 
-- **AsyncStorage** (default)
-- **MMKV** (if installed)
-- **SecureStore** (Expo)
+**Live events** — Watch storage changes happen in real-time as your app reads and writes data.
 
-## Configuration
+**Bulk selection** — Select multiple keys to delete or export them all at once.
 
-```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-import { StorageConfig } from "@react-buoy/storage";
+---
 
-const storageConfig: StorageConfig = {
-  // Keys to hide from the inspector (e.g., sensitive data)
-  hiddenKeys: ["auth_token", "refresh_token"],
+## What's Next
 
-  // Custom storage adapter (if not using AsyncStorage)
-  adapter: myCustomAdapter,
-};
-
-<FloatingDevTools
-  environment="local"
-  storageConfig={storageConfig}
-/>
-```
-
-## StorageConfig Schema
-
-```typescript
-interface StorageConfig {
-  /** Keys to hide from display */
-  hiddenKeys?: string[];
-
-  /** Custom storage adapter */
-  adapter?: StorageAdapter;
-
-  /** Enable real-time updates */
-  watchChanges?: boolean;
-}
-
-interface StorageAdapter {
-  getAllKeys(): Promise<string[]>;
-  getItem(key: string): Promise<string | null>;
-  setItem(key: string, value: string): Promise<void>;
-  removeItem(key: string): Promise<void>;
-  clear(): Promise<void>;
-}
-```
-
-## Actions
-
-| Action | Description |
-|--------|-------------|
-| **View** | See current value for any key |
-| **Edit** | Modify values directly |
-| **Delete** | Remove a single key |
-| **Clear All** | Remove all stored data |
-| **Refresh** | Reload all keys |
-| **Export** | Export all data as JSON |
-
-## JSON Formatting
-
-Values that are valid JSON are automatically formatted for readability:
-
-```json
-{
-  "user": {
-    "id": 123,
-    "name": "John Doe"
-  }
-}
-```
-
-## Next Steps
-
-- [FloatingDevTools](../floating-devtools) - Core component reference
-- [Custom Tools](../custom-tools) - Build your own tools
+- [Network Monitor](./network) — See every API call your app makes
+- [Environment Inspector](./env) — Validate env vars with type checking
+- [React Query](./react-query) — Inspect query cache and simulate states
