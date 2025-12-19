@@ -54,6 +54,10 @@
         {
           "label": "React Query DevTools",
           "to": "tools/react-query"
+        },
+        {
+          "label": "Route Inspector",
+          "to": "tools/routes"
         }
       ]
     }
