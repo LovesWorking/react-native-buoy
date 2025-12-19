@@ -16,33 +16,19 @@ After installation, the Environment Inspector will be auto-detected and appear i
 For more control, use `createEnvTool` with the `envVar` builder to define required variables and validation rules:
 
 ```tsx
-import { FloatingDevTools } from "@react-buoy/core";
-import { createEnvTool, createEnvVarConfig, envVar } from "@react-buoy/env";
+import { createEnvTool, envVar } from "@react-buoy/env";
 
-const requiredEnvVars = createEnvVarConfig([
-  envVar("EXPO_PUBLIC_API_URL").exists(),
-  envVar("EXPO_PUBLIC_DEBUG_MODE").withType("boolean").build(),
-  envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(),
-  envVar("EXPO_PUBLIC_MAX_RETRIES")
-    .withType("number")
-    .withDescription("Maximum API retry attempts")
-    .build(),
-]);
-
-const myEnvTool = createEnvTool({
-  requiredEnvVars,
+const envTool = createEnvTool({
+  requiredEnvVars: [
+    envVar("EXPO_PUBLIC_API_URL").exists(),
+    envVar("EXPO_PUBLIC_DEBUG_MODE").withType("boolean").build(),
+    envVar("EXPO_PUBLIC_ENVIRONMENT").withValue("development").build(),
+    envVar("EXPO_PUBLIC_MAX_RETRIES")
+      .withType("number")
+      .withDescription("Maximum API retry attempts")
+      .build(),
+  ],
 });
-
-const installedApps = [myEnvTool];
-
-function App() {
-  return (
-    <FloatingDevTools
-      apps={installedApps}
-      environment="local"
-    />
-  );
-}
 ```
 
 ## The `envVar` Builder
@@ -104,3 +90,9 @@ createEnvTool({
 - **Green** - Variable exists and matches expected value/type
 - **Yellow** - Variable exists but value/type differs from expected
 - **Red** - Required variable is missing
+
+## Try It Out
+
+Use the interactive builder below to create your environment validation config. Add variables, configure checks (type, value, description), and export the code directly.
+
+<!-- ::env-playground -->
