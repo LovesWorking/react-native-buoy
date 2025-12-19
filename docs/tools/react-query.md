@@ -3,123 +3,49 @@ title: React Query DevTools
 id: tools-react-query
 ---
 
-The React Query DevTools integration brings the power of TanStack Query DevTools to React Native.
+Full TanStack Query inspection for React Native. Browse queries, view cached data, simulate states, and debug your data fetching in real-time.
 
 ## Installation
 
-```bash
-npm install @react-buoy/react-query @tanstack/react-query
-```
+<!-- ::PM npm="npm install @react-buoy/react-query" yarn="yarn add @react-buoy/react-query" pnpm="pnpm add @react-buoy/react-query" bun="bun add @react-buoy/react-query" -->
 
-## Features
+That's it. The React Query DevTools auto-detects your QueryClient and appears in your FloatingDevTools menu.
 
-- View all queries and mutations
-- Inspect query state (loading, error, success)
-- See cached data
-- Manually refetch queries
-- Invalidate cache
-- View query timing
-
-## Setup
-
-Wrap your app with the QueryClientProvider and add the devtools:
-
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FloatingDevTools } from "@react-buoy/core";
-import "@react-buoy/react-query";
-
-const queryClient = new QueryClient();
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <YourApp />
-      <FloatingDevTools environment="local" />
-    </QueryClientProvider>
-  );
-}
-```
+---
 
 ## Query States
 
-The tool displays query states with color coding:
+<!-- ::query-states-grid -->
 
-| State | Color | Description |
-|-------|-------|-------------|
-| **fresh** | Green | Data is fresh and valid |
-| **stale** | Yellow | Data is stale, will refetch on next access |
-| **fetching** | Blue | Currently fetching data |
-| **paused** | Gray | Query is paused |
-| **error** | Red | Query encountered an error |
+---
 
-## Query Details
+## What You Can Do
 
-For each query, you can view:
+<!-- ::query-actions-grid -->
 
-- **Query Key**: The unique identifier
-- **State**: Current fetch state
-- **Data**: Cached response data
-- **Data Updated At**: When data was last fetched
-- **Error**: Error message if failed
-- **Observers**: Number of active observers
+> **Simulate loading & error states** — Test how your UI handles loading spinners and error boundaries without waiting for real network conditions.
 
-## Actions
-
-| Action | Description |
-|--------|-------------|
-| **Refetch** | Manually trigger a refetch |
-| **Invalidate** | Mark query as stale |
-| **Reset** | Reset to initial state |
-| **Remove** | Remove from cache |
+---
 
 ## Mutations
 
-View active and past mutations:
+Track all your mutations in real-time:
 
-```tsx
-const mutation = useMutation({
-  mutationFn: updateUser,
-  mutationKey: ["updateUser"],
-});
-```
+- **Status** — idle, pending, success, or error
+- **Variables** — data passed to the mutation
+- **Response** — returned data or error message
+- **Timing** — when the mutation was submitted
 
-Mutation details include:
-- Status (idle, pending, success, error)
-- Variables passed to the mutation
-- Response data or error
-- Submission time
+---
 
-## Filtering
+## WiFi Toggle
 
-Filter queries and mutations by:
-- Query key (search)
-- State (fresh, stale, fetching, error)
-- Active/Inactive
+Simulate offline mode with one tap. The WiFi toggle controls React Query's `onlineManager` to pause all queries — perfect for testing offline-first features.
 
-## Configuration
+---
 
-```tsx
-import { ReactQueryConfig } from "@react-buoy/react-query";
+## What's Next
 
-const queryConfig: ReactQueryConfig = {
-  // Show inactive queries
-  showInactive: true,
-
-  // Default expanded sections
-  defaultExpanded: ["queries"],
-
-  // Sort order
-  sortBy: "lastUpdated",
-};
-
-<FloatingDevTools
-  environment="local"
-  reactQueryConfig={queryConfig}
-/>
-```
-
-## Next Steps
-
-- [FloatingDevTools](../floating-devtools) - Core component reference
-- [Custom Tools](../custom-tools) - Build your own tools
+- [Network Monitor](./network) — See every API call your app makes
+- [Storage Explorer](./storage) — Browse and edit AsyncStorage & MMKV
+- [Environment Inspector](./env) — Validate env vars with type checking
