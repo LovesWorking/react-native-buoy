@@ -58,6 +58,10 @@
         {
           "label": "Route Inspector",
           "to": "tools/routes"
+        },
+        {
+          "label": "Highlight Updates",
+          "to": "tools/highlight-updates"
         }
       ]
     }
